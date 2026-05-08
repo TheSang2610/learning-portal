@@ -1,31 +1,32 @@
 const Course = require('../models/Course');
 
-// @desc    Tạo khóa học mới
-// @route   POST /api/courses
 const createCourse = async (req, res) => {
     try {
         const { title, description, thumbnail, price, category } = req.body;
-        const course = await Course.create({
+
+        // req.user được gán từ middleware protect
+        const course = new Course({
             title,
             description,
             thumbnail,
             price,
             category,
-            instructor: req.user._id // Lấy từ middleware protect
+            instructor: req.user._id
         });
-        res.status(201).json(course);
+
+        const createdCourse = await course.save();
+        res.status(201).json(createdCourse);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(400).json({ message: error.message });
     }
 };
 
-// @desc    Lấy tất cả khóa học (kèm thông tin giảng viên)
 const getCourses = async (req, res) => {
     try {
-        const courses = await Course.find().populate('instructor', 'name email');
+        const courses = await Course.find({}).populate('instructor', 'name email');
         res.json(courses);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: 'Lỗi lấy danh sách khóa học' });
     }
 };
 
