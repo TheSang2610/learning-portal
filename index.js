@@ -8,7 +8,9 @@ const connectDB = require('./src/config/db');
 dotenv.config();
 
 // Connect to database
-connectDB();
+connectDB().catch((error) => {
+    console.error('Initial DB connection error:', error);
+});
 
 const app = express();
 
@@ -30,6 +32,7 @@ app.use('/api/lessons', require('./src/routes/lessonRoutes'));
 
 // Error handling middleware (basic)
 app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err);
     const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
     res.status(statusCode);
     res.json({
