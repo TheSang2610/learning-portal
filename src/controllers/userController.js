@@ -70,7 +70,7 @@ const registerUser = async (req, res) => {
 // @route   PUT /api/users/profile
 const updateUserProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.body.id); // Sau này thay bằng req.user.id từ middleware
+        const user = await User.findById(req.user._id);
 
         if (user) {
             user.name = req.body.name || user.name;
