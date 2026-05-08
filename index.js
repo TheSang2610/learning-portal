@@ -46,9 +46,12 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-// Bỏ điều kiện IF ở đây để server luôn chạy bất kể môi trường nào
-app.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(
+            `Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`
+        );
+    });
+}
 
 module.exports = app;
