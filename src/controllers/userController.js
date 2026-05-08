@@ -114,8 +114,19 @@ const deleteUser = async (req, res) => {
     }
 };
 
+// @desc    Get all users
+// @route   GET /api/users
+const getUsers = async (req, res) => {
+    try {
+        const users = await User.find({}).select('-password');
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
-    getUsers, // Hàm cũ của bạn
+    getUsers,
     registerUser,
     loginUser,
     updateUserProfile,
