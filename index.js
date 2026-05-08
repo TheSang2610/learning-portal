@@ -26,6 +26,7 @@ app.get('/', (req, res) => {
 // Chú ý: Đảm bảo đường dẫn file chính xác
 app.use('/api/users', require('./src/routes/userRoutes'));
 app.use('/api/courses', require('./src/routes/courseRoutes'));
+app.use('/api/lessons', require('./src/routes/lessonRoutes'));
 
 // Middleware xử lý lỗi 404 (Khi không tìm thấy route)
 app.use((req, res, next) => {
