@@ -36,4 +36,12 @@ const admin = (req, res, next) => {
     }
 };
 
-module.exports = { protect, admin };
+const instructor = (req, res, next) => {
+    if (req.user && (req.user.role === 'instructor' || req.user.role === 'admin')) {
+        next();
+    } else {
+        res.status(403).json({ message: 'Quyền Instructor hoặc Admin mới có thể thực hiện' });
+    }
+};
+
+module.exports = { protect, admin, instructor };

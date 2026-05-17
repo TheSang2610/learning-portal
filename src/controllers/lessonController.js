@@ -7,6 +7,17 @@ const addLesson = async (req, res) => {
     try {
         const { courseId, title, content, videoUrl, order } = req.body;
 
+        const course = await Course.findById(courseId);
+
+        if (!course) {
+            return res.status(404).json({ message: 'Không tìm thấy khóa học' });
+        }
+
+        // Kiểm tra quyền: Chỉ instructor của khóa học hoặc admin mới có thể thêm lesson
+        if (course.instructor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Bạn không có quyền thêm bài học vào khóa học này' });
+        }
+
         const lesson = await Lesson.create({
             courseId, title, content, videoUrl, order
         });
