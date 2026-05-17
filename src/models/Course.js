@@ -23,8 +23,13 @@ const courseSchema = new mongoose.Schema({
     },
 
     category: {
-        type: String,
-        required: true
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Category"
+    },
+
+    provider: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Provider"
     },
 
     level: {
@@ -57,11 +62,39 @@ const courseSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    rating: {
+        type: Number,
+        default: 0
+    },
+
+    reviewsCount: {
+        type: Number,
+        default: 0
+    },
+
+    studentsCount: {
+        type: Number,
+        default: 0
+    },
 
     isPublished: {
         type: Boolean,
         default: false
-    }
+    },
+
+    reviews: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Review'
+        }
+    ],
+
+    enrollments: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Enrollment'
+        }
+    ]
 
 }, { timestamps: true });
 

@@ -1,0 +1,267 @@
+{
+  "info": {
+    "name": "Learning Portal - Quizzes API",
+    "description": "Collection for testing Quizzes & Assessments API",
+    "version": "1.0"
+  },
+  "item": [
+    {
+      "name": "Quiz Management (Instructor)",
+      "item": [
+        {
+          "name": "Create Quiz",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"courseId\": \"{{courseId}}\",\n  \"lessonId\": \"{{lessonId}}\",\n  \"title\": \"Node.js Basics Quiz\",\n  \"description\": \"Test your knowledge on Node.js\",\n  \"passingScore\": 70,\n  \"timeLimit\": 30,\n  \"attempts\": 2,\n  \"randomizeQuestions\": true,\n  \"showAnswers\": true,\n  \"questions\": [\n    {\n      \"text\": \"Node.js được viết bằng ngôn ngữ nào?\",\n      \"type\": \"multiple_choice\",\n      \"points\": 5,\n      \"options\": [\n        { \"text\": \"Java\", \"isCorrect\": false },\n        { \"text\": \"JavaScript\", \"isCorrect\": true },\n        { \"text\": \"Python\", \"isCorrect\": false }\n      ],\n      \"explanation\": \"Node.js được viết bằng JavaScript\"\n    },\n    {\n      \"text\": \"Event-driven là đặc điểm của Node.js?\",\n      \"type\": \"true_false\",\n      \"points\": 3,\n      \"options\": [\n        { \"text\": \"Đúng\", \"isCorrect\": true },\n        { \"text\": \"Sai\", \"isCorrect\": false }\n      ]\n    },\n    {\n      \"text\": \"Viết tên package manager của Node.js\",\n      \"type\": \"short_answer\",\n      \"points\": 2,\n      \"correctAnswer\": \"npm\",\n      \"explanation\": \"npm = Node Package Manager\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/quizzes",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "quizzes"]
+            }
+          }
+        },
+        {
+          "name": "Get Course Quizzes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/quizzes/course/{{courseId}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "quizzes", "course", "{{courseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Quiz",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Quiz Title\",\n  \"passingScore\": 75\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/quizzes/{{quizId}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "quizzes", "{{quizId}}"]
+            }
+          }
+        },
+        {
+          "name": "Publish Quiz",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/quizzes/{{quizId}}/publish",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "quizzes", "{{quizId}}", "publish"]
+            }
+          }
+        },
+        {
+          "name": "Delete Quiz",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/quizzes/{{quizId}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "quizzes", "{{quizId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Quiz Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/quizzes/{{quizId}}/stats",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "quizzes", "{{quizId}}", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Quiz Taking (Student)",
+      "item": [
+        {
+          "name": "Get Quiz",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/quizzes/{{quizId}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "quizzes", "{{quizId}}"]
+            }
+          }
+        },
+        {
+          "name": "Submit Quiz Attempt",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answers\": [\n    {\n      \"questionId\": \"{{questionId1}}\",\n      \"studentAnswer\": \"JavaScript\"\n    },\n    {\n      \"questionId\": \"{{questionId2}}\",\n      \"studentAnswer\": \"Đúng\"\n    },\n    {\n      \"questionId\": \"{{questionId3}}\",\n      \"studentAnswer\": \"npm\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/quizzes/{{quizId}}/submit",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "quizzes", "{{quizId}}", "submit"]
+            }
+          }
+        },
+        {
+          "name": "Get Quiz Attempts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/quizzes/{{quizId}}/attempts",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "quizzes", "{{quizId}}", "attempts"]
+            }
+          }
+        },
+        {
+          "name": "Get Attempt Result",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/quizzes/{{quizId}}/attempt/{{attemptId}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "quizzes", "{{quizId}}", "attempt", "{{attemptId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "courseId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "quizId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "lessonId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "attemptId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "questionId1",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "questionId2",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "questionId3",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

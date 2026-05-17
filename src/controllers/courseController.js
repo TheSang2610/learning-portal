@@ -37,7 +37,11 @@ const getCourseById = async (req, res) => {
     try {
         const course = await Course.findById(req.params.id)
             .populate('instructor', 'name email')
-            .populate('lessons');
+            .populate('lessons')
+            .populate({
+                path: 'reviews',
+                populate: { path: 'student', select: 'name avatar' }
+            });
 
         if (course) {
             res.json(course);
@@ -83,6 +87,7 @@ const updateCourse = async (req, res) => {
 // @route   POST /api/courses/:id/enroll
 const enrollInCourse = async (req, res) => {
     try {
+        const Enrollment = require('../models/Enrollment');
         const course = await Course.findById(req.params.id);
 
         if (course) {
@@ -96,14 +101,36 @@ const enrollInCourse = async (req, res) => {
 
             // Thêm student vào Course
             course.students.push(req.user._id);
-            await course.save();
-
+            
             // Thêm course vào User
             const user = await User.findById(req.user._id);
             user.enrolledCourses.push(course._id);
-            await user.save();
+            
+            // Tạo Enrollment record
+            const enrollment = new Enrollment({
+                course: course._id,
+                student: req.user._id,
+                lessonProgress: []
+            });
 
-            res.status(200).json({ message: 'Đăng ký khóa học thành công' });
+            // Khởi tạo lesson progress cho tất cả bài học
+            const lessonsPopulated = await course.populate('lessons');
+            lessonsPopulated.lessons.forEach((lesson) => {
+                enrollment.lessonProgress.push({
+                    lesson: lesson._id,
+                    status: 'not_started',
+                    watchedDuration: 0
+                });
+            });
+
+            await course.save();
+            await user.save();
+            await enrollment.save();
+
+            res.status(200).json({ 
+                message: 'Đăng ký khóa học thành công',
+                enrollment
+            });
         } else {
             res.status(404).json({ message: 'Không tìm thấy khóa học' });
         }

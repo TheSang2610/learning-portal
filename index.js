@@ -27,6 +27,10 @@ app.get('/', (req, res) => {
 app.use('/api/users', require('./src/routes/userRoutes'));
 app.use('/api/courses', require('./src/routes/courseRoutes'));
 app.use('/api/lessons', require('./src/routes/lessonRoutes'));
+app.use('/api/reviews', require('./src/routes/reviewRoutes'));
+app.use('/api/enrollments', require('./src/routes/enrollmentRoutes'));
+app.use('/api/quizzes', require('./src/routes/quizRoutes'));
+app.use('/api/certificates', require('./src/routes/certificateRoutes'));
 
 // Middleware xử lý lỗi 404 (Khi không tìm thấy route)
 app.use((req, res, next) => {
