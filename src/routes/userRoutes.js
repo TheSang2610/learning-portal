@@ -4,6 +4,7 @@ const {
     getUsers,
     registerUser,
     loginUser,
+    googleLogin,
     updateUserProfile, 
     deleteUser 
 } = require('../controllers/userController');
@@ -13,5 +14,6 @@ router.route('/').get(protect, admin, getUsers).post(registerUser);
 router.post('/login', loginUser);
 router.put('/profile', protect, updateUserProfile);
 router.delete('/:id', protect, admin, deleteUser);
+router.post('/google', googleLogin);
 
 module.exports = router;
