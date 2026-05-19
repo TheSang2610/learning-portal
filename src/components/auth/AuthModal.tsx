@@ -60,8 +60,16 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
     try {
       await registerUser(registerData);
 
+      const data = await loginUser({
+        email: registerData.email,
+        password: registerData.password,
+      });
+
+      localStorage.setItem("userInfo", JSON.stringify(data));
+      window.dispatchEvent(new Event("userInfoChanged"));
+
       alert("Register success");
-      setIsLogin(true);
+      onClose();
     } catch (error) {
       console.error(error);
       alert("Register failed");

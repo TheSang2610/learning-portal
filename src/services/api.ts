@@ -12,10 +12,27 @@ interface LoginUserData {
   password: string;
 }
 
+const parseResponse = async (res: Response) => {
+  const text = await res.text();
+  let json;
+
+  try {
+    json = text ? JSON.parse(text) : {};
+  } catch {
+    json = { message: text || res.statusText };
+  }
+
+  if (!res.ok) {
+    throw new Error(json.message || `Request failed with status ${res.status}`);
+  }
+
+  return json;
+};
+
 export const registerUser = async (
   userData: RegisterUserData
 ) => {
-  const res = await fetch(API_URL, {
+  let res = await fetch(API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -23,11 +40,17 @@ export const registerUser = async (
     body: JSON.stringify(userData),
   });
 
-  if (!res.ok) {
-    throw new Error("Register failed");
+  if (res.status === 404) {
+    res = await fetch(`${API_URL}/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(userData),
+    });
   }
 
-  return res.json();
+  return parseResponse(res);
 };
 
 export const loginUser = async (
@@ -41,9 +64,5 @@ export const loginUser = async (
     body: JSON.stringify(userData),
   });
 
-  if (!res.ok) {
-    throw new Error("Login failed");
-  }
-
-  return res.json();
+  return parseResponse(res);
 };
