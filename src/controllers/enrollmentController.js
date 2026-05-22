@@ -9,7 +9,6 @@ const getMyEnrolledCourses = async (req, res) => {
     try {
         const enrollments = await Enrollment.find({ student: req.user._id })
             .populate('course', 'title thumbnail price rating instructor')
-            .populate('completedLessons', 'title')
             .sort({ createdAt: -1 });
 
         res.json(enrollments);
@@ -90,15 +89,10 @@ const markLessonComplete = async (req, res) => {
             enrollment.lessonProgress[lessonProgressIndex].completedAt = new Date();
         }
 
-        // Thêm vào completedLessons nếu chưa có
-        if (!enrollment.completedLessons.includes(lessonId)) {
-            enrollment.completedLessons.push(lessonId);
-        }
-
         // Cập nhật lastAccessedAt
         enrollment.lastAccessedAt = new Date();
 
-        // Cập nhật totalProgress
+        // Cập nhật totalProgress (Tính toán dựa trên lessonProgress)
         await updateEnrollmentProgress(enrollment, courseId);
 
         const updatedEnrollment = await enrollment.save();
@@ -218,17 +212,22 @@ const getProgressStats = async (req, res) => {
             return res.status(404).json({ message: 'Bạn chưa đăng ký khóa học này' });
         }
 
-        // Tính toán thống kê
-        const course = await Course.findById(courseId).populate('lessons');
+        // Tính toán thống kê từ mảng lessonProgress mới
+        const course = await Course.findById(courseId);
         const totalLessons = course.lessons.length;
-        const completedLessons = enrollment.completedLessons.length;
+        
+        // Đếm các bài học có trạng thái là completed trong mảng lessonProgress
+        const completedLessonsCount = enrollment.lessonProgress.filter(
+            (lp) => lp.status === 'completed'
+        ).length;
+
         const progressPercentage = totalLessons > 0 
-            ? Math.round((completedLessons / totalLessons) * 100)
+            ? Math.round((completedLessonsCount / totalLessons) * 100)
             : 0;
 
         const stats = {
             totalLessons,
-            completedLessons,
+            completedLessons: completedLessonsCount,
             inProgressLessons: enrollment.lessonProgress.filter(
                 (lp) => lp.status === 'in_progress'
             ).length,
@@ -265,14 +264,15 @@ const completeCourse = async (req, res) => {
             return res.status(404).json({ message: 'Bạn chưa đăng ký khóa học này' });
         }
 
-        // Kiểm tra đã hoàn thành tất cả bài học
-        const course = await Course.findById(courseId).populate('lessons');
+        const course = await Course.findById(courseId);
         const totalLessons = course.lessons.length;
-        const completedLessons = enrollment.completedLessons.length;
+        const completedLessonsCount = enrollment.lessonProgress.filter(
+            (lp) => lp.status === 'completed'
+        ).length;
 
-        if (completedLessons < totalLessons) {
+        if (completedLessonsCount < totalLessons) {
             return res.status(400).json({
-                message: `Bạn chưa hoàn thành tất cả bài học (${completedLessons}/${totalLessons})`
+                message: `Bạn chưa hoàn thành tất cả bài học (${completedLessonsCount}/${totalLessons})`
             });
         }
 
@@ -317,7 +317,6 @@ const getCourseStudents = async (req, res) => {
     try {
         const { courseId } = req.params;
 
-        // Kiểm tra quyền instructor
         const course = await Course.findById(courseId);
         if (!course) {
             return res.status(404).json({ message: 'Khóa học không tồn tại' });
@@ -327,9 +326,9 @@ const getCourseStudents = async (req, res) => {
             return res.status(403).json({ message: 'Bạn không có quyền xem danh sách này' });
         }
 
+        // Đọc danh sách học viên từ bảng Enrollment thay vì mảng của Course
         const enrollments = await Enrollment.find({ course: courseId })
             .populate('student', 'name email avatar')
-            .populate('completedLessons', 'title')
             .sort({ createdAt: -1 });
 
         res.json(enrollments);
@@ -338,22 +337,23 @@ const getCourseStudents = async (req, res) => {
     }
 };
 
-// Helper function: Cập nhật tiến độ enrollment
+// Helper function: Cập nhật tiến độ enrollment dựa vào trạng thái bài học
 const updateEnrollmentProgress = async (enrollment, courseId) => {
     try {
-        const course = await Course.findById(courseId).populate('lessons');
+        const course = await Course.findById(courseId);
         if (!course) return;
 
         const totalLessons = course.lessons.length;
-        const completedLessons = enrollment.completedLessons.length;
+        const completedLessonsCount = enrollment.lessonProgress.filter(
+            (lp) => lp.status === 'completed'
+        ).length;
 
         const totalProgress = totalLessons > 0
-            ? Math.round((completedLessons / totalLessons) * 100)
+            ? Math.round((completedLessonsCount / totalLessons) * 100)
             : 0;
 
         enrollment.totalProgress = totalProgress;
 
-        // Tự động đánh dấu hoàn thành nếu 100%
         if (totalProgress === 100 && enrollment.status === 'active') {
             enrollment.status = 'completed';
             enrollment.completedAt = new Date();

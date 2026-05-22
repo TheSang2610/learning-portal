@@ -14,21 +14,45 @@ const generateToken = (id) => {
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
+
         const user = await User.findOne({ email });
 
-        if (user && (await bcrypt.compare(password, user.password))) {
-            res.json({
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                token: generateToken(user._id),
+        if (!user) {
+            return res.status(401).json({
+                message: 'Email hoặc mật khẩu không đúng'
             });
-        } else {
-            res.status(401).json({ message: 'Email hoặc mật khẩu không đúng' });
         }
+
+        // Account Google chưa có password
+        if (!user.password ) {
+            return res.status(401).json({
+                message: 'Vui lòng đăng nhập bằng Google'
+            });
+        }
+
+        const isMatch = await bcrypt.compare(
+            password,
+            user.password
+        );
+
+        if (!isMatch) {
+            return res.status(401).json({
+                message: 'Email hoặc mật khẩu không đúng'
+            });
+        }
+
+        res.json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            token: generateToken(user._id),
+        });
+
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({
+            message: error.message
+        });
     }
 };
 const googleLogin = async (req, res) => {
@@ -79,7 +103,7 @@ const googleLogin = async (req, res) => {
       user = await User.create({
         name,
         email,
-        password: 'GOOGLE_LOGIN', // placeholder; you may want to randomize or mark differently
+        password: '', // placeholder; you may want to randomize or mark differently
         avatar: '',               // keep empty so DB does not store the external link
         googleId: sub || '',
         role: 'student'
@@ -116,7 +140,15 @@ const googleLogin = async (req, res) => {
 // @route   POST /api/users
 const registerUser = async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { name, email, password } = req.body;
+
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: 'Vui lòng cung cấp name, email và password' });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({ message: 'Password phải có ít nhất 6 ký tự' });
+        }
 
         const userExists = await User.findOne({ email });
         if (userExists) {
@@ -131,7 +163,7 @@ const registerUser = async (req, res) => {
             name,
             email,
             password: hashedPassword,
-            role: role || 'student'
+            role: 'student'
         });
 
         if (user) {
@@ -143,6 +175,40 @@ const registerUser = async (req, res) => {
                 token: generateToken(user._id),
             });
         }
+    } catch (error) {
+        console.error('registerUser error:', error);
+        if (error.code === 11000) {
+            return res.status(400).json({ message: 'Email đã tồn tại' });
+        }
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Update user role (admin only)
+// @route   PUT /api/users/:id/role
+const updateUserRole = async (req, res) => {
+    try {
+        const { role } = req.body;
+        const validRoles = ['student', 'instructor'];
+
+        if (!role || !validRoles.includes(role)) {
+            return res.status(400).json({ message: 'Vai trò không hợp lệ' });
+        }
+
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User không tìm thấy' });
+        }
+
+        user.role = role;
+        const updatedUser = await user.save();
+
+        res.json({
+            _id: updatedUser._id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            role: updatedUser.role,
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -226,6 +292,7 @@ module.exports = {
     loginUser,
     googleLogin,
     updateUserProfile,
+    updateUserRole,
     deleteUser
 };
 

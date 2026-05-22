@@ -13,51 +13,29 @@ const {
     getCourseStudents
 } = require('../controllers/enrollmentController');
 
-const { protect, instructor } = require('../middlewares/authMiddleware');
+const { protect } = require('../middlewares/authMiddleware');
 
-// @route   GET /api/enrollments/my-courses
-// @desc    Lấy tất cả khóa học của student
-// @access  Private
-router.get('/my-courses', protect, getMyEnrolledCourses);
+// Tất cả các route dưới đây đều yêu cầu đăng nhập
+router.use(protect);
 
-// @route   GET /api/enrollments/course/:courseId
-// @desc    Lấy chi tiết enrollment của 1 khóa học
-// @access  Private
-router.get('/course/:courseId', protect, getEnrollmentByCourse);
+// 1. Các route dạng tĩnh (Static) phải đưa lên ĐẦU để tránh bị trùng với param :courseId
+router.get('/my-courses', getMyEnrolledCourses);
 
-// @route   GET /api/enrollments/course/:courseId/progress
-// @desc    Lấy thống kê tiến độ học
-// @access  Private
-router.get('/course/:courseId/progress', protect, getProgressStats);
+// 2. Các route thao tác theo courseId cụ thể (Dynamic)
+router.route('/:courseId')
+    .get(getEnrollmentByCourse); // Lấy chi tiết đăng ký
 
-// @route   GET /api/enrollments/course/:courseId/students
-// @desc    Lấy danh sách students đăng ký (instructor only)
-// @access  Private
-router.get('/course/:courseId/students', protect, instructor, getCourseStudents);
+router.route('/:courseId/progress')
+    .get(getProgressStats); // Lấy thống kê tiến độ
 
-// @route   PUT /api/enrollments/course/:courseId/start-lesson
-// @desc    Bắt đầu học bài
-// @access  Private
-router.put('/course/:courseId/start-lesson', protect, startLesson);
+router.route('/:courseId/students')
+    .get(getCourseStudents); // Lấy danh sách học viên (Logic check chính chủ instructor nằm trong controller)
 
-// @route   PUT /api/enrollments/course/:courseId/update-watch-time
-// @desc    Cập nhật thời gian xem video
-// @access  Private
-router.put('/course/:courseId/update-watch-time', protect, updateWatchTime);
-
-// @route   PUT /api/enrollments/course/:courseId/complete-lesson
-// @desc    Đánh dấu bài học là hoàn thành
-// @access  Private
-router.put('/course/:courseId/complete-lesson', protect, markLessonComplete);
-
-// @route   PUT /api/enrollments/course/:courseId/complete-course
-// @desc    Đánh dấu khóa học là hoàn thành
-// @access  Private
-router.put('/course/:courseId/complete-course', protect, completeCourse);
-
-// @route   PUT /api/enrollments/course/:courseId/drop
-// @desc    Hủy đăng ký khóa học
-// @access  Private
-router.put('/course/:courseId/drop', protect, dropCourse);
+// 3. Các hành động thay đổi trạng thái học tập (PUT)
+router.put('/:courseId/start-lesson', startLesson);
+router.put('/:courseId/update-watch-time', updateWatchTime);
+router.put('/:courseId/complete-lesson', markLessonComplete);
+router.put('/:courseId/complete-course', completeCourse);
+router.put('/:courseId/drop', dropCourse);
 
 module.exports = router;

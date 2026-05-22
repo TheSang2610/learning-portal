@@ -7,6 +7,13 @@ const courseSchema = new mongoose.Schema({
         required: true
     },
 
+    slug: {
+        type: String,
+        required: true,
+        unique: true,
+        index: true
+    },
+    
     description: {
         type: String,
         required: true
@@ -51,13 +58,6 @@ const courseSchema = new mongoose.Schema({
         }
     ],
 
-    students: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User'
-        }
-    ],
-
     totalDuration: {
         type: Number,
         default: 0
@@ -88,13 +88,6 @@ const courseSchema = new mongoose.Schema({
             ref: 'Review'
         }
     ],
-
-    enrollments: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Enrollment'
-        }
-    ]
 
 }, { timestamps: true });
 

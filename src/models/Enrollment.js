@@ -13,14 +13,6 @@ const enrollmentSchema = new mongoose.Schema({
         required: true
     },
 
-    // Bài học đã hoàn thành
-    completedLessons: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Lesson'
-        }
-    ],
-
     // Tiến độ theo bài học
     lessonProgress: [
         {

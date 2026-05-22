@@ -7,10 +7,14 @@ const lessonSchema = new mongoose.Schema({
         required: true 
     },
     title: { type: String, required: true },
-    content: { type: String }, // Có thể là text hoặc mô tả
+    slug: { type: String, required: true },
+    content: { type: String }, 
     videoUrl: { type: String },
-    duration: { type: String }, // Thời lượng bài học
-    order: { type: Number, default: 0 } // Thứ tự bài học trong khóa học
+    documentUrl: { type: String, default: "" },
+    duration: { type: String }, 
+    order: { type: Number, default: 0 }
 }, { timestamps: true });
+
+lessonSchema.index({ courseId: 1, slug: 1 });
 
 module.exports = mongoose.model('Lesson', lessonSchema);
