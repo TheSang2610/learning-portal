@@ -255,7 +255,7 @@ export default function IndividualsHeader() {
                   {/* ADMIN DASHBOARD */}
                   {user.role === "admin" && (
                     <Link
-                      href="/admin"
+                      href="/admin/dashboard"
                       onClick={() => setOpenDropdown(false)}
                       className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 transition"
                     >

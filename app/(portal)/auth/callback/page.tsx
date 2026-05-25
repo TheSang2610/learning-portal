@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function GoogleCallbackPage() {
+function GoogleCallbackInner() {
   const [status, setStatus] = useState("Signing you in with Google...");
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -64,5 +64,20 @@ export default function GoogleCallbackPage() {
         <p className="text-sm text-slate-600">{status}</p>
       </div>
     </div>
+  );
+}
+
+export default function GoogleCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12">
+        <div className="w-full max-w-lg rounded-3xl bg-white p-10 shadow-2xl ring-1 ring-slate-200 text-center">
+          <h1 className="text-2xl font-semibold mb-4">Google sign-in</h1>
+          <p className="text-sm text-slate-600">Loading Google authentication...</p>
+        </div>
+      </div>
+    }>
+      <GoogleCallbackInner />
+    </Suspense>
   );
 }

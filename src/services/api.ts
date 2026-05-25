@@ -12,6 +12,14 @@ interface LoginUserData {
   password: string;
 }
 
+interface LoginResponse {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+  token: string;
+}
+
 const parseResponse = async (res: Response) => {
   const text = await res.text();
   let json;
@@ -29,9 +37,7 @@ const parseResponse = async (res: Response) => {
   return json;
 };
 
-export const registerUser = async (
-  userData: RegisterUserData
-) => {
+export const registerUser = async (userData: RegisterUserData) => {
   let res = await fetch(API_URL, {
     method: "POST",
     headers: {
@@ -50,12 +56,18 @@ export const registerUser = async (
     });
   }
 
-  return parseResponse(res);
+  const data = await parseResponse(res);
+  
+  // ✅ Lưu token sau khi register
+  if (data.token) {
+    localStorage.setItem("authToken", JSON.stringify(data.token));
+    localStorage.setItem("userInfo", JSON.stringify(data));
+  }
+  
+  return data;
 };
 
-export const loginUser = async (
-  userData: LoginUserData
-) => {
+export const loginUser = async (userData: LoginUserData): Promise<LoginResponse> => {
   const res = await fetch(`${API_URL}/login`, {
     method: "POST",
     headers: {
@@ -64,5 +76,63 @@ export const loginUser = async (
     body: JSON.stringify(userData),
   });
 
-  return parseResponse(res);
+  const data = await parseResponse(res);
+  
+  // ✅ LƯU TOKEN SAU KHI LOGIN - ĐÂY LÀ ĐIỀU QUAN TRỌNG
+  if (data.token) {
+    localStorage.setItem("authToken", JSON.stringify(data.token));
+    localStorage.setItem("userInfo", JSON.stringify(data));
+  }
+  
+  return data;
+};
+
+export const googleLogin = async (credential: string) => {
+  const res = await fetch(`${API_URL}/google`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ credential }),
+  });
+
+  const data = await parseResponse(res);
+  
+  // ✅ Lưu token sau Google login
+  if (data.token) {
+    localStorage.setItem("authToken", JSON.stringify(data.token));
+    localStorage.setItem("userInfo", JSON.stringify(data));
+  }
+  
+  return data;
+};
+
+export const logout = () => {
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("userInfo");
+};
+
+export interface User {
+  _id?: string;
+  name: string;
+  email: string;
+  role?: string;
+  createdAt?: string;
+}
+
+export const apiService = {
+  getUsers: async (): Promise<User[]> => {
+    const res = await fetch(API_URL);
+    return parseResponse(res);
+  },
+  createUser: async (userData: User): Promise<User> => {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(userData),
+    });
+    return parseResponse(res);
+  }
 };

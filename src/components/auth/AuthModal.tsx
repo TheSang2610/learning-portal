@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, ChangeEvent, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { loginUser, registerUser } from "@/src/services/api";
 
 interface AuthModalProps {
@@ -9,7 +10,10 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ open, onClose }: AuthModalProps) {
+  const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const [loginData, setLoginData] = useState({
     email: "",
@@ -37,44 +41,64 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
     });
   };
 
-  const handleLoginSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+const handleLoginSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setLoading(true);
+  setError("");
 
-    try {
-      const data = await loginUser(loginData);
+  try {
+    const data = await loginUser(loginData); // data chính là { _id, name, email, role, token }
 
-      localStorage.setItem("userInfo", JSON.stringify(data));
-      window.dispatchEvent(new Event("userInfoChanged"));
-
-      alert("Login success");
-      onClose();
-    } catch (error) {
-      console.error(error);
-      alert("Login failed");
+    if (data.token) {
+      localStorage.setItem("authToken", data.token);
     }
-  };
 
-  const handleRegisterSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+    // Bóc tách token ra, chỉ lưu các thông tin user còn lại vào userInfo
+    const { token, ...userWithoutToken } = data;
+    localStorage.setItem("userInfo", JSON.stringify(userWithoutToken));
+    
+    window.dispatchEvent(new Event("userInfoChanged"));
+    alert("Đăng nhập thành công");
+    onClose();
+    
+    setTimeout(() => { window.location.reload(); }, 500);
+    
+  } catch (error: any) {
+    setError(error.message || "Đăng nhập thất bại");
+  } finally {
+    setLoading(false);
+  }
+};
 
-    try {
-      await registerUser(registerData);
+const handleRegisterSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setLoading(true);
+  setError("");
 
-      const data = await loginUser({
-        email: registerData.email,
-        password: registerData.password,
-      });
+  try {
+    // 1. Đăng ký và nhận ngay data chứa token từ backend
+    const data = await registerUser(registerData); 
 
-      localStorage.setItem("userInfo", JSON.stringify(data));
-      window.dispatchEvent(new Event("userInfoChanged"));
-
-      alert("Register success");
-      onClose();
-    } catch (error) {
-      console.error(error);
-      alert("Register failed");
+    if (data.token) {
+      localStorage.setItem("authToken", data.token);
     }
-  };
+
+    // 2. Lọc bỏ token trước khi lưu thông tin user vào localStorage
+    const { token, ...userWithoutToken } = data;
+    localStorage.setItem("userInfo", JSON.stringify(userWithoutToken));
+    
+    window.dispatchEvent(new Event("userInfoChanged"));
+    alert("Đăng ký thành công");
+    onClose();
+    
+    setTimeout(() => { window.location.reload(); }, 500);
+    
+  } catch (error: any) {
+    setError(error.message || "Đăng ký thất bại");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleGoogleSignIn = () => {
     const width = 600;
@@ -83,13 +107,13 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
     const top = window.screenY + (window.outerHeight - height) / 2.5;
 
     const popup = window.open(
-      "/api/auth/google?popup=1",
+      "/api/auth/google",
       "googleSignIn",
       `width=${width},height=${height},left=${left},top=${top}`
     );
 
     if (!popup) {
-      alert("Popup blocked. Please allow popups for this site.");
+      alert("Popup bị chặn. Vui lòng cho phép popup cho trang này.");
       return;
     }
 
@@ -101,20 +125,33 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
 
         if (type === "google-auth-success") {
           const { user, token } = payload;
+          
+          // ✅ LƯU TOKEN ĐÚNG - KHÔNG DÙNG JSON.stringify()
+          if (token) {
+            localStorage.setItem("authToken", token); // Lưu token sạch
+          }
           localStorage.setItem("userInfo", JSON.stringify(user));
-          // also store token if provided
-          if (token) localStorage.setItem("authToken", JSON.stringify(token));
+          
+          console.log("✅ Google login success, token saved:", token);
+          
           window.dispatchEvent(new Event("userInfoChanged"));
           onClose();
+          
+          // Reload để cập nhật app state
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+          
           window.removeEventListener("message", messageHandler);
         }
 
         if (type === "google-auth-failed") {
-          alert("Google login failed");
+          setError("Đăng nhập Google thất bại");
+          alert("Đăng nhập Google thất bại");
           window.removeEventListener("message", messageHandler);
         }
       } catch (err) {
-        console.error(err);
+        console.error("❌ Google auth error:", err);
       }
     };
 
@@ -148,38 +185,51 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
         </button>
 
         <h2 className="text-3xl font-bold text-center mb-6">
-          {isLogin ? "Login" : "Register"}
+          {isLogin ? "Đăng nhập" : "Đăng ký"}
         </h2>
 
         <div className="flex bg-slate-100 rounded-2xl p-1 mb-6">
           <button
             type="button"
-            onClick={() => setIsLogin(true)}
+            onClick={() => {
+              setIsLogin(true);
+              setError("");
+            }}
             className={`flex-1 rounded-2xl py-2 text-sm font-semibold transition ${
               isLogin ? "bg-blue-600 text-white" : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            Login
+            Đăng nhập
           </button>
 
           <button
             type="button"
-            onClick={() => setIsLogin(false)}
+            onClick={() => {
+              setIsLogin(false);
+              setError("");
+            }}
             className={`flex-1 rounded-2xl py-2 text-sm font-semibold transition ${
               !isLogin ? "bg-blue-600 text-white" : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            Register
+            Đăng ký
           </button>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600">
+            {error}
+          </div>
+        )}
 
         <button
           type="button"
           onClick={handleGoogleSignIn}
-          className="mb-4 flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          disabled={loading}
+          className="mb-4 flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
         >
           <img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google logo" className="h-5 w-5" />
-          Continue with Google
+          Tiếp tục với Google
         </button>
 
         {isLogin ? (
@@ -190,21 +240,24 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               placeholder="Email"
               value={loginData.email}
               onChange={handleLoginChange}
+              required
               className="w-full rounded-2xl border border-slate-300 p-3 outline-none transition focus:border-blue-600"
             />
             <input
               type="password"
               name="password"
-              placeholder="Password"
+              placeholder="Mật khẩu"
               value={loginData.password}
               onChange={handleLoginChange}
+              required
               className="w-full rounded-2xl border border-slate-300 p-3 outline-none transition focus:border-blue-600"
             />
             <button
               type="submit"
-              className="w-full rounded-2xl bg-blue-600 py-3 text-white transition hover:bg-blue-700"
+              disabled={loading}
+              className="w-full rounded-2xl bg-blue-600 py-3 text-white transition hover:bg-blue-700 disabled:opacity-50"
             >
-              Login
+              {loading ? "Đang xử lý..." : "Đăng nhập"}
             </button>
           </form>
         ) : (
@@ -212,9 +265,10 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
             <input
               type="text"
               name="name"
-              placeholder="Name"
+              placeholder="Họ và tên"
               value={registerData.name}
               onChange={handleRegisterChange}
+              required
               className="w-full rounded-2xl border border-slate-300 p-3 outline-none transition focus:border-blue-600"
             />
             <input
@@ -223,21 +277,25 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               placeholder="Email"
               value={registerData.email}
               onChange={handleRegisterChange}
+              required
               className="w-full rounded-2xl border border-slate-300 p-3 outline-none transition focus:border-blue-600"
             />
             <input
               type="password"
               name="password"
-              placeholder="Password"
+              placeholder="Mật khẩu (tối thiểu 6 ký tự)"
               value={registerData.password}
               onChange={handleRegisterChange}
+              required
+              minLength={6}
               className="w-full rounded-2xl border border-slate-300 p-3 outline-none transition focus:border-blue-600"
             />
             <button
               type="submit"
-              className="w-full rounded-2xl bg-blue-600 py-3 text-white transition hover:bg-blue-700"
+              disabled={loading}
+              className="w-full rounded-2xl bg-blue-600 py-3 text-white transition hover:bg-blue-700 disabled:opacity-50"
             >
-              Register
+              {loading ? "Đang xử lý..." : "Đăng ký"}
             </button>
           </form>
         )}
