@@ -11,45 +11,40 @@ export interface LessonData {
   order?: number;
 }
 
-/**
- * 1. Thêm bài học mới (Giữ nguyên logic gốc của bạn)
- */
-export const addLesson = async (data: {
-  courseId: string;
-  title: string;
-  content?: string;
-  videoUrl?: string;
-  order?: number;
-}) => {
+export const addLesson = async (formData: FormData) => {
   return apiRequest("/lessons", {
     method: "POST",
-    body: JSON.stringify(data),
+    body: formData, // Trình duyệt tự sinh multipart/form-data nhờ cấu trúc apiHelper của bạn
   });
 };
 
-/**
- * 2. Lấy thông tin chi tiết của 1 bài học bằng ID
- * @route GET /api/lessons/:id
- */
 export const getLessonById = async (lessonId: string) => {
   return apiRequest(`/lessons/${lessonId}`, {
     method: "GET",
   });
 };
 
-/**
- * 3. Cập nhật thông tin bài học
- * @route PUT /api/lessons/:id
- */
-export const updateLesson = async (lessonId: string, data: LessonData) => {
+export const updateLesson = async (lessonId: string, formData: FormData) => {
   return apiRequest(`/lessons/${lessonId}`, {
     method: "PUT",
-    body: JSON.stringify(data),
+    body: formData,
+  });
+};
+
+export const deleteLesson = async (lessonId: string) => {
+  return apiRequest(`/lessons/${lessonId}`, {
+    method: "DELETE",
   });
 };
 
 export const getLessonBySlug = async (courseSlug: string, lessonSlug: string): Promise<LessonData> => {
   return apiRequest(`/lessons/course/${courseSlug}/lesson/${lessonSlug}`, {
+    method: "GET",
+  });
+};
+
+export const getLessonsByCourseId = async (courseId: string): Promise<LessonData[]> => {
+  return apiRequest(`api/lessons?courseId=${courseId}`, {
     method: "GET",
   });
 };

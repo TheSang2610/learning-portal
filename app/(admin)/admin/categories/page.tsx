@@ -56,7 +56,7 @@ export default function AdminCategoriesPage() {
           <tbody className="divide-y">
             {categories.map((cat) => (
               <tr key={cat._id} className="hover:bg-slate-50/50 transition">
-                <td className="p-5 font-mono text-blue-600">{cat.icon || "—"}</td>
+                {/* <td className="p-5 font-mono text-blue-600">{cat.icon || "—"}</td> */}
                 <td className="p-5 font-bold text-slate-800">{cat.name}</td>
                 <td className="p-5 text-slate-500">{cat.slug}</td>
               </tr>

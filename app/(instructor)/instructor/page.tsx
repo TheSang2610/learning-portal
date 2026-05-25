@@ -6,66 +6,45 @@ import { useEffect, useState } from "react";
 
 import {
   LayoutDashboard,
-  Users,
   BookOpen,
-  FolderOpen,
   Video,
   ChevronDown,
   LogOut,
-  Shield,
-  PlusCircle,
-  Building2, // 🎯 THÊM: Icon đại diện cho mục Providers (Trường học / Đối tác)
+  GraduationCap,
 } from "lucide-react";
 
-// Cấu trúc dữ liệu Menu đã tích hợp thêm Providers vào nhóm quản lý khóa học
-const menuItems = [
+const instructorMenuItems = [
   {
     label: "Dashboard",
-    href: "/admin/dashboard",
+    href: "/instructor",
     icon: LayoutDashboard,
   },
   {
-    label: "Courses Management",
-    href: "/admin/courses",
+    label: "My Courses",
+    href: "/instructor/courses",
     icon: BookOpen,
     submenu: [
       {
         label: "All Courses",
-        href: "/admin/courses",
+        href: "/instructor/courses",
         icon: BookOpen,
       },
       {
         label: "Create Course",
-        href: "/admin/courses/create",
-        icon: PlusCircle,
-      },
-      {
-        label: "Categories",
-        href: "/admin/categories",
-        icon: FolderOpen,
-      },
-      // 🎯 THÊM VÀO ĐÂY: Quản lý đối tác trường học / doanh nghiệp liên kết
-      {
-        label: "Providers",
-        href: "/admin/providers",
-        icon: Building2,
+        href: "/instructor/courses/create",
+        icon: GraduationCap,
       },
       {
         label: "Lesson Content",
-        href: "", 
+        href: "",
         icon: Video,
-        isIndicatorOnly: true, 
+        isIndicatorOnly: true,
       },
     ],
   },
-  {
-    label: "Users",
-    href: "/admin/users",
-    icon: Users,
-  },
 ];
 
-export default function AdminLayout({
+export default function InstructorPanelLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -74,16 +53,13 @@ export default function AdminLayout({
   const pathname = usePathname();
 
   const [loading, setLoading] = useState(true);
-  const [adminName, setAdminName] = useState("");
+  const [instructorName, setInstructorName] = useState("");
   const [isCourseMenuOpen, setIsCourseMenuOpen] = useState(true);
 
-  // 🔥 Tự động giữ menu khóa học luôn mở rộng nếu đang truy cập vào trang providers
   useEffect(() => {
     if (
-      pathname.startsWith("/admin/courses") || 
-      pathname.startsWith("/admin/categories") || 
-      pathname.startsWith("/admin/providers") || // 🎯 Thêm điều kiện giữ trạng thái mở cho Providers
-      pathname.startsWith("/admin/lessons")
+      pathname.startsWith("/instructor/courses") || 
+      pathname.startsWith("/instructor/lessons")
     ) {
       setIsCourseMenuOpen(true);
     }
@@ -99,11 +75,11 @@ export default function AdminLayout({
 
     try {
       const user = JSON.parse(userInfo);
-      if (user.role !== "admin") {
+      if (user.role !== "instructor" && user.role !== "admin") {
         router.push("/");
         return;
       }
-      setAdminName(user.name);
+      setInstructorName(user.name);
     } catch (e) {
       console.error(e);
       router.push("/");
@@ -120,43 +96,42 @@ export default function AdminLayout({
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center text-lg font-semibold text-slate-600 bg-slate-50">
-        Loading Admin Panel...
+        Loading Instructor Panel...
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-100 text-slate-900 antialiased">
+    // ĐÃ SỬA: Xóa bỏ các class trùng lặp với body ở Root Layout để tránh ghi đè lỗi font
+    <div className="flex min-h-screen">
       
       {/* SIDEBAR */}
       <aside className="w-72 bg-white border-r border-slate-200 flex flex-col sticky top-0 h-screen">
 
         {/* LOGO */}
         <div className="px-6 py-6 border-b border-slate-100">
-          <Link href="/admin/dashboard" className="flex items-center gap-3">
-            <div className="bg-blue-600 text-white p-2.5 rounded-xl shadow-md shadow-blue-200">
-              <Shield size={22} />
+          <Link href="/instructor" className="flex items-center gap-3">
+            <div className="bg-indigo-600 text-white p-2.5 rounded-xl shadow-md shadow-indigo-200">
+              <GraduationCap size={22} />
             </div>
             <div>
-              <h1 className="font-bold text-xl tracking-tight text-slate-800">LMS Admin</h1>
-              <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Management</p>
+              <h1 className="font-bold text-xl tracking-tight text-slate-800">LMS Teacher</h1>
+              <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Instructor Center</p>
             </div>
           </Link>
         </div>
 
         {/* NAVIGATION */}
         <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
-          <p className="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Core Features</p>
+          <p className="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Workspace</p>
           
-          {menuItems.map((item) => {
+          {instructorMenuItems.map((item) => {
             const Icon = item.icon;
             
             if (item.submenu) {
               const isSubmenuActive = 
-                pathname.startsWith("/admin/courses") || 
-                pathname.startsWith("/admin/categories") ||
-                pathname.startsWith("/admin/providers") || // 🎯 Đánh dấu Active menu cha khi truy cập Providers
-                pathname.startsWith("/admin/lessons");
+                pathname.startsWith("/instructor/courses") || 
+                pathname.startsWith("/instructor/lessons");
               
               return (
                 <div key={item.label} className="space-y-1">
@@ -178,26 +153,18 @@ export default function AdminLayout({
                     />
                   </button>
 
-                  {/* Dropdown menu items */}
                   {isCourseMenuOpen && (
                     <div className="pl-6 space-y-1">
                       {item.submenu.map((subItem) => {
                         const SubIcon = subItem.icon;
                         
-                        // Xử lý Active riêng biệt cho từng route con chính xác
                         let isChildActive = false;
-                        if (subItem.href === "/admin/categories") {
-                          isChildActive = pathname.startsWith("/admin/categories");
-                        } else if (subItem.href === "/admin/providers") {
-                          // 🎯 Thêm logic so sánh URL active chuẩn cho trang Providers
-                          isChildActive = pathname.startsWith("/admin/providers");
-                        } else if (subItem.href === "/admin/courses/create") {
-                          isChildActive = pathname === "/admin/courses/create";
+                        if (subItem.href === "/instructor/courses/create") {
+                          isChildActive = pathname === "/instructor/courses/create";
                         } else if (subItem.isIndicatorOnly) {
-                          isChildActive = pathname.startsWith("/admin/lessons");
+                          isChildActive = pathname.startsWith("/instructor/lessons");
                         } else {
-                          // Mục All Courses
-                          isChildActive = pathname === "/admin/courses" || (pathname.startsWith("/admin/courses/") && pathname !== "/admin/courses/create");
+                          isChildActive = pathname === "/instructor/courses";
                         }
 
                         if (subItem.isIndicatorOnly && !isChildActive) {
@@ -208,10 +175,10 @@ export default function AdminLayout({
                           return (
                             <div
                               key="lesson-indicator"
-                              className="flex items-center gap-3 rounded-xl px-4 py-3 bg-blue-50 text-blue-600 font-semibold border border-blue-100"
+                              className="flex items-center gap-3 rounded-xl px-4 py-3 bg-indigo-50 text-indigo-600 font-semibold border border-indigo-100"
                             >
                               <SubIcon size={18} />
-                              <span className="text-[14px]">{subItem.label} (Editing)</span>
+                              <span className="text-[14px]">Lesson Management</span>
                             </div>
                           );
                         }
@@ -222,7 +189,7 @@ export default function AdminLayout({
                             href={subItem.href}
                             className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-all ${
                               isChildActive
-                                ? "bg-blue-600 text-white font-medium shadow-md shadow-blue-600/10"
+                                ? "bg-indigo-600 text-white font-medium shadow-md shadow-indigo-600/10"
                                 : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                             }`}
                           >
@@ -244,7 +211,7 @@ export default function AdminLayout({
                 href={item.href}
                 className={`flex items-center gap-3 rounded-2xl px-4 py-3.5 transition-all ${
                   isMainActive
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/10 font-semibold"
+                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/10 font-semibold"
                     : "hover:bg-slate-50 text-slate-600 hover:text-slate-900"
                 }`}
               >
@@ -255,11 +222,11 @@ export default function AdminLayout({
           })}
         </nav>
 
-        {/* ADMIN FOOTER */}
+        {/* INSTRUCTOR FOOTER */}
         <div className="border-t border-slate-100 p-4 bg-slate-50/50">
           <div className="mb-4 px-2">
-            <p className="font-bold text-slate-800 truncate">{adminName || "Administrator"}</p>
-            <p className="text-xs font-medium text-slate-400">Super Admin Role</p>
+            <p className="font-bold text-slate-800 truncate">{instructorName || "Instructor"}</p>
+            <p className="text-xs font-medium text-slate-400">Professional Faculty</p>
           </div>
           <button
             onClick={logoutHandler}
@@ -275,8 +242,8 @@ export default function AdminLayout({
       <main className="flex-1 flex flex-col min-w-0">
         <header className="h-20 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-10">
           <div>
-            <h2 className="text-xl font-bold text-slate-800">System Console</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Overviewing platform behaviors and curriculum architectures.</p>
+            <h2 className="text-xl font-bold text-slate-800">Instructor Studio</h2>
+            <p className="text-xs text-slate-400 mt-0.5">Design curriculum architectures and engage with student learning analytics.</p>
           </div>
         </header>
 

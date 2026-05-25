@@ -50,12 +50,26 @@ export const handleResponse = async (res: Response) => {
 
 export const apiRequest = async (path: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${path}`;
+
+  // 1. Gộp toàn bộ headers lại thành một Object riêng để dễ xử lý
+  const mergedHeaders: Record<string, string> = {
+    ...getHeaders(),
+    ...((options.headers as Record<string, string>) || {}),
+  };
+
+  // 2. 🔥 ĐOẠN KHẮC PHỤC LỖI: 
+  // Nếu dữ liệu gửi đi (options.body) là FormData (dùng để upload file)
+  // Thì bắt buộc phải XÓA Content-Type để trình duyệt tự nhận diện multipart/form-data
+  if (options.body && options.body instanceof FormData) {
+    delete mergedHeaders["Content-Type"];
+    delete mergedHeaders["content-type"]; // Đề phòng viết thường
+  }
+
+  // 3. Tiến hành gọi fetch bình thường với headers đã được tối ưu
   const response = await fetch(url, {
     ...options,
-    headers: {
-      ...getHeaders(),
-      ...options.headers,
-    },
+    headers: mergedHeaders,
   });
+
   return handleResponse(response);
 };

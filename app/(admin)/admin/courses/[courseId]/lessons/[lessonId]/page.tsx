@@ -2,16 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-// Import các hàm API chuẩn từ file service
-import { getLessonById, updateLesson } from "@/src/services/lesson.api";
+// 🎯 Import đầy đủ các hàm xử lý dữ liệu: Đọc, Sửa, Xóa
+import { getLessonById, updateLesson, deleteLesson } from "@/src/services/lesson.api";
 
 export default function AdminEditLessonPage() {
   const params = useParams();
   const router = useRouter();
-  const lessonId = params.id as string;
+  
+  // 🎯 Lấy đồng thời cả courseId và lessonId từ thanh URL thông minh
+  const courseId = params.courseId as string;
+  const lessonId = params.lessonId as string;
 
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false); // Trạng thái khi đang bấm Save
+  const [submitting, setSubmitting] = useState(false); 
+  const [deleting, setDeleting] = useState(false); // Trạng thái khi bấm nút Xóa
 
   // States quản lý form bài học
   const [title, setTitle] = useState("");
@@ -24,8 +28,6 @@ export default function AdminEditLessonPage() {
     const fetchLesson = async () => {
       try {
         setLoading(true);
-        
-        // Sử dụng hàm service mới cập nhật
         const lesson = await getLessonById(lessonId);
         
         setTitle(lesson.title || "");
@@ -45,7 +47,7 @@ export default function AdminEditLessonPage() {
     }
   }, [lessonId]);
 
-  // Hàm xử lý gửi dữ liệu cập nhật lên Backend
+  // 🎯 Hàm xử lý gửi dữ liệu cập nhật lên Backend (Hỗ trợ cả File nếu cần nâng cấp)
   const saveHandler = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return alert("Please enter a lesson title");
@@ -53,16 +55,19 @@ export default function AdminEditLessonPage() {
     try {
       setSubmitting(true);
 
-      // Sử dụng hàm service cập nhật mới
-      await updateLesson(lessonId, {
-        title,
-        content,
-        videoUrl,
-        order,
-      });
+      // Vì backend lessonController nhận FormData hoặc JSON tùy cấu hình,
+      // Ta đóng gói thành FormData để sau này bạn đính kèm input type="file" upload video trực tiếp sẽ không bị lỗi.
+      const formData = new FormData();
+      formData.append("courseId", courseId); // 🎯 Luôn gắn chặt với ID khóa học
+      formData.append("title", title);
+      formData.append("content", content);
+      formData.append("videoUrl", videoUrl);
+      formData.append("order", String(order));
+
+      await updateLesson(lessonId, formData);
 
       alert("Lesson updated successfully!");
-      router.back(); // Quay ngược lại trang chi tiết khóa học
+      router.push(`/admin/courses/${courseId}`); // Quay về đúng trang quản lý cấu trúc của khóa học đó
     } catch (error: any) {
       console.error(error);
       alert(error.message || "Failed to update lesson");
@@ -71,23 +76,57 @@ export default function AdminEditLessonPage() {
     }
   };
 
+  // 🎯 HÀM XỬ LÝ XÓA BÀI HỌC MỚI BỔ SUNG
+  const deleteHandler = async () => {
+    const isConfirmed = window.confirm(
+      "⚠️ Bạn có chắc chắn muốn xóa bài học này?\nHành động này sẽ gỡ bài học khỏi khóa học và không thể hoàn tác!"
+    );
+    if (!isConfirmed) return;
+
+    try {
+      setDeleting(true);
+      await deleteLesson(lessonId);
+      alert("Lesson deleted successfully!");
+      router.push(`/admin/courses/${courseId}`); // Xóa xong điều hướng an toàn về trang tổng quan khóa học
+    } catch (error: any) {
+      console.error(error);
+      alert(error.message || "Failed to delete lesson");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return <div className="p-20 text-center text-slate-500 font-medium">Loading lesson details...</div>;
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
-      {/* Nút quay lại nhanh */}
+    <div className="max-w-3xl mx-auto py-10">
+      {/* Nút quay lại nhanh liên kết trực tiếp với Course ID */}
       <button
-        onClick={() => router.back()}
+        onClick={() => router.push(`/admin/courses/${courseId}`)}
         className="mb-5 text-sm font-semibold text-slate-500 hover:text-slate-800 transition flex items-center gap-2"
       >
         ← Back to Course Structure
       </button>
 
       <div className="bg-white p-8 rounded-3xl border shadow-sm">
-        <h1 className="text-3xl font-bold mb-1 text-slate-800">Edit Lesson Content</h1>
-        <p className="text-sm text-slate-400 mb-6">Modify details, video pathways, and course documentation.</p>
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <h1 className="text-3xl font-bold mb-1 text-slate-800">Edit Lesson Content</h1>
+            <p className="text-sm text-slate-400">Modify details, video pathways, and course documentation.</p>
+          </div>
+          
+          {/* 🎯 NÚT XÓA BÀI HỌC: Thiết kế trực quan, tách biệt an toàn */}
+          <button
+            type="button"
+            disabled={deleting || submitting}
+            onClick={deleteHandler}
+            className="bg-red-50 hover:bg-red-100 text-red-600 font-semibold px-4 py-2 rounded-xl text-sm transition disabled:bg-slate-100 disabled:text-slate-400"
+          >
+            {deleting ? "Deleting..." : "Delete Lesson"}
+          </button>
+        </div>
         
         <form onSubmit={saveHandler} className="space-y-5">
           <div className="grid grid-cols-4 gap-5">
@@ -140,14 +179,15 @@ export default function AdminEditLessonPage() {
           <div className="flex gap-4 pt-4 border-t justify-end">
             <button
               type="button"
-              onClick={() => router.back()}
+              disabled={submitting || deleting}
+              onClick={() => router.push(`/admin/courses/${courseId}`)}
               className="border hover:bg-slate-50 text-slate-700 font-semibold px-6 py-3.5 rounded-2xl transition"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || deleting}
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-2xl transition shadow-md shadow-blue-600/10 disabled:bg-slate-200 disabled:text-slate-400"
             >
               {submitting ? "Saving changes..." : "Save Changes"}

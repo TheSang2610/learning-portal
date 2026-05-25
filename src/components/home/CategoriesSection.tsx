@@ -57,11 +57,11 @@ export default function CategoriesSection() {
               className="min-w-fit bg-[#f0f6ff] rounded-full border border-gray-200 px-4 py-2 flex items-center justify-center shadow-sm hover:shadow-md hover:border-gray-400 transition duration-200 cursor-pointer select-none"
             >
               {/* Hiển thị icon nếu có cấu hình trong database */}
-              {category.icon && (
+              {/* {category.icon && (
                 <span className="mr-2 text-sm text-blue-600 font-mono">
                   {category.icon}
                 </span>
-              )}
+              )} */}
               
               <span className="text-sm md:text-md font-medium text-gray-800 whitespace-nowrap">
                 {category.name}

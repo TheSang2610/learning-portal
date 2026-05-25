@@ -19,74 +19,79 @@ export default function CourseDetailPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [isMounted, setIsMounted] = useState(false);
 
   // Tự động tải dữ liệu tuần tự chuẩn xác: Lấy Course theo Slug -> Lấy ID -> Check Enrollment
-  useEffect(() => {
-    let isMounted = true; 
+useEffect(() => {
+  setIsMounted(true);
+}, []);
 
-    const loadData = async () => {
-      if (!courseSlug) return;
+// Sửa lại useEffect tải dữ liệu chính
+useEffect(() => {
+  if (!isMounted || !courseSlug) return; // Đợi mount xong mới xử lý data tránh lỗi SSR
+
+  let isComponentMounted = true; 
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError("");
       
-      try {
-        setLoading(true);
-        setError("");
-        
-        // 1. Tìm thông tin khóa học bằng Slug để lấy ID thật từ database
-        const courseData = await getCourseBySlug(courseSlug) as any;
-        
-        if (!courseData || courseData.error) {
-          if (isMounted) setCourse(null);
-          return;
-        }
-
-        if (isMounted) setCourse(courseData);
-        const realCourseId = courseData._id;
-
-        // 2. Kiểm tra token xác thực người dùng tại client
-        const token = typeof window !== "undefined" 
-          ? (localStorage.getItem("authToken") || document.cookie.split("; ").find(row => row.startsWith("authToken="))?.split("=")[1])
-          : null;
-        
-        if (!token) {
-          if (isMounted) setIsEnrolled(false);
-          return;
-        }
-
-        // 3. Đối chiếu cặp (User + Course ID) với bảng ghi danh ở Backend
-        try {
-          const enrollmentData = await getEnrollmentByCourse(realCourseId);
-          
-          if (isMounted) {
-            if (enrollmentData && !enrollmentData.error) {
-              setIsEnrolled(true); 
-              console.log("✅ Kết quả: Học viên ĐÃ ĐĂNG KÝ khóa học này.");
-            } else {
-              setIsEnrolled(false); 
-              console.log("ℹ️ Kết quả: Học viên CHƯA ĐĂNG KÝ khóa học này.");
-            }
-          }
-        } catch (err: any) {
-          console.log("Học viên chưa đăng ký khóa học hoặc token hết hạn.");
-          if (isMounted) setIsEnrolled(false);
-        }
-
-      } catch (error) {
-        console.error("Lỗi hệ thống khi kết nối Backend:", error);
-        if (isMounted) {
-          setCourse(null);
-          setError("Không thể tải thông tin chi tiết khóa học");
-        }
-      } finally {
-        if (isMounted) setLoading(false);
+      // 1. Lấy thông tin khóa học
+      const courseData = await getCourseBySlug(courseSlug) as any;
+      if (!courseData || courseData.error) {
+        if (isComponentMounted) setCourse(null);
+        return;
       }
-    };
 
-    loadData();
+      if (isComponentMounted) setCourse(courseData);
+      const realCourseId = courseData._id;
 
-    return () => {
-      isMounted = false; // Ngăn chặn cập nhật state đè khi chuyển trang
-    };
-  }, [courseSlug]);
+      // 2. Lấy token an toàn tại Client
+      const token = localStorage.getItem("authToken") || 
+                    document.cookie.split("; ").find(row => row.startsWith("authToken="))?.split("=")[1];
+      
+      if (!token) {
+        if (isComponentMounted) setIsEnrolled(false);
+        return;
+      }
+
+      // 3. Đối chiếu trạng thái đăng ký với Backend
+      try {
+        const enrollmentData = await getEnrollmentByCourse(realCourseId);
+        
+        if (isComponentMounted) {
+          // 🔥 KIỂM TRA KỸ: Đảm bảo dữ liệu trả về hợp lệ và không phải mảng rỗng [] hay object trống {}
+          if (enrollmentData && enrollmentData.isEnrolled === true) {
+            setIsEnrolled(true); 
+            console.log("✅ Kết quả: Học viên ĐÃ ĐĂNG KÝ khóa học này.");
+          } else {
+            setIsEnrolled(false); 
+            console.log("ℹ️ Kết quả: Học viên CHƯA ĐĂNG KÝ khóa học này.");
+          }
+        }
+      } catch (err: any) {
+        console.log("Học viên chưa đăng ký khóa học.");
+        if (isComponentMounted) setIsEnrolled(false);
+      }
+
+    } catch (error) {
+      console.error("Lỗi hệ thống khi kết nối Backend:", error);
+      if (isComponentMounted) {
+        setCourse(null);
+        setError("Không thể tải thông tin chi tiết khóa học");
+      }
+    } finally {
+      if (isComponentMounted) setLoading(false);
+    }
+  };
+
+  loadData();
+
+  return () => {
+    isComponentMounted = false;
+  };
+}, [courseSlug, isMounted]); // Thêm isMounted vào mảng dependency
 
   // Xử lý khi nhấn đăng ký (Dành cho khóa học chưa mua)
   const handleEnrollCourse = async () => {

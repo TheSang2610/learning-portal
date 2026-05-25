@@ -7,7 +7,7 @@ export default function PortalRootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
         <Header />
         {/* 40px topbar + 64px header */}

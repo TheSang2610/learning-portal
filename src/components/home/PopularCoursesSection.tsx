@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowRight, Star, BookOpen, User } from "lucide-react";
+import { ArrowRight, Star, BookOpen, User, Building2 } from "lucide-react";
 import Link from "next/link";
 
 import { getCourses, Course } from "@/src/services/course"; 
@@ -94,6 +94,17 @@ export default function PopularCoursesSection() {
                         ? course.instructor.name 
                         : course.instructor || "Expert Instructor";
 
+                      // 🎯 Xử lý thông tin Provider (Logo & Tên)
+                      const rawProvider = course.provider;
+                      let providerLogo: string | null = null;
+                      let providerName = "Hệ thống LMS";
+
+                      if (rawProvider && typeof rawProvider === "object") {
+                        const p = rawProvider as any; // Ép sang any để bypass kiểm tra nghiêm ngặt của TS client
+                        providerLogo = p.logo || null;
+                        providerName = p.name || "Hệ thống LMS";
+                      }
+
                       return (
                         <Link
                           href={`/individuals/courses/${course.slug}`}
@@ -116,12 +127,36 @@ export default function PopularCoursesSection() {
                           {/* RIGHT: INFO */}
                           <div className="flex flex-col justify-between min-w-0 flex-1">
                             <div>
-                              {/* INSTRUCTOR */}
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                <User size={12} className="text-gray-400 flex-shrink-0" />
-                                <p className="text-xs text-gray-500 truncate">
-                                  {instructorName}
-                                </p>
+                              {/* INSTRUCTOR & PROVIDER ROW */}
+                              <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                                {/* Giảng viên */}
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <User size={12} className="text-gray-400 flex-shrink-0" />
+                                  <p className="text-xs text-gray-500 truncate max-w-[110px]">
+                                    {instructorName}
+                                  </p>
+                                </div>
+
+                                {/* Thanh phân cách đứng nhẹ */}
+                                <span className="text-gray-200 text-xs flex-shrink-0">|</span>
+
+                                {/* 🎯 HIỂN THỊ PROVIDER KẾ BÊN */}
+                                <div className="flex items-center gap-1 min-w-0" title={`Cấp bởi: ${providerName}`}>
+                                  {providerLogo ? (
+                                    <div className="w-4 h-4 rounded border bg-gray-50 overflow-hidden flex items-center justify-center flex-shrink-0">
+                                      <img 
+                                        src={providerLogo} 
+                                        alt={providerName} 
+                                        className="w-6 h-10 object-contain"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <Building2 size={12} className="text-violet-400 flex-shrink-0" />
+                                  )}
+                                  <p className="text-[11px] font-medium text-violet-600 truncate max-w-[90px]">
+                                    {providerName}
+                                  </p>
+                                </div>
                               </div>
 
                               {/* COURSE TITLE */}
