@@ -5,6 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Video, Clock, AlignLeft, FileText } from "lucide-react";
 
+// 1. Import đúng hàm addLesson đã chuẩn bị từ service của bạn
+import { addLesson } from "@/src/services/lesson.api"; 
+
 export default function AdminLessonCreatePage() {
   const params = useParams();
   const router = useRouter();
@@ -13,7 +16,7 @@ export default function AdminLessonCreatePage() {
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
-    description: "",
+    description: "", // Trên Backend trường này tương ứng với 'content'
     videoUrl: "",
     duration: 0,
     isFreePreview: false,
@@ -34,16 +37,27 @@ export default function AdminLessonCreatePage() {
     try {
       setSubmitting(true);
       
-      // Giả lập gọi API tạo bài học ở Backend của bạn
-      // Ví dụ: await axios.post(`/api/courses/${courseId}/lessons`, formData);
-      console.log("Dữ liệu gửi lên Backend:", formData);
+      // 2. Chuyển đổi Object State thành FormData đúng chuẩn Backend yêu cầu
+      const dataToSend = new FormData();
+      dataToSend.append("courseId", courseId);
+      dataToSend.append("title", formData.title.trim());
+      dataToSend.append("content", formData.description.trim()); // Khớp 'content' của Backend
+      dataToSend.append("videoUrl", formData.videoUrl.trim());
+      dataToSend.append("order", "1"); // Bạn có thể bổ sung trường nhập 'order' nếu cần, tạm thời để mặc định là 1
+
+      // Nếu sau này bạn có input loại file (<input type="file" />), bạn sẽ append như sau:
+      // dataToSend.append("video", videoFileObject);
+
+      // 3. Gọi API thực tế thông qua Service
+      await addLesson(dataToSend);
 
       alert("Thêm bài học mới thành công!");
-      // Quay lại trang danh sách bài học của khóa học đó
+      
+      // 4. Điều hướng về trang danh sách giáo trình bài học
       router.push(`/admin/courses/${courseId}/lessons`);
-    } catch (error) {
-      console.error(error);
-      alert("Đã xảy ra lỗi khi tạo bài học mới.");
+    } catch (error: any) {
+      console.error("Lỗi tạo bài học:", error);
+      alert(error.response?.data?.message || error.message || "Đã xảy ra lỗi khi tạo bài học mới.");
     } finally {
       setSubmitting(false);
     }

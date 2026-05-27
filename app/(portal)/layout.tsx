@@ -11,7 +11,7 @@ export default function PortalRootLayout({
       <body className="antialiased">
         <Header />
         {/* 40px topbar + 64px header */}
-        <main className="pt-[104px]">
+        <main className="pt-[104px] ">
           {children}
         </main>
       </body>
