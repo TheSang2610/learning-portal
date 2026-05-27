@@ -9,6 +9,7 @@ const {
     updateWatchTime,
     getProgressStats,
     completeCourse,
+    enrollInCourse,
     dropCourse,
     getCourseStudents
 } = require('../controllers/enrollmentController');
@@ -23,7 +24,8 @@ router.get('/my-courses', getMyEnrolledCourses);
 
 // 2. Các route thao tác theo courseId cụ thể (Dynamic)
 router.route('/:courseId')
-    .get(getEnrollmentByCourse); // Lấy chi tiết đăng ký
+    .get(getEnrollmentByCourse) // Lấy chi tiết đăng ký
+    .post(enrollInCourse);
 
 router.route('/:courseId/progress')
     .get(getProgressStats); // Lấy thống kê tiến độ

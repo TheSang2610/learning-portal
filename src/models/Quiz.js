@@ -100,7 +100,6 @@ quizSchema.pre('save', function (next) {
     if (this.questions.length > 0) {
         this.totalPoints = this.questions.reduce((sum, q) => sum + (q.points || 1), 0);
     }
-    next();
 });
 
 module.exports = mongoose.model('Quiz', quizSchema);

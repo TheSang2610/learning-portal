@@ -1,5 +1,8 @@
 const Lesson = require('../models/Lesson');
 const Course = require('../models/Course');
+const Quiz = require('../models/Quiz');
+const QuizAttempt = require('../models/QuizAttempt');
+const { protect } = require('../middlewares/authMiddleware');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
 
 // Hàm helper chuyển đổi Tiếng Việt có dấu thành Slug gọn đẹp
@@ -165,4 +168,33 @@ const updateLesson = async (req, res) => {
     }
 };
 
-module.exports = { addLesson, getLessonById, getLessonBySlug, updateLesson };
+// @desc    Xóa một bài học
+// @route   DELETE /api/lessons/:id
+const deleteLesson = async (req, res) => {
+    try {
+        const lesson = await Lesson.findById(req.params.id);
+        if (!lesson) {
+            return res.status(404).json({ message: 'Không tìm thấy bài học để xóa' });
+        }
+
+        // Kiểm tra quyền (Chỉ Admin hoặc Instructor sở hữu khóa học mới được xóa)
+        const course = await Course.findById(lesson.courseId);
+        if (course && course.instructor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Bạn không có quyền xóa bài học này' });
+        }
+
+        // 1. Gỡ ID bài học ra khỏi mảng lessons của khóa học tương ứng
+        await Course.findByIdAndUpdate(lesson.courseId, {
+            $pull: { lessons: lesson._id }
+        });
+
+        // 2. Tiến hành xóa bài học khỏi bảng Lesson
+        await lesson.deleteOne();
+
+        res.status(200).json({ message: 'Xóa bài học thành công' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { addLesson, getLessonById, getLessonBySlug, updateLesson, deleteLesson };

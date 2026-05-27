@@ -1,7 +1,6 @@
 const Quiz = require('../models/Quiz');
 const QuizAttempt = require('../models/QuizAttempt');
 const Course = require('../models/Course');
-const User = require('../models/User');
 const mongoose = require('mongoose');
 
 // @desc    Tạo quiz mới
@@ -10,12 +9,10 @@ const createQuiz = async (req, res) => {
     try {
         const { courseId, lessonId, title, description, questions, passingScore, timeLimit, attempts } = req.body;
 
-        // Validate
         if (!courseId || !title || !questions || questions.length === 0) {
             return res.status(400).json({ message: 'Vui lòng cung cấp courseId, title và ít nhất 1 câu hỏi' });
         }
 
-        // Kiểm tra quyền instructor
         const course = await Course.findById(courseId);
         if (!course) {
             return res.status(404).json({ message: 'Khóa học không tồn tại' });
@@ -25,11 +22,15 @@ const createQuiz = async (req, res) => {
             return res.status(403).json({ message: 'Bạn không có quyền tạo quiz cho khóa học này' });
         }
 
-        // Validate questions
+        // Tự động gán ObjectId cho từng câu hỏi mới tạo
         const questionsWithIds = questions.map((q) => ({
             _id: new mongoose.Types.ObjectId(),
-            ...q
+            ...q,
+            points: Number(q.points) || 1 // Đảm bảo points luôn là Number
         }));
+
+        // 🎯 TÍNH TỔNG ĐIỂM CỦA BÀI QUIZ TRƯỚC KHI LƯU
+        const totalPoints = questionsWithIds.reduce((sum, q) => sum + q.points, 0);
 
         const quiz = new Quiz({
             course: courseId,
@@ -37,6 +38,7 @@ const createQuiz = async (req, res) => {
             title,
             description,
             questions: questionsWithIds,
+            totalPoints, // 🎯 Đưa trường này vào để tránh lỗi Schema Validation
             passingScore: passingScore || 70,
             timeLimit: timeLimit || null,
             attempts: attempts || 1,
@@ -46,17 +48,33 @@ const createQuiz = async (req, res) => {
         const createdQuiz = await quiz.save();
         res.status(201).json(createdQuiz);
     } catch (error) {
+        // Trả về log chi tiết trên console của terminal backend để bạn dễ debug
+        console.error("LỖI TẠI BACKEND CREATE QUIZ:", error);
         res.status(500).json({ message: error.message });
     }
 };
 
-// @desc    Lấy tất cả quizzes của course
-// @route   GET /api/quizzes/course/:courseId
+// @desc     Lấy tất cả quizzes của course (Có lọc theo bài học)
+// @route    GET /api/quizzes/course/:courseId
 const getCourseQuizzes = async (req, res) => {
     try {
         const { courseId } = req.params;
+        const { lessonId } = req.query; // Nhận lessonId từ query string
 
-        const quizzes = await Quiz.find({ course: courseId })
+        // Tối ưu hóa bảo mật ẩn đáp án đối với học viên
+        const selectFields = req.user && req.user.role === 'student' 
+            ? '-questions.correctAnswer -questions.options.isCorrect' 
+            : '';
+
+        // Tạo object bộ lọc động
+        let filter = { course: courseId };
+        if (lessonId) {
+            filter.lesson = lessonId; // Lọc chính xác theo bài học nếu truyền lên
+        }
+
+        // 🎯 ĐÃ SỬA: Truyền object filter vào hàm find thay vì fix cứng courseId
+        const quizzes = await Quiz.find(filter)
+            .select(selectFields)
             .populate('lesson', 'title')
             .sort({ createdAt: -1 });
 
@@ -66,72 +84,80 @@ const getCourseQuizzes = async (req, res) => {
     }
 };
 
-// @desc    Lấy chi tiết quiz (không có đáp án đúng)
-// @route   GET /api/quizzes/:id
+// @desc     Lấy chi tiết quiz (Ẩn đáp án đối với học viên)
+// @route    GET /api/quizzes/:id
 const getQuizById = async (req, res) => {
     try {
-        const quiz = await Quiz.findById(req.params.id).populate('lesson', 'title');
+        // Sử dụng .lean() để biến đổi trực tiếp kết quả Mongoose thành Plain JavaScript Object, tăng tốc độ và tránh lỗi .toObject()
+        const quiz = await Quiz.findById(req.params.id)
+            .populate('lesson', 'title')
+            .lean();
 
         if (!quiz) {
-            return res.status(404).json({ message: 'Quiz không tồn tại' });
+            return res.status(404).json({ message: 'Quiz không tồn tại trong hệ thống' });
         }
 
-        // Kiểm tra xem student có được phép xem không
-        if (!quiz.isPublished && req.user.role === 'student') {
-            // Chỉ instructor mới xem được quiz chưa publish
-            const course = await Course.findById(quiz.course);
-            if (course.instructor.toString() !== req.user._id.toString()) {
-                return res.status(403).json({ message: 'Quiz chưa được công bố' });
-            }
-        }
+        // Kiểm tra an toàn trạng thái Published
+        const isQuizPublished = quiz.isPublished === true || String(quiz.isPublished) === 'true';
 
-        // Nếu là student, ẩn đáp án
         if (req.user.role === 'student') {
-            const quizObj = quiz.toObject();
-            quizObj.questions = quizObj.questions.map((q) => {
-                delete q.correctAnswer;
-                q.options = q.options ? q.options.map((opt) => ({ text: opt.text })) : [];
-                return q;
-            });
-            return res.json(quizObj);
+            if (!isQuizPublished) {
+                return res.status(403).json({ message: 'Bài tập/Đề thi này chưa được giảng viên công bố!' });
+            }
+
+            // Ẩn đáp án bảo mật cho Học viên làm bài
+            if (quiz.questions && Array.isArray(quiz.questions)) {
+                quiz.questions = quiz.questions.map((q) => {
+                    delete q.correctAnswer;
+                    delete q.explanation;
+                    if (q.options && Array.isArray(q.options)) {
+                        q.options = q.options.map((opt) => ({
+                            _id: opt._id,
+                            text: opt.text
+                        }));
+                    } else {
+                        q.options = [];
+                    }
+                    return q;
+                });
+            }
         }
 
         res.json(quiz);
     } catch (error) {
+        console.error("LỖI TẠI GET_QUIZ_BY_ID BACKEND:", error.message);
         res.status(500).json({ message: error.message });
     }
 };
 
-// @desc    Cập nhật quiz
-// @route   PUT /api/quizzes/:id
+// @desc     Cập nhật cấu trúc quiz
+// @route    PUT /api/quizzes/:id
 const updateQuiz = async (req, res) => {
     try {
         const quiz = await Quiz.findById(req.params.id);
-
         if (!quiz) {
             return res.status(404).json({ message: 'Quiz không tồn tại' });
         }
 
-        // Kiểm tra quyền
         const course = await Course.findById(quiz.course);
         if (course.instructor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
             return res.status(403).json({ message: 'Bạn không có quyền chỉnh sửa quiz này' });
         }
 
-        // Không cho sửa nếu đã có attempts
+        // Chặn chỉnh sửa tuyệt đối nếu đã phát sinh dữ liệu bài làm lịch sử
         const attemptCount = await QuizAttempt.countDocuments({ quiz: quiz._id });
         if (attemptCount > 0) {
-            return res.status(400).json({ message: 'Không thể chỉnh sửa quiz đã có người làm' });
+            return res.status(400).json({ message: 'Không thể chỉnh sửa cấu trúc đề thi vì đã có học viên làm bài' });
         }
 
-        quiz.title = req.body.title || quiz.title;
-        quiz.description = req.body.description || quiz.description;
-        quiz.passingScore = req.body.passingScore !== undefined ? req.body.passingScore : quiz.passingScore;
-        quiz.timeLimit = req.body.timeLimit !== undefined ? req.body.timeLimit : quiz.timeLimit;
-        quiz.attempts = req.body.attempts !== undefined ? req.body.attempts : quiz.attempts;
-        quiz.randomizeQuestions = req.body.randomizeQuestions !== undefined ? req.body.randomizeQuestions : quiz.randomizeQuestions;
-        quiz.randomizeOptions = req.body.randomizeOptions !== undefined ? req.body.randomizeOptions : quiz.randomizeOptions;
-        quiz.showAnswers = req.body.showAnswers !== undefined ? req.body.showAnswers : quiz.showAnswers;
+        const fieldsToUpdate = [
+            'title', 'description', 'passingScore', 'timeLimit', 
+            'attempts', 'randomizeQuestions', 'randomizeOptions', 'showAnswers'
+        ];
+
+        fieldsToUpdate.forEach(field => {
+            if (req.body[field] !== undefined) quiz[field] = req.body[field];
+        });
 
         if (req.body.questions) {
             quiz.questions = req.body.questions.map((q) => ({
@@ -147,27 +173,23 @@ const updateQuiz = async (req, res) => {
     }
 };
 
-// @desc    Publish/Unpublish quiz
-// @route   PUT /api/quizzes/:id/publish
+// @desc     Publish/Unpublish công bố quiz
+// @route    PUT /api/quizzes/:id/publish
 const publishQuiz = async (req, res) => {
     try {
         const quiz = await Quiz.findById(req.params.id);
+        if (!quiz) return res.status(404).json({ message: 'Quiz không tồn tại' });
 
-        if (!quiz) {
-            return res.status(404).json({ message: 'Quiz không tồn tại' });
-        }
-
-        // Kiểm tra quyền
         const course = await Course.findById(quiz.course);
         if (course.instructor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-            return res.status(403).json({ message: 'Bạn không có quyền thay đổi quiz này' });
+            return res.status(403).json({ message: 'Bạn không có quyền thao tác trên quiz này' });
         }
 
         quiz.isPublished = !quiz.isPublished;
         const updatedQuiz = await quiz.save();
 
         res.json({
-            message: quiz.isPublished ? 'Quiz đã được công bố' : 'Quiz đã ẩn',
+            message: quiz.isPublished ? 'Quiz đã được công bố rộng rãi' : 'Quiz đã được chuyển về trạng thái ẩn',
             quiz: updatedQuiz
         });
     } catch (error) {
@@ -175,81 +197,59 @@ const publishQuiz = async (req, res) => {
     }
 };
 
-// @desc    Xóa quiz
-// @route   DELETE /api/quizzes/:id
+// @desc     Xóa bài quiz hệ thống
+// @route    DELETE /api/quizzes/:id
 const deleteQuiz = async (req, res) => {
     try {
         const quiz = await Quiz.findById(req.params.id);
+        if (!quiz) return res.status(404).json({ message: 'Quiz không tồn tại' });
 
-        if (!quiz) {
-            return res.status(404).json({ message: 'Quiz không tồn tại' });
-        }
-
-        // Kiểm tra quyền
         const course = await Course.findById(quiz.course);
         if (course.instructor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
             return res.status(403).json({ message: 'Bạn không có quyền xóa quiz này' });
         }
 
-        // Xóa tất cả attempts
+        // Xóa sạch các tài liệu liên quan thông qua transaction hoặc lệnh xóa hàng loạt
         await QuizAttempt.deleteMany({ quiz: quiz._id });
         await Quiz.findByIdAndDelete(req.params.id);
 
-        res.json({ message: 'Xóa quiz thành công' });
+        res.json({ message: 'Xóa bài thi và dữ liệu lịch sử liên quan thành công' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// @desc    Submit quiz attempt
-// @route   POST /api/quizzes/:id/submit
+// @desc     Nộp bài và chấm điểm tự động
+// @route    POST /api/quizzes/:id/submit
 const submitQuizAttempt = async (req, res) => {
     try {
         const { id } = req.params;
-        const { answers } = req.body;
+        const { answers, startedAt } = req.body; 
 
         const quiz = await Quiz.findById(id);
-        if (!quiz) {
-            return res.status(404).json({ message: 'Quiz không tồn tại' });
-        }
+        if (!quiz) return res.status(404).json({ message: 'Quiz không tồn tại' });
+        if (!quiz.isPublished) return res.status(403).json({ message: 'Bài thi này chưa được mở' });
 
-        if (!quiz.isPublished) {
-            return res.status(403).json({ message: 'Quiz chưa được công bố' });
-        }
-
-        // Kiểm tra số lần attempt
-        const attemptCount = await QuizAttempt.countDocuments({
-            quiz: id,
-            student: req.user._id
-        });
-
+        const attemptCount = await QuizAttempt.countDocuments({ quiz: id, student: req.user._id });
         if (attemptCount >= quiz.attempts) {
-            return res.status(400).json({
-                message: `Bạn đã hết lần làm bài (${quiz.attempts} lần)`
-            });
+            return res.status(400).json({ message: `Bạn đã dùng hết giới hạn lượt làm bài (${quiz.attempts} lượt)` });
         }
 
-        // Tính điểm
         let totalScore = 0;
-        const gradedAnswers = answers.map((answer) => {
+        const gradedAnswers = (answers || []).map((answer) => {
             const question = quiz.questions.find((q) => q._id.toString() === answer.questionId);
-
-            if (!question) {
-                return null;
-            }
+            if (!question) return null;
 
             let isCorrect = false;
             let pointsEarned = 0;
 
             if (question.type === 'multiple_choice' || question.type === 'true_false') {
                 const correctOption = question.options.find((opt) => opt.isCorrect);
-                isCorrect = answer.studentAnswer === correctOption.text;
+                isCorrect = correctOption && answer.studentAnswer === correctOption.text;
             } else if (question.type === 'short_answer') {
-                // Case-insensitive comparison
-                isCorrect = answer.studentAnswer.toLowerCase().trim() === 
-                           question.correctAnswer.toLowerCase().trim();
+                isCorrect = answer.studentAnswer && question.correctAnswer &&
+                            answer.studentAnswer.toLowerCase().trim() === question.correctAnswer.toLowerCase().trim();
             }
-            // Essay type: không tự động chấm, cần instructor review
 
             if (isCorrect) {
                 pointsEarned = question.points || 1;
@@ -264,8 +264,12 @@ const submitQuizAttempt = async (req, res) => {
             };
         }).filter((a) => a !== null);
 
-        const percentage = Math.round((totalScore / quiz.totalPoints) * 100);
+        const percentage = quiz.totalPoints > 0 ? Math.round((totalScore / quiz.totalPoints) * 100) : 0;
         const passed = percentage >= quiz.passingScore;
+
+        const startTime = startedAt ? new Date(startedAt) : new Date();
+        const endTime = new Date();
+        const timeSpent = Math.max(0, Math.round((endTime.getTime() - startTime.getTime()) / 1000));
 
         const quizAttempt = new QuizAttempt({
             quiz: id,
@@ -274,11 +278,67 @@ const submitQuizAttempt = async (req, res) => {
             score: totalScore,
             percentage,
             passed,
-            submittedAt: new Date(),
-            attemptNumber: attemptCount + 1
+            timeSpent,
+            startedAt: startTime,
+            submittedAt: endTime,
+            attemptNumber: attemptCount + 1,
+            status: 'submitted'
         });
 
         const savedAttempt = await quizAttempt.save();
+
+        let lessonCompletedMessage = '';
+        if (passed && quiz.lesson) {
+            const Enrollment = require('../models/Enrollment');
+            const Course = require('../models/Course'); 
+            
+            const enrollment = await Enrollment.findOne({
+                course: quiz.course,
+                student: req.user._id
+            });
+
+            if (enrollment) {
+                const currentCourse = await Course.findById(quiz.course);
+                const totalLessons = currentCourse ? currentCourse.lessons.length : 0;
+
+                // Tìm index của bài học hiện tại trong mảng tiến độ
+                let lpIndex = enrollment.lessonProgress.findIndex(
+                    (lp) => lp.lesson && lp.lesson.toString() === quiz.lesson.toString()
+                );
+
+                if (lpIndex !== -1) {
+                    // Nếu bài học chưa hoàn thành, cập nhật thành hoàn thành
+                    if (enrollment.lessonProgress[lpIndex].status !== 'completed') {
+                        enrollment.lessonProgress[lpIndex].status = 'completed';
+                        enrollment.lessonProgress[lpIndex].completedAt = new Date();
+                        lessonCompletedMessage = ' Bài học này của bạn đã được đánh dấu hoàn thành 100% nhờ vượt qua bài Quiz!';
+                    }
+                } else {
+                    // Trường hợp hy hữu: Bài học chưa có trong danh sách tiến độ, thêm mới chuẩn xác
+                    enrollment.lessonProgress.push({
+                        lesson: quiz.lesson,
+                        status: 'completed',
+                        watchedDuration: 0,
+                        completedAt: new Date()
+                    });
+                    lessonCompletedMessage = ' Bài học này của bạn đã được đánh dấu hoàn thành 100%!';
+                }
+
+                enrollment.lastAccessedAt = new Date();
+                
+                // Tính toán lại tổng tiến độ dựa trên số bài học thực tế đạt 'completed'
+                const completedLessonsCount = enrollment.lessonProgress.filter(lp => lp.status === 'completed').length;
+                enrollment.totalProgress = totalLessons > 0 ? Math.round((completedLessonsCount / totalLessons) * 100) : 0;
+
+                // Tự động hoàn thành khóa học nếu tiến độ đạt 100%
+                if (enrollment.totalProgress === 100 && enrollment.status === 'active') {
+                    enrollment.status = 'completed';
+                    enrollment.completedAt = new Date();
+                }
+                
+                await enrollment.save();
+            }
+        }
 
         res.status(201).json({
             attemptId: savedAttempt._id,
@@ -286,39 +346,44 @@ const submitQuizAttempt = async (req, res) => {
             percentage: savedAttempt.percentage,
             passed: savedAttempt.passed,
             totalPoints: quiz.totalPoints,
-            message: passed ? 'Bạn đã đạt điểm yêu cầu!' : 'Bạn chưa đạt điểm yêu cầu'
+            timeSpent,
+            message: passed 
+                ? `Chúc mừng bạn đã vượt qua bài kiểm tra!${lessonCompletedMessage}` 
+                : 'Rất tiếc, bạn chưa đạt mức điểm yêu cầu. Hãy thử lại ở lượt sau.'
         });
     } catch (error) {
+        console.error("LỖI TẠI SUBMIT_QUIZ_ATTEMPT:", error);
         res.status(500).json({ message: error.message });
     }
 };
 
-// @desc    Lấy kết quả quiz attempt
-// @route   GET /api/quizzes/:id/attempt/:attemptId
+// @desc     Xem kết quả chi tiết của lượt làm bài cụ thể
+// @route    GET /api/quizzes/:id/attempt/:attemptId
 const getQuizAttemptResult = async (req, res) => {
     try {
-        const { id, attemptId } = req.params;
+        const { attemptId } = req.params;
 
         const attempt = await QuizAttempt.findById(attemptId)
             .populate('student', 'name email')
             .populate('quiz');
 
-        if (!attempt) {
-            return res.status(404).json({ message: 'Attempt không tồn tại' });
-        }
+        if (!attempt) return res.status(404).json({ message: 'Không tìm thấy dữ liệu lượt làm bài này' });
 
-        // Kiểm tra quyền: student xem kết quả của mình, instructor xem tất cả
         if (attempt.student._id.toString() !== req.user._id.toString() && req.user.role !== 'instructor' && req.user.role !== 'admin') {
-            return res.status(403).json({ message: 'Bạn không có quyền xem kết quả này' });
+            return res.status(403).json({ message: 'Bạn không có quyền xem kết quả của người khác' });
         }
 
-        // Nếu là student, chỉ show đáp án nếu quiz cho phép
+        // Nếu hệ thống cấu hình ẩn đáp án sau khi làm xong, tiến hành xóa thông tin nhạy cảm trước khi trả về
         if (req.user.role === 'student' && !attempt.quiz.showAnswers) {
-            attempt.quiz.questions = attempt.quiz.questions.map((q) => ({
-                ...q,
-                correctAnswer: undefined,
-                explanation: undefined
-            }));
+            const sanitizedAttempt = attempt.toObject();
+            if (sanitizedAttempt.quiz && sanitizedAttempt.quiz.questions) {
+                sanitizedAttempt.quiz.questions = sanitizedAttempt.quiz.questions.map((q) => ({
+                    ...q,
+                    correctAnswer: undefined,
+                    explanation: undefined
+                }));
+            }
+            return res.json(sanitizedAttempt);
         }
 
         res.json(attempt);
@@ -327,16 +392,13 @@ const getQuizAttemptResult = async (req, res) => {
     }
 };
 
-// @desc    Lấy tất cả attempts của student cho 1 quiz
-// @route   GET /api/quizzes/:id/attempts
+// @desc     Lấy lịch sử tất cả các lần làm bài của học viên hiện tại
+// @route    GET /api/quizzes/:id/attempts
 const getQuizAttempts = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const attempts = await QuizAttempt.find({
-            quiz: id,
-            student: req.user._id
-        })
+        const attempts = await QuizAttempt.find({ quiz: id, student: req.user._id })
             .sort({ createdAt: -1 });
 
         res.json(attempts);
@@ -345,40 +407,30 @@ const getQuizAttempts = async (req, res) => {
     }
 };
 
-// @desc    Lấy thống kê quiz results (instructor only)
-// @route   GET /api/quizzes/:id/stats
+// @desc     Lấy thống kê tổng hợp kết quả (Chỉ dành cho Giảng viên)
+// @route    GET /api/quizzes/:id/stats
 const getQuizStats = async (req, res) => {
     try {
         const { id } = req.params;
 
         const quiz = await Quiz.findById(id);
-        if (!quiz) {
-            return res.status(404).json({ message: 'Quiz không tồn tại' });
-        }
+        if (!quiz) return res.status(404).json({ message: 'Quiz không tồn tại' });
 
-        // Kiểm tra quyền
         const course = await Course.findById(quiz.course);
         if (course.instructor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-            return res.status(403).json({ message: 'Bạn không có quyền xem thống kê này' });
+            return res.status(403).json({ message: 'Bạn không có quyền truy cập dữ liệu báo cáo khóa học này' });
         }
 
-        const attempts = await QuizAttempt.find({ quiz: id });
+        const attempts = await QuizAttempt.find({ quiz: id }).populate('student', 'name email');
 
         if (attempts.length === 0) {
-            return res.json({
-                totalAttempts: 0,
-                averageScore: 0,
-                passRate: 0,
-                attempts: []
-            });
+            return res.json({ totalAttempts: 0, averageScore: 0, passRate: 0, attempts: [] });
         }
 
         const passCount = attempts.filter((a) => a.passed).length;
-        const averageScore = Math.round(
-            attempts.reduce((sum, a) => sum + a.percentage, 0) / attempts.length
-        );
+        const averageScore = Math.round(attempts.reduce((sum, a) => sum + a.percentage, 0) / attempts.length);
 
-        const stats = {
+        res.json({
             totalAttempts: attempts.length,
             averageScore,
             passRate: Math.round((passCount / attempts.length) * 100),
@@ -393,9 +445,7 @@ const getQuizStats = async (req, res) => {
                 attemptNumber: a.attemptNumber,
                 submittedAt: a.submittedAt
             }))
-        };
-
-        res.json(stats);
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

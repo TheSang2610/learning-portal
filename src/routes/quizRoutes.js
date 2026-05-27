@@ -16,54 +16,37 @@ const {
 
 const { protect, instructor } = require('../middlewares/authMiddleware');
 
-// @route   POST /api/quizzes
-// @desc    Tạo quiz mới (instructor only)
-// @access  Private
-router.post('/', protect, instructor, createQuiz);
+// Khóa học & Đề thi cần định danh người xem để xử lý ẩn/hiện đáp án đúng cấu hình
+router.use(protect); 
 
-// @route   GET /api/quizzes/course/:courseId
-// @desc    Lấy tất cả quizzes của course
-// @access  Public
+// @route    POST /api/quizzes
+router.post('/', instructor, createQuiz);
+
+// @route    GET /api/quizzes/course/:courseId
 router.get('/course/:courseId', getCourseQuizzes);
 
-// @route   GET /api/quizzes/:id/stats
-// @desc    Lấy thống kê (instructor only)
-// @access  Private
-router.get('/:id/stats', protect, instructor, getQuizStats);
+// @route    GET /api/quizzes/:id/stats
+router.get('/:id/stats', instructor, getQuizStats);
 
-// @route   GET /api/quizzes/:id
-// @desc    Lấy chi tiết quiz
-// @access  Public
+// @route    GET /api/quizzes/:id
 router.get('/:id', getQuizById);
 
-// @route   GET /api/quizzes/:id/attempts
-// @desc    Lấy tất cả attempts của student
-// @access  Private
-router.get('/:id/attempts', protect, getQuizAttempts);
+// @route    GET /api/quizzes/:id/attempts
+router.get('/:id/attempts', getQuizAttempts);
 
-// @route   GET /api/quizzes/:id/attempt/:attemptId
-// @desc    Lấy kết quả quiz attempt
-// @access  Private
-router.get('/:id/attempt/:attemptId', protect, getQuizAttemptResult);
+// @route    GET /api/quizzes/:id/attempt/:attemptId
+router.get('/:id/attempt/:attemptId', getQuizAttemptResult);
 
-// @route   PUT /api/quizzes/:id
-// @desc    Cập nhật quiz (instructor only)
-// @access  Private
-router.put('/:id', protect, instructor, updateQuiz);
+// @route    PUT /api/quizzes/:id
+router.put('/:id', instructor, updateQuiz);
 
-// @route   PUT /api/quizzes/:id/publish
-// @desc    Publish/Unpublish quiz (instructor only)
-// @access  Private
-router.put('/:id/publish', protect, instructor, publishQuiz);
+// @route    PUT /api/quizzes/:id/publish
+router.put('/:id/publish', instructor, publishQuiz);
 
-// @route   DELETE /api/quizzes/:id
-// @desc    Xóa quiz (instructor only)
-// @access  Private
-router.delete('/:id', protect, instructor, deleteQuiz);
+// @route    DELETE /api/quizzes/:id
+router.delete('/:id', instructor, deleteQuiz);
 
-// @route   POST /api/quizzes/:id/submit
-// @desc    Submit quiz attempt (student)
-// @access  Private
-router.post('/:id/submit', protect, submitQuizAttempt);
+// @route    POST /api/quizzes/:id/submit
+router.post('/:id/submit', submitQuizAttempt);
 
 module.exports = router;

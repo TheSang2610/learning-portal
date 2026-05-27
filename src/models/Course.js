@@ -29,14 +29,15 @@ const courseSchema = new mongoose.Schema({
         default: 0
     },
 
-    category: {
+    category: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Category"
-    },
+    }],
 
     provider: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Provider"
+        ref: "Provider", 
+        required: false  
     },
 
     level: {

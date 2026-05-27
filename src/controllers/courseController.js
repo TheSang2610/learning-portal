@@ -17,11 +17,11 @@ const slugify = (str) => {
     return str;
 };
 
-// @desc    Tạo mới khóa học
-// @route   POST /api/courses
 const createCourse = async (req, res) => {
     try {
-        const { title, description, price, category } = req.body;
+        // 🔥 ĐÃ SỬA: Thêm bóc tách 'providerId' từ req.body để không bị lỗi undefined
+        const { title, description, price, category, instructorId, provider, providerId } = req.body;
+        const chosenProvider = provider || providerId || null;
 
         const slug = slugify(title);
 
@@ -30,9 +30,7 @@ const createCourse = async (req, res) => {
             return res.status(400).json({ message: 'Tên khóa học này đã tồn tại hoặc tạo ra link trùng lặp.' });
         }
         
-        // SỬA LỖI: Khai báo chính xác biến thumbnailUrl 👇
         let thumbnailUrl = '';
-
         if (req.file) {
             const uploadResult = await uploadToCloudinary(req.file.buffer);
             thumbnailUrl = uploadResult.secure_url; 
@@ -40,14 +38,28 @@ const createCourse = async (req, res) => {
             thumbnailUrl = req.body.thumbnail || "https://res.cloudinary.com/demo/image/upload/sample.jpg";
         }
 
+        let assignedInstructor = req.user._id;
+        if (req.user.role === 'admin') {
+            if (!instructorId) {
+                return res.status(400).json({ message: 'Admin tạo khóa học phải chỉ định gán cho một Instructor (instructorId).' });
+            }
+            assignedInstructor = instructorId; 
+        }
+        const categoriesData = req.body.category;
+        let finalCategories = [];
+        if (categoriesData) {
+            finalCategories = Array.isArray(categoriesData) ? categoriesData : [categoriesData];
+        }
         const course = new Course({
             title,
             slug,
             description,
             thumbnail: thumbnailUrl,
             price,
-            category,
-            instructor: req.user._id
+            category: finalCategories,
+            instructor: assignedInstructor,
+            provider: chosenProvider,
+            isPublished: req.user.role === 'admin' ? (req.body.isPublished === 'true' || req.body.isPublished === true) : false
         });
 
         const createdCourse = await course.save();
@@ -57,24 +69,24 @@ const createCourse = async (req, res) => {
     }
 };
 
-// @desc    Lấy danh sách khóa học
-// @route   GET /api/courses
 const getCourses = async (req, res) => {
     try {
-        const courses = await Course.find({}).populate('instructor', 'name email');
+        const courses = await Course.find({ isPublished: true })
+            .populate('instructor', 'name email')
+            .populate('category', 'name')
+            .populate('provider' );
         res.json(courses);
     } catch (error) {
         res.status(500).json({ message: 'Lỗi lấy danh sách khóa học' });
     }
 };
 
-// SỬA LỖI: Giữ lại hàm lấy chi tiết bằng ID (Dành cho trang quản lý/sửa khóa học)
-// @desc    Lấy chi tiết khóa học bằng ID
-// @route   GET /api/courses/:id
 const getCourseById = async (req, res) => {
     try {
         const course = await Course.findById(req.params.id)
             .populate('instructor', 'name email')
+            .populate('category', 'name')
+            .populate('provider')
             .populate('lessons')
             .populate({
                 path: 'reviews',
@@ -91,13 +103,12 @@ const getCourseById = async (req, res) => {
     }
 };
 
-// BỔ SUNG: Hàm lấy chi tiết bằng Slug (Dành cho hiển thị phía học viên bên Frontend)
-// @desc    Lấy chi tiết khóa học bằng Slug
-// @route   GET /api/courses/slug/:slug
 const getCourseBySlug = async (req, res) => {
     try {
-        const course = await Course.findOne({ slug: req.params.slug })
+        const course = await Course.findOne({ slug: req.params.slug, isPublished: true })
             .populate('instructor', 'name email')
+            .populate('category', 'name')
+            .populate('provider')
             .populate('lessons')
             .populate({
                 path: 'reviews',
@@ -107,61 +118,113 @@ const getCourseBySlug = async (req, res) => {
         if (course) {
             res.json(course);
         } else {
-            res.status(404).json({ message: 'Không tìm thấy khóa học' });
+            res.status(404).json({ message: 'Không tìm thấy khóa học hoặc khóa học chưa được xuất bản.' });
         }
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// @desc    Cập nhật khóa học
-// @route   PUT /api/courses/:id
+const getInstructorCourses = async (req, res) => {
+    try {
+        const filter = req.user.role === 'admin' ? {} : { instructor: req.user._id };
+
+        const courses = await Course.find(filter)
+            .populate('instructor', 'name email')
+            .populate('category', 'name') 
+            .sort({ createdAt: -1 });    
+
+        res.status(200).json({
+            success: true,
+            count: courses.length,
+            data: courses
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Không thể lấy danh sách khóa học quản trị',
+            error: error.message
+        });
+    }
+};
+
 const updateCourse = async (req, res) => {
     try {
         const course = await Course.findById(req.params.id);
 
-        if (course) {
-            if (course.instructor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-                return res.status(403).json({ message: 'Bạn không có quyền chỉnh sửa khóa học này' });
-            }
-
-            if (req.file) {
-                const uploadResult = await uploadToCloudinary(req.file.buffer);
-                course.thumbnail = uploadResult.secure_url; 
-            } else {
-                course.thumbnail = req.body.thumbnail || course.thumbnail; 
-            }
-
-            if (req.body.title && req.body.title !== course.title) {
-                const newSlug = slugify(req.body.title);
-                
-                const slugExists = await Course.findOne({ slug: newSlug, _id: { $ne: course._id } });
-                if (slugExists) {
-                    return res.status(400).json({ message: 'Tên khóa học mới bị trùng link với khóa học khác' });
-                }
-                
-                course.title = req.body.title;
-                course.slug = newSlug; 
-            }
-
-            course.description = req.body.description || course.description;
-            course.price = req.body.price || course.price;
-            course.category = req.body.category || course.category;
-            course.level = req.body.level || course.level;
-            course.isPublished = req.body.isPublished !== undefined ? req.body.isPublished : course.isPublished;
-
-            const updatedCourse = await course.save();
-            res.json(updatedCourse);
-        } else {
-            res.status(404).json({ message: 'Không tìm thấy khóa học' });
+        if (!course) {
+            return res.status(404).json({ message: 'Không tìm thấy khóa học' });
         }
+
+        if (course.instructor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Bạn không có quyền chỉnh sửa khóa học này' });
+        }
+
+        if (req.file) {
+            const uploadResult = await uploadToCloudinary(req.file.buffer);
+            course.thumbnail = uploadResult.secure_url; 
+        }
+
+        if (req.body.title && req.body.title !== course.title) {
+            const newSlug = slugify(req.body.title);
+            const slugExists = await Course.findOne({ slug: newSlug, _id: { $ne: course._id } });
+            if (slugExists) {
+                return res.status(400).json({ message: 'Tên khóa học mới bị trùng link với khóa học khác' });
+            }
+            course.title = req.body.title;
+            course.slug = newSlug; 
+        }
+
+        if (req.body.category) {
+            course.category = Array.isArray(req.body.category) ? req.body.category : [req.body.category];
+        }
+
+        course.description = req.body.description || course.description;
+        course.price = req.body.price !== undefined ? Number(req.body.price) : course.price;
+        course.level = req.body.level || course.level;
+
+        // 🔥 ĐÃ SỬA: Đưa định nghĩa biến lên trước, câu lệnh IF kiểm tra theo sau để sửa triệt để lỗi 500
+        const incomingProvider = req.body.provider !== undefined ? req.body.provider : req.body.providerId;
+        if (incomingProvider !== undefined) {
+            course.provider = incomingProvider || null; 
+        }
+
+        if (req.user.role === 'admin' && req.body.instructorId) {
+            course.instructor = req.body.instructorId;
+        }
+
+        const updatedCourse = await course.save();
+        res.json(updatedCourse);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// @desc    Đăng ký khóa học
-// @route   POST /api/courses/:id/enroll
+const publishCourse = async (req, res) => {
+    try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Hành động bị từ chối: Chỉ tài khoản Admin tối cao mới có quyền xuất bản khóa học.' });
+        }
+
+        const course = await Course.findById(req.params.id);
+        if (!course) {
+            return res.status(404).json({ message: 'Không tìm thấy khóa học cần xử lý.' });
+        }
+
+        if (req.body.isPublished !== undefined) {
+            course.isPublished = !!req.body.isPublished; 
+        }
+
+        const updatedCourse = await course.save();
+        res.json({
+            message: `Đã cập nhật trạng thái xuất bản: ${updatedCourse.isPublished ? "CÔNG KHAI" : "BẢN NHÁP"}`,
+            isPublished: updatedCourse.isPublished
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 const enrollInCourse = async (req, res) => {
     try {
         const Enrollment = require('../models/Enrollment');
@@ -209,5 +272,53 @@ const enrollInCourse = async (req, res) => {
     }
 };
 
-// Đừng quên export cả hàm getCourseBySlug ra ngoài nhé!
-module.exports = { createCourse, getCourses, getCourseById, getCourseBySlug, updateCourse, enrollInCourse };
+const deleteCourse = async (req, res) => {
+    try {
+        const course = await Course.findById(req.params.id);
+        if (!course) {
+            return res.status(404).json({ message: 'Không tìm thấy khóa học để xóa' });
+        }
+
+        if (course.instructor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Bạn không có quyền xóa khóa học này' });
+        }
+
+        const Lesson = require('../models/Lesson');
+        const Enrollment = require('../models/Enrollment');
+        const Quiz = require('../models/Quiz');
+        const QuizAttempt = require('../models/QuizAttempt');
+
+        // 1. Tìm tất cả các bài Quiz thuộc khóa học này để xóa lịch sử làm bài trước
+        const quizzes = await Quiz.find({ course: course._id });
+        const quizIds = quizzes.map(q => q._id);
+
+        // 2. Xóa sạch lịch sử làm bài (Attempts) và các bài Quiz
+        if (quizIds.length > 0) {
+            await QuizAttempt.deleteMany({ quiz: { $in: quizIds } });
+            await Quiz.deleteMany({ course: course._id });
+        }
+
+        // 3. Xóa bài học và lượt đăng ký học
+        await Lesson.deleteMany({ courseId: course._id });
+        await Enrollment.deleteMany({ course: course._id });
+
+        // 4. Xóa chính khóa học
+        await course.deleteOne();
+
+        res.status(200).json({ message: 'Xóa khóa học, bài học và toàn bộ đề thi/lịch sử liên quan thành công!' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { 
+    createCourse, 
+    getCourses, 
+    getCourseById, 
+    getCourseBySlug, 
+    getInstructorCourses, 
+    updateCourse, 
+    publishCourse, 
+    deleteCourse,
+    enrollInCourse 
+};

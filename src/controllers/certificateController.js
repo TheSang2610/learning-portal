@@ -13,8 +13,14 @@ const createCertificate = async (req, res) => {
         const { enrollmentId } = req.body;
 
         const enrollment = await Enrollment.findById(enrollmentId)
-            .populate('course')
-            .populate('student');
+            .populate({
+                path: 'course',
+                populate: {
+                    path: 'instructor',
+                    select: 'name'
+                }
+            })
+            .populate('student', 'name email');
 
         if (!enrollment) {
             return res.status(404).json({ message: 'Enrollment không tồn tại' });
@@ -24,49 +30,64 @@ const createCertificate = async (req, res) => {
             return res.status(400).json({ message: 'Khóa học chưa hoàn thành' });
         }
 
-        // Kiểm tra đã có chứng chỉ chưa
+        // 🔥 SỬA: Nếu đã tồn tại, return cái cũ thay vì error
         const existingCert = await Certificate.findOne({
             course: enrollment.course._id,
             student: enrollment.student._id
         });
 
         if (existingCert) {
-            return res.status(400).json({ message: 'Đã trao chứng chỉ cho khóa học này' });
+            console.log("✅ Certificate đã tồn tại, return cái cũ");
+            return res.status(200).json(existingCert);  // ✅ Return 200 + dữ liệu cũ
         }
 
-        // Tạo verification code
-        const verificationCode = crypto.randomBytes(16).toString('hex');
-
+        // Tạo cái mới
         const certificate = new Certificate({
+            certificateNumber: `CERT-${Date.now()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`,
             course: enrollment.course._id,
             student: enrollment.student._id,
             title: `Certificate of Completion - ${enrollment.course.title}`,
             description: `Successfully completed ${enrollment.course.title}`,
-            completionDate: enrollment.completedAt,
+            completionDate: enrollment.completedAt || new Date(),
             courseName: enrollment.course.title,
-            instructorName: enrollment.course.instructor.name || 'Instructor',
-            finalScore: enrollment.finalScore,
-            scorePercentage: enrollment.totalProgress,
-            verificationCode,
-            signedBy: enrollment.course.instructor.name || 'Learning Portal',
+            instructorName: enrollment.course.instructor?.name || 'Giảng viên hệ thống',
+            courseDuration: enrollment.course.duration || 'N/A',
+            finalScore: enrollment.finalScore || 100,
+            scorePercentage: enrollment.totalProgress || 100,
+            verificationCode: crypto.randomBytes(16).toString('hex'),
+            verificationUrl: `${req.protocol}://${req.get('host')}/api/certificates/verify/${crypto.randomBytes(16).toString('hex')}`,
+            signedBy: enrollment.course.instructor?.name || 'Giảng viên hệ thống',
             issuedAt: new Date()
         });
 
         const savedCertificate = await certificate.save();
 
         // Tạo achievement
-        await createAchievement(enrollment.student._id, 'course_completed', {
-            courseId: enrollment.course._id,
-            courseName: enrollment.course.title
+        const completedCoursesCount = await Enrollment.countDocuments({
+            student: enrollment.student._id,
+            status: 'completed'
         });
+
+        if (completedCoursesCount === 1) {
+            await createAchievement(enrollment.student._id, 'first_course_completed', {
+                courseId: enrollment.course._id,
+                courseName: enrollment.course.title
+            });
+        } else {
+            await createAchievement(enrollment.student._id, 'course_completed', {
+                courseId: enrollment.course._id,
+                courseName: enrollment.course.title
+            });
+        }
 
         res.status(201).json(savedCertificate);
     } catch (error) {
+        console.error("❌ Lỗi tạo certificate:", error.message);
         res.status(500).json({ message: error.message });
     }
 };
 
-// @desc    Lấy chứng chỉ của student
+// @desc    Lấy chứng chỉ của student hiện tại
 // @route   GET /api/certificates/my-certificates
 const getMyCertificates = async (req, res) => {
     try {
@@ -83,7 +104,7 @@ const getMyCertificates = async (req, res) => {
     }
 };
 
-// @desc    Lấy chi tiết chứng chỉ
+// @desc    Lấy chi tiết chứng chỉ bằng ID
 // @route   GET /api/certificates/:id
 const getCertificateById = async (req, res) => {
     try {
@@ -95,9 +116,9 @@ const getCertificateById = async (req, res) => {
             return res.status(404).json({ message: 'Chứng chỉ không tồn tại' });
         }
 
-        // Kiểm tra quyền (public hoặc student của mình)
+        // Kiểm tra quyền (phải là công khai HOẶC chính học viên đó sở hữu mới xem được)
         if (!certificate.isPublic && certificate.student._id.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ message: 'Bạn không có quyền xem chứng chỉ này' });
+            return res.status(403).json({ message: 'Bạn không có quyền xem chứng chỉ riêng tư này' });
         }
 
         res.json(certificate);
@@ -106,7 +127,7 @@ const getCertificateById = async (req, res) => {
     }
 };
 
-// @desc    Verify chứng chỉ
+// @desc    Verify chứng chỉ công khai thông qua Code
 // @route   GET /api/certificates/verify/:code
 const verifyCertificate = async (req, res) => {
     try {
@@ -120,12 +141,12 @@ const verifyCertificate = async (req, res) => {
             .populate('student', 'name');
 
         if (!certificate) {
-            return res.status(404).json({ message: 'Chứng chỉ không hợp lệ' });
+            return res.status(404).json({ message: 'Chứng chỉ không hợp lệ hoặc đã bị vô hiệu hóa' });
         }
 
-        // Check expiry
+        // Kiểm tra thời hạn hết hạn (Expiry Date)
         if (certificate.expiresAt && new Date() > certificate.expiresAt) {
-            return res.status(400).json({ message: 'Chứng chỉ đã hết hạn' });
+            return res.status(400).json({ message: 'Chứng chỉ này đã quá hạn áp dụng' });
         }
 
         res.json({
@@ -135,7 +156,9 @@ const verifyCertificate = async (req, res) => {
                 student: certificate.student.name,
                 course: certificate.courseName,
                 completionDate: certificate.completionDate,
-                issuedAt: certificate.issuedAt
+                issuedAt: certificate.issuedAt,
+                instructorName: certificate.instructorName,
+                signedBy: certificate.signedBy
             }
         });
     } catch (error) {
@@ -143,7 +166,7 @@ const verifyCertificate = async (req, res) => {
     }
 };
 
-// @desc    Cập nhật chứng chỉ (công khai/riêng tư)
+// @desc    Cập nhật trạng thái hiển thị của chứng chỉ (Chuyển đổi Public / Private)
 // @route   PUT /api/certificates/:id
 const updateCertificate = async (req, res) => {
     try {
@@ -153,9 +176,9 @@ const updateCertificate = async (req, res) => {
             return res.status(404).json({ message: 'Chứng chỉ không tồn tại' });
         }
 
-        // Kiểm tra quyền
+        // Chỉ chủ nhân của chứng chỉ mới có quyền ẩn/hiện
         if (certificate.student.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ message: 'Bạn không có quyền sửa chứng chỉ này' });
+            return res.status(403).json({ message: 'Bạn không có quyền chỉnh sửa chứng chỉ này' });
         }
 
         certificate.isPublic = req.body.isPublic !== undefined ? req.body.isPublic : certificate.isPublic;
@@ -167,7 +190,7 @@ const updateCertificate = async (req, res) => {
     }
 };
 
-// @desc    Lấy chứng chỉ công khai của user
+// @desc    Lấy toàn bộ danh sách chứng chỉ công khai của một user bất kỳ
 // @route   GET /api/certificates/user/:userId
 const getUserPublicCertificates = async (req, res) => {
     try {
@@ -179,7 +202,7 @@ const getUserPublicCertificates = async (req, res) => {
             isValid: true
         })
             .populate('course', 'title thumbnail')
-            .select('-verificationCode');
+            .select('-verificationCode'); // Bảo mật mã gốc khi xem công khai bên ngoài
 
         res.json(certificates);
     } catch (error) {
@@ -187,17 +210,14 @@ const getUserPublicCertificates = async (req, res) => {
     }
 };
 
-// @desc    Lấy achievements của student
+// @desc    Lấy danh sách thành tích của bản thân học viên
 // @route   GET /api/achievements/my-achievements
 const getMyAchievements = async (req, res) => {
     try {
-        const achievements = await Achievement.find({
-            student: req.user._id
-        })
+        const achievements = await Achievement.find({ student: req.user._id })
             .populate('relatedCourse', 'title')
             .sort({ unlockedAt: -1 });
 
-        // Tính total points
         const totalPoints = achievements.reduce((sum, a) => sum + a.points, 0);
 
         res.json({
@@ -210,7 +230,7 @@ const getMyAchievements = async (req, res) => {
     }
 };
 
-// @desc    Lấy achievement công khai của user
+// @desc    Lấy thành tích công khai của user khác để hiển thị Profile
 // @route   GET /api/achievements/user/:userId
 const getUserPublicAchievements = async (req, res) => {
     try {
@@ -235,13 +255,12 @@ const getUserPublicAchievements = async (req, res) => {
     }
 };
 
-// @desc    Lấy leaderboard
-// @route   GET /api/achievements/leaderboard?limit=10
+// @desc    Bảng xếp hạng học viên dựa theo tổng điểm tích lũy thành tích
+// @route   GET /api/achievements/leaderboard
 const getLeaderboard = async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 10;
 
-        // Aggregate achievements by student
         const leaderboard = await Achievement.aggregate([
             {
                 $group: {
@@ -250,23 +269,17 @@ const getLeaderboard = async (req, res) => {
                     achievements: { $sum: 1 }
                 }
             },
-            {
-                $sort: { totalPoints: -1 }
-            },
-            {
-                $limit: limit
-            },
+            { $sort: { totalPoints: -1 } },
+            { $limit: limit },
             {
                 $lookup: {
-                    from: 'users',
+                    from: 'users', // Đảm bảo tên collection trong DB của bạn là 'users' viết thường số nhiều
                     localField: '_id',
                     foreignField: '_id',
                     as: 'student'
                 }
             },
-            {
-                $unwind: '$student'
-            },
+            { $unwind: '$student' },
             {
                 $project: {
                     _id: 0,
@@ -287,35 +300,34 @@ const getLeaderboard = async (req, res) => {
     }
 };
 
-// Helper: Tạo achievement
+// Helper kết nối tự động ghi nhận Thành tích hệ thống
 const createAchievement = async (studentId, type, metadata = {}) => {
     try {
-        // Định nghĩa achievements
         const achievementDefs = {
             course_completed: {
-                title: `Course Master: ${metadata.courseName}`,
-                description: `Completed ${metadata.courseName}`,
+                title: `Bậc Thầy Khóa Học: ${metadata.courseName}`,
+                description: `Chúc mừng bạn đã hoàn thành trọn vẹn khóa học ${metadata.courseName}`,
                 points: 50,
                 level: 'silver',
                 badgeImage: 'https://via.placeholder.com/100?text=Completed'
             },
             first_course_completed: {
-                title: 'First Step',
-                description: 'Completed your first course',
+                title: 'Bước Tiến Đầu Tiên',
+                description: 'Hoàn thành xuất sắc khóa học đầu tiên của bạn trên hệ thống',
                 points: 100,
                 level: 'gold',
                 badgeImage: 'https://via.placeholder.com/100?text=First'
             },
             perfect_score: {
-                title: 'Perfect Score',
-                description: 'Achieved 100% on a quiz',
+                title: 'Điểm Số Tuyệt Đối',
+                description: 'Đạt thành tích 100% số điểm trong một bài Quiz bài học',
                 points: 75,
                 level: 'platinum',
                 badgeImage: 'https://via.placeholder.com/100?text=Perfect'
             },
             high_score: {
-                title: 'Quiz Master',
-                description: 'Achieved 90%+ on a quiz',
+                title: 'Kẻ Chinh Phục Thử Thách',
+                description: 'Đạt điểm số từ 90%+ trở lên trong một bài kiểm tra',
                 points: 30,
                 level: 'gold',
                 badgeImage: 'https://via.placeholder.com/100?text=HighScore'
@@ -325,7 +337,6 @@ const createAchievement = async (studentId, type, metadata = {}) => {
         const achDef = achievementDefs[type];
         if (!achDef) return;
 
-        // Check if already exists
         const existing = await Achievement.findOne({
             student: studentId,
             type: type,
@@ -348,7 +359,7 @@ const createAchievement = async (studentId, type, metadata = {}) => {
 
         await achievement.save();
     } catch (error) {
-        console.error('Error creating achievement:', error.message);
+        console.error('Lỗi trong tiến trình sinh tự động Achievement:', error.message);
     }
 };
 

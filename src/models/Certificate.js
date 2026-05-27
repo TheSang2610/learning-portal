@@ -88,7 +88,6 @@ certificateSchema.pre('save', async function (next) {
         const count = await mongoose.model('Certificate').countDocuments();
         this.certificateNumber = `CERT-${Date.now()}-${count + 1}`;
     }
-    next();
 });
 
 module.exports = mongoose.model('Certificate', certificateSchema);

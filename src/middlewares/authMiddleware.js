@@ -2,29 +2,48 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const protect = async (req, res, next) => {
-    let token;
+    try {
+        let token;
 
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        try {
+        // 1. Lấy token từ Authorization header
+        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
             token = req.headers.authorization.split(' ')[1];
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-            // Tìm user và gán vào req
-            req.user = await User.findById(decoded.id).select('-password');
-
-            if (!req.user) {
-                return res.status(401).json({ message: 'User không tồn tại' });
-            }
-
-            return next(); // Quan trọng: Phải return next()
-        } catch (error) {
-            console.error('JWT Error:', error.message);
-            return res.status(401).json({ message: 'Token không hợp lệ' });
         }
-    }
 
-    if (!token) {
-        return res.status(401).json({ message: 'Không có token, truy cập bị từ chối' });
+        // 2. Kiểm tra token tồn tại
+        if (!token) {
+            return res.status(401).json({ 
+                message: 'Không có token, truy cập bị từ chối' 
+            });
+        }
+
+        // 3. Xác thực token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // 4. Tìm user và gán vào req
+        req.user = await User.findById(decoded.id).select('-password');
+
+        if (!req.user) {
+            return res.status(401).json({ 
+                message: 'User không tồn tại' 
+            });
+        }
+
+        // 5. Gọi next() để tiếp tục xử lý
+        next();
+
+    } catch (error) {
+        console.error('JWT Error:', error.message);
+        
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ 
+                message: 'Token đã hết hạn, vui lòng đăng nhập lại' 
+            });
+        }
+        
+        return res.status(401).json({ 
+            message: 'Token không hợp lệ' 
+        });
     }
 };
 

@@ -33,6 +33,7 @@ app.use('/api/enrollments', require('./src/routes/enrollmentRoutes'));
 app.use('/api/quizzes', require('./src/routes/quizRoutes'));
 app.use('/api/certificates', require('./src/routes/certificateRoutes'));
 app.use('/api/admin', require('./src/routes/adminRoutes'));
+app.use("/api/providers", require("./src/routes/providerRoutes"));
 
 // Middleware xử lý lỗi 404 (Khi không tìm thấy route)
 app.use((req, res, next) => {

@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Course = require('../models/Course');
+const Lesson = require('../models/Lesson');
 const Enrollment = require('../models/Enrollment');
 const Certificate = require('../models/Certificate');
 const Review = require('../models/Review');
@@ -308,14 +309,20 @@ const deleteCourseAdmin = async (req, res) => {
             return res.status(404).json({ message: 'Khóa học không tìm thấy' });
         }
 
-        // Delete enrollments
+        // 🚀 CÁCH 1: XÓA SẠCH BÀI HỌC THUỘC KHÓA HỌC NÀY TRƯỚC
+        const Lesson = require('../models/Lesson'); // Import trực tiếp model Lesson vào đây
+        await Lesson.deleteMany({ courseId: course._id });
+
+        // Delete enrollments liên quan đến khóa học
         await Enrollment.deleteMany({ course: course._id });
 
-        // Delete certificates
+        // Delete certificates liên quan đến khóa học
         await Certificate.deleteMany({ course: course._id });
 
+        // Tiến hành xóa khóa học khỏi DB
         await course.deleteOne();
-        res.json({ message: 'Khóa học đã bị xóa' });
+        
+        res.json({ message: 'Khóa học và toàn bộ bài học liên quan đã bị xóa thành công' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
