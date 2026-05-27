@@ -4,6 +4,9 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Play, CheckCircle, Award, BookOpen, Clock, FileText, HelpCircle, Loader2, XCircle, Timer, CheckCircle2 } from "lucide-react";
 
+// Thêm import các thành phần liên quan đến Certificate
+import CertificateModal from "@/src/components/certificate/CertificateModal";
+
 // Đổi từ getCourseById sang getCourseBySlug để tìm kiếm bằng chuỗi chữ chuẩn SEO
 import { getCourseBySlug } from "@/src/services/course";
 import {
@@ -37,6 +40,9 @@ export default function CourseLearnPage() {
 
   // 🎯 STATE ĐIỀU KHIỂN HIỂN THỊ QUIZ TẠI CHỖ (CÁCH 1)
   const [isDoingQuiz, setIsDoingQuiz] = useState<boolean>(false);
+
+  // 🎯 STATE ĐIỀU KHIỂN HIỂN THỊ CERTIFICATE MODAL
+  const [showCertificate, setShowCertificate] = useState<boolean>(false);
 
   // 1. Tải thông tin tổng quan khi vào trang bằng Slug
   useEffect(() => {
@@ -157,8 +163,6 @@ export default function CourseLearnPage() {
       
       const response = await completeLesson(course._id, activeLesson._id, duration) as any;
       
-      alert(response?.message || `Chúc mừng bạn đã hoàn thành phần video bài học: ${activeLesson.title}`);
-
       const updatedEnroll = await getEnrollmentByCourse(course._id);
       setEnrollment(updatedEnroll);
 
@@ -167,7 +171,9 @@ export default function CourseLearnPage() {
 
       if (newStats?.progressPercentage === 100 || newStats?.completedCount === course?.lessons?.length) {
         await completeCourse(course._id);
-        alert("🎉 Xuất sắc! Bạn đã hoàn thành toàn bộ khóa học này!");
+        setShowCertificate(true); // Hiển thị modal chứng chỉ luôn, giảm bớt alert gây phiền
+      } else {
+        alert(response?.message || `Chúc mừng bạn đã hoàn thành phần video bài học: ${activeLesson.title}`);
       }
     } catch (error) {
       console.error("Lỗi khi gửi kết quả hoàn thành bài học:", error);
@@ -182,7 +188,7 @@ export default function CourseLearnPage() {
       const duration = videoRef.current ? Math.floor(videoRef.current.duration) : 0;
       
       // Gọi lại API completeLesson để Backend quét qua bài Quiz đã Pass và kích hoạt trạng thái "completed" bài học
-      const response = await completeLesson(course._id, activeLesson._id, duration) as any;
+      await completeLesson(course._id, activeLesson._id, duration);
       
       // Cập nhật lại toàn bộ State tiến độ hiển thị trên màn hình
       const updatedEnroll = await getEnrollmentByCourse(course._id);
@@ -193,7 +199,7 @@ export default function CourseLearnPage() {
 
       if (newStats?.progressPercentage === 100) {
         await completeCourse(course._id);
-        alert("🎉 Xuất sắc! Bạn đã hoàn thành khóa học!");
+        setShowCertificate(true);  // Hiển thị modal chứng chỉ khi hoàn thành 100% từ Quiz
       }
     } catch (error) {
       console.error("Lỗi đồng bộ tiến độ sau khi hoàn thành bài học:", error);
@@ -395,6 +401,15 @@ export default function CourseLearnPage() {
         </div>
 
       </div>
+
+      {/* 🎯 CERTIFICATE MODAL ĐƯỢC CHÈN DƯỚI CÙNG JSX */}
+      <CertificateModal
+        isOpen={showCertificate}
+        onClose={() => setShowCertificate(false)}
+        enrollmentId={enrollment?._id}
+        courseTitle={course?.title}
+        instructorName={course?.instructor?.name}
+      />
     </div>
   );
 }
