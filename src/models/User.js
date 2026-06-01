@@ -12,6 +12,15 @@ const userSchema = new mongoose.Schema({
         required: true
     },
 
+    fullname: {
+        type: String,
+        default: ''
+    },
+
+    birthday: {
+        type: Date
+    },
+
     email: {
         type: String,
         required: true,
@@ -34,6 +43,12 @@ const userSchema = new mongoose.Schema({
         default: 'student'
     },
 
+    provider: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Provider',
+        default: null
+    },
+    
     bio: {
         type: String,
         default: ''

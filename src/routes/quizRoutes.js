@@ -11,6 +11,7 @@ const {
     submitQuizAttempt,
     getQuizAttemptResult,
     getQuizAttempts,
+    allowStudentRetry,
     getQuizStats
 } = require('../controllers/quizController');
 
@@ -42,6 +43,8 @@ router.put('/:id', instructor, updateQuiz);
 
 // @route    PUT /api/quizzes/:id/publish
 router.put('/:id/publish', instructor, publishQuiz);
+
+router.put('/:id/allow-retry/:studentId', instructor, allowStudentRetry);
 
 // @route    DELETE /api/quizzes/:id
 router.delete('/:id', instructor, deleteQuiz);

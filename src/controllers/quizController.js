@@ -84,11 +84,11 @@ const getCourseQuizzes = async (req, res) => {
     }
 };
 
-// @desc     Lấy chi tiết quiz (Ẩn đáp án đối với học viên)
+// @desc     Lấy chi tiết quiz (Tự động đính kèm lượt làm bài mới nhất của học sinh)
 // @route    GET /api/quizzes/:id
 const getQuizById = async (req, res) => {
     try {
-        // Sử dụng .lean() để biến đổi trực tiếp kết quả Mongoose thành Plain JavaScript Object, tăng tốc độ và tránh lỗi .toObject()
+        // 1. Sử dụng .lean() để biến đổi kết quả thành Plain JavaScript Object nhằm thêm thuộc tính động dễ dàng
         const quiz = await Quiz.findById(req.params.id)
             .populate('lesson', 'title')
             .lean();
@@ -100,21 +100,50 @@ const getQuizById = async (req, res) => {
         // Kiểm tra an toàn trạng thái Published
         const isQuizPublished = quiz.isPublished === true || String(quiz.isPublished) === 'true';
 
+        // 2. Nếu người dùng đăng nhập là Học viên (Student)
         if (req.user.role === 'student') {
             if (!isQuizPublished) {
                 return res.status(403).json({ message: 'Bài tập/Đề thi này chưa được giảng viên công bố!' });
             }
 
-            // Ẩn đáp án bảo mật cho Học viên làm bài
+            // 🎯 SỬA TẠI ĐÂY: Thay vì lấy cái mới nhất bất kỳ, ta tìm lượt làm bài nào ĐANG CÓ HIỆU LỰC ('submitted')
+            const latestAttempt = await QuizAttempt.findOne({ 
+                quiz: quiz._id, 
+                student: req.user._id,
+                status: 'submitted' 
+            })
+            .sort({ createdAt: -1 })
+            .lean();
+
+            if (latestAttempt) {
+                quiz.latestAttempt = latestAttempt;
+            }
+
+            // 🎯 SỬA TẠI ĐÂY: Chỉ đếm các lượt làm bài hợp lệ thực sự để tính toán quyền xem đáp án
+            const maxAttempts = quiz.attempts || 1;
+            const validAttemptCount = await QuizAttempt.countDocuments({ 
+                quiz: quiz._id, 
+                student: req.user._id, 
+                status: 'submitted' 
+            });
+
+            // Học sinh chỉ được xem đáp án đúng/sai nếu đã PASSED hoặc ĐÃ HẾT LƯỢT LÀM BÀI HỢP LỆ
+            const canSeeAnswers = latestAttempt && (latestAttempt.passed || validAttemptCount >= maxAttempts);
+
             if (quiz.questions && Array.isArray(quiz.questions)) {
                 quiz.questions = quiz.questions.map((q) => {
                     delete q.correctAnswer;
                     delete q.explanation;
+                    
                     if (q.options && Array.isArray(q.options)) {
-                        q.options = q.options.map((opt) => ({
-                            _id: opt._id,
-                            text: opt.text
-                        }));
+                        q.options = q.options.map((opt) => {
+                            const baseOption = { _id: opt._id, text: opt.text };
+                            // Nếu đủ điều kiện xem lại bài, gửi kèm isCorrect về cho Frontend render màu xanh/đỏ
+                            if (canSeeAnswers) {
+                                baseOption.isCorrect = opt.isCorrect;
+                            }
+                            return baseOption;
+                        });
                     } else {
                         q.options = [];
                     }
@@ -123,6 +152,7 @@ const getQuizById = async (req, res) => {
             }
         }
 
+        // Trả về object quiz đã được gộp trường `latestAttempt`
         res.json(quiz);
     } catch (error) {
         console.error("LỖI TẠI GET_QUIZ_BY_ID BACKEND:", error.message);
@@ -230,7 +260,13 @@ const submitQuizAttempt = async (req, res) => {
         if (!quiz) return res.status(404).json({ message: 'Quiz không tồn tại' });
         if (!quiz.isPublished) return res.status(403).json({ message: 'Bài thi này chưa được mở' });
 
-        const attemptCount = await QuizAttempt.countDocuments({ quiz: id, student: req.user._id });
+        // 🎯 SỬA TẠI ĐÂY: Chỉ đếm những lượt đã nộp thành công, bỏ qua lượt bị giảng viên 'reset'
+        const attemptCount = await QuizAttempt.countDocuments({ 
+            quiz: id, 
+            student: req.user._id,
+            status: 'submitted'
+        });
+        
         if (attemptCount >= quiz.attempts) {
             return res.status(400).json({ message: `Bạn đã dùng hết giới hạn lượt làm bài (${quiz.attempts} lượt)` });
         }
@@ -281,7 +317,7 @@ const submitQuizAttempt = async (req, res) => {
             timeSpent,
             startedAt: startTime,
             submittedAt: endTime,
-            attemptNumber: attemptCount + 1,
+            attemptNumber: attemptCount + 1, // Số lượt làm tiếp theo dựa trên số lượt hợp lệ thực tế
             status: 'submitted'
         });
 
@@ -341,12 +377,15 @@ const submitQuizAttempt = async (req, res) => {
         }
 
         res.status(201).json({
+            _id: savedAttempt._id,
             attemptId: savedAttempt._id,
             score: savedAttempt.score,
             percentage: savedAttempt.percentage,
             passed: savedAttempt.passed,
             totalPoints: quiz.totalPoints,
             timeSpent,
+            attemptNumber: savedAttempt.attemptNumber, 
+            answers: savedAttempt.answers,
             message: passed 
                 ? `Chúc mừng bạn đã vượt qua bài kiểm tra!${lessonCompletedMessage}` 
                 : 'Rất tiếc, bạn chưa đạt mức điểm yêu cầu. Hãy thử lại ở lượt sau.'
@@ -407,7 +446,41 @@ const getQuizAttempts = async (req, res) => {
     }
 };
 
+// @desc     Cho phép một học sinh làm lại bài (Giảng viên/Admin kích hoạt)
+// @route    PUT /api/quizzes/:id/allow-retry/:studentId
+const allowStudentRetry = async (req, res) => {
+    try {
+        const { id: quizId, studentId } = req.params;
+        const { reason } = req.body;
+
+        if (!reason || !reason.trim()) {
+            return res.status(400).json({ message: "Vui lòng cung cấp lý do cho phép làm lại bài!" });
+        }
+
+        // 🎯 THAY VÌ UPDATE, TA XÓA BẢN GHI CŨ ĐỂ TRÁNH TRÙNG INDEX UNIQUE
+        const deletedAttempt = await QuizAttempt.findOneAndDelete({ quiz: quizId, student: studentId });
+
+        if (!deletedAttempt) {
+            return res.status(404).json({ message: "Không tìm thấy lượt làm bài của học sinh này." });
+        }
+
+        // Tùy chọn: Bạn có thể lưu lý do này vào một bảng Log hệ thống khác nếu cần lưu vết,
+        // hoặc đơn giản là giải phóng để học sinh được làm lại sạch sẽ.
+
+        res.status(200).json({
+            message: `Đã giải phóng bài làm cũ. Học sinh có thể làm lại bài mới ngay lập tức!`
+        });
+
+    } catch (error) {
+        console.error("Lỗi allowStudentRetry:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Đừng quên export hàm này ra ở cuối file module.exports nhé!
 // @desc     Lấy thống kê tổng hợp kết quả (Chỉ dành cho Giảng viên)
+// @route    GET /api/quizzes/:id/stats
+// @desc     Lấy thống kê kết quả Quiz và danh sách học viên chưa làm bài
 // @route    GET /api/quizzes/:id/stats
 const getQuizStats = async (req, res) => {
     try {
@@ -416,27 +489,46 @@ const getQuizStats = async (req, res) => {
         const quiz = await Quiz.findById(id);
         if (!quiz) return res.status(404).json({ message: 'Quiz không tồn tại' });
 
-        const course = await Course.findById(quiz.course);
-        if (course.instructor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-            return res.status(403).json({ message: 'Bạn không có quyền truy cập dữ liệu báo cáo khóa học này' });
-        }
+        // 1. Lấy tất cả lượt làm bài hợp lệ ('submitted') của bài quiz này
+        const attempts = await QuizAttempt.find({ quiz: id, status: 'submitted' })
+            .populate('student', 'name email');
 
-        const attempts = await QuizAttempt.find({ quiz: id }).populate('student', 'name email');
+        // 2. Lấy danh sách TẤT CẢ học sinh đã ghi danh vào khóa học này
+        const Enrollment = require('../models/Enrollment'); // Thay đường dẫn bằng model của bạn
+        const enrolledStudents = await Enrollment.find({ course: quiz.course })
+            .populate('student', 'name email')
+            .lean();
 
-        if (attempts.length === 0) {
-            return res.json({ totalAttempts: 0, averageScore: 0, passRate: 0, attempts: [] });
-        }
+        // Lấy ra mảng các ID của học sinh đã nộp bài
+        const submittedStudentIds = attempts.map(a => a.student._id.toString());
 
-        const passCount = attempts.filter((a) => a.passed).length;
-        const averageScore = Math.round(attempts.reduce((sum, a) => sum + a.percentage, 0) / attempts.length);
+        // 3. Lọc danh sách những học sinh CHƯA LÀM BÀI (Có tên trong lớp nhưng không có trong danh sách đã nộp)
+        const unsubmittedList = enrolledStudents
+            .map(e => e.student)
+            .filter(student => student && !submittedStudentIds.includes(student._id.toString()));
+
+        // 4. Gom nhóm lượt làm bài mới nhất của những người ĐÃ LÀM để hiển thị lên bảng điểm
+        const latestAttemptsMap = {};
+        attempts.forEach(a => {
+            const studentId = a.student._id.toString();
+            if (!latestAttemptsMap[studentId] || new Date(a.submittedAt) > new Date(latestAttemptsMap[studentId].submittedAt)) {
+                latestAttemptsMap[studentId] = a;
+            }
+        });
+
+        // Tính toán các thông số tổng quan
+        const totalAttempts = attempts.length;
+        const passCount = attempts.filter(a => a.passed).length;
+        const averageScore = totalAttempts > 0 
+            ? Math.round(attempts.reduce((sum, a) => sum + a.percentage, 0) / totalAttempts) 
+            : 0;
 
         res.json({
-            totalAttempts: attempts.length,
+            title: quiz.title,
+            totalAttempts,
             averageScore,
-            passRate: Math.round((passCount / attempts.length) * 100),
-            passCount,
-            failCount: attempts.length - passCount,
-            attempts: attempts.map((a) => ({
+            passRate: totalAttempts > 0 ? Math.round((passCount / totalAttempts) * 100) : 0,
+            submittedList: Object.values(latestAttemptsMap).map((a) => ({
                 _id: a._id,
                 student: a.student,
                 score: a.score,
@@ -444,12 +536,16 @@ const getQuizStats = async (req, res) => {
                 passed: a.passed,
                 attemptNumber: a.attemptNumber,
                 submittedAt: a.submittedAt
-            }))
+            })),
+            unsubmittedList // 🎯 Danh sách học sinh làm thiếu gửi về đây
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
+// Đừng quên viết thêm route tương ứng cho hàm này nhé!
+// router.get('/:id/stats', protect, instructorOnly, getQuizStats);
 
 module.exports = {
     createQuiz,
@@ -459,6 +555,7 @@ module.exports = {
     publishQuiz,
     deleteQuiz,
     submitQuizAttempt,
+    allowStudentRetry,
     getQuizAttemptResult,
     getQuizAttempts,
     getQuizStats

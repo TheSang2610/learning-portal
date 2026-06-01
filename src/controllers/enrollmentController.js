@@ -371,7 +371,19 @@ const enrollInCourse = async (req, res) => {
             if (existingEnrollment.status === 'dropped') {
                 existingEnrollment.status = 'active';
                 await existingEnrollment.save();
-                return res.json({ message: 'Kích hoạt lại khóa học thành công', enrollment: existingEnrollment });
+                
+                // Đồng thời tăng lại số lượng học viên nếu cần thiết
+                const updatedCourse = await Course.findByIdAndUpdate(
+                    courseId,
+                    { $inc: { studentsCount: 1 } },
+                    { new: true }
+                );
+
+                return res.json({ 
+                    message: 'Kích hoạt lại khóa học thành công', 
+                    enrollment: existingEnrollment,
+                    studentsCount: updatedCourse ? updatedCourse.studentsCount : 1
+                });
             }
             return res.status(400).json({ message: 'Bạn đã đăng ký khóa học này rồi' });
         }
@@ -395,9 +407,23 @@ const enrollInCourse = async (req, res) => {
 
         await newEnrollment.save();
 
+        // 5. 🔥 ĐỒNG BỘ: Tăng số lượng học viên bên bảng Course bằng toán tử $inc
+        const updatedCourse = await Course.findByIdAndUpdate(
+            courseId,
+            { $inc: { studentsCount: 1 } },
+            { new: true } // Trả về dữ liệu mới nhất sau cập nhật
+        );
+
+        // 6. 🔥 ĐỒNG BỘ: Đẩy thông tin khóa học vào mảng của User
+        await User.findByIdAndUpdate(req.user._id, {
+            $addToSet: { enrolledCourses: courseId } // Dùng $addToSet để tránh trùng lặp phần tử
+        });
+
+        // 7. Trả dữ liệu sạch đẹp về cho Frontend render
         res.status(201).json({
             message: 'Đăng ký khóa học thành công!',
-            enrollment: newEnrollment
+            enrollment: newEnrollment,
+            studentsCount: updatedCourse ? updatedCourse.studentsCount : 1
         });
     } catch (error) {
         res.status(500).json({ message: error.message });

@@ -63,12 +63,17 @@ const quizAttemptSchema = new mongoose.Schema({
         default: 1
     },
 
+    retryReason: {
+        type: String,
+        default: ""
+    },
+
     // Feedback từ instructor (tuỳ chọn)
     feedback: String,
 
     status: {
         type: String,
-        enum: ['submitted', 'graded', 'reviewed'],
+        enum: ['submitted', 'graded', 'reviewed', 'reset'],
         default: 'submitted'
     }
 

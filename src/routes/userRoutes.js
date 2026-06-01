@@ -6,10 +6,13 @@ const {
     loginUser,
     googleLogin,
     updateUserProfile,
+    getInstructorsByProvider,
     updateUserRole,
     deleteUser 
 } = require('../controllers/userController');
 const { protect, admin } = require('../middlewares/authMiddleware');
+
+router.get('/instructors', protect, admin, getInstructorsByProvider);
 
 router.route('/').get(protect, admin, getUsers).post(registerUser);
 router.post('/login', loginUser);

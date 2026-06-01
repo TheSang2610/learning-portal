@@ -90,6 +90,21 @@ const courseSchema = new mongoose.Schema({
         }
     ],
 
+    isPopular: {
+        type: Boolean,
+        default: false
+    },
+
+    isTrending: {
+        type: Boolean,
+        default: false
+    },
+
+    isNewRelease: {
+        type: Boolean,
+        default: false
+    }
+    
 }, { timestamps: true });
 
 module.exports = mongoose.model('Course', courseSchema);

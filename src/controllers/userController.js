@@ -219,6 +219,11 @@ const updateUserRole = async (req, res) => {
 const updateUserProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User không tìm thấy' });
+        }
+
         if (req.body.phone) {
             const phoneExists = await User.findOne({
                 phone: req.body.phone,
@@ -226,34 +231,58 @@ const updateUserProfile = async (req, res) => {
             });
 
             if (phoneExists) {
-                return res.status(400).json({
-                    message: 'Số điện thoại đã tồn tại'
-                });
+                return res.status(400).json({ message: 'Số điện thoại đã tồn tại' });
             }
-
             user.phone = req.body.phone;
         }
-        if (user) {
-            user.name = req.body.name || user.name;
-            user.avatar = req.body.avatar || user.avatar;
-            user.bio = req.body.bio || user.bio;
-            user.phone = req.body.phone || user.phone;
 
-            if (req.body.password) {
-                const salt = await bcrypt.genSalt(10);
-                user.password = await bcrypt.hash(req.body.password, salt);
-            }
+        // Cập nhật các trường thông tin cơ bản
+        user.name = req.body.name || user.name;
+        user.fullname = req.body.fullname || user.fullname;
+        user.birthday = req.body.birthday || user.birthday;
+        user.avatar = req.body.avatar || user.avatar;
+        user.bio = req.body.bio || user.bio;
 
-            const updatedUser = await user.save();
-            res.json({
-                _id: updatedUser._id,
-                name: updatedUser.name,
-                email: updatedUser.email,
-                role: updatedUser.role,
-            });
-        } else {
-            res.status(404).json({ message: 'User không tìm thấy' });
+        // 🎯 ĐẶC BIỆT: Nếu là Instructor, cho phép tự cập nhật/chọn Trường/Doanh nghiệp chủ quản
+        if (user.role === 'instructor' && req.body.provider) {
+            user.provider = req.body.provider;
         }
+
+        if (req.body.password) {
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(req.body.password, salt);
+        }
+
+        const updatedUser = await user.save();
+        
+        // Trả về dữ liệu sạch kèm thông tin provider nếu có
+        res.json({
+            _id: updatedUser._id,
+            name: updatedUser.name,
+            fullname: updatedUser.fullname,
+            birthday: updatedUser.birthday,
+            email: updatedUser.email,
+            role: updatedUser.role,
+            provider: updatedUser.provider
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get instructors filtered by Provider (Phục vụ Admin khi tạo khóa học)
+// @route   GET /api/users/instructors
+const getInstructorsByProvider = async (req, res) => {
+    try {
+        const { providerId } = req.query;
+        let filter = { role: 'instructor' };
+        
+        if (providerId) {
+            filter.provider = providerId;
+        }
+
+        const instructors = await User.find(filter).select('name email fullname provider');
+        res.json(instructors);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -292,6 +321,7 @@ module.exports = {
     loginUser,
     googleLogin,
     updateUserProfile,
+    getInstructorsByProvider,
     updateUserRole,
     deleteUser
 };
