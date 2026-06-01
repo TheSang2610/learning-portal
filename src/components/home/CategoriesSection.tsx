@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { getCategories, Category } from "@/src/services/categoryService";
 
 export default function CategoriesSection() {
@@ -50,24 +51,23 @@ export default function CategoriesSection() {
 
         {/* FLEX WRAPPER FOR PILLS (Tự động xuống hàng, dữ liệu động) */}
         <div className="flex flex-wrap px-2 gap-2 mt-6">
-          {categories.map((category) => (
-            <div
-              // Sử dụng ID từ database (_id) làm key để tối ưu hiệu năng render của React
-              key={category._id}
-              className="min-w-fit bg-[#f0f6ff] rounded-full border border-gray-200 px-4 py-2 flex items-center justify-center shadow-sm hover:shadow-md hover:border-gray-400 transition duration-200 cursor-pointer select-none"
-            >
-              {/* Hiển thị icon nếu có cấu hình trong database */}
-              {/* {category.icon && (
-                <span className="mr-2 text-sm text-blue-600 font-mono">
-                  {category.icon}
+          {categories.map((category) => {
+            // Đảm bảo bạn có trường slug trong model Category (ví dụ: "computer-science", "business")
+            // Nếu chưa có trường slug, tạm thời dùng: encodeURIComponent(category.name.toLowerCase().replace(/ /g, "-"))
+            const catSlug = category.slug || category.name.toLowerCase().replace(/ /g, "-");
+
+            return (
+              <Link
+                href={`/${catSlug}`}
+                key={category._id}
+                className="min-w-fit bg-[#f0f6ff] rounded-full border border-gray-200 px-4 py-2 flex items-center justify-center shadow-sm hover:shadow-md hover:border-gray-400 transition duration-200 cursor-pointer select-none group"
+              >
+                <span className="text-sm md:text-md font-medium text-gray-800 whitespace-nowrap group-hover:text-blue-600 transition">
+                  {category.name}
                 </span>
-              )} */}
-              
-              <span className="text-sm md:text-md font-medium text-gray-800 whitespace-nowrap">
-                {category.name}
-              </span>
-            </div>
-          ))}
+              </Link>
+            );
+          })}
         </div>
 
       </div>

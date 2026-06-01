@@ -5,7 +5,9 @@ import { useEffect, useState } from "react";
 import { createCourse } from "@/src/services/course";
 import { getCategories, Category } from "@/src/services/categoryService";
 import { getUsers, User } from "@/src/services/userApi"; 
-import { ArrowLeft, Sparkles, User as UserIcon, Tag, Check, ImageIcon, Image as ImageIcon2 } from "lucide-react";
+// 🎯 BỔ SUNG: Import API lấy danh sách đối tác và icon Building2
+import { getProviders, ProviderData } from "@/src/services/provider";
+import { ArrowLeft, Sparkles, User as UserIcon, Tag, Check, ImageIcon, Image as ImageIcon2, Building2 } from "lucide-react";
 import Link from "next/link";
 
 const convertToSlug = (text: string) => {
@@ -30,27 +32,31 @@ export default function CreateCoursePage() {
     price: 0,
     category: [] as string[], 
     instructor: "", 
+    providerId: "", // 🎯 BỔ SUNG: Lưu ID của đối tác/trường học được chọn
     level: "beginner",
   });
 
-  // 🔥 1. BỔ SUNG STATE LƯU FILE ẢNH VÀ LINK XEM TRƯỚC (PREVIEW)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [instructors, setInstructors] = useState<User[]>([]); 
+  const [providers, setProviders] = useState<ProviderData[]>([]); // 🎯 BỔ SUNG: State lưu danh sách đối tác
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
-        const [categoriesData, usersData] = await Promise.all([
+        // 🎯 BỔ SUNG: Đồng bộ gọi thêm API lấy danh sách đối tác/trường học liên kết
+        const [categoriesData, usersData, providersData] = await Promise.all([
           getCategories(),
           getUsers(), 
+          getProviders(),
         ]);
 
         setCategories(categoriesData);
+        setProviders(providersData); // 🎯 BỔ SUNG: Lưu danh sách đối tác vào State
         
         const instructorList = (usersData || []).filter(
           (u: User) => u.role === "instructor"
@@ -81,12 +87,10 @@ export default function CreateCoursePage() {
     });
   };
 
-  // 🔥 2. HÀM XỬ LÝ KHI NGƯỜI DÙNG CHỌN FILE ẢNH
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setThumbnailFile(file);
-      // Tạo đường dẫn ảo để hiển thị ảnh lên màn hình ngay lập tức
       setImagePreview(URL.createObjectURL(file));
     }
   };
@@ -109,25 +113,22 @@ export default function CreateCoursePage() {
     try {
       setLoading(true);
 
-      // 🔥 3. CHUYỂN ĐỔI SANG FORMDATA ĐỂ GỬI ĐƯỢC FILE LÊN BACKEND
       const dataToSend = new FormData();
       dataToSend.append("title", formData.title);
       dataToSend.append("slug", formData.slug);
       dataToSend.append("description", formData.description);
       dataToSend.append("price", String(formData.price));
       dataToSend.append("level", formData.level);
-      dataToSend.append("instructorId", formData.instructor); // Khớp với trường 'instructorId' ở Backend tạo
+      dataToSend.append("instructorId", formData.instructor); 
+      dataToSend.append("providerId", formData.providerId); // 🎯 BỔ SUNG: Gửi thêm Provider ID lên Backend khi tạo mới
 
-      // Duyệt mảng gửi lên nhiều category trùng key để Backend hứng mảng
       formData.category.forEach((id) => {
         dataToSend.append("category", id);
       });
 
-      // Đính kèm file ảnh vật lý
       dataToSend.append("thumbnail", thumbnailFile);
 
-      // Gọi API gửi khối FormData này đi
-      const course = await createCourse(dataToSend as any);
+      await createCourse(dataToSend as any);
       
       alert("Tạo khóa học thành công!");
       router.push(`/admin/courses`);
@@ -156,7 +157,7 @@ export default function CreateCoursePage() {
 
       <form onSubmit={submitHandler} className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200 space-y-5">
         
-        {/* 🔥 4. GIAO DIỆN KHU VỰC UPLOAD THUMBNAIL */}
+        {/* UPLOAD THUMBNAIL */}
         <div>
           <label className="block mb-2 text-sm font-semibold text-slate-700 flex items-center gap-2">
             <ImageIcon size={16} className="text-blue-500" />
@@ -164,7 +165,6 @@ export default function CreateCoursePage() {
           </label>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center bg-slate-50 p-4 rounded-2xl border border-dashed border-slate-300">
-            {/* Khung hiển thị ảnh xem trước */}
             <div className="aspect-video md:col-span-1 bg-slate-200 rounded-xl overflow-hidden flex items-center justify-center relative border border-slate-200">
               {imagePreview ? (
                 <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
@@ -176,7 +176,6 @@ export default function CreateCoursePage() {
               )}
             </div>
 
-            {/* Nút bấm chọn file */}
             <div className="md:col-span-2">
               <input
                 type="file"
@@ -261,6 +260,27 @@ export default function CreateCoursePage() {
               <option value="advanced">Nâng cao (Advanced)</option>
             </select>
           </div>
+        </div>
+
+        {/* 🎯 BỔ SUNG: KHU VỰC CHỌN ĐỐI TÁC / TRƯỜNG HỌC LIÊN KẾT (Giống hệt bên Edit) */}
+        <div className="border-t pt-4">
+          <label className="mb-2 text-sm font-semibold text-slate-700 flex items-center gap-2">
+            <Building2 size={16} className="text-violet-500" />
+            Đơn vị đối tác / Trường học liên kết
+          </label>
+          <select
+            name="providerId"
+            value={formData.providerId}
+            onChange={changeHandler}
+            className="w-full border border-slate-200 rounded-2xl p-4 text-sm outline-none focus:border-blue-500 transition bg-white text-slate-800"
+          >
+            <option value="">-- Hệ thống LMS cấp chứng chỉ độc lập --</option>
+            {providers.map((prov) => (
+              <option key={prov._id} value={prov._id}>
+                {prov.type === "university" ? "[Trường học] " : "[Doanh nghiệp] "} {prov.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* CHỌN GIẢNG VIÊN */}

@@ -1,14 +1,14 @@
 "use client";
-
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-// 🎯 Import thêm icon Video để làm nút chuyển hướng
-import { Video } from "lucide-react"; 
+import { Video, Trash2, Edit, HelpCircle } from "lucide-react"; // 🎯 Thêm HelpCircle
+import { deleteCourseAdmin } from "@/src/services/adminService";
 import { Course, getInstructorCourses } from "@/src/services/course";
 
 export default function AdminCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -28,6 +28,25 @@ export default function AdminCoursesPage() {
 
     fetchCourses();
   }, []);
+
+  const handleDeleteCourse = async (courseId: string, courseTitle: string) => {
+    const isConfirmed = window.confirm(
+      `⚠️ CẢNH BÁO NGUY HIỂM!\n\nBạn có chắc chắn muốn xóa khóa học: "${courseTitle}"?\nHành động này sẽ xóa toàn bộ bài học, bài tập trắc nghiệm (quiz) bên trong và KHÔNG THỂ HOÀN TÁC!`
+    );
+    if (!isConfirmed) return;
+
+    try {
+      setDeletingId(courseId);
+      await deleteCourseAdmin(courseId); 
+      alert("Xóa khóa học và toàn bộ dữ liệu liên quan thành công!");
+      setCourses((prevCourses) => prevCourses.filter((c) => c._id !== courseId));
+    } catch (error: any) {
+      console.error("Lỗi khi xóa khóa học:", error);
+      alert(error?.message || "Không thể xóa khóa học. Vui lòng kiểm tra lại phân quyền Admin.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   if (loading) {
     return <div className="p-8 text-center font-medium text-slate-500 animate-pulse">Loading courses...</div>;
@@ -86,21 +105,39 @@ export default function AdminCoursesPage() {
                     {course.isPublished ? "Published" : "Draft"}
                   </span>
                 </td>
-                {/* 🎯 KHU VỰC THAY ĐỔI: Thêm nút Quản lý bài học vào đây */}
-                <td className="p-5 flex items-center gap-4">
+                
+                <td className="p-5 flex items-center gap-2">
                   <Link
                     href={course._id ? `/admin/courses/${course._id}/lessons` : "#"}
-                    className="inline-flex items-center gap-1 bg-slate-900 hover:bg-slate-800 text-black font-bold text-xs px-3 py-2 rounded-xl transition shadow-sm"
+                    className="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs px-2.5 py-2 rounded-xl transition"
                   >
                     <Video size={13} /> Bài học
+                  </Link>
+
+                  {/* 🎯 NÚT MỚI THÊM: Quản lý FAQ theo Course ID */}
+                  <Link
+                    href={course._id ? `/admin/courses/${course._id}/faqs` : "#"}
+                    className="inline-flex items-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-600 font-bold text-xs px-2.5 py-2 rounded-xl transition"
+                  >
+                    <HelpCircle size={13} /> Hỏi đáp
                   </Link>
                   
                   <Link
                     href={course._id ? `/admin/courses/${course._id}` : "#"}
-                    className="text-blue-600 hover:text-blue-800 font-bold text-sm transition"
+                    className="inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold text-xs px-2.5 py-2 rounded-xl transition"
                   >
-                    Edit
+                    <Edit size={13} /> Sửa
                   </Link>
+
+                  <button
+                    type="button"
+                    disabled={deletingId === course._id}
+                    onClick={() => handleDeleteCourse(course._id!, course.title)}
+                    className="inline-flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs px-2.5 py-2 rounded-xl transition disabled:bg-slate-100 disabled:text-slate-400"
+                  >
+                    <Trash2 size={13} />
+                    {deletingId === course._id ? "Đang xóa..." : "Xóa"}
+                  </button>
                 </td>
               </tr>
             ))}

@@ -53,6 +53,7 @@ export interface QuizSubmitResponse {
   totalPoints: number;
   timeSpent: number;
   message: string;
+  attemptNumber?: number;
 }
 
 export interface QuizAttempt {
@@ -80,12 +81,11 @@ export interface QuizAttempt {
 }
 
 export interface QuizStats {
+  title: string; // Khớp cấu trúc backend trả về tên đề thi
   totalAttempts: number;
   averageScore: number;
   passRate: number;
-  passCount: number;
-  failCount: number;
-  attempts: Array<{
+  submittedList: Array<{
     _id: string;
     student: { _id: string; name: string; email: string };
     score: number;
@@ -94,6 +94,17 @@ export interface QuizStats {
     attemptNumber: number;
     submittedAt: string;
   }>;
+  unsubmittedList: Array<{
+    _id: string;
+    name: string;
+    email: string;
+  }>;
+}
+
+// 🎯 BỔ SUNG: Kiểu dữ liệu trả về khi Giảng viên bấm reset bài làm
+export interface AllowRetryResponse {
+  message: string;
+  attempt: QuizAttempt;
 }
 
 // ================= QUIZ API SERVICES =================
@@ -142,7 +153,6 @@ export const deleteQuiz = async (id: string): Promise<{ message: string }> => {
 };
 
 // 7. Nộp bài làm Quiz (Student)
-// Lưu ý: Cần truyền `startedAt` (ISOString) từ client để Backend tính toán `timeSpent` chuẩn xác nhất
 export const submitQuizAttempt = async (
   quizId: string, 
   answers: StudentAnswerInput[], 
@@ -159,7 +169,7 @@ export const getQuizAttemptResult = async (quizId: string, attemptId: string): P
   return apiRequest(`/quizzes/${quizId}/attempt/${attemptId}`);
 };
 
-// 9. Lấy danh sách lịch sử các lần làm bài của Học viên hiện tại đối với bài Quiz này
+// 9. Lấy danh sách lịch sử các lần làm bài của Học viên hiện tại đối với bài Quiz nàySs
 export const getQuizAttempts = async (quizId: string): Promise<QuizAttempt[]> => {
   return apiRequest(`/quizzes/${quizId}/attempts`);
 };
@@ -167,4 +177,12 @@ export const getQuizAttempts = async (quizId: string): Promise<QuizAttempt[]> =>
 // 10. Xem thống kê báo cáo phổ điểm của bài Quiz (Instructor/Admin)
 export const getQuizStats = async (quizId: string): Promise<QuizStats> => {
   return apiRequest(`/quizzes/${quizId}/stats`);
+};
+
+// 11. 🎯 BỔ SUNG: Kích hoạt quyền cho một học sinh làm lại bài (Instructor/Admin)
+export const allowStudentRetry = async (quizId: string, studentId: string, reason: string): Promise<AllowRetryResponse> => {
+  return apiRequest(`/quizzes/${quizId}/allow-retry/${studentId}`, {
+    method: "PUT",
+    body: JSON.stringify({ reason }),
+  });
 };

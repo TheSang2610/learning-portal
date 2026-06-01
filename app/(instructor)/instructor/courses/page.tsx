@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getInstructorCourses, Course } from "@/src/services/course"; // Đảm bảo đúng đường dẫn alias của bạn
-import { Plus, BookOpen, User, Tag, Calendar, ChevronRight } from "lucide-react";
+import { getInstructorCourses, Course } from "@/src/services/course"; 
+import { Plus, BookOpen, User, Tag, ChevronRight } from "lucide-react";
 
 export default function AllCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -42,9 +42,10 @@ export default function AllCoursesPage() {
           <h3 className="text-xl font-bold text-slate-800">Khóa học của tôi</h3>
           <p className="text-sm text-slate-500">Quản lý và cập nhật nội dung các chương trình giảng dạy.</p>
         </div>
+        {/* ✅ Đã sửa: text-black -> text-white tăng độ tương phản */}
         <Link 
           href="/instructor/courses/create"
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-black px-5 py-2.5 rounded-xl font-medium shadow-md shadow-indigo-600/10 transition-all text-sm"
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-md shadow-indigo-600/10 transition-all text-sm"
         >
           <Plus size={18} />
           Tạo khóa học mới
@@ -95,7 +96,7 @@ export default function AllCoursesPage() {
                 <div className="space-y-2">
                   <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md">
                     <Tag size={12} />
-                    {typeof course.category === "object" ? course.category.name : "Chưa phân loại"}
+                    {typeof course.category === "object" ? (course.category as any).name : "Chưa phân loại"}
                   </span>
                   <h4 className="font-bold text-slate-800 text-base line-clamp-2 group-hover:text-indigo-600 transition-colors">
                     {course.title}
@@ -118,7 +119,7 @@ export default function AllCoursesPage() {
 
                 {/* HÀNH ĐỘNG */}
                 <Link 
-                  href={`/instructor/courses/edit/${course._id}`}
+                  href={`/instructor/courses/${course._id}`}
                   className="w-full text-center bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold py-2.5 rounded-xl text-xs transition-all border border-slate-200 inline-block"
                 >
                   Chỉnh sửa nội dung & Bài học

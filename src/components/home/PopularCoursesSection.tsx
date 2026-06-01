@@ -1,35 +1,57 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowRight, Star, BookOpen, User, Building2 } from "lucide-react";
+import { ArrowRight, BookOpen, User, Building2 } from "lucide-react";
 import Link from "next/link";
 
-import { getCourses, Course } from "@/src/services/course"; 
+// 🎯 THÊM: Import hàm getHomeSections thay vì getCourses
+import { getHomeSections, Course } from "@/src/services/course"; 
+import { getCategories, Category } from "@/src/services/categoryService"; 
+
+interface HomeSectionsState {
+  mostPopular: Course[];
+  trendingNow: Course[];
+  newReleases: Course[];
+}
 
 export default function PopularCoursesSection() {
-  const [courses, setCourses] = useState<Course[]>([]);
+  const [sections, setSections] = useState<HomeSectionsState>({
+    mostPopular: [],
+    trendingNow: [],
+    newReleases: [],
+  });
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAllCourses = async () => {
+    const fetchHomeData = async () => {
       try {
         setLoading(true);
-        // Gọi hàm từ file service của bạn
-        const data = await getCourses();
+        // 🎯 Gọi API cấu trúc phân mục trang chủ song song với danh mục
+        const [response, categoriesRes] = await Promise.all([
+          getHomeSections(),
+          getCategories(),
+        ]);
         
-        if (Array.isArray(data)) {
-          // Chỉ lấy các khóa học đã được kích hoạt Public (isPublished === true)
-          const publishedCourses = data.filter((c: Course) => c.isPublished);
-          setCourses(publishedCourses);
+        if (response && response.success && response.data) {
+          setSections({
+            mostPopular: response.data.mostPopular || [],
+            trendingNow: response.data.trendingNow || [],
+            // Đồng bộ key hot-releases của UI với key newReleases của API
+            newReleases: response.data.newReleases || [],
+          });
+        }
+        if (categoriesRes) {
+          setCategories(categoriesRes);
         }
       } catch (error) {
-        console.error("Lỗi khi load danh sách khóa học:", error);
+        console.error("Lỗi khi load danh sách cấu trúc trang chủ:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAllCourses();
+    fetchHomeData();
   }, []);
 
   if (loading) {
@@ -41,16 +63,23 @@ export default function PopularCoursesSection() {
     );
   }
 
-  // Chia mảng khóa học thành các cụm (ví dụ tối đa 3 khóa học cho mỗi cột như giao diện mẫu Coursera)
-  const mostPopular = courses.slice(0, 3);
-  const hotReleases = courses.slice(3, 6);
-  const trendingNow = courses.slice(6, 9);
+  const getCategorySlug = (course: any) => {
+    const catData = course.category;
+    if (!catData) return "general";
+    const catId = typeof catData === "object" ? (catData._id || catData.$oid) : catData;
+    const cat = categories.find((c) => c._id === catId);
+    return cat?.slug || cat?.name?.toLowerCase().replace(/[^a-zA-Z0-9\s]/g, "").replace(/\s+/g, "-") || "general";
+  };
 
+  // Cấu hình các cột hiển thị dựa trên dữ liệu thật thu được từ Database
   const categoriesColumns = [
-    { id: "most-popular", title: "Most popular", data: mostPopular },
-    { id: "hot-releases", title: "Hot new releases", data: hotReleases },
-    { id: "trending-now", title: "Trending now", data: trendingNow },
+    { id: "most-popular", title: "Most popular", data: sections.mostPopular },
+    { id: "hot-releases", title: "Hot new releases", data: sections.newReleases },
+    { id: "trending-now", title: "Trending now", data: sections.trendingNow },
   ];
+
+  // Kiểm tra xem tổng cả 3 mục có mục nào có khóa học hay không
+  const hasData = categoriesColumns.some(col => col.data.length > 0);
 
   return (
     <section className="bg-[#f5f7fa] py-10">
@@ -64,15 +93,15 @@ export default function PopularCoursesSection() {
           <p className="text-sm text-gray-500 mt-1">Explore our latest online courses and single lessons</p>
         </div>
 
-        {courses.length === 0 ? (
+        {!hasData ? (
           <div className="text-center py-16 text-gray-400 bg-white rounded-2xl border border-dashed mt-6">
-            Không có khóa học nào đang ở trạng thái hiển thị (Published).
+            Không có khóa học nào được Admin kích hoạt hiển thị lên trang chủ vào lúc này.
           </div>
         ) : (
           /* 3 COLUMNS GRID CONTAINER */
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
             {categoriesColumns.map((column) => {
-              // Nếu cột không có data thì ẩn cột đó hoặc hiển thị trống
+              // 🎯 HOÀN TOÀN TỰ ĐỘNG: Nếu Admin tắt hết khóa học của mục này, cột đó tự ẩn đi
               if (column.data.length === 0) return null;
 
               return (
@@ -81,33 +110,37 @@ export default function PopularCoursesSection() {
                   className="bg-[#ebf3ff] rounded-2xl p-4 flex flex-col gap-4"
                 >
                   {/* CATEGORY HEADER */}
-                  <div className="inline-flex items-center gap-1 text-base font-bold text-[#1f1f1f] w-fit">
+                  <Link 
+                    href={`/collections/${column.id}-courses`}
+                    className="inline-flex items-center gap-1 text-base font-bold text-[#1f1f1f] w-fit hover:text-blue-600 transition group/title cursor-pointer"
+                  >
                     {column.title}
-                    <ArrowRight size={16} className="mt-0.5 ml-1 text-blue-600" />
-                  </div>
+                    <ArrowRight 
+                      size={16} 
+                      className="mt-0.5 ml-1 text-blue-600 transition-transform group-hover/title:translate-x-1" 
+                    />
+                  </Link>
 
                   {/* COURSE LIST (VERTICAL) */}
                   <div className="flex flex-col gap-3">
                     {column.data.map((course) => {
-                      // Xử lý thông tin giảng viên (Instructor) vì dữ liệu có thể là String hoặc Object
-                      const instructorName = typeof course.instructor === "object" 
-                        ? course.instructor.name 
-                        : course.instructor || "Expert Instructor";
+                      // const instructorName = typeof course.instructor === "object" && course.instructor !== null
+                      //   ? (course.instructor as any).name 
+                      //   : course.instructor || "Expert Instructor";
 
-                      // 🎯 Xử lý thông tin Provider (Logo & Tên)
                       const rawProvider = course.provider;
                       let providerLogo: string | null = null;
                       let providerName = "Hệ thống LMS";
 
                       if (rawProvider && typeof rawProvider === "object") {
-                        const p = rawProvider as any; // Ép sang any để bypass kiểm tra nghiêm ngặt của TS client
+                        const p = rawProvider as any;
                         providerLogo = p.logo || null;
                         providerName = p.name || "Hệ thống LMS";
                       }
 
                       return (
                         <Link
-                          href={`/individuals/courses/${course.slug}`}
+                          href={`/${getCategorySlug(course)}/${course.slug}`}
                           key={course._id}
                           className="bg-white rounded-xl p-3 flex gap-4 shadow-sm hover:shadow-md transition duration-200 cursor-pointer border border-transparent hover:border-blue-100 group"
                         >
@@ -129,25 +162,22 @@ export default function PopularCoursesSection() {
                             <div>
                               {/* INSTRUCTOR & PROVIDER ROW */}
                               <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                                {/* Giảng viên */}
-                                <div className="flex items-center gap-1.5 min-w-0">
+                                {/* <div className="flex items-center gap-1.5 min-w-0">
                                   <User size={12} className="text-gray-400 flex-shrink-0" />
                                   <p className="text-xs text-gray-500 truncate max-w-[110px]">
                                     {instructorName}
                                   </p>
                                 </div>
 
-                                {/* Thanh phân cách đứng nhẹ */}
-                                <span className="text-gray-200 text-xs flex-shrink-0">|</span>
+                                <span className="text-gray-200 text-xs flex-shrink-0">|</span> */}
 
-                                {/* 🎯 HIỂN THỊ PROVIDER KẾ BÊN */}
                                 <div className="flex items-center gap-1 min-w-0" title={`Cấp bởi: ${providerName}`}>
                                   {providerLogo ? (
                                     <div className="w-4 h-4 rounded border bg-gray-50 overflow-hidden flex items-center justify-center flex-shrink-0">
                                       <img 
                                         src={providerLogo} 
                                         alt={providerName} 
-                                        className="w-6 h-10 object-contain"
+                                        className="w-full h-full object-contain"
                                       />
                                     </div>
                                   ) : (

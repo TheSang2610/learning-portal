@@ -1,5 +1,6 @@
 import "../globals.css";
 import Header from "@/src/components/layout/Header";
+// import Footer from "@/src/components/layout/Footer";
 
 export default function PortalRootLayout({
   children,
@@ -14,6 +15,7 @@ export default function PortalRootLayout({
         <main className="pt-[104px] ">
           {children}
         </main>
+        {/* <Footer /> */}
       </body>
     </html>
   );

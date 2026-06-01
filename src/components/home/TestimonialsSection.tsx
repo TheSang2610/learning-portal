@@ -46,28 +46,22 @@ export default function TestimonialsSection() {
               key={`${item.name}-${index}`}
               className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition duration-200"
             >
-              {/* TOP: REVIEW TEXT (Coursera style đặt chữ lên trước) */}
-              <p className="text-sm md:text-base text-gray-700 font-medium italic leading-relaxed">
-                "{item.review}"
-              </p>
-
-              {/* BOTTOM: USER PROFILE */}
-              <div className="flex items-center gap-3 mt-6 border-t border-gray-100 pt-4">
+              <div className="flex items-center gap-4">
                 <img
                   src={item.image}
                   alt={item.name}
-                  className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                  className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                 />
                 <div className="min-w-0">
-                  <h3 className="font-bold text-sm text-[#1f1f1f] truncate">
+                  {/* Tên đậm và to hơn chút giống bản gốc */}
+                  <h3 className="font-bold text-base text-[#1f1f1f] truncate">
                     {item.name}
                   </h3>
-                  <p className="text-xs text-gray-500 truncate mt-0.5">
-                    {item.role}
-                  </p>
                 </div>
               </div>
-
+              <p className="text-sm md:text-base text-[#5b6780] italic leading-relaxed mt-6">
+                "{item.review}"
+              </p>
             </div>
           ))}
         </div>

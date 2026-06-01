@@ -10,6 +10,8 @@ import PopularCoursesSection from "@/src/components/home/PopularCoursesSection";
 import FaqSection  from "@/src/components/home/FaqSection";
 import TestimonialsSection from "@/src/components/home/TestimonialsSection";
 import CareerSection from "@/src/components/home/CareerSection";
+import CourseSection from "@/src/components/home/CourseSection";
+// import CourseDetailPage from "./individuals/courses/[slug]/page";
 
 function HomeContent() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -37,6 +39,7 @@ function HomeContent() {
         <PopularCoursesSection />
         <PartnersSection />
         <CareerSection />
+        <CourseSection />
         <TestimonialsSection />
         <FaqSection  />
       </div>

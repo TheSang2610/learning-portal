@@ -14,11 +14,32 @@ import {
   LogOut,
   Shield,
   PlusCircle,
-  Building2, // 🎯 THÊM: Icon đại diện cho mục Providers (Trường học / Đối tác)
+  Building2,
+  LayoutGrid,
+  Award,  
+  Flame,  
+  Sparkles, 
+  MessageSquare,
+  HelpCircle
 } from "lucide-react";
 
-// Cấu trúc dữ liệu Menu đã tích hợp thêm Providers vào nhóm quản lý khóa học
-const menuItems = [
+interface SubMenuItem {
+  label: string;
+  href: string;
+  icon: any;
+  isIndicatorOnly?: boolean; 
+}
+
+interface MenuItem {
+  label: string;
+  href: string;
+  icon: any;
+  isHomeSectionGroup?: boolean;
+  submenu?: SubMenuItem[]; 
+}
+
+// Cấu trúc dữ liệu Menu phân tầng hệ thống quản trị
+const menuItems: MenuItem[] = [
   {
     label: "Dashboard",
     href: "/admin/dashboard",
@@ -44,7 +65,6 @@ const menuItems = [
         href: "/admin/categories",
         icon: FolderOpen,
       },
-      // 🎯 THÊM VÀO ĐÂY: Quản lý đối tác trường học / doanh nghiệp liên kết
       {
         label: "Providers",
         href: "/admin/providers",
@@ -58,10 +78,46 @@ const menuItems = [
       },
     ],
   },
+  /* ==========================================================================
+     🎯 CẤU TRÚC MỚI: TÁCH BIỆT VÀ PHÂN TẦNG 3 MỤC QUẢN LÝ TRANG CHỦ
+     ========================================================================== */
+  {
+    label: "Home Sections",
+    href: "/admin/courses/home-sections",
+    icon: LayoutGrid,
+    isHomeSectionGroup: true, // Cờ hiệu phân biệt logic xử lý toggle đóng/mở
+    submenu: [
+      {
+        label: "Most Popular",
+        href: "/admin/courses/home-sections/most-popular",
+        icon: Award,
+      },
+      {
+        label: "Trending Now",
+        href: "/admin/courses/home-sections/trending-now",
+        icon: Flame,
+      },
+      {
+        label: "New Releases",
+        href: "/admin/courses/home-sections/new-releases",
+        icon: Sparkles,
+      },
+    ],
+  },
   {
     label: "Users",
     href: "/admin/users",
     icon: Users,
+  },
+  {
+    label: "Reviews Management",
+    href: "/admin/reviews",
+    icon: MessageSquare, 
+  },
+  {
+    label: "Homepage FAQs",
+    href: "/admin/faqs",
+    icon: HelpCircle,
   },
 ];
 
@@ -75,20 +131,30 @@ export default function AdminLayout({
 
   const [loading, setLoading] = useState(true);
   const [adminName, setAdminName] = useState("");
-  const [isCourseMenuOpen, setIsCourseMenuOpen] = useState(true);
+  
+  // Kiểm soát trạng thái Đóng/Mở riêng biệt cho 2 nhóm Dropdown khác nhau
+  const [isCourseMenuOpen, setIsCourseMenuOpen] = useState(false);
+  const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
 
-  // 🔥 Tự động giữ menu khóa học luôn mở rộng nếu đang truy cập vào trang providers
+  // Tự động kích hoạt trạng thái mở rộng dựa trên phân vùng URL đang chạy
   useEffect(() => {
+    const isHomeSectionRoute = pathname.startsWith("/admin/courses/home-sections");
+    
     if (
-      pathname.startsWith("/admin/courses") || 
+      (pathname.startsWith("/admin/courses") && !isHomeSectionRoute) || 
       pathname.startsWith("/admin/categories") || 
-      pathname.startsWith("/admin/providers") || // 🎯 Thêm điều kiện giữ trạng thái mở cho Providers
+      pathname.startsWith("/admin/providers") || 
       pathname.startsWith("/admin/lessons")
     ) {
       setIsCourseMenuOpen(true);
     }
+
+    if (isHomeSectionRoute) {
+      setIsHomeMenuOpen(true);
+    }
   }, [pathname]);
 
+  // Xác minh phiên đăng nhập và phân quyền Quản trị viên
   useEffect(() => {
     const userInfo = localStorage.getItem("userInfo");
 
@@ -128,7 +194,7 @@ export default function AdminLayout({
   return (
     <div className="flex min-h-screen bg-slate-100 text-slate-900 antialiased">
       
-      {/* SIDEBAR */}
+      {/* SIDEBAR NAVIGATION */}
       <aside className="w-72 bg-white border-r border-slate-200 flex flex-col sticky top-0 h-screen">
 
         {/* LOGO */}
@@ -144,7 +210,7 @@ export default function AdminLayout({
           </Link>
         </div>
 
-        {/* NAVIGATION */}
+        {/* NAVIGATION LINKS */}
         <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
           <p className="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Core Features</p>
           
@@ -152,18 +218,27 @@ export default function AdminLayout({
             const Icon = item.icon;
             
             if (item.submenu) {
-              const isSubmenuActive = 
-                pathname.startsWith("/admin/courses") || 
-                pathname.startsWith("/admin/categories") ||
-                pathname.startsWith("/admin/providers") || // 🎯 Đánh dấu Active menu cha khi truy cập Providers
-                pathname.startsWith("/admin/lessons");
+              const isHomeSectionRoute = pathname.startsWith("/admin/courses/home-sections");
+              
+              // Xác định Menu Cha có đang trong trạng thái Active hay không
+              const isGroupActive = item.isHomeSectionGroup 
+                ? isHomeSectionRoute
+                : (pathname.startsWith("/admin/courses") && !isHomeSectionRoute) || 
+                  pathname.startsWith("/admin/categories") ||
+                  pathname.startsWith("/admin/providers") || 
+                  pathname.startsWith("/admin/lessons");
+              
+              const isOpen = item.isHomeSectionGroup ? isHomeMenuOpen : isCourseMenuOpen;
+              const toggleMenu = item.isHomeSectionGroup 
+                ? () => setIsHomeMenuOpen(!isHomeMenuOpen) 
+                : () => setIsCourseMenuOpen(!isCourseMenuOpen);
               
               return (
                 <div key={item.label} className="space-y-1">
                   <button
-                    onClick={() => setIsCourseMenuOpen(!isCourseMenuOpen)}
+                    onClick={toggleMenu}
                     className={`w-full flex items-center justify-between rounded-2xl px-4 py-3.5 transition-all ${
-                      isSubmenuActive 
+                      isGroupActive 
                         ? "bg-slate-100 text-slate-900 font-semibold" 
                         : "text-slate-600 hover:bg-slate-50"
                     }`}
@@ -174,30 +249,34 @@ export default function AdminLayout({
                     </div>
                     <ChevronDown 
                       size={18} 
-                      className={`text-slate-400 transition-transform duration-200 ${isCourseMenuOpen ? "rotate-180" : ""}`} 
+                      className={`text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} 
                     />
                   </button>
 
-                  {/* Dropdown menu items */}
-                  {isCourseMenuOpen && (
+                  {/* VÙNG SUBMENU CON KHI ĐƯỢC THẢ XUỐNG */}
+                  {isOpen && (
                     <div className="pl-6 space-y-1">
                       {item.submenu.map((subItem) => {
                         const SubIcon = subItem.icon;
                         
-                        // Xử lý Active riêng biệt cho từng route con chính xác
+                        // Xử lý Active riêng biệt, chính xác cho từng Route con
                         let isChildActive = false;
                         if (subItem.href === "/admin/categories") {
                           isChildActive = pathname.startsWith("/admin/categories");
                         } else if (subItem.href === "/admin/providers") {
-                          // 🎯 Thêm logic so sánh URL active chuẩn cho trang Providers
                           isChildActive = pathname.startsWith("/admin/providers");
                         } else if (subItem.href === "/admin/courses/create") {
                           isChildActive = pathname === "/admin/courses/create";
                         } else if (subItem.isIndicatorOnly) {
                           isChildActive = pathname.startsWith("/admin/lessons");
+                        } else if (subItem.href === "/admin/courses") {
+                          isChildActive = pathname === "/admin/courses" || 
+                            (pathname.startsWith("/admin/courses/") && 
+                             pathname !== "/admin/courses/create" && 
+                             !pathname.startsWith("/admin/courses/home-sections"));
                         } else {
-                          // Mục All Courses
-                          isChildActive = pathname === "/admin/courses" || (pathname.startsWith("/admin/courses/") && pathname !== "/admin/courses/create");
+                          // So sánh chính xác hoàn toàn cho 3 mục của trang chủ (Most Popular, Trending Now, New Releases)
+                          isChildActive = pathname === subItem.href;
                         }
 
                         if (subItem.isIndicatorOnly && !isChildActive) {
@@ -255,7 +334,7 @@ export default function AdminLayout({
           })}
         </nav>
 
-        {/* ADMIN FOOTER */}
+        {/* ADMIN FOOTER CỦA SIDEBAR */}
         <div className="border-t border-slate-100 p-4 bg-slate-50/50">
           <div className="mb-4 px-2">
             <p className="font-bold text-slate-800 truncate">{adminName || "Administrator"}</p>
@@ -271,7 +350,7 @@ export default function AdminLayout({
         </div>
       </aside>
 
-      {/* MAIN CONTAINER */}
+      {/* VIEWPORT PHẢI CHỨA HIỂN THỊ NỘI DUNG */}
       <main className="flex-1 flex flex-col min-w-0">
         <header className="h-20 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-10">
           <div>

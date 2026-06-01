@@ -1,0 +1,283 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { BookOpen, User, Building2, Filter, RotateCcw } from "lucide-react";
+import Link from "next/link";
+import { getCourses, Course } from "@/src/services/course";
+import { getCategories, Category } from "@/src/services/categoryService";
+
+export default function CourseSection() {
+  const [courses, setCourses] = useState<any[]>([]); // Để any[] tạm thời xử lý bóc tách linh hoạt cấu trúc DB
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // States quản lý bộ lọc
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedLevel, setSelectedLevel] = useState<string>("all");
+  const [selectedPrice, setSelectedPrice] = useState<string>("all");
+
+  const [filteredCourses, setFilteredCourses] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [coursesRes, categoriesRes] = await Promise.all([
+          getCourses(),
+          getCategories(),
+        ]);
+
+        // 1. Xử lý lấy danh sách khóa học công khai công khai
+        let rawCourses: any[] = [];
+        if (Array.isArray(coursesRes)) {
+          rawCourses = coursesRes;
+        } else if (coursesRes && typeof coursesRes === "object" && Array.isArray((coursesRes as any).data)) {
+          rawCourses = (coursesRes as any).data;
+        }
+
+        // LƯU Ý: Khóa học mẫu của bạn đang có isPublished = false. 
+        // Nếu muốn test được khóa học đó, bạn hãy đổi thành c.isPublished === false hoặc comment dòng filter dưới đây:
+        const published = rawCourses.filter((c: any) => c.isPublished !== undefined ? c.isPublished : true); 
+        
+        setCourses(published);
+        setFilteredCourses(published);
+
+        // 2. Xử lý danh mục
+        if (Array.isArray(categoriesRes)) {
+          setCategories(categoriesRes);
+        }
+      } catch (error) {
+        console.error("Lỗi khi tải dữ liệu:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // 🎯 LOGIC LỌC ĐA NĂNG: Đã sửa đổi để bóc mảng dữ liệu MongoDB bọc $oid
+  useEffect(() => {
+    let result = [...courses];
+
+    // Lọc theo Category
+    if (selectedCategory !== "all") {
+      result = result.filter((course) => {
+        const catData = course.category;
+
+        if (!catData) return false;
+
+        // Trường hợp 1: Category là một Mảng (như dữ liệu JSON thực tế của bạn)
+        if (Array.isArray(catData)) {
+          return catData.some((item: any) => {
+            if (typeof item === "string") return item === selectedCategory;
+            if (item && item.$oid) return item.$oid === selectedCategory;
+            if (item && item._id) return item._id === selectedCategory;
+            return false;
+          });
+        }
+
+        // Trường hợp 2: Category là 1 Object đơn lẻ chứa $oid hoặc _id
+        if (typeof catData === "object") {
+          if (catData.$oid) return catData.$oid === selectedCategory;
+          if (catData._id) return catData._id === selectedCategory;
+        }
+
+        // Trường hợp 3: Category là 1 chuỗi string thông thường
+        return catData === selectedCategory;
+      });
+    }
+
+    // Lọc theo Trình độ (Level)
+    if (selectedLevel !== "all") {
+      result = result.filter(
+        (course) => course.level?.toLowerCase() === selectedLevel.toLowerCase()
+      );
+    }
+
+    // Lọc theo Giá cả (Price)
+    if (selectedPrice !== "all") {
+      if (selectedPrice === "free") {
+        result = result.filter((course) => course.price === 0);
+      } else if (selectedPrice === "paid") {
+        result = result.filter((course) => course.price > 0);
+      }
+    }
+
+    setFilteredCourses(result);
+  }, [selectedCategory, selectedLevel, selectedPrice, courses]);
+
+  const handleResetFilters = () => {
+    setSelectedCategory("all");
+    setSelectedLevel("all");
+    setSelectedPrice("all");
+  };
+
+  const getCategorySlug = (course: any) => {
+    const catData = course.category;
+    if (!catData) return "general";
+    const catId = typeof catData === "object" ? (catData._id || catData.$oid) : catData;
+    const cat = categories.find((c) => c._id === catId);
+    return cat?.slug || cat?.name?.toLowerCase().replace(/[^a-zA-Z0-9\s]/g, "").replace(/\s+/g, "-") || "general";
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20 bg-white">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <span className="ml-3 text-slate-600 font-medium">Đang tải danh sách khóa học...</span>
+      </div>
+    );
+  }
+
+  return (
+    <section className="bg-white py-12 border-t border-gray-100">
+      <div className="max-w-7xl mx-auto px-6">
+        
+        {/* HEADER */}
+        <div className="pb-6 border-b border-gray-100">
+          <h2 className="text-2xl font-bold text-gray-900">Tất cả khóa học</h2>
+          <p className="text-sm text-gray-500 mt-1">Khám phá toàn bộ khoá học trực tuyến hiện có trên hệ thống</p>
+        </div>
+
+        {/* THANH BỘ LỌC */}
+        <div className="mt-6 bg-slate-50 p-4 rounded-2xl border border-gray-100 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-4 flex-1">
+            <div className="flex items-center gap-1.5 text-gray-700 text-sm font-semibold">
+              <Filter size={16} className="text-blue-600" />
+              <span>Bộ lọc:</span>
+            </div>
+
+            {/* Chọn Danh mục */}
+            <div className="flex flex-col min-w-[160px]">
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium text-gray-700 focus:outline-none focus:border-blue-500 cursor-pointer shadow-sm"
+              >
+                <option value="all">Tất cả danh mục</option>
+                {categories.map((cat) => (
+                  <option key={cat._id} value={cat._id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Chọn Cấp độ */}
+            <div className="flex flex-col min-w-[140px]">
+              <select
+                value={selectedLevel}
+                onChange={(e) => setSelectedLevel(e.target.value)}
+                className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium text-gray-700 focus:outline-none focus:border-blue-500 cursor-pointer shadow-sm"
+              >
+                <option value="all">Tất cả cấp độ</option>
+                <option value="beginner">Sơ cấp (Beginner)</option>
+                <option value="intermediate">Trung cấp (Intermediate)</option>
+                <option value="advanced">Cao cấp (Advanced)</option>
+              </select>
+            </div>
+
+            {/* Chọn Học phí */}
+            <div className="flex flex-col min-w-[140px]">
+              <select
+                value={selectedPrice}
+                onChange={(e) => setSelectedPrice(e.target.value)}
+                className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium text-gray-700 focus:outline-none focus:border-blue-500 cursor-pointer shadow-sm"
+              >
+                <option value="all">Tất cả học phí</option>
+                <option value="free">Miễn phí</option>
+                <option value="paid">Có phí</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Reset Filters */}
+          {(selectedCategory !== "all" || selectedLevel !== "all" || selectedPrice !== "all") && (
+            <button
+              onClick={handleResetFilters}
+              className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 font-semibold transition bg-red-50 hover:bg-red-100 px-3 py-2 rounded-xl"
+            >
+              <RotateCcw size={14} />
+              Xóa bộ lọc
+            </button>
+          )}
+        </div>
+
+        {/* LISTING GRID */}
+        {filteredCourses.length === 0 ? (
+          <div className="text-center py-20 text-gray-400 bg-slate-50 rounded-2xl border border-dashed mt-8">
+            Không tìm thấy khóa học nào phù hợp với bộ lọc đã chọn.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-8">
+            {filteredCourses.map((course) => {
+              const instructorName = typeof course.instructor === "object" && course.instructor !== null
+                ? course.instructor.name 
+                : "Expert Instructor";
+              
+              const rawProvider = course.provider;
+              let providerName = "Hệ thống LMS";
+
+              if (rawProvider && typeof rawProvider === "object") {
+                providerName = rawProvider.name || "Hệ thống LMS";
+              }
+
+              return (
+                <Link
+                  href={`/${getCategorySlug(course)}/${course.slug}`}
+                  key={course._id?.$oid || course._id}
+                  className="bg-white rounded-2xl flex flex-col justify-between overflow-hidden border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-100 transition duration-300 group cursor-pointer"
+                >
+                  <div className="aspect-video w-full bg-slate-100 flex items-center justify-center relative overflow-hidden">
+                    {course.thumbnail ? (
+                      <img
+                        src={course.thumbnail}
+                        alt={course.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                      />
+                    ) : (
+                      <BookOpen size={36} className="text-slate-300" />
+                    )}
+                  </div>
+
+                  <div className="p-4 flex flex-col flex-1 justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap mb-2">
+                        <div className="flex items-center gap-1 min-w-0">
+                          <User size={12} className="text-gray-400 flex-shrink-0" />
+                          <p className="text-xs text-gray-500 truncate max-w-[100px]">{instructorName}</p>
+                        </div>
+                        <span className="text-gray-200 text-xs">|</span>
+                        <div className="flex items-center gap-1 min-w-0">
+                          <Building2 size={12} className="text-violet-400 flex-shrink-0" />
+                          <p className="text-[11px] font-medium text-violet-600 truncate max-w-[90px]">{providerName}</p>
+                        </div>
+                      </div>
+
+                      <h4 className="text-sm font-bold text-gray-900 line-clamp-2 leading-snug group-hover:text-blue-600 transition mb-3">
+                        {course.title}
+                      </h4>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-50 mt-auto text-[11px] text-gray-500 font-medium">
+                      <div className="flex items-center gap-1.5">
+                        <span className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-600 capitalize">{course.level}</span>
+                        <span>•</span>
+                        <span className="text-blue-600">{course.lessons?.length || 0} bài học</span>
+                      </div>
+                      <span className="text-slate-900 font-bold text-xs">
+                        {course.price === 0 ? "Miễn phí" : `${course.price.toLocaleString("vi-VN")}đ`}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+
+      </div>
+    </section>
+  );
+}
