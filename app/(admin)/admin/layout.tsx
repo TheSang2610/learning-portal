@@ -44,6 +44,8 @@ interface MenuItem {
   submenu?: SubMenuItem[]; 
 }
 
+export const dynamic = 'force-dynamic';
+
 const menuItems: MenuItem[] = [
   {
     label: "Dashboard",

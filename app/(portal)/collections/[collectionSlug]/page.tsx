@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { getHomeSections, Course } from "@/src/services/course";
 import { getCategories, Category } from "@/src/services/categoryService";
 
+export const dynamic = 'force-dynamic';
+
 interface PageProps {
   params: Promise<{ collectionSlug: string }>;
 }

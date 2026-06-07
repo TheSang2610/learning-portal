@@ -14,6 +14,8 @@ import { getEnrollmentByCourse, enrollInCourse, getProgressStats } from "@/src/s
 import { reviewService, Review, ReviewStats } from "@/src/services/review"; 
 import { faqService, FaqItem } from "@/src/services/faq"; 
 
+export const dynamic = 'force-dynamic';
+
 function CourseDetailSkeleton() {
   return (
     <div className="min-h-screen bg-white pb-24 antialiased animate-pulse">

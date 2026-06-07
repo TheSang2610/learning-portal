@@ -1,7 +1,7 @@
 import "../globals.css";
 import Header from "@/src/components/layout/Header";
 import Footer from "@/src/components/layout/Footer";
-
+export const dynamic = 'force-dynamic';
 export default function PortalRootLayout({
   children,
 }: Readonly<{
