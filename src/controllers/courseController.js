@@ -154,53 +154,76 @@ const getInstructorCourses = async (req, res) => {
 };
 
 // @desc    Cập nhật khóa học
+// @desc    Cập nhật khóa học
 const updateCourse = async (req, res) => {
     try {
-        const course = await Course.findById(req.params.id);
-
-        if (!course) {
+        const courseId = req.params.id;
+        
+        // 1. Kiểm tra sự tồn tại của khóa học và check quyền trước
+        const currentCourse = await Course.findById(courseId);
+        if (!currentCourse) {
             return res.status(404).json({ message: 'Không tìm thấy khóa học' });
         }
 
-        if (course.instructor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+        if (currentCourse.instructor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
             return res.status(403).json({ message: 'Bạn không có quyền chỉnh sửa khóa học này' });
         }
 
+        // 2. Tạo một object chứa các trường cần cập nhật động
+        const updateData = {};
+
+        // Xử lý upload ảnh bìa mới lên Cloudinary (nếu có file đính kèm)
         if (req.file) {
             const uploadResult = await uploadToCloudinary(req.file.buffer);
-            course.thumbnail = uploadResult.secure_url; 
+            updateData.thumbnail = uploadResult.secure_url; 
         }
 
-        if (req.body.title && req.body.title !== course.title) {
+        // Xử lý cập nhật Title và Slug tự động
+        if (req.body.title && req.body.title !== currentCourse.title) {
             const newSlug = slugify(req.body.title);
-            const slugExists = await Course.findOne({ slug: newSlug, _id: { $ne: course._id } });
+            // Kiểm tra trùng lặp slug với các khóa học khác (trừ chính nó)
+            const slugExists = await Course.findOne({ slug: newSlug, _id: { $ne: courseId } });
             if (slugExists) {
                 return res.status(400).json({ message: 'Tên khóa học mới bị trùng link với khóa học khác' });
             }
-            course.title = req.body.title;
-            course.slug = newSlug; 
+            updateData.title = req.body.title;
+            updateData.slug = newSlug; 
+        } else if (req.body.slug) {
+            // Trường hợp tiêu đề không đổi nhưng Frontend chủ động gửi slug mới lên
+            updateData.slug = req.body.slug;
         }
 
+        // Chuẩn hóa mảng danh mục tags (Category)
         if (req.body.category) {
-            course.category = Array.isArray(req.body.category) ? req.body.category : [req.body.category];
+            updateData.category = Array.isArray(req.body.category) ? req.body.category : [req.body.category];
         }
 
-        course.description = req.body.description || course.description;
-        course.price = req.body.price !== undefined ? Number(req.body.price) : course.price;
-        course.level = req.body.level || course.level;
+        // Cập nhật các thông tin cơ bản khác
+        if (req.body.description !== undefined) updateData.description = req.body.description;
+        if (req.body.price !== undefined) updateData.price = Number(req.body.price);
+        if (req.body.level !== undefined) updateData.level = req.body.level;
 
+        // Xử lý thông tin Đơn vị đối tác / Trường học liên kết
         const incomingProvider = req.body.provider !== undefined ? req.body.provider : req.body.providerId;
         if (incomingProvider !== undefined) {
-            course.provider = incomingProvider || null; 
+            updateData.provider = incomingProvider || null; 
         }
 
+        // Phân quyền: Chỉ Admin mới được phép đổi giảng viên phụ trách khóa học này
         if (req.user.role === 'admin' && req.body.instructorId) {
-            course.instructor = req.body.instructorId;
+            updateData.instructor = req.body.instructorId;
         }
 
-        const updatedCourse = await course.save();
-        res.json(updatedCourse);
+        // 3. Thực hiện ghi trực tiếp xuống database bằng findByIdAndUpdate để né lỗi Version OCC
+        const updatedCourse = await Course.findByIdAndUpdate(
+            courseId,
+            { $set: updateData },
+            { new: true, runValidators: true } // Trả về bản ghi mới sau sửa đổi và kích hoạt validate schema
+        );
+
+        res.status(200).json(updatedCourse);
     } catch (error) {
+        console.error("Lỗi cập nhật khóa học phía Backend:", error.message);
         res.status(500).json({ message: error.message });
     }
 };
