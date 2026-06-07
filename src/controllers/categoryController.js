@@ -1,4 +1,4 @@
-const Category = require('../models/CategoryModel');
+const Category = require('../models/categoryModel');
 
 // Hàm helper chuyển đổi Tiếng Việt có dấu thành Slug gọn đẹp
 const slugify = (str) => {
