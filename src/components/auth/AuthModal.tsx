@@ -41,66 +41,88 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
     });
   };
 
-const handleLoginSubmit = async (e: FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  setLoading(true);
-  setError("");
+  const handleLoginSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
-  try {
-    const data = await loginUser(loginData); // data chính là { _id, name, email, role, token }
+    try {
+      // ✅ Validate trước khi gửi
+      if (!loginData.email.trim() || !loginData.password.trim()) {
+        setError("Email và mật khẩu không được để trống");
+        setLoading(false);
+        return;
+      }
 
-    if (data.token) {
-      localStorage.setItem("authToken", data.token);
+      const data = await loginUser(loginData);
+
+      if (data.token) {
+        localStorage.setItem("authToken", data.token);
+      }
+
+      const { token, ...userWithoutToken } = data;
+      localStorage.setItem("userInfo", JSON.stringify(userWithoutToken));
+
+      window.dispatchEvent(new Event("userInfoChanged"));
+      alert("Đăng nhập thành công");
+      onClose();
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    } catch (error: any) {
+      setError(error.message || "Đăng nhập thất bại");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // Bóc tách token ra, chỉ lưu các thông tin user còn lại vào userInfo
-    const { token, ...userWithoutToken } = data;
-    localStorage.setItem("userInfo", JSON.stringify(userWithoutToken));
-    
-    window.dispatchEvent(new Event("userInfoChanged"));
-    alert("Đăng nhập thành công");
-    onClose();
-    
-    setTimeout(() => { window.location.reload(); }, 500);
-    
-  } catch (error: any) {
-    setError(error.message || "Đăng nhập thất bại");
-  } finally {
-    setLoading(false);
-  }
-};
+  const handleRegisterSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
-const handleRegisterSubmit = async (e: FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  setLoading(true);
-  setError("");
+    try {
+      // ✅ Validate trước khi gửi
+      if (!registerData.name.trim() || !registerData.email.trim() || !registerData.password.trim()) {
+        setError("Vui lòng điền đầy đủ thông tin");
+        setLoading(false);
+        return;
+      }
 
-  try {
-    // 1. Đăng ký và nhận ngay data chứa token từ backend
-    const data = await registerUser(registerData); 
+      if (registerData.password.length < 6) {
+        setError("Mật khẩu phải có ít nhất 6 ký tự");
+        setLoading(false);
+        return;
+      }
 
-    if (data.token) {
-      localStorage.setItem("authToken", data.token);
+      const data = await registerUser(registerData);
+
+      if (data.token) {
+        localStorage.setItem("authToken", data.token);
+      }
+
+      const { token, ...userWithoutToken } = data;
+      localStorage.setItem("userInfo", JSON.stringify(userWithoutToken));
+
+      window.dispatchEvent(new Event("userInfoChanged"));
+      alert("Đăng ký thành công");
+      onClose();
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    } catch (error: any) {
+      setError(error.message || "Đăng ký thất bại");
+    } finally {
+      setLoading(false);
     }
-
-    // 2. Lọc bỏ token trước khi lưu thông tin user vào localStorage
-    const { token, ...userWithoutToken } = data;
-    localStorage.setItem("userInfo", JSON.stringify(userWithoutToken));
-    
-    window.dispatchEvent(new Event("userInfoChanged"));
-    alert("Đăng ký thành công");
-    onClose();
-    
-    setTimeout(() => { window.location.reload(); }, 500);
-    
-  } catch (error: any) {
-    setError(error.message || "Đăng ký thất bại");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleGoogleSignIn = () => {
+    // ✅ Kiểm tra localStorage có sẵn không (SSR safety)
+    if (typeof window === "undefined") return;
+
     const width = 600;
     const height = 700;
     const left = window.screenX + (window.outerWidth - width) / 2;
@@ -119,45 +141,46 @@ const handleRegisterSubmit = async (e: FormEvent<HTMLFormElement>) => {
 
     const messageHandler = (e: MessageEvent) => {
       try {
-        if (e.origin !== window.location.origin) return;
+        // ✅ Check origin để tránh XSS
+        if (e.origin !== window.location.origin) {
+          console.warn("Invalid origin:", e.origin);
+          return;
+        }
 
         const { type, payload } = e.data || {};
 
         if (type === "google-auth-success") {
           const { user, token } = payload;
-          
-          // ✅ LƯU TOKEN ĐÚNG - KHÔNG DÙNG JSON.stringify()
+
           if (token) {
-            localStorage.setItem("authToken", token); // Lưu token sạch
+            localStorage.setItem("authToken", token);
           }
           localStorage.setItem("userInfo", JSON.stringify(user));
-          
-          console.log("✅ Google login success, token saved:", token);
-          
+
+          console.log("✅ Google login success");
+
           window.dispatchEvent(new Event("userInfoChanged"));
           onClose();
-          
-          // Reload để cập nhật app state
+
           setTimeout(() => {
             window.location.reload();
           }, 500);
-          
+
           window.removeEventListener("message", messageHandler);
         }
 
         if (type === "google-auth-failed") {
-          setError("Đăng nhập Google thất bại");
-          alert("Đăng nhập Google thất bại");
+          setError(payload?.error || "Đăng nhập Google thất bại");
           window.removeEventListener("message", messageHandler);
         }
       } catch (err) {
         console.error("❌ Google auth error:", err);
+        setError("Lỗi trong quá trình xác thực");
       }
     };
 
     window.addEventListener("message", messageHandler);
 
-    // cleanup if popup closed manually
     const popupChecker = setInterval(() => {
       if (popup.closed) {
         clearInterval(popupChecker);
