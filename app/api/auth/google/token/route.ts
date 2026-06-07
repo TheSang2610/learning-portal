@@ -50,7 +50,7 @@ export async function GET(req: Request) {
 
   // 🌟 SỬA ĐỔI 2: Khớp tên biến với file .env của bạn
   // Thay thế việc tìm process.env.BACKEND_URL thành biến đúng: process.env.NEXT_PUBLIC_BACKEND_URL
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
   const backendGoogleAuthPath = process.env.BACKEND_GOOGLE_AUTH_PATH || "/api/users/google";
 
   const googleUserPayload = {

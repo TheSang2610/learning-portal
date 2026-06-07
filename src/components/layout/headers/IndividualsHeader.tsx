@@ -277,7 +277,7 @@ const filteredCourses = allCourses.filter((course) => {
             />
             <button 
               type="submit"
-              className="absolute right-1 top-1 bg-blue-600 text-white rounded-full w-11 h-11 flex items-center justify-center hover:bg-blue-700 transition"
+              className="absolute right-1 top-1 bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-blue-700 transition"
             >
               <Search size={20} />
             </button>
@@ -311,9 +311,13 @@ const filteredCourses = allCourses.filter((course) => {
                   );
                 })()}
 
-                <div className="hidden md:flex flex-col items-start">
-                  <span className="text-sm font-semibold leading-none">{user.name}</span>
-                  <span className="text-xs text-gray-500 capitalize">{user.role}</span>
+                <div className="hidden md:flex flex-col items-start max-w-[150px]"> 
+                  <span className="text-sm font-semibold leading-none truncate w-full">
+                    {user.name}
+                  </span>
+                  <span className="text-xs text-gray-500 capitalize mt-1">
+                    {user.role}
+                  </span>
                 </div>
                 <ChevronDown size={16} />
               </button>

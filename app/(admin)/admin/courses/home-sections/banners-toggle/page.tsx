@@ -17,10 +17,8 @@ export default function HomepageBannersTogglePage() {
 const fetchHomeBanners = async () => {
     try {
       setLoading(true);
-      
-      // 🔥 THAY ĐỔI: Không gọi qua bộ lọc hạn chế của getBannersByPage("HOME") nữa
-      // Gọi trực tiếp API tổng lấy toàn bộ banner của hệ thống (giống bên trang quản lý chính)
-      const res = await fetch("http://localhost:5000/api/banners?page=HOME&admin=true");
+      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ;
+      const res = await fetch("${BACKEND_URL}/api/banners?page=HOME&admin=true");
       const json = await res.json();
       
       if (json.success && Array.isArray(json.data)) {

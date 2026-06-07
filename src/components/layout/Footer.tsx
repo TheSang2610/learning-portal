@@ -122,9 +122,9 @@ export default function Footer() {
               {providers.length > 0 ? (
                 providers.map((prov) => (
                   <li key={prov._id} className="flex items-center gap-2">
-                    <Link href={`/providers/slug/${prov.slug}`} className="hover:text-[#0056d2] hover:underline transition-all duration-150 block truncate text-[#40444d]">
+                    <span className="hover:text-[#0056d2] hover:underline transition-all duration-150 block truncate text-[#40444d]">
                       {prov.name}
-                    </Link>
+                    </span>
                   </li>
                 ))
               ) : (

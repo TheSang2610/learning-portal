@@ -1,6 +1,5 @@
 import { apiRequest } from "./apiHelper";
 
-// Định nghĩa kiểu dữ liệu Lesson phục vụ cho toàn hệ thống Frontend
 export interface LessonData {
   _id?: string;
   courseId?: string;
@@ -14,7 +13,7 @@ export interface LessonData {
 export const addLesson = async (formData: FormData) => {
   return apiRequest("/lessons", {
     method: "POST",
-    body: formData, // Trình duyệt tự sinh multipart/form-data nhờ cấu trúc apiHelper của bạn
+    body: formData,
   });
 };
 

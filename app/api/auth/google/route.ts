@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
-  const origin = process.env.GOOGLE_ORIGIN || "http://localhost:3000";
+  const origin = process.env.GOOGLE_ORIGIN ;
   const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${origin}/auth/callback`;
   const clientId = process.env.GOOGLE_CLIENT_ID;
 

@@ -10,7 +10,7 @@ export interface User {
   phone?: string;
   bio?: string;
   avatar?: string;
-  provider?: string | { _id: string; name: string }; // Có thể là ID hoặc Object populate
+  provider?: string | { _id: string; name: string }; 
   createdAt?: string;
 }
 
@@ -22,12 +22,10 @@ export interface Provider {
   type: "company" | "university";
 }
 
-// Lấy danh sách toàn bộ User (Admin)
 export const getUsers = async (): Promise<User[]> => {
   return apiRequest("/users");
 };
 
-// Cập nhật Profile thực tế kết nối với Backend (Dùng chung các role)
 export const updateUserProfileApi = async (profileData: Partial<User>): Promise<User> => {
   return apiRequest("/users/profile", {
     method: "PUT",
@@ -35,7 +33,6 @@ export const updateUserProfileApi = async (profileData: Partial<User>): Promise<
   });
 };
 
-// Lấy danh sách trường/doanh nghiệp để Instructor chọn khi update profile
 export const getProvidersApi = async (): Promise<Provider[]> => {
   return apiRequest("/providers");
 };

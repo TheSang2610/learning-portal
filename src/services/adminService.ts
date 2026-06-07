@@ -1,11 +1,9 @@
 import { apiRequest } from "./apiHelper";
 
-// ================= DASHBOARD =================
 export const getDashboardStatistics = async () => {
   return apiRequest("/admin/dashboard/statistics");
 };
 
-// ================= USERS =================
 export const getAllUsersAdmin = async () => {
   return apiRequest("/admin/users");
 };
@@ -27,7 +25,6 @@ export const deleteUserAdmin = async (id: string) => {
   });
 };
 
-// ================= COURSES =================
 export const getAllCoursesAdmin = async () => {
   return apiRequest("/admin/courses");
 };
@@ -49,7 +46,6 @@ export const deleteCourseAdmin = async (id: string) => {
   });
 };
 
-// ================= ENROLLMENTS =================
 export const getAllEnrollmentsAdmin = async () => {
   return apiRequest("/admin/enrollments");
 };
@@ -61,7 +57,6 @@ export const updateEnrollmentStatusAdmin = async (id: string, status: string) =>
   });
 };
 
-// ================= CERTIFICATES =================
 export const getAllCertificatesAdmin = async () => {
   return apiRequest("/admin/certificates");
 };
@@ -72,7 +67,6 @@ export const revokeCertificateAdmin = async (id: string) => {
   });
 };
 
-// ================= REVIEWS =================
 export const getAllReviewsAdmin = async () => {
   return apiRequest("/admin/reviews");
 };

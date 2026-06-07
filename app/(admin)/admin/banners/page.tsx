@@ -32,7 +32,9 @@ export default function BannersManagementPage() {
   const fetchAllBanners = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5000/api/banners?page=HOME&admin=true");
+      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+      const res = await fetch(`${BACKEND_URL}/api/banners?page=HOME&admin=true`);
       const json = await res.json();
       if (json.success) setBanners(json.data);
     } catch (error) {

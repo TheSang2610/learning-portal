@@ -1,6 +1,5 @@
 import { apiRequest } from "./apiHelper";
 
-// ✅ THÊMM hàm enrollInCourse
 export const enrollInCourse = async (courseId: string) => {
   return apiRequest(`/enrollments/${courseId}`, {
     method: "POST",

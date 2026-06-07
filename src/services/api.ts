@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:5000/api/users";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const API_URL = `${BACKEND_URL}/api/users`;
 
 interface RegisterUserData {
   name: string;
