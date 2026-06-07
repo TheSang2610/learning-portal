@@ -19,6 +19,7 @@ import {
 
 import { getCourseQuizzes } from "@/src/services/quizService"; 
 
+
 function CourseLearnSkeleton() {
   return (
     <div className="h-full bg-[#f8f9fa] flex flex-col animate-pulse">
@@ -71,6 +72,7 @@ function CourseLearnSkeleton() {
     </div>
   );
 }
+
 export default function CourseLearnPage() {
   const params = useParams();
   const router = useRouter();
@@ -78,6 +80,7 @@ export default function CourseLearnPage() {
   const courseSlug = (params.slug || params.id) as string;
   const categorySlug = params.categorySlug as string;
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hlsRef = useRef<any>(null);
 
   const [course, setCourse] = useState<any>(null);
   const [enrollment, setEnrollment] = useState<any>(null);
@@ -87,6 +90,7 @@ export default function CourseLearnPage() {
   const [currentQuiz, setCurrentQuiz] = useState<any>(null);
   const [isDoingQuiz, setIsDoingQuiz] = useState<boolean>(false);
   const [showCertificate, setShowCertificate] = useState<boolean>(false);
+  const [videoError, setVideoError] = useState<string>("");
 
   useEffect(() => {
     if (!courseSlug) return;
@@ -155,6 +159,98 @@ export default function CourseLearnPage() {
     initLearnPage();
   }, [courseSlug]);
 
+  // 🎯 Xử lý video URL - Hỗ trợ HLS streaming
+  useEffect(() => {
+    if (!activeLesson?.videoUrl || !videoRef.current) return;
+
+    const setupVideo = async () => {
+      try {
+        setVideoError("");
+        const videoUrl = activeLesson.videoUrl;
+        console.log("📹 Loading video URL:", videoUrl);
+
+        const videoElement = videoRef.current;
+        if (!videoElement) return;
+
+        // Always reset the current source before switching videos
+        videoElement.pause();
+        videoElement.removeAttribute("src");
+        videoElement.load();
+
+        const isHls = /\.m3u8(\?|$)|application\/vnd\.apple\.mpegurl/i.test(videoUrl);
+
+        if (isHls) {
+          const canNativeHls = videoElement.canPlayType("application/vnd.apple.mpegurl") || videoElement.canPlayType("application/x-mpegURL");
+
+          if (canNativeHls) {
+            videoElement.src = videoUrl;
+            videoElement.load();
+            console.log("✅ Native HLS source set");
+          } else {
+            try {
+              const module = await import("hls.js");
+              const Hls = module.default;
+
+              if (Hls && Hls.isSupported()) {
+                if (hlsRef.current) {
+                  hlsRef.current.destroy();
+                  hlsRef.current = null;
+                }
+
+                const hls = new Hls({
+                  debug: false,
+                  enableWorker: true,
+                });
+
+                hlsRef.current = hls;
+                hls.loadSource(videoUrl);
+                hls.attachMedia(videoElement);
+
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                  console.log("✅ HLS manifest loaded successfully");
+                });
+
+                hls.on(Hls.Events.ERROR, (event: string, data: any) => {
+                  console.error("❌ HLS Error:", event, data);
+                  if (data.fatal) {
+                    const errorMsg = data.response?.status
+                      ? `Lỗi tải video: ${data.response.status}`
+                      : `Lỗi tải video: ${data.error || "Không xác định"}`;
+                    setVideoError(errorMsg);
+                  }
+                });
+              } else {
+                console.warn("⚠️ Browser does not support HLS.js; falling back to native HLS");
+                videoElement.src = videoUrl;
+                videoElement.load();
+              }
+            } catch (error: any) {
+              console.error("❌ Không tải được hls.js:", error);
+              videoElement.src = videoUrl;
+              videoElement.load();
+            }
+          }
+        } else {
+          videoElement.src = videoUrl;
+          videoElement.load();
+          console.log("✅ MP4/Direct video loaded");
+        }
+      } catch (error: any) {
+        console.error("Lỗi setup video:", error);
+        setVideoError(`Có lỗi khi tải video: ${error?.message || "Không xác định"}`);
+      }
+    };
+
+    setupVideo();
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [activeLesson?.videoUrl]);
+
   useEffect(() => {
     if (!activeLesson || !course?._id) return;
 
@@ -196,6 +292,7 @@ export default function CourseLearnPage() {
   const handleSelectLesson = async (lesson: any) => {
     if (!course?._id) return;
     setActiveLesson(lesson);
+    setVideoError("");
     try {
       await startLesson(course._id, lesson._id);
       
@@ -323,15 +420,25 @@ export default function CourseLearnPage() {
               {/* Box Video bo góc thanh lịch */}
               <div className="aspect-video bg-black rounded-2xl overflow-hidden relative shadow-md">
                 {activeLesson.videoUrl ? (
-                  <video
-                    ref={videoRef}
-                    key={activeLesson._id}
-                    src={activeLesson.videoUrl}
-                    controls
-                    autoPlay
-                    onEnded={handleVideoEnded}
-                    className="w-full h-full object-contain"
-                  />
+                  <>
+                    <video
+                      ref={videoRef}
+                      key={activeLesson._id}
+                      controls
+                      className="w-full h-full object-contain"
+                      crossOrigin="anonymous"
+                      onEnded={handleVideoEnded}
+                      onError={(e) => {
+                        console.error("❌ Video element error:", e);
+                        setVideoError("Không thể phát video. Kiểm tra kết nối mạng hoặc định dạng file.");
+                      }}
+                    />
+                    {videoError && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80 text-red-400 gap-2 p-4 rounded-2xl">
+                        <p className="text-xs text-center font-medium">❌ {videoError}</p>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-slate-900 gap-2">
                     <BookOpen size={48} className="text-gray-600 animate-pulse" />

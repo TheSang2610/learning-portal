@@ -2,25 +2,25 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-// 🎯 Import đầy đủ các hàm xử lý dữ liệu: Đọc, Sửa, Xóa
 import { getLessonById, updateLesson, deleteLesson } from "@/src/services/lesson.api";
 
 export default function AdminEditLessonPage() {
   const params = useParams();
   const router = useRouter();
   
-  // 🎯 Lấy đồng thời cả courseId và lessonId từ thanh URL thông minh
   const courseId = params.courseId as string;
   const lessonId = params.lessonId as string;
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false); 
-  const [deleting, setDeleting] = useState(false); // Trạng thái khi bấm nút Xóa
+  const [deleting, setDeleting] = useState(false);
 
   // States quản lý form bài học
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string>("");
   const [order, setOrder] = useState(1);
 
   // Gọi API lấy dữ liệu bài học khi trang vừa load
@@ -47,7 +47,40 @@ export default function AdminEditLessonPage() {
     }
   }, [lessonId]);
 
-  // 🎯 Hàm xử lý gửi dữ liệu cập nhật lên Backend (Hỗ trợ cả File nếu cần nâng cấp)
+  // 🎯 Hàm xử lý chọn file video
+  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Kiểm tra loại file
+      if (!file.type.startsWith('video/')) {
+        alert('Please select a valid video file');
+        return;
+      }
+      
+      // Kiểm tra kích thước (giới hạn 500MB)
+      if (file.size > 500 * 1024 * 1024) {
+        alert('Video size must be less than 500MB');
+        return;
+      }
+
+      setVideoFile(file);
+      
+      // Tạo preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setVideoPreview(previewUrl);
+      
+      // Clear videoUrl nếu người dùng chọn upload file mới
+      setVideoUrl("");
+    }
+  };
+
+  // 🎯 Hàm xử lý xóa file video đã chọn
+  const clearVideoFile = () => {
+    setVideoFile(null);
+    setVideoPreview("");
+  };
+
+  // 🎯 Hàm xử lý gửi dữ liệu cập nhật lên Backend
   const saveHandler = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return alert("Please enter a lesson title");
@@ -55,19 +88,32 @@ export default function AdminEditLessonPage() {
     try {
       setSubmitting(true);
 
-      // Vì backend lessonController nhận FormData hoặc JSON tùy cấu hình,
-      // Ta đóng gói thành FormData để sau này bạn đính kèm input type="file" upload video trực tiếp sẽ không bị lỗi.
       const formData = new FormData();
-      formData.append("courseId", courseId); // 🎯 Luôn gắn chặt với ID khóa học
+      formData.append("courseId", courseId);
       formData.append("title", title);
       formData.append("content", content);
-      formData.append("videoUrl", videoUrl);
       formData.append("order", String(order));
+
+      // 🎯 Nếu có chọn file video mới, append vào FormData với key "video"
+      if (videoFile) {
+        formData.append("video", videoFile);
+      } else if (videoUrl) {
+        // 🎯 Nếu không upload file, dùng link video được dán
+        formData.append("videoUrl", videoUrl);
+      }
 
       await updateLesson(lessonId, formData);
 
+      // 🎯 LẤY LẠI DỮ LIỆU LESSON MỚI ĐỂ CẬP NHẬT VIDEOURL TỪ CLOUDINARY
+      try {
+        const updatedLesson = await getLessonById(lessonId);
+        console.log("✅ Updated lesson with new videoUrl:", updatedLesson.videoUrl);
+      } catch (refreshErr) {
+        console.warn("⚠️ Could not refresh lesson data, but save was successful:", refreshErr);
+      }
+
       alert("Lesson updated successfully!");
-      router.push(`/admin/courses/${courseId}`); // Quay về đúng trang quản lý cấu trúc của khóa học đó
+      router.push(`/admin/courses/${courseId}`);
     } catch (error: any) {
       console.error(error);
       alert(error.message || "Failed to update lesson");
@@ -76,7 +122,7 @@ export default function AdminEditLessonPage() {
     }
   };
 
-  // 🎯 HÀM XỬ LÝ XÓA BÀI HỌC MỚI BỔ SUNG
+  // 🎯 Hàm xử lý xóa bài học
   const deleteHandler = async () => {
     const isConfirmed = window.confirm(
       "⚠️ Bạn có chắc chắn muốn xóa bài học này?\nHành động này sẽ gỡ bài học khỏi khóa học và không thể hoàn tác!"
@@ -87,7 +133,7 @@ export default function AdminEditLessonPage() {
       setDeleting(true);
       await deleteLesson(lessonId);
       alert("Lesson deleted successfully!");
-      router.push(`/admin/courses/${courseId}`); // Xóa xong điều hướng an toàn về trang tổng quan khóa học
+      router.push(`/admin/courses/${courseId}`);
     } catch (error: any) {
       console.error(error);
       alert(error.message || "Failed to delete lesson");
@@ -102,7 +148,6 @@ export default function AdminEditLessonPage() {
 
   return (
     <div className="max-w-3xl mx-auto py-10">
-      {/* Nút quay lại nhanh liên kết trực tiếp với Course ID */}
       <button
         onClick={() => router.push(`/admin/courses/${courseId}`)}
         className="mb-5 text-sm font-semibold text-slate-500 hover:text-slate-800 transition flex items-center gap-2"
@@ -117,7 +162,6 @@ export default function AdminEditLessonPage() {
             <p className="text-sm text-slate-400">Modify details, video pathways, and course documentation.</p>
           </div>
           
-          {/* 🎯 NÚT XÓA BÀI HỌC: Thiết kế trực quan, tách biệt an toàn */}
           <button
             type="button"
             disabled={deleting || submitting}
@@ -154,17 +198,80 @@ export default function AdminEditLessonPage() {
             </div>
           </div>
 
-          <div>
-            <label className="block mb-2 font-semibold text-sm text-slate-700">Video Resource URL</label>
-            <input
-              type="text"
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="e.g. https://www.youtube.com/watch?v=..."
-              className="w-full border rounded-2xl p-4 outline-none focus:border-blue-500 transition font-mono text-sm text-slate-600"
-            />
+          {/* 🎯 PHẦN UPLOAD/DÁN LINK VIDEO */}
+          <div className="border-2 border-dashed border-blue-300 rounded-2xl p-6 bg-blue-50">
+            <div className="mb-5">
+              <label className="block mb-2 font-semibold text-sm text-slate-700">
+                📹 Video Resource (Upload or Paste Link)
+              </label>
+              <p className="text-xs text-slate-500 mb-4">
+                Choose one: Upload MP4 file directly OR paste video URL
+              </p>
+
+              {/* 🎯 UPLOAD VIDEO FILE */}
+              <div className="mb-4 p-4 border border-blue-200 rounded-xl bg-white">
+                <label className="block mb-3 font-semibold text-sm text-slate-700">
+                  📁 Upload Video File
+                </label>
+                <input
+                  type="file"
+                  accept="video/mp4,video/webm,video/ogg,video/quicktime"
+                  onChange={handleVideoFileChange}
+                  disabled={submitting || deleting}
+                  className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 disabled:opacity-50"
+                />
+                <p className="text-xs text-slate-400 mt-2">
+                  ✓ Supported: MP4, WebM, OGG, MOV (Max 500MB)
+                </p>
+              </div>
+
+              {/* 🎯 PREVIEW VIDEO FILE */}
+              {videoPreview && (
+                <div className="mb-4 p-4 border border-green-200 rounded-xl bg-green-50">
+                  <p className="text-sm font-semibold text-green-700 mb-3">✓ Video Selected</p>
+                  <video
+                    src={videoPreview}
+                    controls
+                    className="w-full rounded-lg max-h-48 object-cover bg-black"
+                  />
+                  <button
+                    type="button"
+                    onClick={clearVideoFile}
+                    className="mt-3 text-sm text-red-600 hover:text-red-700 font-semibold underline"
+                  >
+                    ✕ Remove this video
+                  </button>
+                </div>
+              )}
+
+              {/* 🎯 DÁN LINK VIDEO */}
+              <div className="p-4 border border-amber-200 rounded-xl bg-white">
+                <label className="block mb-2 font-semibold text-sm text-slate-700">
+                  🔗 Or Paste Video URL
+                </label>
+                <input
+                  type="text"
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  disabled={videoFile ? true : false}
+                  placeholder="e.g. https://www.youtube.com/watch?v=... or https://vimeo.com/..."
+                  className={`w-full border rounded-xl p-3 outline-none focus:border-blue-500 transition font-mono text-sm ${
+                    videoFile ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'text-slate-600'
+                  }`}
+                />
+                {videoFile && (
+                  <p className="text-xs text-amber-600 mt-2">
+                    💡 URL field disabled (file upload takes priority)
+                  </p>
+                )}
+                {!videoFile && videoUrl && (
+                  <p className="text-xs text-green-600 mt-2">✓ URL will be saved</p>
+                )}
+              </div>
+            </div>
           </div>
 
+          {/* TEXT CONTENT */}
           <div>
             <label className="block mb-2 font-semibold text-sm text-slate-700">Text Content / Study Guide</label>
             <textarea
@@ -176,21 +283,22 @@ export default function AdminEditLessonPage() {
             />
           </div>
 
+          {/* BUTTONS */}
           <div className="flex gap-4 pt-4 border-t justify-end">
             <button
               type="button"
               disabled={submitting || deleting}
               onClick={() => router.push(`/admin/courses/${courseId}`)}
-              className="border hover:bg-slate-50 text-slate-700 font-semibold px-6 py-3.5 rounded-2xl transition"
+              className="border hover:bg-slate-50 text-slate-700 font-semibold px-6 py-3.5 rounded-2xl transition disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting || deleting}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-2xl transition shadow-md shadow-blue-600/10 disabled:bg-slate-200 disabled:text-slate-400"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-2xl transition shadow-md shadow-blue-600/10 disabled:bg-slate-300 disabled:cursor-not-allowed"
             >
-              {submitting ? "Saving changes..." : "Save Changes"}
+              {submitting ? "💾 Saving..." : "✓ Save Changes"}
             </button>
           </div>
         </form>
