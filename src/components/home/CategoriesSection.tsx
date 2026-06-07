@@ -4,6 +4,33 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getCategories, Category } from "@/src/services/categoryService";
 
+function CategoriesSkeleton() {
+  return (
+    <section className="bg-[#f5f7fa] animate-pulse">
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        {/* Tiêu đề giả lập */}
+        <div className="h-5 bg-slate-200 rounded w-48 mb-6"></div>
+
+        {/* Danh sách các nút danh mục giả lập (Pills) */}
+        <div className="flex flex-wrap px-2 gap-2">
+          {[
+            "w-24", "w-32", "w-28", "w-36", "w-20", 
+            "w-40", "w-24", "w-32", "w-28"
+          ].map((widthClass, index) => (
+            <div
+              key={index}
+              className={`${widthClass} h-9 bg-white border border-slate-200/60 rounded-full flex items-center justify-center shadow-sm`}
+            >
+              {/* Vệt xám giả lập chữ bên trong nút */}
+              <div className="h-3 bg-slate-200 rounded w-3/5"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function CategoriesSection() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,15 +51,8 @@ export default function CategoriesSection() {
     fetchCats();
   }, []);
 
-  // Trạng thái đang tải dữ liệu
   if (loading) {
-    return (
-      <section className="bg-[#f5f7fa]">
-        <div className="max-w-7xl mx-auto px-6 py-10 text-center text-sm text-gray-500">
-          Loading categories...
-        </div>
-      </section>
-    );
+    return <CategoriesSkeleton />;
   }
 
   // Trường hợp không có dữ liệu
@@ -45,15 +65,13 @@ export default function CategoriesSection() {
         {/* TITLE */}
         <div>
           <h3 className="text-sm md:text-md font-semibold text-[#1f1f1f]">
-            Explore Categories
+            Khám phá danh mục
           </h3>
         </div>
 
-        {/* FLEX WRAPPER FOR PILLS (Tự động xuống hàng, dữ liệu động) */}
+        {/* FLEX WRAPPER FOR PILLS */}
         <div className="flex flex-wrap px-2 gap-2 mt-6">
           {categories.map((category) => {
-            // Đảm bảo bạn có trường slug trong model Category (ví dụ: "computer-science", "business")
-            // Nếu chưa có trường slug, tạm thời dùng: encodeURIComponent(category.name.toLowerCase().replace(/ /g, "-"))
             const catSlug = category.slug || category.name.toLowerCase().replace(/ /g, "-");
 
             return (

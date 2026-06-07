@@ -139,15 +139,15 @@ export default function StudentQuizView({ quizId, onClose, onSuccess }: StudentQ
 
   if (loading) {
     return (
-      <div className="py-20 flex items-center justify-center text-slate-400 bg-slate-900 rounded-2xl border border-slate-800">
-        <Loader2 className="animate-spin mr-2" size={20} /> Đang kiểm tra lịch sử làm bài...
+      <div className="py-20 flex items-center justify-center text-slate-500 bg-white rounded-2xl border border-slate-200 shadow-sm">
+        <Loader2 className="animate-spin mr-2 text-[#0056d2]" size={20} /> Đang kiểm tra lịch sử làm bài...
       </div>
     );
   }
 
   if (!quiz) {
     return (
-      <div className="py-20 text-center text-red-400 bg-slate-900 rounded-2xl border border-slate-800">
+      <div className="py-20 text-center text-red-600 bg-white rounded-2xl border border-slate-200 shadow-sm font-medium">
         Không tìm thấy thông tin bài kiểm tra.
       </div>
     );
@@ -156,35 +156,35 @@ export default function StudentQuizView({ quizId, onClose, onSuccess }: StudentQ
   const canRetry = result && !result.passed && (result.attemptNumber < (quiz.attempts || 1));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-slate-700">
       {/* THANH THOÁT / QUAY LẠI VIDEO */}
       <button 
         onClick={onClose}
-        className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition bg-slate-800/50 px-4 py-2 rounded-xl border border-slate-700/50 w-fit"
+        className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-black transition bg-white px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 shadow-sm w-fit"
       >
         <ArrowLeft size={14} /> Quay lại bài học
       </button>
 
       {/* THÔNG TIN CHI TIẾT BÀI KIỂM TRA */}
-      <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl relative overflow-hidden">
+      <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm relative overflow-hidden">
         {isLocked && (
-          <div className="absolute top-3 right-3 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] px-2.5 py-1 rounded-md font-bold flex items-center gap-1">
-            <Lock size={12} /> CHẾ ĐỘ XEM LẠI KẾT QUẢ
+          <div className="absolute top-3 right-3 bg-blue-50 text-[#0056d2] border border-blue-100 text-[10px] px-2.5 py-1 rounded-md font-bold flex items-center gap-1 uppercase tracking-wider">
+            <Lock size={12} /> Chế độ xem lại kết quả
           </div>
         )}
-        <h1 className="text-base font-extrabold text-white mb-2">{quiz.title}</h1>
-        <p className="text-xs text-slate-400 mb-4">{quiz.description}</p>
+        <h1 className="text-base font-extrabold text-slate-900 mb-2">{quiz.title}</h1>
+        <p className="text-xs text-slate-500 mb-4 leading-relaxed">{quiz.description}</p>
         
-        <div className="flex flex-wrap gap-3 text-xs text-slate-400">
-          <span className="flex items-center gap-1.5 bg-slate-800/60 px-3 py-1.5 rounded-lg border border-slate-700/50 text-[11px]">
+        <div className="flex flex-wrap gap-3 text-xs text-slate-600">
+          <span className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 text-[11px] font-medium">
             Giới hạn lượt làm bài: {quiz.attempts} lần
           </span>
-          <span className="flex items-center gap-1.5 bg-slate-800/60 px-3 py-1.5 rounded-lg border border-slate-700/50 text-[11px]">
+          <span className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 text-[11px] font-medium">
             <Award size={13} className="text-amber-500" /> Cần {quiz.passingScore}% để đạt
           </span>
           {timeLeft !== null && !isLocked && (
             <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-bold text-[11px] ${
-              timeLeft < 60 ? "bg-red-950/50 border-red-500 text-red-400 animate-pulse" : "bg-blue-950/50 border-blue-500/50 text-blue-400"
+              timeLeft < 60 ? "bg-red-50 border-red-200 text-red-600 animate-pulse" : "bg-blue-50 border-blue-100 text-[#0056d2]"
             }`}>
               <Timer size={13} /> Thời gian: {formatTime(timeLeft)}
             </span>
@@ -192,21 +192,21 @@ export default function StudentQuizView({ quizId, onClose, onSuccess }: StudentQ
         </div>
       </div>
 
-      {/* KHỐI THÔNG BÁO ĐIỂM SỐ */}
+      {/* KHỐI THÔNG BÁO ĐIỂM SỐ PASTEL */}
       {result && (
-        <div className={`border p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xl ${
+        <div className={`border p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm ${
           result.passed 
-            ? 'bg-emerald-950/40 border-emerald-500/40' 
-            : 'bg-red-950/40 border-red-500/40' 
+            ? 'bg-emerald-50/60 border-emerald-200' 
+            : 'bg-red-50/60 border-red-200' 
         }`}>
           <div>
-            <h2 className={`text-sm font-black flex items-center gap-2 ${result.passed ? 'text-emerald-400' : 'text-red-400'}`}>
+            <h2 className={`text-sm font-bold flex items-center gap-2 ${result.passed ? 'text-emerald-700' : 'text-red-700'}`}>
               {result.passed ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
               {result.passed ? "BẠN ĐÃ ĐẠT TIÊU CHUẨN BÀI HỌC" : "BẠN CHƯA ĐẠT ĐIỂM ĐIỀU KIỆN"}
             </h2>
-            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-              Bạn đã hoàn thành bài kiểm tra ở lượt thứ <b>{result.attemptNumber || 1}/{quiz.attempts}</b>.<br />
-              Đạt tỉ lệ: <span className="font-bold text-white text-xs">{result.percentage}%</span> | Điểm số: {result.score}/{quiz.totalPoints || quiz.questions.length}
+            <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
+              Bạn đã hoàn thành bài kiểm tra ở lượt thứ <span className="font-semibold text-slate-800">{result.attemptNumber || 1}/{quiz.attempts}</span>.<br />
+              Đạt tỉ lệ: <span className="font-bold text-slate-900 text-xs">{result.percentage}%</span> | Điểm số: <span className="font-semibold text-slate-800">{result.score}/{quiz.totalPoints || quiz.questions.length}</span>
             </p>
           </div>
           
@@ -219,15 +219,15 @@ export default function StudentQuizView({ quizId, onClose, onSuccess }: StudentQ
                 setIsLocked(false);
                 if (quiz.timeLimit) setTimeLeft(quiz.timeLimit * 60);
               }}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition flex-shrink-0"
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition shadow-sm flex-shrink-0"
             >
               Làm lại bài mới
             </button>
           ) : (
             <span className={`text-xs font-bold px-3 py-1.5 rounded-xl border ${
               result.passed 
-                ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" 
-                : "text-red-400 bg-red-500/10 border-red-500/20" 
+                ? "text-emerald-700 bg-emerald-100/60 border-emerald-200" 
+                : "text-red-700 bg-red-100/60 border-red-200" 
             }`}>
               {result.passed ? "✓ Đã Hoàn Thành" : "✕ Đã Hết Lượt Làm Bài"}
             </span>
@@ -235,77 +235,70 @@ export default function StudentQuizView({ quizId, onClose, onSuccess }: StudentQ
         </div>
       )}
 
-      {/* DANH SÁCH KHỐI CÂU HỎI */}
-<div className="space-y-4">
-  {quiz.questions.map((q: any, index: number) => {
-    // 🎯 Lấy bản ghi chấm điểm chi tiết của câu hỏi này từ Backend gửi về
-    const studentAnswerRecord = result?.answers?.find(
-      (ans: any) => (ans.questionId?._id || ans.questionId) === q._id
-    );
-    
-    // Trạng thái đúng/sai thực tế của câu hỏi này
-    const isQuestionCorrect = studentAnswerRecord?.isCorrect === true;
-    
-    // Nội dung text mà học sinh đã chọn làm đáp án
-    const studentSelectedText = answers[q._id!] || studentAnswerRecord?.studentAnswer;
+      {/* DANH SÁCH KHỐI CÂU HỎI SÁNG */}
+      <div className="space-y-4">
+        {quiz.questions.map((q: any, index: number) => {
+          const studentAnswerRecord = result?.answers?.find(
+            (ans: any) => (ans.questionId?._id || ans.questionId) === q._id
+          );
+          
+          const isQuestionCorrect = studentAnswerRecord?.isCorrect === true;
+          const studentSelectedText = answers[q._id!] || studentAnswerRecord?.studentAnswer;
 
-    return (
-      <div key={q._id} className="bg-slate-900 border border-slate-800/80 p-5 rounded-2xl shadow-md">
-        <h3 className="text-xs font-bold text-white mb-3 leading-snug flex items-center justify-between">
-          <span>
-            <span className="text-blue-400 mr-1">Câu {index + 1}:</span> {q.text}
-          </span>
-          {result && (
-            isQuestionCorrect 
-              ? <span className="text-emerald-400 text-[11px] font-medium flex items-center gap-1">✓ Đúng</span>
-              : <span className="text-red-400 text-[11px] font-medium flex items-center gap-1">✕ Sai</span>
-          )}
-        </h3>
-        
-        <div className="grid grid-cols-1 gap-2.5">
-          {q.options?.map((option: any) => {
-            const isThisOptionSelected = studentSelectedText === option.text;
-            
-            let optionStyle = "border-slate-800 bg-slate-950/30 hover:bg-slate-800/30 text-slate-300";
-            
-            if (result) {
-              // 🌟 THAY ĐỔI LOGIC TÔ MÀU AN TOÀN TẠI ĐÂY:
-              if (isThisOptionSelected) {
-                // Nếu đây là câu học sinh chọn: Dựa vào kết quả chấm điểm tổng của câu hỏi để tô màu
-                if (isQuestionCorrect) {
-                  optionStyle = "border-emerald-500/50 bg-emerald-500/5 text-emerald-400 font-medium";
-                } else {
-                  optionStyle = "border-red-500/50 bg-red-500/5 text-red-400 font-medium";
-                }
-              } else {
-                // Đối với các câu học sinh KHÔNG chọn:
-                // Nếu Backend có trả về flag isCorrect thì hiển thị, nếu không thì giữ nguyên màu mặc định
-                if (option.isCorrect === true) {
-                  optionStyle = "border-emerald-500/50 bg-emerald-500/5 text-emerald-400 font-medium";
-                }
-              }
-            } else if (answers[q._id!] === option.text) {
-              // Đang làm bài bình thường: hiện viền xanh dương khi click chọn
-              optionStyle = "border-blue-500 bg-blue-600/10 text-blue-400 font-medium";
-            }
+          return (
+            <div key={q._id} className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+              <h3 className="text-xs font-bold text-slate-900 mb-3 leading-snug flex items-center justify-between">
+                <span>
+                  <span className="text-[#0056d2] mr-1">Câu {index + 1}:</span> {q.text}
+                </span>
+                {result && (
+                  isQuestionCorrect 
+                    ? <span className="text-emerald-600 text-[11px] font-bold flex items-center gap-1">✓ Đúng</span>
+                    : <span className="text-red-600 text-[11px] font-bold flex items-center gap-1">✕ Sai</span>
+                )}
+              </h3>
+              
+              <div className="grid grid-cols-1 gap-2.5">
+                {q.options?.map((option: any) => {
+                  const isThisOptionSelected = studentSelectedText === option.text;
+                  
+                  // Style mặc định Light Mode cho các ô đáp án
+                  let optionStyle = "border-slate-200 bg-slate-50/50 hover:bg-slate-100/70 text-slate-700";
+                  
+                  if (result) {
+                    if (isThisOptionSelected) {
+                      if (isQuestionCorrect) {
+                        optionStyle = "border-emerald-500 bg-emerald-50 text-emerald-700 font-semibold";
+                      } else {
+                        optionStyle = "border-red-500 bg-red-50 text-red-700 font-semibold";
+                      }
+                    } else {
+                      if (option.isCorrect === true) {
+                        optionStyle = "border-emerald-500 bg-emerald-50 text-emerald-700 font-semibold";
+                      }
+                    }
+                  } else if (answers[q._id!] === option.text) {
+                    // Đang làm bài bình thường: hiện viền xanh dương chuẩn hiệu ứng click hệ thống sáng
+                    optionStyle = "border-[#0056d2] bg-blue-50/60 text-[#0056d2] font-semibold";
+                  }
 
-            return (
-              <button
-                type="button"
-                key={option._id}
-                onClick={() => handleSelectOption(q._id!, option.text)}
-                disabled={isLocked || !!result || submitting}
-                className={`w-full text-left p-3.5 rounded-xl border text-xs transition flex items-center justify-between gap-4 ${optionStyle}`}
-              >
-                <span>{option.text}</span>
-              </button>
-            );
-          })}
-        </div>
+                  return (
+                    <button
+                      type="button"
+                      key={option._id}
+                      onClick={() => handleSelectOption(q._id!, option.text)}
+                      disabled={isLocked || !!result || submitting}
+                      className={`w-full text-left p-3.5 rounded-xl border text-xs transition flex items-center justify-between gap-4 ${optionStyle}`}
+                    >
+                      <span>{option.text}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </div>
-    );
-  })}
-</div>
 
       {/* KHỐI GỬI BÀI CHẤM ĐIỂM */}
       {!result && !isLocked && (
@@ -314,7 +307,7 @@ export default function StudentQuizView({ quizId, onClose, onSuccess }: StudentQ
             type="button"
             onClick={handleSubmit}
             disabled={submitting}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 text-white rounded-xl font-bold text-xs shadow-lg transition flex items-center gap-2"
+            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 text-white rounded-xl font-bold text-xs shadow-md transition flex items-center gap-2"
           >
             {submitting && <Loader2 className="animate-spin" size={13} />}
             Gửi bài chấm điểm

@@ -4,9 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Play, CheckCircle, Award, BookOpen, Clock, FileText } from "lucide-react";
 
-// Import các thành phần Modal Chứng chỉ & Sub-view Quiz riêng biệt
 import CertificateModal from "@/src/components/certificate/CertificateModal";
-import StudentQuizView from "@/src/components/quiz/StudentQuizView"; // 🎯 ĐƯỜNG IMPORT MỚI
+import StudentQuizView from "@/src/components/quiz/StudentQuizView"; 
 
 import { getCourseBySlug } from "@/src/services/course";
 import {
@@ -18,9 +17,60 @@ import {
   completeCourse,
 } from "@/src/services/enrollment.api";
 
-// Rút gọn bớt import dư thừa liên quan đến submit vì đã được chuyển sang file Quiz riêng
 import { getCourseQuizzes } from "@/src/services/quizService"; 
 
+function CourseLearnSkeleton() {
+  return (
+    <div className="h-full bg-[#f8f9fa] flex flex-col animate-pulse">
+      {/* SKELETON HEADER */}
+      <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-4 w-1/3">
+          <div className="w-8 h-8 bg-slate-200 rounded-lg"></div>
+          <div className="flex-1 space-y-2">
+            <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+            <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+          </div>
+        </div>
+        <div className="w-32 h-9 bg-slate-200 rounded-xl"></div>
+      </header>
+
+      {/* SKELETON CONTENT */}
+      <div className="w-full flex-1 grid grid-cols-1 md:grid-cols-12 h-[calc(100vh-73px)] overflow-hidden">
+        {/* VIEW TRÁI: VIDEO SKELETON */}
+        <div className="col-span-12 md:col-span-9 p-6 flex flex-col gap-4">
+          <div className="aspect-video bg-slate-200 rounded-2xl shadow-sm w-full"></div>
+          <div className="bg-white border border-slate-200 p-5 rounded-2xl flex justify-between items-center shadow-sm">
+            <div className="space-y-3 flex-1">
+              <div className="h-3 bg-slate-200 rounded w-16"></div>
+              <div className="h-5 bg-slate-200 rounded w-1/3"></div>
+              <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+            </div>
+            <div className="w-28 h-10 bg-slate-200 rounded-xl"></div>
+          </div>
+        </div>
+
+        {/* VIEW PHẢI: MENU LESSONS SKELETON */}
+        <div className="col-span-12 md:col-span-3 bg-white border-t md:border-t-0 md:border-l border-slate-200 flex flex-col">
+          <div className="p-4 border-b border-slate-200 bg-slate-50/80 flex justify-between items-center">
+            <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+            <div className="h-4 bg-slate-200 rounded w-10"></div>
+          </div>
+          <div className="flex-1 p-2 space-y-2">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="p-3 flex items-center gap-3">
+                <div className="w-4 h-4 bg-slate-200 rounded-full flex-shrink-0"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 bg-slate-200 rounded w-5/6"></div>
+                  <div className="h-2 bg-slate-200 rounded w-1/4"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 export default function CourseLearnPage() {
   const params = useParams();
   const router = useRouter();
@@ -61,13 +111,33 @@ export default function CourseLearnPage() {
 
         if (courseData?.lessons && courseData.lessons.length > 0) {
           const sortedLessons = [...courseData.lessons].sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
-          const lastActiveLessonId = enrollData?.currentLessonId;
-          const defaultLesson = sortedLessons.find((l: any) => l._id === lastActiveLessonId) || sortedLessons[0];
+          
+          let defaultLesson = null;
+
+          if (enrollData?.lessonProgress && enrollData.lessonProgress.length > 0) {
+            const nextIncompleteProgress = enrollData.lessonProgress.find((lp: any) => lp.status !== 'completed');
+            
+            if (nextIncompleteProgress) {
+              const targetLessonId = nextIncompleteProgress.lesson?._id || nextIncompleteProgress.lesson;
+              defaultLesson = sortedLessons.find((l: any) => l._id === targetLessonId);
+            }
+          }
+
+          if (!defaultLesson) {
+            const lastActiveLessonId = enrollData?.currentLessonId;
+            defaultLesson = sortedLessons.find((l: any) => l._id === lastActiveLessonId) || sortedLessons[0];
+          }
           
           setActiveLesson(defaultLesson);
+
           try {
             await startLesson(realCourseId, defaultLesson._id);
-            const history = enrollData?.completedLessons?.find((h: any) => h.lessonId === defaultLesson._id);
+
+            const history = enrollData?.lessonProgress?.find((lp: any) => {
+              const lpLessonId = lp.lesson?._id || lp.lesson;
+              return lpLessonId === defaultLesson._id;
+            });
+
             if (history?.watchedDuration && videoRef.current) {
               videoRef.current.currentTime = history.watchedDuration;
             }
@@ -128,7 +198,12 @@ export default function CourseLearnPage() {
     setActiveLesson(lesson);
     try {
       await startLesson(course._id, lesson._id);
-      const history = enrollment?.completedLessons?.find((h: any) => h.lessonId === lesson._id);
+      
+      const history = enrollment?.lessonProgress?.find((lp: any) => {
+        const lpLessonId = lp.lesson?._id || lp.lesson;
+        return lpLessonId === lesson._id;
+      });
+
       if (history?.watchedDuration && videoRef.current) {
         videoRef.current.currentTime = history.watchedDuration;
       }
@@ -188,21 +263,16 @@ export default function CourseLearnPage() {
   };
 
   if (loading) {
-    return (
-      <div className="h-full flex flex-col justify-center items-center bg-slate-900 text-white">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-        <p className="mt-3 text-xs text-slate-400">Đang chuẩn bị phòng học trực tuyến...</p>
-      </div>
-    );
+    return <CourseLearnSkeleton />;
   }
 
   if (!course) {
     return (
-      <div className="h-full flex flex-col justify-center items-center bg-[#0f172a] text-white p-4">
-        <div className="bg-slate-900 p-8 rounded-2xl shadow-sm text-center max-w-sm border border-slate-800">
-          <p className="text-red-500 font-bold text-base">Không vào được phòng học</p>
-          <p className="text-slate-400 text-xs mt-1">Khóa học không tồn tại hoặc bạn chưa đăng ký thành viên.</p>
-          <button onClick={() => router.push("/")} className="mt-4 text-xs bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold transition">
+      <div className="h-full flex flex-col justify-center items-center bg-[#f8f9fa] p-4">
+        <div className="bg-white p-8 rounded-2xl shadow-sm text-center max-w-sm border border-slate-200">
+          <p className="text-red-600 font-bold text-base">Không vào được phòng học</p>
+          <p className="text-gray-500 text-xs mt-1">Khóa học không tồn tại hoặc bạn chưa đăng ký thành viên.</p>
+          <button onClick={() => router.push("/")} className="mt-4 text-xs bg-[#0056d2] hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold transition">
             Quay về trang chủ
           </button>
         </div>
@@ -211,34 +281,38 @@ export default function CourseLearnPage() {
   }
 
   return (
-    <div className="h-full bg-[#0f172a] text-slate-100 flex flex-col">
-      <header className="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between">
+    <div className="h-full bg-[#f8f9fa] text-[#1f2124] flex flex-col">
+      {/* HEADER SÁNG */}
+      <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4 min-w-0">
           <button 
             onClick={() => router.push(`/${categorySlug}/${courseSlug}`)}
-            className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition"
+            className="p-2 hover:bg-slate-100 rounded-lg text-gray-500 hover:text-black transition"
           >
             <ArrowLeft size={18} />
           </button>
           <div className="min-w-0">
-            <h1 className="text-sm font-bold text-white truncate">{course?.title}</h1>
-            <p className="text-[11px] text-slate-400 mt-0.5">Giảng viên: {course?.instructor?.name || "Chuyên gia"}</p>
+            <h1 className="text-sm font-bold text-slate-900 truncate">{course?.title}</h1>
+            <p className="text-[11px] text-gray-500 mt-0.5">Giảng viên: <span className="font-medium text-slate-700">{course?.instructor?.name || "Chuyên gia"}</span></p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 bg-slate-800/60 px-3 py-1.5 rounded-xl border border-slate-700/50">
-          <Award size={16} className="text-yellow-500" />
+        {/* Khung Tiến độ nổi bật */}
+        <div className="flex items-center gap-3 bg-blue-50/60 px-3 py-1.5 rounded-xl border border-blue-100">
+          <Award size={16} className="text-amber-500" />
           <div className="text-right">
-            <span className="text-xs font-bold block text-white"> Tiến độ: {progress?.progressPercentage || 0}%</span>
-            <span className="text-[10px] text-slate-400 block">Bài đã xong: {progress?.completedCount || progress?.completedLessons || 0}/{course?.lessons?.length || 0}</span>
+            <span className="text-xs font-bold block text-[#0056d2]"> Tiến độ: {progress?.progressPercentage || 0}%</span>
+            <span className="text-[10px] text-gray-500 block font-medium">Bài đã xong: {progress?.completedCount || progress?.completedLessons || 0}/{course?.lessons?.length || 0}</span>
           </div>
         </div>
       </header>
 
-      <div className="w-full flex-1 grid grid-cols-1 md:grid-cols-12 h-[calc(100vh-73px)] overflow-hidden bg-[#0f172a]">
+      {/* KHU VỰC BÀI HỌC VÀ MENU DANH SÁCH */}
+      <div className="w-full flex-1 grid grid-cols-1 md:grid-cols-12 h-[calc(100vh-73px)] overflow-hidden bg-[#f8f9fa]">
+        
+        {/* VIEW TRÁI: VIDEO & NỘI DUNG BÀI HỌC CÙNG BÀI KIỂM TRA */}
         <div className="col-span-12 md:col-span-9 min-w-0 p-6 flex flex-col gap-4 overflow-y-auto">
           {isDoingQuiz && currentQuiz && currentQuiz._id ? (
-            /* 🎯 GỌI COMPONENT QUIZ ĐÃ TÁCH FILE */
             <StudentQuizView 
               quizId={currentQuiz._id} 
               onClose={() => setIsDoingQuiz(false)} 
@@ -246,7 +320,8 @@ export default function CourseLearnPage() {
             />
           ) : activeLesson ? (
             <div className="space-y-4">
-              <div className="aspect-video bg-black rounded-2xl overflow-hidden border border-slate-800 shadow-2xl relative">
+              {/* Box Video bo góc thanh lịch */}
+              <div className="aspect-video bg-black rounded-2xl overflow-hidden relative shadow-md">
                 {activeLesson.videoUrl ? (
                   <video
                     ref={videoRef}
@@ -258,27 +333,28 @@ export default function CourseLearnPage() {
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 gap-2">
-                    <BookOpen size={48} className="text-slate-700 animate-pulse" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-slate-900 gap-2">
+                    <BookOpen size={48} className="text-gray-600 animate-pulse" />
                     <p className="text-xs">Bài học này chưa được cấu hình liên kết Video bài giảng</p>
                   </div>
                 )}
               </div>
 
-              <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              {/* Chi tiết bài học dưới Video (Nền Trắng) */}
+              <div className="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
                 <div className="space-y-1 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold bg-blue-600/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded uppercase tracking-wider">
+                    <span className="text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded uppercase tracking-wider">
                       Đang diễn ra
                     </span>
                     {checkLessonCompleted(activeLesson._id) && (
-                      <span className="text-[10px] font-bold bg-emerald-600/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded uppercase tracking-wider">
+                      <span className="text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded uppercase tracking-wider">
                         Đã hoàn thành
                       </span>
                     )}
                   </div>
-                  <h2 className="text-base font-bold text-white">{activeLesson.title}</h2>
-                  <p className="text-xs text-slate-400 leading-relaxed pt-1">
+                  <h2 className="text-base font-bold text-slate-900 pt-1">{activeLesson.title}</h2>
+                  <p className="text-xs text-slate-500 leading-relaxed pt-1">
                     {activeLesson.description || "Bài học này nằm trong khung năng lực đào tạo chuẩn hệ thống."}
                   </p>
                 </div>
@@ -287,7 +363,7 @@ export default function CourseLearnPage() {
                   {currentQuiz && (
                     <button
                       onClick={() => setIsDoingQuiz(true)}
-                      className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-xl font-bold text-xs shadow-md shadow-orange-900/20 transition-all transform active:scale-95"
+                      className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl font-bold text-xs shadow-md transition-all transform active:scale-95"
                     >
                       <FileText size={16} />
                       Làm bài kiểm tra ({currentQuiz.passingScore}% để đạt)
@@ -297,22 +373,23 @@ export default function CourseLearnPage() {
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-500 py-20">
-              <Play size={40} className="stroke-[1.5] mb-2" />
-              <p className="text-xs">Vui lòng chọn một bài giảng ở menu bên cạnh để bắt đầu học tập.</p>
+            <div className="flex-1 flex flex-col items-center justify-center text-gray-400 py-20 bg-white rounded-2xl border border-slate-200">
+              <Play size={40} className="stroke-[1.5] mb-2 text-slate-300" />
+              <p className="text-xs font-medium">Vui lòng chọn một bài giảng ở menu bên cạnh để bắt đầu học tập.</p>
             </div>
           )}
         </div>
 
-        <div className="col-span-12 md:col-span-3 bg-slate-900 border-t md:border-t-0 md:border-l border-slate-800 flex flex-col min-h-0 overflow-hidden">
-          <div className="p-4 border-b border-slate-800 bg-slate-900/50 flex items-center justify-between">
-            <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider">Nội dung bài học</h3>
-            <span className="text-[10px] font-bold bg-slate-800 px-2 py-0.5 rounded text-slate-300">
+        {/* VIEW PHẢI: MENU DANH SÁCH BÀI HỌC (Nền Trắng) */}
+        <div className="col-span-12 md:col-span-3 bg-white border-t md:border-t-0 md:border-l border-slate-200 flex flex-col min-h-0 overflow-hidden shadow-sm">
+          <div className="p-4 border-b border-slate-200 bg-slate-50/80 flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase text-slate-500 tracking-wider">Nội dung bài học</h3>
+            <span className="text-[10px] font-bold bg-slate-200 px-2 py-0.5 rounded text-slate-700">
               {course?.lessons?.length || 0} mục
             </span>
           </div>
 
-          <div className="flex-1 overflow-y-auto divide-y divide-slate-800/40 p-2 space-y-1">
+          <div className="flex-1 overflow-y-auto p-2 space-y-1">
             {course?.lessons && course.lessons.length > 0 ? (
               [...course.lessons]
                 .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
@@ -326,26 +403,26 @@ export default function CourseLearnPage() {
                       onClick={() => handleSelectLesson(lesson)}
                       className={`w-full text-left p-3 rounded-xl flex items-start gap-3 transition group relative ${
                         isCurrent 
-                          ? "bg-blue-600/10 border border-blue-500/30 text-white" 
-                          : "hover:bg-slate-800/50 text-slate-300 border border-transparent"
+                          ? "bg-blue-50 text-[#0056d2] font-semibold border border-blue-100" 
+                          : "hover:bg-slate-50 text-slate-700 border border-transparent"
                       }`}
                     >
                       <div className="mt-0.5 flex-shrink-0">
                         {isCompleted ? (
-                          <CheckCircle size={16} className="text-emerald-500 fill-emerald-500/10" />
+                          <CheckCircle size={16} className="text-emerald-500 fill-emerald-50" />
                         ) : (
-                          <div className={`w-4 h-4 rounded-full border-2 ${isCurrent ? "border-blue-400" : "border-slate-600 group-hover:border-slate-400"} flex items-center justify-center text-[9px] font-bold`}>
+                          <div className={`w-4 h-4 rounded-full border-2 ${isCurrent ? "border-blue-500 bg-[#0056d2] text-white" : "border-slate-300 text-slate-500 group-hover:border-slate-400"} flex items-center justify-center text-[9px] font-bold`}>
                             {index + 1}
                           </div>
                         )}
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <span className={`text-xs font-medium block truncate leading-snug ${isCurrent ? "text-blue-400 font-bold" : "group-hover:text-white"}`}>
+                        <span className={`text-xs font-medium block truncate leading-snug ${isCurrent ? "text-[#0056d2] font-bold" : "group-hover:text-black"}`}>
                           {lesson.title}
                         </span>
                         <div className="flex items-center justify-between mt-1">
-                          <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                          <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
                             <Clock size={10} />
                             <span>{lesson.duration ? `${lesson.duration} phút` : "Bài học Video"}</span>
                           </div>
@@ -355,7 +432,7 @@ export default function CourseLearnPage() {
                   );
                 })
             ) : (
-              <p className="text-xs text-slate-500 italic p-4 text-center">Đang cập nhật bài giảng.</p>
+              <p className="text-xs text-slate-400 italic p-4 text-center">Đang cập nhật bài giảng.</p>
             )}
           </div>
         </div>

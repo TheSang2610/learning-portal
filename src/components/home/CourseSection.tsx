@@ -6,8 +6,51 @@ import Link from "next/link";
 import { getCourses, Course } from "@/src/services/course";
 import { getCategories, Category } from "@/src/services/categoryService";
 
+function CourseGridSkeleton() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-8 animate-pulse">
+      {[1, 2, 3, 4, 5, 6, 7, 8].map((index) => (
+        <div
+          key={index}
+          className="bg-white rounded-2xl flex flex-col justify-between overflow-hidden border border-slate-100 shadow-sm h-[320px]"
+        >
+          {/* Trên: Khung ảnh Thumbnail giả lập tỷ lệ aspect-video */}
+          <div className="aspect-video w-full bg-slate-200"></div>
+
+          {/* Dưới: Khung nội dung chi tiết */}
+          <div className="p-4 flex flex-col flex-1 justify-between">
+            <div className="space-y-3">
+              {/* Hàng Instructor và Provider giả lập */}
+              <div className="flex items-center gap-2">
+                <div className="h-3 bg-slate-200 rounded w-16"></div>
+                <span className="text-slate-200 text-xs">|</span>
+                <div className="h-3 bg-slate-200 rounded w-20"></div>
+              </div>
+
+              {/* Tiêu đề khóa học giả lập (2 dòng lệch size) */}
+              <div className="space-y-2">
+                <div className="h-4 bg-slate-200 rounded w-full"></div>
+                <div className="h-4 bg-slate-200 rounded w-4/5"></div>
+              </div>
+            </div>
+
+            {/* Bottom bar giả lập: Level, Số bài, Giá tiền */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-auto">
+              <div className="flex items-center gap-2">
+                <div className="h-3.5 bg-slate-200 rounded w-12"></div>
+                <div className="h-3.5 bg-slate-200 rounded w-14"></div>
+              </div>
+              <div className="h-4 bg-slate-200 rounded w-16"></div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function CourseSection() {
-  const [courses, setCourses] = useState<any[]>([]); // Để any[] tạm thời xử lý bóc tách linh hoạt cấu trúc DB
+  const [courses, setCourses] = useState<any[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,7 +70,6 @@ export default function CourseSection() {
           getCategories(),
         ]);
 
-        // 1. Xử lý lấy danh sách khóa học công khai công khai
         let rawCourses: any[] = [];
         if (Array.isArray(coursesRes)) {
           rawCourses = coursesRes;
@@ -35,14 +77,11 @@ export default function CourseSection() {
           rawCourses = (coursesRes as any).data;
         }
 
-        // LƯU Ý: Khóa học mẫu của bạn đang có isPublished = false. 
-        // Nếu muốn test được khóa học đó, bạn hãy đổi thành c.isPublished === false hoặc comment dòng filter dưới đây:
         const published = rawCourses.filter((c: any) => c.isPublished !== undefined ? c.isPublished : true); 
         
         setCourses(published);
         setFilteredCourses(published);
 
-        // 2. Xử lý danh mục
         if (Array.isArray(categoriesRes)) {
           setCategories(categoriesRes);
         }
@@ -56,7 +95,6 @@ export default function CourseSection() {
     fetchData();
   }, []);
 
-  // 🎯 LOGIC LỌC ĐA NĂNG: Đã sửa đổi để bóc mảng dữ liệu MongoDB bọc $oid
   useEffect(() => {
     let result = [...courses];
 
@@ -64,10 +102,8 @@ export default function CourseSection() {
     if (selectedCategory !== "all") {
       result = result.filter((course) => {
         const catData = course.category;
-
         if (!catData) return false;
 
-        // Trường hợp 1: Category là một Mảng (như dữ liệu JSON thực tế của bạn)
         if (Array.isArray(catData)) {
           return catData.some((item: any) => {
             if (typeof item === "string") return item === selectedCategory;
@@ -77,13 +113,11 @@ export default function CourseSection() {
           });
         }
 
-        // Trường hợp 2: Category là 1 Object đơn lẻ chứa $oid hoặc _id
         if (typeof catData === "object") {
           if (catData.$oid) return catData.$oid === selectedCategory;
           if (catData._id) return catData._id === selectedCategory;
         }
 
-        // Trường hợp 3: Category là 1 chuỗi string thông thường
         return catData === selectedCategory;
       });
     }
@@ -121,15 +155,6 @@ export default function CourseSection() {
     return cat?.slug || cat?.name?.toLowerCase().replace(/[^a-zA-Z0-9\s]/g, "").replace(/\s+/g, "-") || "general";
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center py-20 bg-white">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-slate-600 font-medium">Đang tải danh sách khóa học...</span>
-      </div>
-    );
-  }
-
   return (
     <section className="bg-white py-12 border-t border-gray-100">
       <div className="max-w-7xl mx-auto px-6">
@@ -140,7 +165,7 @@ export default function CourseSection() {
           <p className="text-sm text-gray-500 mt-1">Khám phá toàn bộ khoá học trực tuyến hiện có trên hệ thống</p>
         </div>
 
-        {/* THANH BỘ LỌC */}
+        {/* THANH BỘ LỌC (Giữ nguyên cấu trúc để UI không bị trống trải khi đang tải) */}
         <div className="mt-6 bg-slate-50 p-4 rounded-2xl border border-gray-100 flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-4 flex-1">
             <div className="flex items-center gap-1.5 text-gray-700 text-sm font-semibold">
@@ -204,8 +229,10 @@ export default function CourseSection() {
           )}
         </div>
 
-        {/* LISTING GRID */}
-        {filteredCourses.length === 0 ? (
+        {/* LISTING GRID HOẶC SKELETON */}
+        {loading ? (
+          <CourseGridSkeleton />
+        ) : filteredCourses.length === 0 ? (
           <div className="text-center py-20 text-gray-400 bg-slate-50 rounded-2xl border border-dashed mt-8">
             Không tìm thấy khóa học nào phù hợp với bộ lọc đã chọn.
           </div>

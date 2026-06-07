@@ -20,7 +20,13 @@ import {
   Flame,  
   Sparkles, 
   MessageSquare,
-  HelpCircle
+  HelpCircle,
+  Bell,
+  Settings,
+  Menu,
+  Sun,
+  Image as ImageIcon, 
+  SlidersHorizontal   
 } from "lucide-react";
 
 interface SubMenuItem {
@@ -38,7 +44,6 @@ interface MenuItem {
   submenu?: SubMenuItem[]; 
 }
 
-// Cấu trúc dữ liệu Menu phân tầng hệ thống quản trị
 const menuItems: MenuItem[] = [
   {
     label: "Dashboard",
@@ -78,14 +83,17 @@ const menuItems: MenuItem[] = [
       },
     ],
   },
-  /* ==========================================================================
-     🎯 CẤU TRÚC MỚI: TÁCH BIỆT VÀ PHÂN TẦNG 3 MỤC QUẢN LÝ TRANG CHỦ
-     ========================================================================== */
+  // ==================== 1. THÊM MỤC QUẢN LÝ BANNER TỔNG TẠI ĐÂY ====================
+  {
+    label: "Banners Management",
+    href: "/admin/banners",
+    icon: ImageIcon,
+  },
   {
     label: "Home Sections",
     href: "/admin/courses/home-sections",
     icon: LayoutGrid,
-    isHomeSectionGroup: true, // Cờ hiệu phân biệt logic xử lý toggle đóng/mở
+    isHomeSectionGroup: true,
     submenu: [
       {
         label: "Most Popular",
@@ -101,6 +109,12 @@ const menuItems: MenuItem[] = [
         label: "New Releases",
         href: "/admin/courses/home-sections/new-releases",
         icon: Sparkles,
+      },
+      // ==================== 2. THÊM BIẾN TẮT MỞ BANNER TRANG CHỦ TẠI ĐÂY ====================
+      {
+        label: "Homepage Banners",
+        href: "/admin/courses/home-sections/banners-toggle",
+        icon: SlidersHorizontal,
       },
     ],
   },
@@ -132,11 +146,10 @@ export default function AdminLayout({
   const [loading, setLoading] = useState(true);
   const [adminName, setAdminName] = useState("");
   
-  // Kiểm soát trạng thái Đóng/Mở riêng biệt cho 2 nhóm Dropdown khác nhau
   const [isCourseMenuOpen, setIsCourseMenuOpen] = useState(false);
   const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
 
-  // Tự động kích hoạt trạng thái mở rộng dựa trên phân vùng URL đang chạy
+  // Cập nhật Logic tự động mở Accordion Menu theo đường dẫn URL thanh địa chỉ
   useEffect(() => {
     const isHomeSectionRoute = pathname.startsWith("/admin/courses/home-sections");
     
@@ -154,7 +167,6 @@ export default function AdminLayout({
     }
   }, [pathname]);
 
-  // Xác minh phiên đăng nhập và phân quyền Quản trị viên
   useEffect(() => {
     const userInfo = localStorage.getItem("userInfo");
 
@@ -183,186 +195,219 @@ export default function AdminLayout({
     router.push("/");
   };
 
+  const generateBreadcrumbs = () => {
+    const paths = pathname.split("/").filter((path) => path);
+    return paths.map((path, index) => {
+      const href = "/" + paths.slice(0, index + 1).join("/");
+      const label = path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, " ");
+      const isLast = index === paths.length - 1;
+
+      return (
+        <span key={href} className="flex items-center">
+          <span className="mx-2 text-slate-300">/</span>
+          {isLast ? (
+            <span className="text-slate-500 font-normal">{label}</span>
+          ) : (
+            <Link href={href} className="hover:text-indigo-600 transition-colors capitalize">
+              {label}
+            </Link>
+          )}
+        </span>
+      );
+    });
+  };
+
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center text-lg font-semibold text-slate-600 bg-slate-50">
+      <div className="h-screen flex items-center justify-center text-sm font-medium text-slate-400 bg-[#1e293b]">
         Loading Admin Panel...
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-100 text-slate-900 antialiased">
+    <div className="flex min-h-screen bg-[#f8fafc] text-slate-900 antialiased">
       
-      {/* SIDEBAR NAVIGATION */}
-      <aside className="w-72 bg-white border-r border-slate-200 flex flex-col sticky top-0 h-screen">
+      {/* 1. SIDEBAR NAVIGATION */}
+      <aside className="w-64 bg-[#1e2530] text-[#b1b7c1] flex flex-col sticky top-0 h-screen z-20 select-none">
 
-        {/* LOGO */}
-        <div className="px-6 py-6 border-b border-slate-100">
-          <Link href="/admin/dashboard" className="flex items-center gap-3">
-            <div className="bg-blue-600 text-white p-2.5 rounded-xl shadow-md shadow-blue-200">
-              <Shield size={22} />
-            </div>
-            <div>
-              <h1 className="font-bold text-xl tracking-tight text-slate-800">LMS Admin</h1>
-              <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Management</p>
-            </div>
+        {/* BRANDING LOGO ZONE */}
+        <div className="h-14 flex items-center px-4 bg-[#181d26] border-b border-[#2a323d]">
+          <Link href="/admin/dashboard" className="flex items-center gap-2.5">
+            <h1 className="font-bold text-sm tracking-wide text-white uppercase">ADMIN PAGE</h1>
           </Link>
         </div>
 
-        {/* NAVIGATION LINKS */}
-        <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
-          <p className="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Core Features</p>
+        {/* RENDER LIST MENU ITEMS */}
+        <nav className="flex-1 py-3 text-[13.5px] overflow-y-auto space-y-0.5 custom-scrollbar">
           
-          {menuItems.map((item) => {
+          <div className="px-4 py-2 text-[11px] font-bold text-[#6a7686] uppercase tracking-wider">
+            Theme Features
+          </div>
+          
+          {menuItems.map((item, index) => {
             const Icon = item.icon;
-            
-            if (item.submenu) {
-              const isHomeSectionRoute = pathname.startsWith("/admin/courses/home-sections");
-              
-              // Xác định Menu Cha có đang trong trạng thái Active hay không
-              const isGroupActive = item.isHomeSectionGroup 
-                ? isHomeSectionRoute
-                : (pathname.startsWith("/admin/courses") && !isHomeSectionRoute) || 
-                  pathname.startsWith("/admin/categories") ||
-                  pathname.startsWith("/admin/providers") || 
-                  pathname.startsWith("/admin/lessons");
-              
-              const isOpen = item.isHomeSectionGroup ? isHomeMenuOpen : isCourseMenuOpen;
-              const toggleMenu = item.isHomeSectionGroup 
-                ? () => setIsHomeMenuOpen(!isHomeMenuOpen) 
-                : () => setIsCourseMenuOpen(!isCourseMenuOpen);
-              
-              return (
-                <div key={item.label} className="space-y-1">
-                  <button
-                    onClick={toggleMenu}
-                    className={`w-full flex items-center justify-between rounded-2xl px-4 py-3.5 transition-all ${
-                      isGroupActive 
-                        ? "bg-slate-100 text-slate-900 font-semibold" 
-                        : "text-slate-600 hover:bg-slate-50"
+            const renderGroupHeader = index === 1;
+
+            return (
+              <div key={item.label}>
+                {renderGroupHeader && (
+                  <div className="px-4 pt-4 pb-2 text-[11px] font-bold text-[#6a7686] uppercase tracking-wider">
+                    Components List
+                  </div>
+                )}
+
+                {item.submenu ? (
+                  (() => {
+                    const isHomeSectionRoute = pathname.startsWith("/admin/courses/home-sections");
+                    const isGroupActive = item.isHomeSectionGroup 
+                      ? isHomeSectionRoute
+                      : (pathname.startsWith("/admin/courses") && !isHomeSectionRoute) || 
+                        pathname.startsWith("/admin/categories") ||
+                        pathname.startsWith("/admin/providers") || 
+                        pathname.startsWith("/admin/lessons");
+                    
+                    const isOpen = item.isHomeSectionGroup ? isHomeMenuOpen : isCourseMenuOpen;
+                    const toggleMenu = item.isHomeSectionGroup 
+                      ? () => setIsHomeMenuOpen(!isHomeMenuOpen) 
+                      : () => setIsCourseMenuOpen(!isCourseMenuOpen);
+                    
+                    return (
+                      <div className="space-y-px">
+                        <button
+                          onClick={toggleMenu}
+                          className={`w-full flex items-center justify-between px-4 py-2.5 transition-colors duration-150 group ${
+                            isGroupActive ? "text-white bg-transparent" : "hover:text-white hover:bg-[#252d3a]"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Icon size={16} className={`transition-colors ${isGroupActive ? "text-indigo-400" : "text-[#7c8796] group-hover:text-white"}`} />
+                            <span>{item.label}</span>
+                          </div>
+                          <ChevronDown 
+                            size={14} 
+                            className={`text-[#7c8796] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} 
+                          />
+                        </button>
+
+                        {/* SUBMENU DROP-DOWN ACCORDION */}
+                        {isOpen && (
+                          <div className="bg-[#181d26] py-1 transition-all">
+                            {item.submenu.map((subItem) => {
+                              const SubIcon = subItem.icon;
+                              
+                              let isChildActive = false;
+                              if (subItem.href === "/admin/categories") {
+                                isChildActive = pathname.startsWith("/admin/categories");
+                              } else if (subItem.href === "/admin/providers") {
+                                isChildActive = pathname.startsWith("/admin/providers");
+                              } else if (subItem.href === "/admin/courses/create") {
+                                isChildActive = pathname === "/admin/courses/create";
+                              } else if (subItem.isIndicatorOnly) {
+                                isChildActive = pathname.startsWith("/admin/lessons");
+                              } else if (subItem.href === "/admin/courses") {
+                                isChildActive = pathname === "/admin/courses" || 
+                                  (pathname.startsWith("/admin/courses/") && 
+                                   pathname !== "/admin/courses/create" && 
+                                   !pathname.startsWith("/admin/courses/home-sections"));
+                              } else {
+                                isChildActive = pathname === subItem.href;
+                              }
+
+                              if (subItem.isIndicatorOnly && !isChildActive) return null;
+
+                              return (
+                                <Link
+                                  key={subItem.href || "indicator"}
+                                  href={subItem.href || "#"}
+                                  className={`flex items-center gap-3 pl-8 pr-4 py-2 transition-colors ${
+                                    isChildActive
+                                      ? "text-white font-medium bg-[#2a323d]"
+                                      : "text-[#b1b7c1] hover:text-white hover:bg-[#252d3a]/50"
+                                  }`}
+                                >
+                                  <SubIcon size={14} className={isChildActive ? "text-indigo-400" : "text-[#7c8796]"} />
+                                  <span>{subItem.label} {subItem.isIndicatorOnly && "(Editing)"}</span>
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()
+                ) : (
+                  <Link
+                    href={item.href}
+                    className={`flex items-center gap-3 px-4 py-2.5 transition-colors group ${
+                      pathname.startsWith(item.href) // Tối ưu active cho các route con của /admin/banners
+                        ? "bg-[#252d3a] text-white font-medium"
+                        : "hover:text-white hover:bg-[#252d3a]"
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <Icon size={20} className="text-slate-500" />
-                      <span className="text-[15px]">{item.label}</span>
-                    </div>
-                    <ChevronDown 
-                      size={18} 
-                      className={`text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} 
-                    />
-                  </button>
-
-                  {/* VÙNG SUBMENU CON KHI ĐƯỢC THẢ XUỐNG */}
-                  {isOpen && (
-                    <div className="pl-6 space-y-1">
-                      {item.submenu.map((subItem) => {
-                        const SubIcon = subItem.icon;
-                        
-                        // Xử lý Active riêng biệt, chính xác cho từng Route con
-                        let isChildActive = false;
-                        if (subItem.href === "/admin/categories") {
-                          isChildActive = pathname.startsWith("/admin/categories");
-                        } else if (subItem.href === "/admin/providers") {
-                          isChildActive = pathname.startsWith("/admin/providers");
-                        } else if (subItem.href === "/admin/courses/create") {
-                          isChildActive = pathname === "/admin/courses/create";
-                        } else if (subItem.isIndicatorOnly) {
-                          isChildActive = pathname.startsWith("/admin/lessons");
-                        } else if (subItem.href === "/admin/courses") {
-                          isChildActive = pathname === "/admin/courses" || 
-                            (pathname.startsWith("/admin/courses/") && 
-                             pathname !== "/admin/courses/create" && 
-                             !pathname.startsWith("/admin/courses/home-sections"));
-                        } else {
-                          // So sánh chính xác hoàn toàn cho 3 mục của trang chủ (Most Popular, Trending Now, New Releases)
-                          isChildActive = pathname === subItem.href;
-                        }
-
-                        if (subItem.isIndicatorOnly && !isChildActive) {
-                          return null; 
-                        }
-
-                        if (subItem.isIndicatorOnly) {
-                          return (
-                            <div
-                              key="lesson-indicator"
-                              className="flex items-center gap-3 rounded-xl px-4 py-3 bg-blue-50 text-blue-600 font-semibold border border-blue-100"
-                            >
-                              <SubIcon size={18} />
-                              <span className="text-[14px]">{subItem.label} (Editing)</span>
-                            </div>
-                          );
-                        }
-
-                        return (
-                          <Link
-                            key={subItem.href}
-                            href={subItem.href}
-                            className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-all ${
-                              isChildActive
-                                ? "bg-blue-600 text-white font-medium shadow-md shadow-blue-600/10"
-                                : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-                            }`}
-                          >
-                            <SubIcon size={18} />
-                            <span className="text-[14px]">{subItem.label}</span>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            }
-
-            const isMainActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-2xl px-4 py-3.5 transition-all ${
-                  isMainActive
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/10 font-semibold"
-                    : "hover:bg-slate-50 text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Icon size={20} className={isMainActive ? "text-white" : "text-slate-400"} />
-                <span className="text-[15px]">{item.label}</span>
-              </Link>
+                    <Icon size={16} className={`transition-colors ${pathname.startsWith(item.href) ? "text-indigo-400" : "text-[#7c8796] group-hover:text-white"}`} />
+                    <span>{item.label}</span>
+                  </Link>
+                )}
+              </div>
             );
           })}
         </nav>
 
-        {/* ADMIN FOOTER CỦA SIDEBAR */}
-        <div className="border-t border-slate-100 p-4 bg-slate-50/50">
-          <div className="mb-4 px-2">
-            <p className="font-bold text-slate-800 truncate">{adminName || "Administrator"}</p>
-            <p className="text-xs font-medium text-slate-400">Super Admin Role</p>
+        {/* SIDEBAR FOOTER & USER PROFILE */}
+        <div className="bg-[#181d26] border-t border-[#2a323d] p-3 flex items-center justify-between">
+          <div className="min-w-0 flex flex-col">
+            <span className="text-xs text-white font-medium truncate">{adminName || "Administrator"}</span>
+            <span className="text-[10px] text-slate-500 font-semibold tracking-wider uppercase mt-0.5">Super Admin</span>
           </div>
           <button
             onClick={logoutHandler}
-            className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-red-500 hover:bg-red-50 font-medium transition-all"
+            title="Sign out of system"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
           >
-            <LogOut size={20} />
-            Logout Account
+            <LogOut size={16} />
           </button>
         </div>
       </aside>
 
-      {/* VIEWPORT PHẢI CHỨA HIỂN THỊ NỘI DUNG */}
-      <main className="flex-1 flex flex-col min-w-0">
-        <header className="h-20 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-10">
-          <div>
-            <h2 className="text-xl font-bold text-slate-800">System Console</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Overviewing platform behaviors and curriculum architectures.</p>
+      {/* 2. MAIN VIEWPORT SYSTEM PANEL */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="h-14 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-10 shadow-sm shadow-slate-100/50">
+          <div className="flex items-center gap-4 text-xs font-medium text-slate-600">
+            <button className="text-slate-500 hover:text-slate-800 transition-colors">
+              <Menu size={18} />
+            </button>
+            <div className="flex items-center">
+              <Link href="/admin/dashboard" className="hover:text-indigo-600 transition-colors">
+                Home
+              </Link>
+              {generateBreadcrumbs()}
+            </div>
           </div>
+          <div className="flex items-center gap-4 text-slate-500"></div>
         </header>
 
-        <div className="p-8 flex-1 overflow-y-auto">
+        <main className="p-6 flex-1 overflow-y-auto">
           {children}
-        </div>
-      </main>
+        </main>
+      </div>
+
+      {/* Styles Custom Scrollbar */}
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #1e2530;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #2a323d;
+          border-radius: 99px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #3e4958;
+        }
+      `}</style>
     </div>
   );
 }

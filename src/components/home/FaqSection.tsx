@@ -1,8 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown, Loader2, HelpCircle } from "lucide-react";
+import { ChevronDown, HelpCircle } from "lucide-react";
 import { faqService, FaqItem } from "@/src/services/faq"; 
+
+function FaqAccordionSkeleton() {
+  return (
+    <div className="border-t border-gray-200 mt-2 animate-pulse">
+      {[1, 2, 3, 4].map((index) => (
+        <div key={index} className="border-b border-gray-200 py-5 flex items-center justify-between">
+          {/* Thanh câu hỏi dài giả lập */}
+          <div className="h-4 bg-slate-200 rounded w-3/4 md:w-1/2"></div>
+          {/* Vòng tròn icon mũi tên giả lập */}
+          <div className="w-5 h-5 bg-slate-200 rounded-full flex-shrink-0"></div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function FaqSection() {
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
@@ -37,24 +52,21 @@ export default function FaqSection() {
         {/* TÊN TIÊU ĐỀ */}
         <div className="mb-8">
           <h2 className="text-2xl md:text-3xl font-bold text-[#1f1f1f] tracking-tight">
-            Frequently Asked Questions
+            Câu hỏi thường gặp
           </h2>
         </div>
 
-        {/* 1. TRẠNG THÁI LOADING KHI CHỜ API TRẢ VỀ */}
+        {/* ĐIỀU KIỆN HIỂN THỊ: LOADING HOẶC DATA THẬT */}
         {loading ? (
-          <div className="flex items-center gap-3 py-10 border-t border-gray-200 text-gray-500">
-            <Loader2 className="animate-spin text-blue-600" size={20} />
-            <span className="text-sm font-medium">Loading platform FAQs...</span>
-          </div>
+          <FaqAccordionSkeleton />
         ) : faqs.length === 0 ? (
-          /* 2. TRẠNG THÁI KHÔNG CÓ DỮ LIỆU */
+          /* TRẠNG THÁI KHÔNG CÓ DỮ LIỆU */
           <div className="py-10 border-t border-gray-200 text-gray-400 flex items-center gap-2 text-sm">
             <HelpCircle size={18} />
             <span>Chưa có câu hỏi thường gặp nào được thiết lập cho Trang chủ.</span>
           </div>
         ) : (
-          /* 3. ĐỔ DỮ LIỆU THẬT RA ACCORDION */
+          /* ĐỔ DỮ LIỆU THẬT RA ACCORDION */
           <div className="border-t border-gray-200">
             {faqs.map((faq, index) => {
               const isOpen = openIndex === index;

@@ -12,8 +12,8 @@ export default function TopNav() {
       href: "/",
     },
     {
-      title: "For Businesses",
-      href: "/business",
+      title: "For Businesseses",
+      href: "/businesses",
     },
     {
       title: "For Universities",

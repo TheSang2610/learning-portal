@@ -5,11 +5,22 @@ import { useParams } from "next/navigation";
 import { getCourseById, updateCourse, updateCoursePublishStatus } from "@/src/services/course";
 import { getCategories, Category } from "@/src/services/categoryService";
 import { getUsers, User } from "@/src/services/userApi";
-// 🎯 Import thêm service lấy đối tác và trường học
 import { getProviders, ProviderData } from "@/src/services/provider";
-// 🎯 Import thêm icon Building2 từ Lucide
 import { LayoutGrid, ArrowLeft, User as UserIcon, Tag, Check, Image as ImageIcon, Eye, EyeOff, Video, Building2 } from "lucide-react";
 import Link from "next/link";
+
+// 🎯 HÀM CHUYỂN ĐỔI SLUG ĐỒNG BỘ TỪ TRANG CREATE
+const convertToSlug = (text: string) => {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[đĐ]/g, "d")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .trim();
+};
 
 export default function AdminCourseDetailsPage() {
   const params = useParams();
@@ -19,15 +30,16 @@ export default function AdminCourseDetailsPage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null); 
   const [categories, setCategories] = useState<Category[]>([]);
   const [instructors, setInstructors] = useState<User[]>([]);
-  const [providers, setProviders] = useState<ProviderData[]>([]); // 🎯 State lưu danh sách đối tác
+  const [providers, setProviders] = useState<ProviderData[]>([]); 
 
   const [formData, setFormData] = useState({
     title: "",
+    slug: "", // 🎯 Đảm bảo slug có trong cấu trúc state form
     description: "",
     price: 0,
     category: [] as string[],
     instructorId: "",
-    providerId: "", // 🎯 Lưu ID của đối tác/trường học được chọn
+    providerId: "", 
     level: "",
   });
 
@@ -42,7 +54,6 @@ export default function AdminCourseDetailsPage() {
         const userFake: User = { _id: "current_user_id", name: "Quản trị viên", email: "admin@gmail.com", role: "admin" }; 
         setCurrentUser(userFake);
 
-        // 🎯 Đồng bộ thêm API lấy danh sách đối tác
         const [courseData, categoriesData, usersData, providersData] = await Promise.all([
           getCourseById(courseId),
           getCategories(),
@@ -51,7 +62,7 @@ export default function AdminCourseDetailsPage() {
         ]);
         
         setCategories(categoriesData);
-        setProviders(providersData); // Lưu vào state
+        setProviders(providersData); 
 
         const instructorList = (usersData || []).filter((u: User) => u.role === "instructor");
         setInstructors(instructorList);
@@ -65,18 +76,18 @@ export default function AdminCourseDetailsPage() {
           ? (typeof courseData.instructor === "object" ? courseData.instructor._id : courseData.instructor)
           : "";
 
-        // Chuẩn hóa dữ liệu Provider từ backend trả về (đề phòng backend trả dạng Object hoặc chuỗi ID)
         const normalizedProvider = courseData.provider
           ? (typeof courseData.provider === "object" ? courseData.provider._id : courseData.provider)
           : "";
 
         setFormData({
           title: courseData.title || "",
+          slug: courseData.slug || convertToSlug(courseData.title || ""), // 🎯 Đồng bộ nạp slug cũ từ DB
           description: courseData.description || "",
           price: courseData.price || 0,
           category: normalizedCategories,
           instructorId: normalizedInstructor,
-          providerId: normalizedProvider || "", // 🎯 Gán dữ liệu cũ vào form
+          providerId: normalizedProvider || "", 
           level: courseData.level || "beginner",
         });
 
@@ -95,6 +106,16 @@ export default function AdminCourseDetailsPage() {
     };
     fetchCourseAndMetadata();
   }, [courseId]);
+
+  // 🎯 TỰ ĐỘNG NHẢY SLUG REALTIME KHI THAY ĐỔI TIÊU ĐỀ
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFormData({
+      ...formData,
+      title: value,
+      slug: convertToSlug(value),
+    });
+  };
 
   const changeHandler = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
@@ -127,10 +148,11 @@ export default function AdminCourseDetailsPage() {
     try {
       const data = new FormData();
       data.append("title", formData.title);
+      data.append("slug", formData.slug); // 🎯 ĐÍNH KÈM SLUG ĐỂ KHÔNG BỊ BÁO LỖI 500 VALIDATION
       data.append("description", formData.description);
       data.append("price", String(formData.price));
       data.append("instructorId", formData.instructorId);
-      data.append("providerId", formData.providerId); // 🎯 Gửi Provider ID lên Backend khi cập nhật
+      data.append("providerId", formData.providerId); 
       data.append("level", formData.level);
 
       formData.category.forEach((id) => data.append("category", id));
@@ -239,14 +261,28 @@ export default function AdminCourseDetailsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* 🎯 Ô NHẬP TIÊU ĐỀ: Sử dụng handleTitleChange để tự sinh slug */}
             <div>
               <label className="block mb-1.5 text-xs font-semibold text-slate-600">Tiêu đề khóa học</label>
-              <input type="text" name="title" value={formData.title} onChange={changeHandler} className="w-full border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-blue-500 transition" required />
+              <input type="text" name="title" value={formData.title} onChange={handleTitleChange} className="w-full border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-blue-500 transition" required />
             </div>
             <div>
               <label className="block mb-1.5 text-xs font-semibold text-slate-600">Giá bán (VND)</label>
               <input type="number" name="price" value={formData.price} onChange={changeHandler} className="w-full border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-blue-500 transition" min={0} required />
             </div>
+          </div>
+
+          {/* 🎯 Ô HIỂN THỊ SLUG ĐƯỢC THÊM VÀO GIỐNG BÊN TRANG CREATE */}
+          <div>
+            <label className="block mb-1.5 text-xs font-semibold text-slate-600">Đường dẫn SEO (Slug)</label>
+            <input
+              type="text"
+              name="slug"
+              value={formData.slug}
+              onChange={(e) => setFormData({ ...formData, slug: convertToSlug(e.target.value) })}
+              className="w-full border border-slate-200 rounded-xl p-3 text-xs font-mono bg-slate-50 text-slate-600 outline-none focus:border-blue-500 transition"
+              required
+            />
           </div>
 
           <div>
@@ -264,7 +300,6 @@ export default function AdminCourseDetailsPage() {
               </select>
             </div>
 
-            {/* 🎯 ĐOẠN THÊM MỚI: CHỌN ĐỐI TÁC / TRƯỜNG HỌC ĐỒNG CẤP CHỨNG CHỈ */}
             <div>
               <label className="mb-1.5 text-xs font-semibold text-slate-600 flex items-center gap-1.5">
                 <Building2 size={14} className="text-violet-500" />
@@ -344,7 +379,6 @@ export default function AdminCourseDetailsPage() {
               Lưu thay đổi khóa học
             </button>
 
-            {/* ✅ Sửa lỗi màu chữ: Đổi text-black sang text-white để tương thích nền đen bg-slate-900 */}
             <Link
               href={`/admin/courses/${courseId}/lessons`}
               className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3.5 rounded-xl text-xs transition shadow-md flex items-center justify-center gap-2"

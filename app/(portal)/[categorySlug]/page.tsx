@@ -1,38 +1,32 @@
-// app/(portal)/individuals/courses/browse/[categorySlug]/page.tsx
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { BookOpen, ArrowLeft, User, Building2 } from "lucide-react";
 import { getCourses, Course } from "@/src/services/course";
 import { getCategories, Category } from "@/src/services/categoryService";
 
-interface PageProps {
-  params: Promise<{ categorySlug: string }>;
-}
-
-export default function CategoryBrowsePage({ params }: PageProps) {
+export default function SearchResultPage() {
   const router = useRouter();
-  const { categorySlug } = use(params);
+  const searchParams = useSearchParams();
+  const searchKeyword = searchParams.get("search") || ""; // 🌟 Lấy từ khóa từ URL
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [categoryName, setCategoryName] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadData = async () => {
+    const loadSearchData = async () => {
       try {
         setLoading(true);
 
-        // 🌟 Gọi song song cả danh sách khoá học lẫn danh mục
         const [coursesRes, categoriesRes] = await Promise.all([
           getCourses(),
           getCategories(),
         ]);
 
-        // 1. Chuẩn hoá dữ liệu courses trả về từ API (giống CourseSection)
+        // Chuẩn hóa dữ liệu courses
         let rawCourses: any[] = [];
         if (Array.isArray(coursesRes)) {
           rawCourses = coursesRes;
@@ -40,72 +34,30 @@ export default function CategoryBrowsePage({ params }: PageProps) {
           rawCourses = (coursesRes as any).data;
         }
 
-        // Chỉ lấy các khoá học công khai (bỏ qua filter nếu muốn test khoá nháp)
-        const publishedCourses = rawCourses.filter((c: any) => c.isPublished !== undefined ? c.isPublished : true);
-
-        // 2. Tìm danh mục hiện tại dựa vào categorySlug trên URL
-        let currentCategory: Category | undefined = undefined;
         if (Array.isArray(categoriesRes)) {
           setCategories(categoriesRes);
-          currentCategory = categoriesRes.find((cat) => {
-            const catSlug = cat.slug || cat.name.toLowerCase().replace(/ /g, "-");
-            return catSlug === categorySlug;
-          });
         }
 
-        if (categorySlug === "general") {
-          // Hiển thị tất cả khóa học nếu slug là 'general'
-          setCategoryName("Tất cả khóa học");
-          setCourses(publishedCourses);
-        } else if (currentCategory) {
-          // Lưu tên danh mục có dấu chuẩn từ DB để hiển thị lên UI
-          setCategoryName(currentCategory.name);
-          const targetCategoryId = currentCategory._id;
- 
-          // 3. 🎯 LOGIC LỌC THẦN THÁNH: Bóc tách cấu trúc MongoDB y hệt CourseSection của bạn
-          const filtered = publishedCourses.filter((course) => {
-            const catData = course.category;
-            if (!catData) return false;
- 
-            // Trường hợp 1: Category là một mảng dữ liệu
-            if (Array.isArray(catData)) {
-              return catData.some((item: any) => {
-                if (typeof item === "string") return item === targetCategoryId;
-                if (item && item.$oid) return item.$oid === targetCategoryId;
-                if (item && item._id) return item._id === targetCategoryId;
-                return false;
-              });
-            }
- 
-            // Trường hợp 2: Category là một Object đơn lẻ
-            if (typeof catData === "object") {
-              if ((catData as any).$oid) return (catData as any).$oid === targetCategoryId;
-              if ((catData as any)._id) return (catData as any)._id === targetCategoryId;
-            }
- 
-            // Trường hợp 3: Category là chuỗi string thuần chứa ID
-            return catData === targetCategoryId;
-          });
- 
+        const publishedCourses = rawCourses.filter((c: any) => c.isPublished !== undefined ? c.isPublished : true);
+
+        // 🎯 LOGIC LỌC THEO TỪ KHÓA TÌM KIẾM
+        if (searchKeyword.trim() !== "") {
+          const filtered = publishedCourses.filter((course) =>
+            course.title.toLowerCase().includes(searchKeyword.toLowerCase().trim())
+          );
           setCourses(filtered);
         } else {
-          // Dự phòng nếu không tìm thấy danh mục tương ứng trong DB
-          const fallbackTitle = categorySlug
-            .split("-")
-            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ");
-          setCategoryName(fallbackTitle);
-          setCourses([]);
+          setCourses(publishedCourses); // Trống từ khóa thì show hết
         }
       } catch (error) {
-        console.error("Lỗi khi tải dữ liệu phân loại khóa học:", error);
+        console.error("Lỗi khi tìm kiếm khóa học:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadData();
-  }, [categorySlug]);
+    loadSearchData();
+  }, [searchKeyword]);
 
   const getCategorySlug = (course: any) => {
     const catData = course.category;
@@ -127,26 +79,25 @@ export default function CategoryBrowsePage({ params }: PageProps) {
     <div className="bg-[#f8fafc] min-h-screen pb-16">
       <div className="max-w-7xl mx-auto px-6 py-10">
         
-        {/* BUTTON BACK */}
         <button
-          onClick={() => router.back()}
+          onClick={() => router.push("/")}
           className="inline-flex items-center gap-2 text-xs font-semibold text-gray-500 hover:text-blue-600 mb-6 transition"
         >
-          <ArrowLeft size={14} /> QUAY LẠI
+          <ArrowLeft size={14} /> VỀ TRANG CHỦ
         </button>
 
-        {/* TITLE */}
         <div className="mb-8">
-          <span className="text-xs font-bold text-blue-600 uppercase tracking-wider block mb-1">Chủ đề phổ biến</span>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900">Khóa học {categoryName}</h1>
+          <span className="text-xs font-bold text-blue-600 uppercase tracking-wider block mb-1">Kết quả tìm kiếm toàn trang</span>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900">
+            {searchKeyword ? `Kết quả cho "${searchKeyword}"` : "Tất cả khóa học"}
+          </h1>
         </div>
 
         {courses.length === 0 ? (
           <div className="text-center py-16 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200 shadow-sm">
-            Hiện chưa có khóa học nào trực thuộc danh mục <strong className="text-gray-700">"{categoryName}"</strong>.
+            Không tìm thấy khóa học nào phù hợp với từ khóa <strong className="text-gray-700">"{searchKeyword}"</strong>.
           </div>
         ) : (
-          /* GRID LIST - Sử dụng chung cấu trúc design đẹp từ CourseSection */
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {courses.map((course) => {
               const instructorName = typeof course.instructor === "object" && course.instructor !== null

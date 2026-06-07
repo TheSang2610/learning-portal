@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowRight, BookOpen, User, Building2 } from "lucide-react";
+import { ArrowRight, BookOpen, Building2 } from "lucide-react";
 import Link from "next/link";
-
-// 🎯 THÊM: Import hàm getHomeSections thay vì getCourses
 import { getHomeSections, Course } from "@/src/services/course"; 
 import { getCategories, Category } from "@/src/services/categoryService"; 
 
@@ -14,6 +12,67 @@ interface HomeSectionsState {
   newReleases: Course[];
 }
 
+// ==========================================
+// SKELETON LOADING COMPONENT (LIGHT MODE)
+// ==========================================
+function PopularCoursesSkeleton() {
+  return (
+    <section className="bg-[#f5f7fa] py-10 animate-pulse">
+      <div className="max-w-7xl mx-auto px-6">
+        {/* Tiêu đề & mô tả giả lập */}
+        <div className="space-y-2">
+          <div className="h-6 bg-slate-200 rounded w-64 md:w-80"></div>
+          <div className="h-4 bg-slate-200 rounded w-96 max-w-full"></div>
+        </div>
+
+        {/* Khung lưới Grid 3 cột tương thích layout thực tế */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          {[1, 2, 3].map((colIndex) => (
+            <div key={colIndex} className="bg-[#ebf3ff]/60 rounded-2xl p-4 flex flex-col gap-4 border border-blue-50/50">
+              {/* Header cột giả lập */}
+              <div className="h-5 bg-slate-200 rounded w-36 my-1"></div>
+
+              {/* Danh sách các thẻ bài học dọc bên trong */}
+              <div className="flex flex-col gap-3">
+                {[1, 2, 3].map((cardIndex) => (
+                  <div key={cardIndex} className="bg-white rounded-xl p-3 flex gap-4 border border-slate-100 shadow-sm">
+                    {/* Trái: Ảnh Thumbnail giả lập */}
+                    <div className="w-16 h-16 rounded-lg bg-slate-200 flex-shrink-0"></div>
+
+                    {/* Phải: Thông tin chi tiết */}
+                    <div className="flex flex-col justify-between flex-1 min-w-0 py-0.5">
+                      <div className="space-y-2">
+                        {/* Hàng logo đối tác / Tổ chức cấp phát */}
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-3.5 h-3.5 bg-slate-200 rounded-sm"></div>
+                          <div className="h-3 bg-slate-200 rounded w-20"></div>
+                        </div>
+                        {/* Tiêu đề khóa học (2 dòng giả lập lệch chiều dài) */}
+                        <div className="h-4 bg-slate-200 rounded w-11/12"></div>
+                        <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                      </div>
+
+                      {/* Hàng Badge cấp độ, số bài học và giá tiền */}
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="h-3.5 bg-slate-200 rounded w-12"></div>
+                        <div className="h-3 bg-slate-200 rounded w-16"></div>
+                        <div className="h-3 bg-slate-200 rounded w-14 ml-auto"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ==========================================
+// MAIN COMPONENT: POPULAR COURSES SECTION
+// ==========================================
 export default function PopularCoursesSection() {
   const [sections, setSections] = useState<HomeSectionsState>({
     mostPopular: [],
@@ -27,7 +86,6 @@ export default function PopularCoursesSection() {
     const fetchHomeData = async () => {
       try {
         setLoading(true);
-        // 🎯 Gọi API cấu trúc phân mục trang chủ song song với danh mục
         const [response, categoriesRes] = await Promise.all([
           getHomeSections(),
           getCategories(),
@@ -37,7 +95,6 @@ export default function PopularCoursesSection() {
           setSections({
             mostPopular: response.data.mostPopular || [],
             trendingNow: response.data.trendingNow || [],
-            // Đồng bộ key hot-releases của UI với key newReleases của API
             newReleases: response.data.newReleases || [],
           });
         }
@@ -54,13 +111,9 @@ export default function PopularCoursesSection() {
     fetchHomeData();
   }, []);
 
+  // Thay thế vòng xoay Loading bằng Component Skeleton thông minh
   if (loading) {
-    return (
-      <div className="flex justify-center items-center py-20 bg-[#f5f7fa]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-slate-600 font-medium">Loading courses...</span>
-      </div>
-    );
+    return <PopularCoursesSkeleton />;
   }
 
   const getCategorySlug = (course: any) => {
@@ -71,14 +124,12 @@ export default function PopularCoursesSection() {
     return cat?.slug || cat?.name?.toLowerCase().replace(/[^a-zA-Z0-9\s]/g, "").replace(/\s+/g, "-") || "general";
   };
 
-  // Cấu hình các cột hiển thị dựa trên dữ liệu thật thu được từ Database
   const categoriesColumns = [
-    { id: "most-popular", title: "Most popular", data: sections.mostPopular },
-    { id: "hot-releases", title: "Hot new releases", data: sections.newReleases },
-    { id: "trending-now", title: "Trending now", data: sections.trendingNow },
+    { id: "most-popular", title: "Phổ biến nhất", data: sections.mostPopular },
+    { id: "hot-releases", title: "Mới phát hành", data: sections.newReleases },
+    { id: "trending-now", title: "Đang thịnh hành", data: sections.trendingNow },
   ];
 
-  // Kiểm tra xem tổng cả 3 mục có mục nào có khóa học hay không
   const hasData = categoriesColumns.some(col => col.data.length > 0);
 
   return (
@@ -88,9 +139,9 @@ export default function PopularCoursesSection() {
         {/* TITLE */}
         <div>
           <h2 className="text-xl md:text-2xl font-bold text-[#1f1f1f]">
-            New and popular
+            Khoá học mới và phổ biến
           </h2>
-          <p className="text-sm text-gray-500 mt-1">Explore our latest online courses and single lessons</p>
+          <p className="text-sm text-gray-500 mt-1">Khám phá các khóa học trực tuyến và bài học riêng lẻ mới nhất của chúng tôi.</p>
         </div>
 
         {!hasData ? (
@@ -101,7 +152,6 @@ export default function PopularCoursesSection() {
           /* 3 COLUMNS GRID CONTAINER */
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
             {categoriesColumns.map((column) => {
-              // 🎯 HOÀN TOÀN TỰ ĐỘNG: Nếu Admin tắt hết khóa học của mục này, cột đó tự ẩn đi
               if (column.data.length === 0) return null;
 
               return (
@@ -124,10 +174,6 @@ export default function PopularCoursesSection() {
                   {/* COURSE LIST (VERTICAL) */}
                   <div className="flex flex-col gap-3">
                     {column.data.map((course) => {
-                      // const instructorName = typeof course.instructor === "object" && course.instructor !== null
-                      //   ? (course.instructor as any).name 
-                      //   : course.instructor || "Expert Instructor";
-
                       const rawProvider = course.provider;
                       let providerLogo: string | null = null;
                       let providerName = "Hệ thống LMS";
@@ -160,17 +206,8 @@ export default function PopularCoursesSection() {
                           {/* RIGHT: INFO */}
                           <div className="flex flex-col justify-between min-w-0 flex-1">
                             <div>
-                              {/* INSTRUCTOR & PROVIDER ROW */}
+                              {/* PROVIDER ROW */}
                               <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                                {/* <div className="flex items-center gap-1.5 min-w-0">
-                                  <User size={12} className="text-gray-400 flex-shrink-0" />
-                                  <p className="text-xs text-gray-500 truncate max-w-[110px]">
-                                    {instructorName}
-                                  </p>
-                                </div>
-
-                                <span className="text-gray-200 text-xs flex-shrink-0">|</span> */}
-
                                 <div className="flex items-center gap-1 min-w-0" title={`Cấp bởi: ${providerName}`}>
                                   {providerLogo ? (
                                     <div className="w-4 h-4 rounded border bg-gray-50 overflow-hidden flex items-center justify-center flex-shrink-0">
