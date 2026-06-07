@@ -11,16 +11,39 @@ connectDB();
 
 const app = express();
 
+const allowedOrigins = [
+  'https://learning-portal-frontend-gilt.vercel.app',  
+  'http://localhost:3000',                              
+  'http://localhost:3001',
+  'http://127.0.0.1:3000',
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Cho phép request không có origin (mobile apps, curl, etc)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS not allowed for origin: ${origin}`));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200,
+}));
+
 // Middleware
-app.use(express.json());
-app.use(cors());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
 if (process.env.NODE_ENV === 'development') {
-    app.use(morgan('dev'));
+  app.use(morgan('dev'));
 }
 
 // Routes
 app.get('/', (req, res) => {
-    res.send('API is running...');
+  res.send('API is running...');
 });
 
 // Chú ý: Đảm bảo đường dẫn file chính xác
@@ -39,28 +62,28 @@ app.use('/api/banners', require('./src/routes/bannerRoutes'));
 
 // Middleware xử lý lỗi 404 (Khi không tìm thấy route)
 app.use((req, res, next) => {
-    const error = new Error(`Not Found - ${req.originalUrl}`);
-    res.status(404);
-    next(error);
+  const error = new Error(`Not Found - ${req.originalUrl}`);
+  res.status(404);
+  next(error);
 });
 
 // Middleware xử lý lỗi tập trung
 app.use((err, req, res, next) => {
-    const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-    res.status(statusCode).json({
-        message: err.message,
-        stack: process.env.NODE_ENV === 'production' ? null : err.stack,
-    });
+  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  res.status(statusCode).json({
+    message: err.message,
+    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+  });
 });
 
 const PORT = process.env.PORT || 5000;
 
 if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => {
-        console.log(
-            `Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`
-        );
-    });
+  app.listen(PORT, () => {
+    console.log(
+      `Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`
+    );
+  });
 }
 
 module.exports = app;
