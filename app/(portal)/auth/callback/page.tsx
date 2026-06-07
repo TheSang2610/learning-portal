@@ -3,6 +3,8 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+export const dynamic = 'force-dynamic';
+
 function GoogleCallbackInner() {
   const [status, setStatus] = useState("Signing you in with Google...");
   const searchParams = useSearchParams();
