@@ -1,4 +1,5 @@
 const Category = require('../models/categoryModel');
+const Course = require('../models/Course');
 
 // Hàm helper chuyển đổi Tiếng Việt có dấu thành Slug gọn đẹp
 const slugify = (str) => {
@@ -59,7 +60,71 @@ const getCategories = async (req, res) => {
     }
 };
 
+// @desc    Sua danh muc
+// @route   PUT /api/categories/:id
+const updateCategory = async (req, res) => {
+    try {
+        const { name, icon } = req.body;
+
+        const category = await Category.findById(req.params.id);
+        if (!category) {
+            return res.status(404).json({ message: 'Danh mục không tồn tại' });
+        }
+
+        if (name && name !== category.name) {
+            const slug = slugify(name);
+            // Ten va slug deu unique -> phai loai chinh no ra khi kiem tra trung
+            const dup = await Category.findOne({
+                _id: { $ne: category._id },
+                $or: [{ name }, { slug }]
+            });
+            if (dup) {
+                return res.status(400).json({ message: 'Danh mục này đã tồn tại' });
+            }
+            category.name = name;
+            category.slug = slug;
+        }
+
+        if (icon !== undefined) category.icon = icon;
+
+        const updated = await category.save();
+        res.json(updated);
+    } catch (error) {
+        if (error.code === 11000) {
+            return res.status(400).json({ message: 'Tên hoặc slug danh mục đã tồn tại' });
+        }
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Xoa danh muc
+// @route   DELETE /api/categories/:id
+const deleteCategory = async (req, res) => {
+    try {
+        const category = await Category.findById(req.params.id);
+        if (!category) {
+            return res.status(404).json({ message: 'Danh mục không tồn tại' });
+        }
+
+        // Chan xoa neu con khoa hoc dang dung -> tranh de lai tham chieu mo coi
+        const inUse = await Course.countDocuments({ category: category._id });
+        if (inUse > 0) {
+            return res.status(400).json({
+                message: `Không thể xóa: còn ${inUse} khóa học đang thuộc danh mục này`,
+                coursesCount: inUse
+            });
+        }
+
+        await category.deleteOne();
+        res.json({ message: 'Đã xóa danh mục' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     createCategory,
-    getCategories
+    getCategories,
+    updateCategory,
+    deleteCategory
 };

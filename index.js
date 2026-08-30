@@ -4,6 +4,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const connectDB = require('./src/config/db');
 
+
 dotenv.config();
 
 // Kết nối DB trước khi khởi tạo App
@@ -12,20 +13,24 @@ connectDB();
 const app = express();
 
 const allowedOrigins = [
-  'https://learning-portal-frontend-gilt.vercel.app',  
-  'http://localhost:3000',                              
-  'http://localhost:3001',
-  'http://127.0.0.1:3000',
+  'https://learning-portal-frontend-gilt.vercel.app',
 ];
+
+// Khi dev: chap nhan MOI port cua localhost / 127.0.0.1.
+// Ly do: Next tu nhay sang 3001, 3002... neu 3000 dang bi chiem,
+// truoc day port moi bi chan CORS -> API tra 500 -> giao dien trong tron.
+const isLocalhost = (origin) =>
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
 
 app.use(cors({
   origin: function (origin, callback) {
     // Cho phép request không có origin (mobile apps, curl, etc)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error(`CORS not allowed for origin: ${origin}`));
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (process.env.NODE_ENV !== 'production' && isLocalhost(origin)) {
+      return callback(null, true);
     }
+    return callback(new Error(`CORS not allowed for origin: ${origin}`));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -78,10 +83,13 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-if (process.env.NODE_ENV !== 'production') {
+// Tren Vercel, ham serverless duoc goi qua module.exports - KHONG duoc listen.
+// Goi app.listen() o do se chiem cong vo ich va keo dai cold start.
+// Chi listen khi chay truc tiep bang `node index.js` hoac nodemon.
+if (require.main === module && !process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(
-      `Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`
+      `🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`
     );
   });
 }

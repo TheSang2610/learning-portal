@@ -11,7 +11,7 @@ const QuizAttempt = require('../models/QuizAttempt');
 const getMyEnrolledCourses = async (req, res) => {
     try {
         const enrollments = await Enrollment.find({ student: req.user._id })
-            .populate('course', 'title thumbnail price rating instructor')
+            .populate('course', 'title slug thumbnail price rating instructor')
             .sort({ createdAt: -1 });
 
         res.json(enrollments);

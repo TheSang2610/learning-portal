@@ -1,4 +1,9 @@
+const bcrypt = require('bcryptjs');
 const User = require('../models/User');
+
+// Giu dong nhat voi userController: email luon luu dang chu thuong da trim
+const normalizeEmail = (v) => String(v || '').trim().toLowerCase();
+const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
 const Course = require('../models/Course');
 const Lesson = require('../models/Lesson');
 const Enrollment = require('../models/Enrollment');
@@ -154,6 +159,11 @@ const updateUserStatus = async (req, res) => {
             return res.status(400).json({ message: 'Status là bắt buộc' });
         }
 
+        // Chan tu khoa chinh minh -> tranh mat quyen truy cap admin
+        if (req.params.id === req.user._id.toString()) {
+            return res.status(400).json({ message: 'Không thể tự khóa tài khoản của chính bạn' });
+        }
+
         const user = await User.findById(req.params.id);
         if (!user) {
             return res.status(404).json({ message: 'User không tìm thấy' });
@@ -180,6 +190,11 @@ const updateUserStatus = async (req, res) => {
 // @route   DELETE /api/admin/users/:id
 const deleteUserAdmin = async (req, res) => {
     try {
+        // Chan tu xoa chinh minh
+        if (req.params.id === req.user._id.toString()) {
+            return res.status(400).json({ message: 'Không thể tự xóa tài khoản của chính bạn' });
+        }
+
         const user = await User.findById(req.params.id);
         if (!user) {
             return res.status(404).json({ message: 'User không tìm thấy' });
@@ -196,6 +211,113 @@ const deleteUserAdmin = async (req, res) => {
         await user.deleteOne();
         res.json({ message: 'User đã bị xóa' });
     } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Admin tao user moi (dat duoc ca role, khac voi /api/users dang ky cong khai)
+// @route   POST /api/admin/users
+const createUserAdmin = async (req, res) => {
+    try {
+        const { name, password, role = 'student', status = true, phone, fullname, bio } = req.body;
+        const email = normalizeEmail(req.body?.email);
+
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: 'Name, email và password là bắt buộc' });
+        }
+        if (!isValidEmail(email)) {
+            return res.status(400).json({ message: 'Email không hợp lệ' });
+        }
+        if (password.length < 6) {
+            return res.status(400).json({ message: 'Password phải có ít nhất 6 ký tự' });
+        }
+        if (!['student', 'instructor', 'admin'].includes(role)) {
+            return res.status(400).json({ message: 'Role không hợp lệ' });
+        }
+
+        const exists = await User.findOne({ email });
+        if (exists) {
+            return res.status(400).json({ message: 'Email đã tồn tại' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, await bcrypt.genSalt(10));
+
+        const user = await User.create({
+            name, email, password: hashedPassword, role, status,
+            ...(phone ? { phone } : {}),
+            ...(fullname ? { fullname } : {}),
+            ...(bio ? { bio } : {}),
+        });
+
+        const { password: _, ...safe } = user.toObject();
+        res.status(201).json({ message: 'Tạo user thành công', user: safe });
+    } catch (error) {
+        if (error.code === 11000) {
+            return res.status(400).json({ message: 'Email hoặc số điện thoại đã tồn tại' });
+        }
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Admin sua thong tin user (ten, email, role, trang thai, mat khau)
+// @route   PUT /api/admin/users/:id
+const updateUserAdmin = async (req, res) => {
+    try {
+        const { name, role, status, password, phone, fullname, bio } = req.body;
+        const email = req.body?.email === undefined ? undefined : normalizeEmail(req.body.email);
+
+        if (email !== undefined && !isValidEmail(email)) {
+            return res.status(400).json({ message: 'Email không hợp lệ' });
+        }
+
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User không tìm thấy' });
+        }
+
+        const isSelf = req.params.id === req.user._id.toString();
+
+        // Chan tu ha quyen / tu khoa chinh minh -> tranh mat quyen admin
+        if (isSelf && role && role !== user.role) {
+            return res.status(400).json({ message: 'Không thể tự đổi quyền của chính bạn' });
+        }
+        if (isSelf && status === false) {
+            return res.status(400).json({ message: 'Không thể tự khóa tài khoản của chính bạn' });
+        }
+
+        if (email && email !== user.email) {
+            const dup = await User.findOne({ email });
+            if (dup) return res.status(400).json({ message: 'Email đã được dùng bởi user khác' });
+            user.email = email;
+        }
+
+        if (role) {
+            if (!['student', 'instructor', 'admin'].includes(role)) {
+                return res.status(400).json({ message: 'Role không hợp lệ' });
+            }
+            user.role = role;
+        }
+
+        if (password) {
+            if (password.length < 6) {
+                return res.status(400).json({ message: 'Password phải có ít nhất 6 ký tự' });
+            }
+            user.password = await bcrypt.hash(password, await bcrypt.genSalt(10));
+        }
+
+        if (name !== undefined) user.name = name;
+        if (status !== undefined) user.status = status;
+        if (phone !== undefined) user.phone = phone || undefined;
+        if (fullname !== undefined) user.fullname = fullname;
+        if (bio !== undefined) user.bio = bio;
+
+        const updated = await user.save();
+        const { password: _, ...safe } = updated.toObject();
+        res.json({ message: 'Cập nhật user thành công', user: safe });
+    } catch (error) {
+        if (error.code === 11000) {
+            return res.status(400).json({ message: 'Email hoặc số điện thoại đã tồn tại' });
+        }
         res.status(500).json({ message: error.message });
     }
 };
@@ -542,6 +664,8 @@ module.exports = {
     getDashboardStatistics,
     getAllUsers,
     getUserDetails,
+    createUserAdmin,
+    updateUserAdmin,
     updateUserStatus,
     deleteUserAdmin,
     getAllCourses,

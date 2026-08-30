@@ -8,6 +8,8 @@ const {
     // Users Management
     getAllUsers,
     getUserDetails,
+    createUserAdmin,
+    updateUserAdmin,
     updateUserStatus,
     deleteUserAdmin,
 
@@ -40,7 +42,9 @@ router.get('/dashboard/statistics', getDashboardStatistics);
 
 // ============ Users Management ============
 router.get('/users', getAllUsers);
+router.post('/users', createUserAdmin);
 router.get('/users/:id', getUserDetails);
+router.put('/users/:id', updateUserAdmin);
 router.put('/users/:id/status', updateUserStatus);
 router.delete('/users/:id', deleteUserAdmin);
 

@@ -357,20 +357,21 @@ const deleteCourse = async (req, res) => {
 const getHomeSections = async (req, res) => {
     try {
         // 🎯 Lọc ĐÚNG khóa học đã Publish VÀ được Admin ghim tag tương ứng
-        const mostPopular = await Course.find({ isPublished: true, isPopular: true })
-            .populate('instructor', 'name')
-            .populate('provider', 'name logo')
-            .limit(5); // Giới hạn số lượng hiển thị nếu cần
+        //
+        // Ba truy van doc lap nhau. Truoc day dung 3 lan `await` lien tiep nen
+        // chung chay tuan tu: tong thoi gian = 3 x round-trip toi Atlas (~440ms).
+        // Promise.all cho ca ba di cung luc -> chi con ~1 round-trip.
+        const withRefs = (filter) =>
+            Course.find(filter)
+                .populate('instructor', 'name')
+                .populate('provider', 'name logo')
+                .limit(5);
 
-        const trendingNow = await Course.find({ isPublished: true, isTrending: true })
-            .populate('instructor', 'name')
-            .populate('provider', 'name logo')
-            .limit(5);
-
-        const newReleases = await Course.find({ isPublished: true, isNewRelease: true })
-            .populate('instructor', 'name')
-            .populate('provider', 'name logo')
-            .limit(5);
+        const [mostPopular, trendingNow, newReleases] = await Promise.all([
+            withRefs({ isPublished: true, isPopular: true }),
+            withRefs({ isPublished: true, isTrending: true }),
+            withRefs({ isPublished: true, isNewRelease: true }),
+        ]);
 
         res.status(200).json({
             success: true,

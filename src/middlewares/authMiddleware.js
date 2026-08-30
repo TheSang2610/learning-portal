@@ -24,8 +24,16 @@ const protect = async (req, res, next) => {
         req.user = await User.findById(decoded.id).select('-password');
 
         if (!req.user) {
-            return res.status(401).json({ 
-                message: 'User không tồn tại' 
+            return res.status(401).json({
+                message: 'User không tồn tại'
+            });
+        }
+
+        // 4b. Token cap truoc khi bi khoa van con han 30 ngay,
+        //     nen phai kiem tra trang thai o day chu khong chi luc dang nhap.
+        if (req.user.status === false) {
+            return res.status(403).json({
+                message: 'Tài khoản của bạn đã bị khóa'
             });
         }
 
