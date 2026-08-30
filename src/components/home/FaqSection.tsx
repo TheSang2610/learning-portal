@@ -61,7 +61,7 @@ export default function FaqSection() {
           <FaqAccordionSkeleton />
         ) : faqs.length === 0 ? (
           /* TRẠNG THÁI KHÔNG CÓ DỮ LIỆU */
-          <div className="py-10 border-t border-gray-200 text-gray-400 flex items-center gap-2 text-sm">
+          <div className="py-10 border-t border-gray-200 text-gray-500 flex items-center gap-2 text-sm">
             <HelpCircle size={18} />
             <span>Chưa có câu hỏi thường gặp nào được thiết lập cho Trang chủ.</span>
           </div>

@@ -44,7 +44,7 @@ export default function AllCoursesPage() {
         </div>
         {/* ✅ Đã sửa: text-black -> text-white tăng độ tương phản */}
         <Link 
-          href="/instructor/courses/create"
+          href="/instructor/course-create"
           className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-md shadow-indigo-600/10 transition-all text-sm"
         >
           <Plus size={18} />
@@ -55,13 +55,13 @@ export default function AllCoursesPage() {
       {/* ĐIỀU KIỆN RỖNG (EMPTY STATE) */}
       {courses.length === 0 ? (
         <div className="bg-white border border-slate-200 border-dashed rounded-3xl p-12 text-center max-w-xl mx-auto mt-8">
-          <div className="bg-slate-50 text-slate-400 p-4 rounded-full w-14 h-14 flex items-center justify-center mx-auto mb-4">
+          <div className="bg-slate-50 text-slate-500 p-4 rounded-full w-14 h-14 flex items-center justify-center mx-auto mb-4">
             <BookOpen size={24} />
           </div>
           <h4 className="text-base font-bold text-slate-800 mb-1">Chưa có khóa học nào</h4>
           <p className="text-sm text-slate-500 mb-5">Bạn chưa khởi tạo chương trình giảng dạy nào trên hệ thống LMS.</p>
           <Link 
-            href="/instructor/courses/create"
+            href="/instructor/course-create"
             className="inline-flex items-center gap-2 text-indigo-600 font-semibold hover:text-indigo-700 text-sm"
           >
             Bắt đầu tạo khóa học đầu tiên <ChevronRight size={16} />
@@ -101,7 +101,7 @@ export default function AllCoursesPage() {
                   <h4 className="font-bold text-slate-800 text-base line-clamp-2 group-hover:text-indigo-600 transition-colors">
                     {course.title}
                   </h4>
-                  <p className="text-xs text-slate-400 line-clamp-2">
+                  <p className="text-xs text-slate-500 line-clamp-2">
                     {course.description || "Chưa có mô tả chi tiết cho khóa học này."}
                   </p>
                 </div>
@@ -109,7 +109,7 @@ export default function AllCoursesPage() {
                 {/* THÔNG SỐ PHỤ */}
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
                   <span className="flex items-center gap-1">
-                    <User size={14} className="text-slate-400" />
+                    <User size={14} className="text-slate-500" />
                     {course.studentsCount || 0} học viên
                   </span>
                   <span className="font-bold text-slate-800 text-sm">
@@ -119,7 +119,7 @@ export default function AllCoursesPage() {
 
                 {/* HÀNH ĐỘNG */}
                 <Link 
-                  href={`/instructor/courses/${course._id}`}
+                  href={`/instructor/course-detail?courseId=${course._id}`}
                   className="w-full text-center bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold py-2.5 rounded-xl text-xs transition-all border border-slate-200 inline-block"
                 >
                   Chỉnh sửa nội dung & Bài học

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, BookOpen, Building2 } from "lucide-react";
 import Link from "next/link";
 import { getHomeSections, Course } from "@/src/services/course"; 
-import { getCategories, Category } from "@/src/services/categoryService"; 
+ 
 
 interface HomeSectionsState {
   mostPopular: Course[];
@@ -79,17 +79,14 @@ export default function PopularCoursesSection() {
     trendingNow: [],
     newReleases: [],
   });
-  const [categories, setCategories] = useState<Category[]>([]);
+  
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchHomeData = async () => {
       try {
         setLoading(true);
-        const [response, categoriesRes] = await Promise.all([
-          getHomeSections(),
-          getCategories(),
-        ]);
+        const response = await getHomeSections();
         
         if (response && response.success && response.data) {
           setSections({
@@ -98,9 +95,7 @@ export default function PopularCoursesSection() {
             newReleases: response.data.newReleases || [],
           });
         }
-        if (categoriesRes) {
-          setCategories(categoriesRes);
-        }
+        
       } catch (error) {
         console.error("Lỗi khi load danh sách cấu trúc trang chủ:", error);
       } finally {
@@ -116,13 +111,7 @@ export default function PopularCoursesSection() {
     return <PopularCoursesSkeleton />;
   }
 
-  const getCategorySlug = (course: any) => {
-    const catData = course.category;
-    if (!catData) return "general";
-    const catId = typeof catData === "object" ? (catData._id || catData.$oid) : catData;
-    const cat = categories.find((c) => c._id === catId);
-    return cat?.slug || cat?.name?.toLowerCase().replace(/[^a-zA-Z0-9\s]/g, "").replace(/\s+/g, "-") || "general";
-  };
+  
 
   const categoriesColumns = [
     { id: "most-popular", title: "Phổ biến nhất", data: sections.mostPopular },
@@ -145,7 +134,7 @@ export default function PopularCoursesSection() {
         </div>
 
         {!hasData ? (
-          <div className="text-center py-16 text-gray-400 bg-white rounded-2xl border border-dashed mt-6">
+          <div className="text-center py-16 text-gray-500 bg-white rounded-2xl border border-dashed mt-6">
             Không có khóa học nào được Admin kích hoạt hiển thị lên trang chủ vào lúc này.
           </div>
         ) : (
@@ -161,7 +150,7 @@ export default function PopularCoursesSection() {
                 >
                   {/* CATEGORY HEADER */}
                   <Link 
-                    href={`/collections/${column.id}-courses`}
+                    href={`/collection?slug=${column.id}-courses`}
                     className="inline-flex items-center gap-1 text-base font-bold text-[#1f1f1f] w-fit hover:text-blue-600 transition group/title cursor-pointer"
                   >
                     {column.title}
@@ -186,7 +175,7 @@ export default function PopularCoursesSection() {
 
                       return (
                         <Link
-                          href={`/${getCategorySlug(course)}/${course.slug}`}
+                          href={`/course?slug=${course.slug}`}
                           key={course._id}
                           className="bg-white rounded-xl p-3 flex gap-4 shadow-sm hover:shadow-md transition duration-200 cursor-pointer border border-transparent hover:border-blue-100 group"
                         >
@@ -199,7 +188,7 @@ export default function PopularCoursesSection() {
                                 className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                               />
                             ) : (
-                              <BookOpen size={24} className="text-slate-400" />
+                              <BookOpen size={24} className="text-slate-500" />
                             )}
                           </div>
 

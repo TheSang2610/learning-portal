@@ -14,18 +14,11 @@ import CourseSection from "@/src/components/home/CourseSection";
 // import CourseDetailPage from "./individuals/courses/[slug]/page";
 
 function HomeContent() {
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
-
-  useEffect(() => {
-    if (searchParams.get("auth")) {
-      setIsAuthOpen(true);
-    }
-  }, [searchParams]);
+  const isAuthOpen = searchParams.get("auth") !== null;
 
   const handleClose = () => {
-    setIsAuthOpen(false);
     router.replace("/");
   };
 

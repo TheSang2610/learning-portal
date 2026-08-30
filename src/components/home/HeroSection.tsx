@@ -59,10 +59,6 @@ export default function HeroSection() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    fetchActiveHomeBanners();
-  }, []);
-
   const fetchActiveHomeBanners = async () => {
     try {
       setLoading(true);
@@ -75,6 +71,10 @@ export default function HeroSection() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchActiveHomeBanners();
+  }, []);
 
   const handleScroll = () => {
     const el = scrollRef.current;

@@ -67,6 +67,38 @@ export default function StudentQuizView({ quizId, onClose, onSuccess }: StudentQ
       .finally(() => setLoading(false));
   }, [quizId]);
 
+  async function executeSubmit() {
+    if (!quiz || submitting || isLocked) return;
+    
+    setSubmitting(true); 
+
+    const formattedAnswers = quiz.questions.map((q: any) => ({
+      questionId: q._id!,
+      studentAnswer: answers[q._id!] || "",
+    }));
+
+    try {
+      const res = await submitQuizAttempt(quizId, formattedAnswers, startedAt);
+      setResult(res);
+      
+      if (res.passed || quiz.attempts === 1) {
+        setIsLocked(true);
+      }
+
+      if (res.passed && onSuccess) {
+        await onSuccess();
+      }
+
+      const mainContainer = document.querySelector(".overflow-y-auto");
+      if (mainContainer) mainContainer.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error: any) {
+      console.error("Lỗi khi nộp bài:", error);
+      alert(error?.response?.data?.message || "Đã xảy ra lỗi trong quá trình nộp bài, vui lòng thử lại!");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   useEffect(() => {
     if (timeLeft === null || result || isLocked) return;
 
@@ -103,38 +135,6 @@ export default function StudentQuizView({ quizId, onClose, onSuccess }: StudentQ
       }
     }
     executeSubmit();
-  };
-
-  const executeSubmit = async () => {
-    if (!quiz || submitting || isLocked) return;
-    
-    setSubmitting(true); 
-
-    const formattedAnswers = quiz.questions.map((q: any) => ({
-      questionId: q._id!,
-      studentAnswer: answers[q._id!] || "",
-    }));
-
-    try {
-      const res = await submitQuizAttempt(quizId, formattedAnswers, startedAt);
-      setResult(res);
-      
-      if (res.passed || quiz.attempts === 1) {
-        setIsLocked(true);
-      }
-
-      if (res.passed && onSuccess) {
-        await onSuccess();
-      }
-
-      const mainContainer = document.querySelector(".overflow-y-auto");
-      if (mainContainer) mainContainer.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (error: any) {
-      console.error("Lỗi khi nộp bài:", error);
-      alert(error?.response?.data?.message || "Đã xảy ra lỗi trong quá trình nộp bài, vui lòng thử lại!");
-    } finally {
-      setSubmitting(false);
-    }
   };
 
   if (loading) {

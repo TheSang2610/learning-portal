@@ -143,7 +143,7 @@ export default function AdminReviewsPage() {
         {loading ? (
           <div className="py-20 text-center space-y-3">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-xs text-slate-400 font-medium">Đang tải dữ liệu đánh giá toàn hệ thống...</p>
+            <p className="text-xs text-slate-500 font-medium">Đang tải dữ liệu đánh giá toàn hệ thống...</p>
           </div>
         ) : reviews.length > 0 ? (
           <div className="overflow-x-auto">
@@ -168,10 +168,10 @@ export default function AdminReviewsPage() {
                       <td className="p-4">
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5 font-semibold text-slate-800">
-                            <User size={14} className="text-slate-400" />
+                            <User size={14} className="text-slate-500" />
                             <span className="truncate max-w-[160px]">{studentName}</span>
                           </div>
-                          <p className="text-[11px] text-slate-400 font-medium">
+                          <p className="text-[11px] text-slate-500 font-medium">
                             {new Date(review.createdAt).toLocaleDateString("vi-VN")} lúc {new Date(review.createdAt).toLocaleTimeString("vi-VN", {hour: '2-digit', minute:'2-digit'})}
                           </p>
                         </div>
@@ -237,8 +237,8 @@ export default function AdminReviewsPage() {
             </table>
           </div>
         ) : (
-          <div className="py-16 text-center text-slate-400 space-y-2">
-            <MessageSquare size={36} className="mx-auto text-slate-300 stroke-[1.5]" />
+          <div className="py-16 text-center text-slate-500 space-y-2">
+            <MessageSquare size={36} className="mx-auto text-slate-400 stroke-[1.5]" />
             <p className="text-sm font-medium">Chưa có đánh giá nào được ghi nhận trên hệ thống.</p>
           </div>
         )}
@@ -255,7 +255,7 @@ export default function AdminReviewsPage() {
               </h3>
               <button 
                 onClick={() => setIsModalOpen(false)} 
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition"
+                className="text-slate-500 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition"
               >
                 <X size={18} />
               </button>

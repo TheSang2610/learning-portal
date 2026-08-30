@@ -4,8 +4,55 @@ export const getDashboardStatistics = async () => {
   return apiRequest("/admin/dashboard/statistics");
 };
 
-export const getAllUsersAdmin = async () => {
-  return apiRequest("/admin/users");
+export interface AdminUserQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  role?: string;
+  status?: boolean;
+}
+
+// Backend phan trang mac dinh limit=10 -> bat buoc truyen tham so, neu khong se mat user.
+export const getAllUsersAdmin = async (q: AdminUserQuery = {}) => {
+  const p = new URLSearchParams();
+  if (q.page) p.set("page", String(q.page));
+  if (q.limit) p.set("limit", String(q.limit));
+  if (q.search) p.set("search", q.search);
+  if (q.role) p.set("role", q.role);
+  if (q.status !== undefined) p.set("status", String(q.status));
+  const qs = p.toString();
+  return apiRequest(`/admin/users${qs ? "?" + qs : ""}`);
+};
+
+export const createUserAdmin = async (data: {
+  name: string;
+  email: string;
+  password: string;
+  role?: string;
+  status?: boolean;
+  phone?: string;
+}) => {
+  return apiRequest("/admin/users", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+};
+
+export const updateUserAdmin = async (
+  id: string,
+  data: {
+    name?: string;
+    email?: string;
+    role?: string;
+    status?: boolean;
+    password?: string;
+    phone?: string;
+  }
+) => {
+  return apiRequest(`/admin/users/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
 };
 
 export const getUserDetailsAdmin = async (id: string) => {
@@ -46,8 +93,24 @@ export const deleteCourseAdmin = async (id: string) => {
   });
 };
 
-export const getAllEnrollmentsAdmin = async () => {
-  return apiRequest("/admin/enrollments");
+export interface AdminListQuery {
+  page?: number;
+  limit?: number;
+  status?: string;
+  courseId?: string;
+  studentId?: string;
+}
+
+// Backend phan trang mac dinh limit=10 -> phai truyen tham so
+export const getAllEnrollmentsAdmin = async (q: AdminListQuery = {}) => {
+  const p = new URLSearchParams();
+  if (q.page) p.set("page", String(q.page));
+  if (q.limit) p.set("limit", String(q.limit));
+  if (q.status) p.set("status", q.status);
+  if (q.courseId) p.set("courseId", q.courseId);
+  if (q.studentId) p.set("studentId", q.studentId);
+  const qs = p.toString();
+  return apiRequest(`/admin/enrollments${qs ? "?" + qs : ""}`);
 };
 
 export const updateEnrollmentStatusAdmin = async (id: string, status: string) => {
@@ -57,8 +120,23 @@ export const updateEnrollmentStatusAdmin = async (id: string, status: string) =>
   });
 };
 
-export const getAllCertificatesAdmin = async () => {
-  return apiRequest("/admin/certificates");
+export interface AdminCertQuery {
+  page?: number;
+  limit?: number;
+  isValid?: boolean;
+  courseId?: string;
+  studentId?: string;
+}
+
+export const getAllCertificatesAdmin = async (q: AdminCertQuery = {}) => {
+  const p = new URLSearchParams();
+  if (q.page) p.set("page", String(q.page));
+  if (q.limit) p.set("limit", String(q.limit));
+  if (q.isValid !== undefined) p.set("isValid", String(q.isValid));
+  if (q.courseId) p.set("courseId", q.courseId);
+  if (q.studentId) p.set("studentId", q.studentId);
+  const qs = p.toString();
+  return apiRequest(`/admin/certificates${qs ? "?" + qs : ""}`);
 };
 
 export const revokeCertificateAdmin = async (id: string) => {

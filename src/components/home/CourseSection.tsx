@@ -23,7 +23,7 @@ function CourseGridSkeleton() {
               {/* Hàng Instructor và Provider giả lập */}
               <div className="flex items-center gap-2">
                 <div className="h-3 bg-slate-200 rounded w-16"></div>
-                <span className="text-slate-200 text-xs">|</span>
+                <span className="text-slate-400 text-xs">|</span>
                 <div className="h-3 bg-slate-200 rounded w-20"></div>
               </div>
 
@@ -147,13 +147,7 @@ export default function CourseSection() {
     setSelectedPrice("all");
   };
 
-  const getCategorySlug = (course: any) => {
-    const catData = course.category;
-    if (!catData) return "general";
-    const catId = typeof catData === "object" ? (catData._id || catData.$oid) : catData;
-    const cat = categories.find((c) => c._id === catId);
-    return cat?.slug || cat?.name?.toLowerCase().replace(/[^a-zA-Z0-9\s]/g, "").replace(/\s+/g, "-") || "general";
-  };
+  
 
   return (
     <section className="bg-white py-12 border-t border-gray-100">
@@ -233,7 +227,7 @@ export default function CourseSection() {
         {loading ? (
           <CourseGridSkeleton />
         ) : filteredCourses.length === 0 ? (
-          <div className="text-center py-20 text-gray-400 bg-slate-50 rounded-2xl border border-dashed mt-8">
+          <div className="text-center py-20 text-gray-500 bg-slate-50 rounded-2xl border border-dashed mt-8">
             Không tìm thấy khóa học nào phù hợp với bộ lọc đã chọn.
           </div>
         ) : (
@@ -252,7 +246,7 @@ export default function CourseSection() {
 
               return (
                 <Link
-                  href={`/${getCategorySlug(course)}/${course.slug}`}
+                  href={`/course?slug=${course.slug}`}
                   key={course._id?.$oid || course._id}
                   className="bg-white rounded-2xl flex flex-col justify-between overflow-hidden border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-100 transition duration-300 group cursor-pointer"
                 >
@@ -264,7 +258,7 @@ export default function CourseSection() {
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                       />
                     ) : (
-                      <BookOpen size={36} className="text-slate-300" />
+                      <BookOpen size={36} className="text-slate-400" />
                     )}
                   </div>
 
@@ -272,10 +266,10 @@ export default function CourseSection() {
                     <div>
                       <div className="flex items-center gap-2 flex-wrap mb-2">
                         <div className="flex items-center gap-1 min-w-0">
-                          <User size={12} className="text-gray-400 flex-shrink-0" />
+                          <User size={12} className="text-gray-500 flex-shrink-0" />
                           <p className="text-xs text-gray-500 truncate max-w-[100px]">{instructorName}</p>
                         </div>
-                        <span className="text-gray-200 text-xs">|</span>
+                        <span className="text-gray-400 text-xs">|</span>
                         <div className="flex items-center gap-1 min-w-0">
                           <Building2 size={12} className="text-violet-400 flex-shrink-0" />
                           <p className="text-[11px] font-medium text-violet-600 truncate max-w-[90px]">{providerName}</p>

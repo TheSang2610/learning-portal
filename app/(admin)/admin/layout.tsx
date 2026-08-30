@@ -25,8 +25,10 @@ import {
   Settings,
   Menu,
   Sun,
-  Image as ImageIcon, 
-  SlidersHorizontal   
+  Image as ImageIcon,
+  SlidersHorizontal,
+  ClipboardList,
+  Award as AwardIcon
 } from "lucide-react";
 
 interface SubMenuItem {
@@ -44,7 +46,31 @@ interface MenuItem {
   submenu?: SubMenuItem[]; 
 }
 
-export const dynamic = 'force-dynamic';
+// ===== NHOM ROUTE PHANG (URL khong con long nhau) =====
+const COURSE_ROUTES = [
+  "/admin/courses",
+  "/admin/course-create",
+  "/admin/course-detail",
+  "/admin/course-faqs",
+  "/admin/categories",
+  "/admin/category-create",
+  "/admin/providers",
+];
+
+const LESSON_ROUTES = [
+  "/admin/lessons",
+  "/admin/lesson-create",
+  "/admin/lesson-detail",
+  "/admin/quiz-create",
+  "/admin/quiz-edit",
+];
+
+const HOME_SECTION_ROUTES = [
+  "/admin/home-most-popular",
+  "/admin/home-trending-now",
+  "/admin/home-new-releases",
+  "/admin/home-banners",
+];
 
 const menuItems: MenuItem[] = [
   {
@@ -64,7 +90,7 @@ const menuItems: MenuItem[] = [
       },
       {
         label: "Create Course",
-        href: "/admin/courses/create",
+        href: "/admin/course-create",
         icon: PlusCircle,
       },
       {
@@ -93,32 +119,42 @@ const menuItems: MenuItem[] = [
   },
   {
     label: "Home Sections",
-    href: "/admin/courses/home-sections",
+    href: "/admin/home-most-popular",
     icon: LayoutGrid,
     isHomeSectionGroup: true,
     submenu: [
       {
         label: "Most Popular",
-        href: "/admin/courses/home-sections/most-popular",
+        href: "/admin/home-most-popular",
         icon: Award,
       },
       {
         label: "Trending Now",
-        href: "/admin/courses/home-sections/trending-now",
+        href: "/admin/home-trending-now",
         icon: Flame,
       },
       {
         label: "New Releases",
-        href: "/admin/courses/home-sections/new-releases",
+        href: "/admin/home-new-releases",
         icon: Sparkles,
       },
       // ==================== 2. THÊM BIẾN TẮT MỞ BANNER TRANG CHỦ TẠI ĐÂY ====================
       {
         label: "Homepage Banners",
-        href: "/admin/courses/home-sections/banners-toggle",
+        href: "/admin/home-banners",
         icon: SlidersHorizontal,
       },
     ],
+  },
+  {
+    label: "Enrollments",
+    href: "/admin/enrollments",
+    icon: ClipboardList,
+  },
+  {
+    label: "Certificates",
+    href: "/admin/certificates",
+    icon: AwardIcon,
   },
   {
     label: "Users",
@@ -153,7 +189,7 @@ export default function AdminLayout({
 
   // Cập nhật Logic tự động mở Accordion Menu theo đường dẫn URL thanh địa chỉ
   useEffect(() => {
-    const isHomeSectionRoute = pathname.startsWith("/admin/courses/home-sections");
+    const isHomeSectionRoute = pathname.startsWith("/admin/home-most-popular");
     
     if (
       (pathname.startsWith("/admin/courses") && !isHomeSectionRoute) || 
@@ -200,13 +236,15 @@ export default function AdminLayout({
   const generateBreadcrumbs = () => {
     const paths = pathname.split("/").filter((path) => path);
     return paths.map((path, index) => {
-      const href = "/" + paths.slice(0, index + 1).join("/");
+      const rawHref = "/" + paths.slice(0, index + 1).join("/");
+      // /admin khong phai la mot trang -> tro ve dashboard
+      const href = rawHref === "/admin" ? "/admin/dashboard" : rawHref;
       const label = path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, " ");
       const isLast = index === paths.length - 1;
 
       return (
         <span key={href} className="flex items-center">
-          <span className="mx-2 text-slate-300">/</span>
+          <span className="mx-2 text-slate-400">/</span>
           {isLast ? (
             <span className="text-slate-500 font-normal">{label}</span>
           ) : (
@@ -221,7 +259,7 @@ export default function AdminLayout({
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center text-sm font-medium text-slate-400 bg-[#1e293b]">
+      <div className="h-screen flex items-center justify-center text-sm font-medium text-slate-500 bg-[#1e293b]">
         Loading Admin Panel...
       </div>
     );
@@ -261,13 +299,10 @@ export default function AdminLayout({
 
                 {item.submenu ? (
                   (() => {
-                    const isHomeSectionRoute = pathname.startsWith("/admin/courses/home-sections");
-                    const isGroupActive = item.isHomeSectionGroup 
+                    const isHomeSectionRoute = HOME_SECTION_ROUTES.includes(pathname);
+                    const isGroupActive = item.isHomeSectionGroup
                       ? isHomeSectionRoute
-                      : (pathname.startsWith("/admin/courses") && !isHomeSectionRoute) || 
-                        pathname.startsWith("/admin/categories") ||
-                        pathname.startsWith("/admin/providers") || 
-                        pathname.startsWith("/admin/lessons");
+                      : COURSE_ROUTES.includes(pathname) || LESSON_ROUTES.includes(pathname);
                     
                     const isOpen = item.isHomeSectionGroup ? isHomeMenuOpen : isCourseMenuOpen;
                     const toggleMenu = item.isHomeSectionGroup 
@@ -300,18 +335,17 @@ export default function AdminLayout({
                               
                               let isChildActive = false;
                               if (subItem.href === "/admin/categories") {
-                                isChildActive = pathname.startsWith("/admin/categories");
+                                isChildActive = pathname === "/admin/categories" || pathname === "/admin/category-create";
                               } else if (subItem.href === "/admin/providers") {
-                                isChildActive = pathname.startsWith("/admin/providers");
-                              } else if (subItem.href === "/admin/courses/create") {
-                                isChildActive = pathname === "/admin/courses/create";
+                                isChildActive = pathname === "/admin/providers";
+                              } else if (subItem.href === "/admin/course-create") {
+                                isChildActive = pathname === "/admin/course-create";
                               } else if (subItem.isIndicatorOnly) {
-                                isChildActive = pathname.startsWith("/admin/lessons");
+                                isChildActive = LESSON_ROUTES.includes(pathname);
                               } else if (subItem.href === "/admin/courses") {
-                                isChildActive = pathname === "/admin/courses" || 
-                                  (pathname.startsWith("/admin/courses/") && 
-                                   pathname !== "/admin/courses/create" && 
-                                   !pathname.startsWith("/admin/courses/home-sections"));
+                                isChildActive = pathname === "/admin/courses" ||
+                                  pathname === "/admin/course-detail" ||
+                                  pathname === "/admin/course-faqs";
                               } else {
                                 isChildActive = pathname === subItem.href;
                               }
@@ -342,12 +376,12 @@ export default function AdminLayout({
                   <Link
                     href={item.href}
                     className={`flex items-center gap-3 px-4 py-2.5 transition-colors group ${
-                      pathname.startsWith(item.href) // Tối ưu active cho các route con của /admin/banners
+                      pathname === item.href // URL da phang: so khop chinh xac
                         ? "bg-[#252d3a] text-white font-medium"
                         : "hover:text-white hover:bg-[#252d3a]"
                     }`}
                   >
-                    <Icon size={16} className={`transition-colors ${pathname.startsWith(item.href) ? "text-indigo-400" : "text-[#7c8796] group-hover:text-white"}`} />
+                    <Icon size={16} className={`transition-colors ${pathname === item.href ? "text-indigo-400" : "text-[#7c8796] group-hover:text-white"}`} />
                     <span>{item.label}</span>
                   </Link>
                 )}

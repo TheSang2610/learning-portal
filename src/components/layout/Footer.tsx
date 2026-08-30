@@ -67,13 +67,13 @@ export default function Footer() {
               {categories.length > 0 ? (
                 categories.map((cat) => (
                   <li key={cat._id}>
-                    <Link href={`/${cat.slug}`} className="hover:text-[#0056d2] hover:underline transition-all duration-150 block text-[#40444d]">
+                    <Link href={`/courses?category=${cat.slug}`} className="hover:text-[#0056d2] hover:underline transition-all duration-150 block text-[#40444d]">
                       {cat.name}
                     </Link>
                   </li>
                 ))
               ) : (
-                <li className="text-gray-400 text-xs italic font-light">Chưa có danh mục</li>
+                <li className="text-gray-500 text-xs italic font-light">Chưa có danh mục</li>
               )}
             </ul>
           )}
@@ -95,13 +95,13 @@ export default function Footer() {
               {popularCourses.length > 0 ? (
                 popularCourses.map((course) => (
                   <li key={course._id}>
-                    <Link href={`/general/${course.slug}`} className="hover:text-[#0056d2] hover:underline transition-all duration-150 block truncate text-[#40444d]" title={course.title}>
+                    <Link href={`/course?slug=${course.slug}`} className="hover:text-[#0056d2] hover:underline transition-all duration-150 block truncate text-[#40444d]" title={course.title}>
                       {course.title}
                     </Link>
                   </li>
                 ))
               ) : (
-                <li className="text-gray-400 text-xs italic font-light">Chưa cập nhật khóa học</li>
+                <li className="text-gray-500 text-xs italic font-light">Chưa cập nhật khóa học</li>
               )}
             </ul>
           )}
@@ -128,7 +128,7 @@ export default function Footer() {
                   </li>
                 ))
               ) : (
-                <li className="text-gray-400 text-xs italic font-light">Chưa có đối tác liên kết</li>
+                <li className="text-gray-500 text-xs italic font-light">Chưa có đối tác liên kết</li>
               )}
             </ul>
           )}
@@ -141,25 +141,14 @@ export default function Footer() {
           </h3>
           <ul className="space-y-2.5 text-sm text-[#40444d]">
             <li className="flex items-center gap-1.5">
-              <span className="font-medium text-[#1f2124]">Thái Thanh Vũ</span> 
-              <span className="text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-semibold border border-blue-100">Leader</span>
-              <span className="text-[10px] text-gray-500 bg-slate-100 px-1.5 py-0.5 rounded font-medium">Tester</span>
-            </li>
-            <li className="flex items-center gap-1.5">
-              <span>Nguyễn Minh Tâm</span>
-              <span className="text-[10px] text-gray-500 bg-slate-100 px-1.5 py-0.5 rounded font-medium">Frontend</span>
-            </li>
-            <li className="flex items-center gap-1.5">
-              <span>Nguyễn Đức Minh</span>
-              <span className="text-[10px] text-gray-500 bg-slate-100 px-1.5 py-0.5 rounded font-medium">Frontend</span>
-            </li>
-            <li className="flex items-center gap-1.5">
               <span>Nguyễn Thế Sang</span>
-              <span className="text-[10px] text-gray-500 bg-slate-100 px-1.5 py-0.5 rounded font-medium">Frontend</span>
+              <span className="text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded font-medium border border-emerald-100">FullStack</span>
+              {/* <span className="text-[10px] text-red-600 bg-red-50 px-1.5 py-0.5 rounded font-medium border border-red-100">Leader</span> */}
+
             </li>
             <li className="flex items-center gap-1.5">
               <span>Nguyễn Thanh Sang</span>
-              <span className="text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded font-medium border border-emerald-100">Backend</span>
+              <span className="text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded font-medium border border-emerald-100">FullStack</span>
             </li>
           </ul>
         </div>

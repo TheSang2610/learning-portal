@@ -8,20 +8,20 @@ export default function TopNav() {
 
   const menus = [
     {
-      title: "For Individuals",
+      title: "Individuals",
       href: "/",
     },
     {
-      title: "For Businesseses",
-      href: "/businesses",
+      title: "Cẩm nang môn học",
+      href: "/blog",
     },
     {
-      title: "For Universities",
-      href: "/campus",
+      title: "Chia sẻ tài liệu",
+      href: "/share-document",
     },
     {
-      title: "For Governments",
-      href: "/government",
+      title: "Tính điểm GPA",
+      href: "/gpa-calculator",
     },
   ];
 

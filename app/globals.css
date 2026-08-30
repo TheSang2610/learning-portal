@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: light;
   --background: #f8fafc;
   --foreground: #0f172a;
   --primary: #6366f1;
@@ -17,15 +18,11 @@
   --color-primary-hover: var(--primary-hover);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --foreground: #f8fafc;
-    --card-bg: rgba(30, 41, 59, 0.7);
-    --border-color: rgba(51, 65, 85, 0.8);
-    --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  }
-}
+/* Da BO block @media (prefers-color-scheme: dark).
+   Ly do: toan bo giao dien hardcode nen sang (170 cho bg-white, 107 bg-slate-50...),
+   nhung block do lai doi --foreground thanh #f8fafc. Khi may nguoi dung o che do toi,
+   chu thua ke tu body thanh gan trang nam tren hop bg-white -> tuong phan ~1.05:1, mat chu.
+   Muon lam dark mode that thi phai them bien the dark: cho tung nen, khong chi doi body. */
 
 body {
   background: var(--background);

@@ -1,4 +1,8 @@
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const RAW_BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:5000";
+const BACKEND_URL = RAW_BACKEND_URL.replace(/\/+$/, "").replace(/\/api$/, "");
 const API_URL = `${BACKEND_URL}/api/users`;
 
 interface RegisterUserData {
@@ -61,7 +65,7 @@ export const registerUser = async (userData: RegisterUserData) => {
   
   // ✅ Lưu token sau khi register
   if (data.token) {
-    localStorage.setItem("authToken", JSON.stringify(data.token));
+    localStorage.setItem("authToken", data.token);
     localStorage.setItem("userInfo", JSON.stringify(data));
   }
   
@@ -81,7 +85,7 @@ export const loginUser = async (userData: LoginUserData): Promise<LoginResponse>
   
   // ✅ LƯU TOKEN SAU KHI LOGIN - ĐÂY LÀ ĐIỀU QUAN TRỌNG
   if (data.token) {
-    localStorage.setItem("authToken", JSON.stringify(data.token));
+    localStorage.setItem("authToken", data.token);
     localStorage.setItem("userInfo", JSON.stringify(data));
   }
   
@@ -101,7 +105,7 @@ export const googleLogin = async (credential: string) => {
   
   // ✅ Lưu token sau Google login
   if (data.token) {
-    localStorage.setItem("authToken", JSON.stringify(data.token));
+    localStorage.setItem("authToken", data.token);
     localStorage.setItem("userInfo", JSON.stringify(data));
   }
   

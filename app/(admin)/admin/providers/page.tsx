@@ -204,10 +204,10 @@ export default function AdminProvidersPage() {
                     <span className="text-xs text-blue-600 font-medium group-hover:underline">Thay đổi ảnh thương hiệu</span>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-4 text-gray-400">
-                    <UploadCloud size={28} className="mb-2 text-gray-400" />
+                  <div className="flex flex-col items-center justify-center py-4 text-gray-500">
+                    <UploadCloud size={28} className="mb-2 text-gray-500" />
                     <span className="text-xs font-medium text-gray-600">Click để chọn file logo</span>
-                    <span className="text-[10px] text-gray-400 mt-0.5">Định dạng ảnh: PNG, JPG, SVG</span>
+                    <span className="text-[10px] text-gray-500 mt-0.5">Định dạng ảnh: PNG, JPG, SVG</span>
                   </div>
                 )}
               </div>
@@ -238,11 +238,11 @@ export default function AdminProvidersPage() {
         {/* KHỐI 2: DATA TABLE HIỂN THỊ DANH SÁCH */}
         <div className="lg:col-span-2 bg-white rounded-2xl border shadow-sm overflow-hidden">
           {fetching ? (
-            <div className="p-12 text-center text-gray-400 text-sm animate-pulse flex items-center justify-center gap-2">
-              <RefreshCw size={16} className="animate-spin text-gray-400" /> Đang lấy dữ liệu từ server...
+            <div className="p-12 text-center text-gray-500 text-sm animate-pulse flex items-center justify-center gap-2">
+              <RefreshCw size={16} className="animate-spin text-gray-500" /> Đang lấy dữ liệu từ server...
             </div>
           ) : providers.length === 0 ? (
-            <div className="p-12 text-center text-gray-400 text-sm">
+            <div className="p-12 text-center text-gray-500 text-sm">
               Hệ thống trống! Chưa có đối tác nào được thiết lập.
             </div>
           ) : (

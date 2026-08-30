@@ -151,10 +151,10 @@ export default function AdminFaqsPage() {
           <p className="text-sm">{error}</p>
         </div>
       ) : faqs.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-400">
-          <HelpCircle className="mx-auto text-slate-300 mb-3" size={48} />
+        <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-500">
+          <HelpCircle className="mx-auto text-slate-400 mb-3" size={48} />
           <p className="font-medium text-slate-600">Chưa có câu hỏi nào được tạo</p>
-          <p className="text-xs text-slate-400 mt-1">Bấm nút "Add New FAQ" ở góc trên để bắt đầu thêm câu hỏi đầu tiên.</p>
+          <p className="text-xs text-slate-500 mt-1">Bấm nút "Add New FAQ" ở góc trên để bắt đầu thêm câu hỏi đầu tiên.</p>
         </div>
       ) : (
         /* DANH SÁCH FAQ DẠNG GRID/LIST */
@@ -212,7 +212,7 @@ export default function AdminFaqsPage() {
               </h4>
               <button 
                 onClick={() => setIsOpenModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-200 transition-all"
+                className="text-slate-500 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-200 transition-all"
               >
                 <X size={18} />
               </button>

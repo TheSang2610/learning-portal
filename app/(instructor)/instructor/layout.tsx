@@ -2,6 +2,7 @@
 import "@/app/globals.css"; 
 import InstructorPanelLayout from "@/app/(instructor)/instructor/page"; 
 
+
 export default function InstructorRootLayout({
   children,
 }: {

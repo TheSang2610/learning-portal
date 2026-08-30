@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { bannerService, BannerData } from "@/src/services/banner";
+import { apiRequest } from "@/src/services/apiHelper";
 import { Image as ImageIcon, Plus, Trash2, Edit2, X, Save, Loader2, Link2 } from "lucide-react";
 
 export default function BannersManagementPage() {
@@ -25,24 +26,23 @@ export default function BannersManagementPage() {
   const [order, setOrder] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  useEffect(() => {
-    fetchAllBanners();
-  }, []);
-
-  const fetchAllBanners = async () => {
+  async function fetchAllBanners() {
     try {
-      setLoading(true);
-      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-
-      const res = await fetch(`${BACKEND_URL}/api/banners?page=HOME&admin=true`);
-      const json = await res.json();
+      const json = await apiRequest("/banners?page=HOME&admin=true", {
+        method: "GET",
+        cache: "no-store",
+      });
       if (json.success) setBanners(json.data);
     } catch (error) {
       console.error("Lỗi khi tải danh sách tất cả banner:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    fetchAllBanners();
+  }, []);
 
   const handleEditClick = (banner: BannerData) => {
     setEditingId(banner._id);
@@ -68,7 +68,7 @@ export default function BannersManagementPage() {
     setButtonText("Explore");
     setLinkUrl(""); // 🔥 RESET STATE LINK
     setBackgroundColor("#0056d2");
-    textColor && setTextColor("#ffffff");
+    setTextColor("#ffffff");
     setDisplayType("DEFAULT");
     setDiscountText("");
     setDiscountSubtext("");
@@ -150,7 +150,7 @@ export default function BannersManagementPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-slate-800">Banners Management</h1>
-            <p className="text-xs text-slate-400 mt-0.5">Khởi tạo các khối banner quảng cáo và cấu hình đồ họa, đẩy file ảnh trực tiếp lên kho chứa Cloudinary.</p>
+            <p className="text-xs text-slate-500 mt-0.5">Khởi tạo các khối banner quảng cáo và cấu hình đồ họa, đẩy file ảnh trực tiếp lên kho chứa Cloudinary.</p>
           </div>
         </div>
         {!showForm && (
@@ -168,7 +168,7 @@ export default function BannersManagementPage() {
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-md space-y-4 transition-all">
           <div className="flex items-center justify-between border-b pb-3">
             <h3 className="font-bold text-slate-800">{editingId ? "Cập Nhật Thông Tin Banner" : "Tạo Khung Quảng Cáo Mới"}</h3>
-            <button type="button" onClick={handleResetForm} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
+            <button type="button" onClick={handleResetForm} className="text-slate-500 hover:text-slate-600"><X size={18} /></button>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
@@ -195,13 +195,13 @@ export default function BannersManagementPage() {
           <div className="text-sm">
             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Đường dẫn liên kết khi click nút (URL Link)</label>
             <div className="relative">
-              <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
               <input 
                 type="text" 
                 value={linkUrl} 
                 onChange={(e) => setLinkUrl(e.target.value)} 
                 placeholder="Ví dụ: /courses/nextjs-basic hoặc https://google.com" 
-                className="w-full border rounded-xl pl-10 pr-4 py-2.5 bg-slate-50 focus:outline-none focus:border-blue-500 placeholder:text-slate-300"
+                className="w-full border rounded-xl pl-10 pr-4 py-2.5 bg-slate-50 focus:outline-none focus:border-blue-500 placeholder:text-slate-500"
               />
             </div>
           </div>
@@ -274,7 +274,7 @@ export default function BannersManagementPage() {
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50/70 border-b border-slate-200 text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <tr className="bg-slate-50/70 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
               <th className="px-6 py-4">Thông tin Banner</th>
               <th className="px-6 py-4">Vị trí hiển thị</th>
               <th className="px-6 py-4">Cấu trúc đồ họa</th>
@@ -291,7 +291,7 @@ export default function BannersManagementPage() {
                     </div>
                     <div>
                       <span className="font-semibold text-slate-800 line-clamp-1">{b.title}</span>
-                      <p className="text-xs text-slate-400 line-clamp-1 mt-0.5">{b.description}</p>
+                      <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{b.description}</p>
                       {/* 🔥 Hiển thị nhỏ thông tin link dưới tiêu đề để Admin dễ quan sát */}
                       {(b as any).linkUrl && (
                         <p className="text-[11px] text-blue-500 font-medium mt-0.5 flex items-center gap-0.5">
@@ -312,8 +312,8 @@ export default function BannersManagementPage() {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center justify-center gap-2">
-                    <button onClick={() => handleEditClick(b)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Sửa nội dung"><Edit2 size={16} /></button>
-                    <button onClick={() => handleDelete(b._id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Xóa vĩnh viễn"><Trash2 size={16} /></button>
+                    <button onClick={() => handleEditClick(b)} className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Sửa nội dung"><Edit2 size={16} /></button>
+                    <button onClick={() => handleDelete(b._id)} className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Xóa vĩnh viễn"><Trash2 size={16} /></button>
                   </div>
                 </td>
               </tr>

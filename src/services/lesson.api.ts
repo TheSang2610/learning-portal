@@ -43,7 +43,7 @@ export const getLessonBySlug = async (courseSlug: string, lessonSlug: string): P
 };
 
 export const getLessonsByCourseId = async (courseId: string): Promise<LessonData[]> => {
-  return apiRequest(`api/lessons?courseId=${courseId}`, {
+  return apiRequest(`/lessons?courseId=${courseId}`, {
     method: "GET",
   });
 };

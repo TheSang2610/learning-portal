@@ -17,6 +17,22 @@ import {
   Sun
 } from "lucide-react";
 
+// ===== NHOM ROUTE PHANG (URL khong con long nhau) =====
+const COURSE_ROUTES = [
+  "/instructor/courses",
+  "/instructor/course-create",
+  "/instructor/course-detail",
+];
+
+const LESSON_ROUTES = [
+  "/instructor/lessons",
+  "/instructor/lesson-create",
+  "/instructor/lesson-detail",
+  "/instructor/quiz-create",
+  "/instructor/quiz-edit",
+  "/instructor/quiz-stats",
+];
+
 const instructorMenuItems = [
   // {
   //   label: "Dashboard",
@@ -35,7 +51,7 @@ const instructorMenuItems = [
       },
       {
         label: "Create Course",
-        href: "/instructor/courses/create",
+        href: "/instructor/course-create",
         icon: GraduationCap,
       },
       {
@@ -61,10 +77,7 @@ export default function InstructorPanelLayout({
   const [isCourseMenuOpen, setIsCourseMenuOpen] = useState(true);
 
   useEffect(() => {
-    if (
-      pathname.startsWith("/instructor/courses") || 
-      pathname.startsWith("/instructor/lessons")
-    ) {
+    if (COURSE_ROUTES.includes(pathname) || LESSON_ROUTES.includes(pathname)) {
       setIsCourseMenuOpen(true);
     }
   }, [pathname]);
@@ -101,13 +114,15 @@ export default function InstructorPanelLayout({
   const generateBreadcrumbs = () => {
     const paths = pathname.split("/").filter((path) => path);
     return paths.map((path, index) => {
-      const href = "/" + paths.slice(0, index + 1).join("/");
+      const rawHref = "/" + paths.slice(0, index + 1).join("/");
+      // /instructor chi la panel -> tro ve danh sach khoa hoc
+      const href = rawHref === "/instructor" ? "/instructor/courses" : rawHref;
       const label = path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, " ");
       const isLast = index === paths.length - 1;
 
       return (
         <span key={href} className="flex items-center">
-          <span className="mx-2 text-slate-300">/</span>
+          <span className="mx-2 text-slate-400">/</span>
           {isLast ? (
             <span className="text-slate-500 font-normal">{label}</span>
           ) : (
@@ -122,7 +137,7 @@ export default function InstructorPanelLayout({
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center text-sm font-medium text-slate-400 bg-[#1e293b]">
+      <div className="h-screen flex items-center justify-center text-sm font-medium text-slate-500 bg-[#1e293b]">
         Loading Instructor Panel...
       </div>
     );
@@ -163,13 +178,13 @@ export default function InstructorPanelLayout({
                     <button
                       onClick={() => setIsCourseMenuOpen(!isCourseMenuOpen)}
                       className={`w-full flex items-center justify-between px-4 py-2.5 transition-colors duration-150 group ${
-                        pathname.startsWith("/instructor/courses") || pathname.startsWith("/instructor/lessons")
-                          ? "text-white bg-transparent" 
+                        COURSE_ROUTES.includes(pathname) || LESSON_ROUTES.includes(pathname)
+                          ? "text-white bg-transparent"
                           : "hover:text-white hover:bg-[#252d3a]"
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <Icon size={16} className={`transition-colors ${(pathname.startsWith("/instructor/courses") || pathname.startsWith("/instructor/lessons")) ? "text-indigo-400" : "text-[#7c8796] group-hover:text-white"}`} />
+                        <Icon size={16} className={`transition-colors ${(COURSE_ROUTES.includes(pathname) || LESSON_ROUTES.includes(pathname)) ? "text-indigo-400" : "text-[#7c8796] group-hover:text-white"}`} />
                         <span>{item.label}</span>
                       </div>
                       <ChevronDown 
@@ -185,12 +200,13 @@ export default function InstructorPanelLayout({
                           const SubIcon = subItem.icon;
                           
                           let isChildActive = false;
-                          if (subItem.href === "/instructor/courses/create") {
-                            isChildActive = pathname === "/instructor/courses/create";
+                          if (subItem.href === "/instructor/course-create") {
+                            isChildActive = pathname === "/instructor/course-create";
                           } else if (subItem.isIndicatorOnly) {
-                            isChildActive = pathname.startsWith("/instructor/lessons");
+                            isChildActive = LESSON_ROUTES.includes(pathname);
                           } else {
-                            isChildActive = pathname === "/instructor/courses";
+                            isChildActive = pathname === "/instructor/courses" ||
+                              pathname === "/instructor/course-detail";
                           }
 
                           if (subItem.isIndicatorOnly && !isChildActive) return null;

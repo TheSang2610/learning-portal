@@ -2,30 +2,20 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronDown, Search, User, Settings, LogOut, BookOpen } from "lucide-react";
+import { ChevronDown, Search, BookOpen } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { getCourses, Course } from "@/src/services/course";
-import { getCategories, Category } from "@/src/services/categoryService"; 
+import { getCategories, Category } from "@/src/services/categoryService";
+import HeaderUserMenu from "./HeaderUserMenu"; 
 
-interface UserInfo {
-  _id: string;
-  name: string;
-  email: string;
-  role: string;
-  token: string;
-  picture?: string;
-  googlePicture?: string;
-  avatar?: string;
-}
+
 
 export default function IndividualsHeader() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  const [user, setUser] = useState<UserInfo | null>(null);
-  const [avatarError, setAvatarError] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get("search") ?? "");
 
   // 🌟 States quản lý Menu Explore
   const [categories, setCategories] = useState<Category[]>([]);
@@ -33,8 +23,16 @@ export default function IndividualsHeader() {
   const [openExplore, setOpenExplore] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const exploreRef = useRef<HTMLDivElement>(null);
+
+  const normalizeCategoryId = (value: string | { _id?: string; $oid?: string } | null | undefined): string | null => {
+    if (!value) return null;
+    if (typeof value === "string") return value;
+
+    if (typeof value._id === "string") return value._id;
+    if (typeof value.$oid === "string") return value.$oid;
+    return null;
+  };
 
   // LOAD CATEGORIES & COURSES CHO EXPLORE MENU
   useEffect(() => {
@@ -56,55 +54,11 @@ export default function IndividualsHeader() {
     fetchMenuData();
   }, []);
 
-  // ĐỒNG BỘ TỪ KHÓA TỪ URL
-  useEffect(() => {
-    const currentSearch = searchParams.get("search");
-    if (currentSearch) {
-      setSearchQuery(currentSearch);
-    }
-  }, [searchParams]);
-
-  // LOAD USER
-  useEffect(() => {
-    const loadUser = () => {
-      const userInfo = localStorage.getItem("userInfo");
-      if (userInfo && userInfo !== "undefined") {
-        try {
-          setUser(JSON.parse(userInfo));
-          setAvatarError(false);
-        } catch {
-          setUser(null);
-        }
-      } else {
-        setUser(null);
-      }
-    };
-
-    loadUser();
-
-    const handlePageShow = (event: PageTransitionEvent) => {
-      if (event.persisted) {
-        loadUser();
-      }
-    };
-
-    window.addEventListener("storage", loadUser);
-    window.addEventListener("userInfoChanged", loadUser);
-    window.addEventListener("pageshow", handlePageShow);
-
-    return () => {
-      window.removeEventListener("storage", loadUser);
-      window.removeEventListener("userInfoChanged", loadUser);
-      window.removeEventListener("pageshow", handlePageShow);
-    };
-  }, []);
+  
 
   // CLICK OUTSIDE DROPDOWNS (Xử lý đóng cả menu avatar lẫn menu explore)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setOpenDropdown(false);
-      }
       if (exploreRef.current && !exploreRef.current.contains(event.target as Node)) {
         setOpenExplore(false);
       }
@@ -123,34 +77,17 @@ export default function IndividualsHeader() {
     }
   };
 
-  // LOGOUT
-  const logoutHandler = () => {
-    localStorage.removeItem("userInfo");
-    localStorage.removeItem("authToken");
-    setUser(null);
-    window.location.href = "/";
-  };
+  
 
 // 🌟 HÀM XỬ LÝ LỌC KHÓA HỌC THEO DANH MỤC (ĐÃ SỬA LỖI MẢNG MONGOOSE)
 const filteredCourses = allCourses.filter((course) => {
   if (!course.category || !activeCategory) return false;
 
-  // Trường hợp 1: Nếu category từ DB trả về là một Mảng (Array) nhiều danh mục giống như của bạn
   if (Array.isArray(course.category)) {
-    return course.category.some((cat: any) => {
-      if (!cat) return false;
-      // Trích xuất ID bất kể backend trả về chuỗi, object thường hoặc object chứa $oid
-      const idToCheck = typeof cat === "object" ? (cat._id || cat.$oid || cat) : cat;
-      return String(idToCheck) === String(activeCategory);
-    });
+    return course.category.some((cat) => normalizeCategoryId(cat) === activeCategory);
   }
 
-  // Trường hợp 2: Nếu category chỉ là một chuỗi hoặc một Object đơn lẻ (Dự phòng)
-  const singleCatId = typeof course.category === "object" 
-    ? ((course.category as any)._id || (course.category as any).$oid || course.category) 
-    : course.category;
-
-  return String(singleCatId) === String(activeCategory);
+  return normalizeCategoryId(course.category) === activeCategory;
 });
 
   return (
@@ -180,7 +117,7 @@ const filteredCourses = allCourses.filter((course) => {
                 
                 {/* CỘT TRÁI: DANH MỤC (CATEGORIES) */}
                 <div className="w-2/5 bg-gray-50 border-r border-gray-100 py-3">
-                  <div className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Danh mục ngành học
                   </div>
                   <div className="max-h-[380px] overflow-y-auto">
@@ -199,7 +136,7 @@ const filteredCourses = allCourses.filter((course) => {
                         }`}
                       >
                         <span className="truncate">{cat.name}</span>
-                        <span className="text-gray-400 text-xs">→</span>
+                        <span className="text-gray-500 text-xs">→</span>
                       </button>
                     ))}
                   </div>
@@ -208,7 +145,7 @@ const filteredCourses = allCourses.filter((course) => {
                 {/* CỘT PHẢI: KHÓA HỌC TƯƠNG ỨNG (COURSES) */}
                 <div className="w-3/5 p-4 flex flex-col justify-between">
                   <div>
-                    <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
                       Khóa học phổ biến
                     </div>
                     <div className="max-h-[300px] overflow-y-auto space-y-1 pr-1">
@@ -216,23 +153,23 @@ const filteredCourses = allCourses.filter((course) => {
                         filteredCourses.map((course) => (
                           <Link
                             key={course._id}
-                            href={`/courses/${course.slug}`}
+                            href={`/course?slug=${course.slug}`}
                             onClick={() => setOpenExplore(false)}
                             className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-blue-50/70 transition group text-left"
                           >
-                            <BookOpen size={16} className="text-gray-400 mt-0.5 group-hover:text-blue-500 flex-shrink-0" />
+                            <BookOpen size={16} className="text-gray-500 mt-0.5 group-hover:text-blue-500 flex-shrink-0" />
                             <div className="min-w-0">
                               <p className="text-sm font-medium text-gray-800 group-hover:text-blue-600 line-clamp-1">
                                 {course.title}
                               </p>
-                              <p className="text-xs text-gray-400 capitalize">
+                              <p className="text-xs text-gray-500 capitalize">
                                 Trình độ: {course.level || "Tất cả"}
                               </p>
                             </div>
                           </Link>
                         ))
                       ) : (
-                        <div className="text-sm text-gray-400 italic py-4 text-center">
+                        <div className="text-sm text-gray-500 italic py-4 text-center">
                           Chưa có khóa học nào thuộc nhóm này.
                         </div>
                       )}
@@ -286,88 +223,7 @@ const filteredCourses = allCourses.filter((course) => {
 
         {/* RIGHT */}
         <div className="flex items-center gap-5">
-          {user ? (
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setOpenDropdown(!openDropdown)}
-                className="flex items-center gap-3 hover:bg-gray-100 px-3 py-2 rounded-xl transition"
-              >
-                {(() => {
-                  const src = user.avatar || user.picture || user.googlePicture;
-                  if (src && !avatarError) {
-                    return (
-                      <img
-                        src={src}
-                        alt={user.name}
-                        onError={() => setAvatarError(true)}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                    );
-                  }
-                  return (
-                    <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold uppercase shadow">
-                      {user.name.charAt(0)}
-                    </div>
-                  );
-                })()}
-
-                <div className="hidden md:flex flex-col items-start max-w-[150px]"> 
-                  <span className="text-sm font-semibold leading-none truncate w-full">
-                    {user.name}
-                  </span>
-                  <span className="text-xs text-gray-500 capitalize mt-1">
-                    {user.role}
-                  </span>
-                </div>
-                <ChevronDown size={16} />
-              </button>
-
-              {openDropdown && (
-                <div className="absolute right-0 top-14 w-64 bg-white border rounded-2xl shadow-xl py-2 overflow-hidden z-50">
-                  <div className="px-4 py-4 border-b">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold uppercase">
-                        {user.name.charAt(0)}
-                      </div>
-                      <div className="overflow-hidden">
-                        <p className="font-semibold truncate">{user.name}</p>
-                        <p className="text-sm text-gray-500 truncate">{user.email}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Link href="/user/profile" onClick={() => setOpenDropdown(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 transition">
-                    <User size={18} /> <span>Profile</span>
-                  </Link>
-
-                  <Link href="/user/settings" onClick={() => setOpenDropdown(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 transition">
-                    <Settings size={18} /> <span>Settings</span>
-                  </Link>
-
-                  {user.role === "admin" && (
-                    <Link href="/admin/dashboard" onClick={() => setOpenDropdown(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 transition">
-                      <User size={18} /> <span>Admin Dashboard</span>
-                    </Link>
-                  )}
-
-                  {user.role === "instructor" && (
-                    <Link href="/instructor/courses" onClick={() => setOpenDropdown(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 transition">
-                      <User size={18} /> <span>Instructor Dashboard</span>
-                    </Link>
-                  )}
-
-                  <button onClick={logoutHandler} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-red-500 transition">
-                    <LogOut size={18} /> <span>Logout</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <>
-              <Link href="/?auth=login" className="text-sm text-blue-600 hover:underline">Log In</Link>
-              <Link href="/?auth=register" className="border border-blue-600 text-blue-600 px-4 py-2 rounded-md text-sm font-semibold hover:bg-blue-50 transition">Join for Free</Link>
-            </>
-          )}
+          <HeaderUserMenu />
         </div>
       </div>
     </div>

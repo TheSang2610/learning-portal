@@ -9,6 +9,9 @@ interface AuthModalProps {
   onClose: () => void;
 }
 
+// Kiem tra dinh dang co ban, khop voi validate phia backend
+const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+
 export default function AuthModal({ open, onClose }: AuthModalProps) {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
@@ -48,13 +51,22 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
 
     try {
       // ✅ Validate trước khi gửi
-      if (!loginData.email.trim() || !loginData.password.trim()) {
+      const email = loginData.email.trim().toLowerCase();
+
+      if (!email || !loginData.password) {
         setError("Email và mật khẩu không được để trống");
         setLoading(false);
         return;
       }
 
-      const data = await loginUser(loginData);
+      if (!isValidEmail(email)) {
+        setError("Email không hợp lệ");
+        setLoading(false);
+        return;
+      }
+
+      // Gui email da chuan hoa, khong gui nguyen chuoi nguoi dung go
+      const data = await loginUser({ email, password: loginData.password });
 
       if (data.token) {
         localStorage.setItem("authToken", data.token);
@@ -84,8 +96,17 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
 
     try {
       // ✅ Validate trước khi gửi
-      if (!registerData.name.trim() || !registerData.email.trim() || !registerData.password.trim()) {
+      const name = registerData.name.trim();
+      const email = registerData.email.trim().toLowerCase();
+
+      if (!name || !email || !registerData.password) {
         setError("Vui lòng điền đầy đủ thông tin");
+        setLoading(false);
+        return;
+      }
+
+      if (!isValidEmail(email)) {
+        setError("Email không hợp lệ");
         setLoading(false);
         return;
       }
@@ -96,7 +117,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
         return;
       }
 
-      const data = await registerUser(registerData);
+      const data = await registerUser({ ...registerData, name, email });
 
       if (data.token) {
         localStorage.setItem("authToken", data.token);
@@ -264,7 +285,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               value={loginData.email}
               onChange={handleLoginChange}
               required
-              className="w-full rounded-2xl border border-slate-300 p-3 outline-none transition focus:border-blue-600"
+              className="w-full rounded-2xl border border-slate-300 p-3 text-black placeholder:text-slate-500 outline-none transition focus:border-blue-600"
             />
             <input
               type="password"
@@ -273,7 +294,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               value={loginData.password}
               onChange={handleLoginChange}
               required
-              className="w-full rounded-2xl border border-slate-300 p-3 outline-none transition focus:border-blue-600"
+              className="w-full rounded-2xl border border-slate-300 p-3 text-black placeholder:text-slate-500 outline-none transition focus:border-blue-600"
             />
             <button
               type="submit"
@@ -292,7 +313,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               value={registerData.name}
               onChange={handleRegisterChange}
               required
-              className="w-full rounded-2xl border border-slate-300 p-3 outline-none transition focus:border-blue-600"
+              className="w-full rounded-2xl border border-slate-300 p-3 text-black placeholder:text-slate-500 outline-none transition focus:border-blue-600"
             />
             <input
               type="email"
@@ -301,7 +322,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               value={registerData.email}
               onChange={handleRegisterChange}
               required
-              className="w-full rounded-2xl border border-slate-300 p-3 outline-none transition focus:border-blue-600"
+              className="w-full rounded-2xl border border-slate-300 p-3 text-black placeholder:text-slate-500 outline-none transition focus:border-blue-600"
             />
             <input
               type="password"
@@ -311,7 +332,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               onChange={handleRegisterChange}
               required
               minLength={6}
-              className="w-full rounded-2xl border border-slate-300 p-3 outline-none transition focus:border-blue-600"
+              className="w-full rounded-2xl border border-slate-300 p-3 text-black placeholder:text-slate-500 outline-none transition focus:border-blue-600"
             />
             <button
               type="submit"

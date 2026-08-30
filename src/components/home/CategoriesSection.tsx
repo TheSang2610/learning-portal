@@ -76,7 +76,7 @@ export default function CategoriesSection() {
 
             return (
               <Link
-                href={`/${catSlug}`}
+                href={`/courses?category=${catSlug}`}
                 key={category._id}
                 className="min-w-fit bg-[#f0f6ff] rounded-full border border-gray-200 px-4 py-2 flex items-center justify-center shadow-sm hover:shadow-md hover:border-gray-400 transition duration-200 cursor-pointer select-none group"
               >
