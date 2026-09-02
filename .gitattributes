@@ -1,0 +1,18 @@
+# Ket ma dong: trong kho LUON la LF, va checkout ra cung LF.
+#
+# Khong co dong nay thi tren Windows (core.autocrlf=true) git doi LF -> CRLF
+# luc checkout, con prettier mac dinh doi LF -> `npm run verify` do ngay o
+# buoc dau voi hang tram file, du noi dung trong kho hoan toan dung.
+# CI chay tren Linux nen khong bao gio thay loi nay.
+* text=auto eol=lf
+
+# File nhi phan: khong dung vao.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
