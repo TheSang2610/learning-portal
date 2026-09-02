@@ -16,18 +16,18 @@ export default function GpaHeader() {
   const pathname = usePathname();
 
   return (
-    <div className="bg-white border-b">
-      <div className="max-w-7xl mx-auto h-16 px-6 flex items-center justify-between">
+    <div className="border-b bg-white">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <div className="flex items-center gap-10">
           {/* Cung kieu chu voi logo o IndividualsHeader de dong bo toan trang */}
           <Link
             href="/"
-            className="text-[38px] font-bold text-blue-600 tracking-tight shrink-0"
+            className="shrink-0 text-[38px] font-bold tracking-tight text-blue-600"
           >
             coursera
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-8 text-[15px]">
+          <nav className="hidden items-center gap-8 text-[15px] lg:flex">
             {TOOLS.map((t) => {
               const active = pathname === t.href;
               return (

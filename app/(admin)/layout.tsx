@@ -1,14 +1,8 @@
 import "../globals.css";
-export default function AdminRootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AdminRootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="antialiased">
-        {children}
-      </body>
+    <html lang="vi">
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

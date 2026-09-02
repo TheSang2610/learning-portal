@@ -27,12 +27,10 @@ export default function CalcPointPage() {
           <Calculator size={24} className="text-blue-600" />
         </span>
 
-        <h1 className="mt-4 text-3xl font-extrabold text-blue-600">
-          Tính điểm tổng kết
-        </h1>
+        <h1 className="mt-4 text-3xl font-extrabold text-blue-600">Tính điểm tổng kết</h1>
         <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-slate-700">
-          Công cụ tính điểm tổng kết chính xác và nhanh chóng. Hỗ trợ nhiều cấu trúc
-          điểm và thang điểm khác nhau của các trường đại học.
+          Công cụ tính điểm tổng kết chính xác và nhanh chóng. Hỗ trợ nhiều cấu trúc điểm
+          và thang điểm khác nhau của các trường đại học.
         </p>
 
         <div className="mt-5 flex flex-wrap justify-center gap-3">

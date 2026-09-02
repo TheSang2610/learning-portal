@@ -1,61 +1,65 @@
 "use client";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import SafeImage from "@/src/components/ui/SafeImage";
 import { useRef, useState, useEffect } from "react";
 import { getProviders, ProviderData } from "@/src/services/provider";
 
 function PartnersSkeleton() {
   return (
-    <section className="bg-[#f5f7fa] animate-pulse">
-      <div className="max-w-7xl mx-auto px-6 py-6">
+    <section className="animate-pulse bg-[#f5f7fa]">
+      <div className="mx-auto max-w-7xl px-6 py-6">
         {/* Tiêu đề giả lập */}
-        <div className="h-5 bg-slate-200 rounded w-72 max-w-full"></div>
+        <div className="h-5 w-72 max-w-full rounded bg-slate-200"></div>
 
         {/* Danh sách logo đối tác chạy ngang giả lập */}
-        <div className="flex gap-3 overflow-hidden mt-6 px-2">
-          {[
-            "w-28", "w-36", "w-24", "w-40", "w-32", 
-            "w-28", "w-36", "w-24"
-          ].map((widthClass, index) => (
-            <div
-              key={index}
-              className={`${widthClass} h-9 bg-white border border-slate-200/60 rounded-full flex items-center gap-2 px-4 flex-shrink-0 shadow-sm`}
-            >
-              {/* Giả lập hình ảnh logo tròn/vuông nhỏ phía trước */}
-              <div className="w-4 h-4 bg-slate-200 rounded-sm flex-shrink-0"></div>
-              {/* Giả lập chữ tên thương hiệu */}
-              <div className="h-3 bg-slate-200 rounded w-full"></div>
-            </div>
-          ))}
+        <div className="mt-6 flex gap-3 overflow-hidden px-2">
+          {["w-28", "w-36", "w-24", "w-40", "w-32", "w-28", "w-36", "w-24"].map(
+            (widthClass, index) => (
+              <div
+                key={index}
+                className={`${widthClass} flex h-9 flex-shrink-0 items-center gap-2 rounded-full border border-slate-200/60 bg-white px-4 shadow-sm`}
+              >
+                {/* Giả lập hình ảnh logo tròn/vuông nhỏ phía trước */}
+                <div className="h-4 w-4 flex-shrink-0 rounded-sm bg-slate-200"></div>
+                {/* Giả lập chữ tên thương hiệu */}
+                <div className="h-3 w-full rounded bg-slate-200"></div>
+              </div>
+            ),
+          )}
         </div>
       </div>
     </section>
   );
 }
 
-export default function PartnersSection() {
+interface Props {
+  /**
+   * Du lieu lay san tu may chu (xem app/(portal)/page.tsx).
+   *
+   * Co san thi KHONG goi API luc mount nua: noi dung nam thang trong HTML,
+   * nguoi dung khong phai nhin khung xam, va may tim kiem doc duoc.
+   * Bo trong thi component tu goi nhu cu - de con dung lai duoc o cho khac.
+   */
+  initialData?: ProviderData[] | null;
+}
+
+export default function PartnersSection({ initialData }: Props) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
-  const [companies, setCompanies] = useState<ProviderData[]>([]);
-  const [loading, setLoading] = useState(true); // Thêm state loading chuẩn hóa
+  const [companies, setCompanies] = useState<ProviderData[]>(initialData ?? []);
+  const [loading, setLoading] = useState(!initialData);
 
-  // Lấy dữ liệu thực tế từ Database
   useEffect(() => {
-    const fetchPartners = async () => {
-      try {
-        setLoading(true);
-        const data = await getProviders();
-        if (Array.isArray(data)) {
-          setCompanies(data);
-        }
-      } catch (err) {
-        console.error("Lỗi lấy danh sách đối tác:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPartners();
-  }, []);
+    if (initialData) return;
+
+    getProviders()
+      .then((data) => {
+        if (Array.isArray(data)) setCompanies(data);
+      })
+      .catch((err) => console.error("Lỗi lấy danh sách đối tác:", err))
+      .finally(() => setLoading(false));
+  }, [initialData]);
 
   const checkScroll = () => {
     const el = scrollRef.current;
@@ -96,10 +100,11 @@ export default function PartnersSection() {
 
   return (
     <section className="bg-[#f5f7fa]">
-      <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="mx-auto max-w-7xl px-6 py-6">
         <div>
-          <h3 className="text-sm md:text-base font-semibold text-[#1f1f1f]">
-            Học từ <span className="font-semibold">các trường đại học và công ty hàng đầu</span>
+          <h3 className="text-sm font-semibold text-[#1f1f1f] md:text-base">
+            Học từ{" "}
+            <span className="font-semibold">các trường đại học và công ty hàng đầu</span>
           </h3>
         </div>
 
@@ -107,7 +112,7 @@ export default function PartnersSection() {
           {showLeft && (
             <button
               onClick={() => scroll("left")}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white border shadow-md rounded-full w-8 h-8 flex items-center justify-center transition hover:bg-gray-50"
+              className="absolute top-1/2 left-0 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border bg-white shadow-md transition hover:bg-gray-50"
             >
               <ChevronLeft size={16} />
             </button>
@@ -116,7 +121,7 @@ export default function PartnersSection() {
           {showRight && (
             <button
               onClick={() => scroll("right")}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white border shadow-md rounded-full w-8 h-8 flex items-center justify-center transition hover:bg-gray-50"
+              className="absolute top-1/2 right-0 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border bg-white shadow-md transition hover:bg-gray-50"
             >
               <ChevronRight size={16} />
             </button>
@@ -124,7 +129,7 @@ export default function PartnersSection() {
 
           <div
             ref={scrollRef}
-            className="flex gap-3 overflow-x-auto scroll-smooth px-2 min-h-[50px] [scrollbar-width:none] [-ms-overflow-style:none]"
+            className="flex min-h-[50px] gap-3 overflow-x-auto scroll-smooth px-2 [-ms-overflow-style:none] [scrollbar-width:none]"
             style={{ WebkitOverflowScrolling: "touch" }}
           >
             <style jsx global>{`
@@ -136,17 +141,20 @@ export default function PartnersSection() {
             {companies.map((company) => (
               <div
                 key={company._id}
-                className="min-w-fit bg-white rounded-full border px-4 py-2 flex items-center justify-center shadow-sm grayscale hover:grayscale-0 hover:shadow-md transition duration-200 select-none"
+                className="flex min-w-fit items-center justify-center rounded-full border bg-white px-4 py-2 shadow-sm grayscale transition duration-200 select-none hover:shadow-md hover:grayscale-0"
               >
-                <img
-                  src={company.logo || "https://res.cloudinary.com/demo/image/upload/sample.jpg"}
+                <SafeImage
+                  src={
+                    company.logo ||
+                    "https://res.cloudinary.com/demo/image/upload/sample.jpg"
+                  }
                   alt={company.name}
                   className="h-4 w-auto object-contain"
                   width={40}
                   height={16}
                   loading="lazy"
                 />
-                <span className="px-2 text-sm text-gray-700 font-medium">
+                <span className="px-2 text-sm font-medium text-gray-700">
                   {company.name}
                 </span>
               </div>

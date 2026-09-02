@@ -23,37 +23,40 @@ const STEPS: { title: string; body: string }[] = [
   },
 ];
 
-// Giu nguyen hinh khoi cua CSS ban goc, chi doi mau thuong hieu do -> xanh
-// cho khop voi trang Individuals:
-//   border      1px solid mau thuong hieu, do dam 10%  -> border-blue-600/10
-//   radius      16px                                   -> rounded-2xl
-//   shadow      0 2px 4px #0000000d (den 5%)
-//   gap/padding 1.5rem                                 -> gap-6 / p-6
-// transition co san trong ban goc nhung khong kem :hover nao, nen toi them
-// mot hieu ung nhe khi ro chuot cho nut transition co tac dung.
+// Cac buoc nam TRONG khung lon, nen khong dung lai kieu the noi nua:
+// the trang + vien + do bong dat tren nen trang cua khung cha thi ranh gioi
+// gan nhu bien mat, nhin ra "the long the". Doi sang nen slate nhat, vien mo,
+// bo do bong - phan cap ro ma van thay tung buoc tach nhau.
 const stepCard =
-  "flex items-start gap-6 rounded-2xl border border-blue-600/10 bg-white p-6 " +
-  "shadow-[0_2px_4px_rgba(0,0,0,0.05)] transition-all duration-300 " +
-  "hover:border-blue-600/30 hover:shadow-[0_4px_10px_rgba(0,0,0,0.08)]";
+  "flex items-start gap-5 rounded-xl border border-slate-200/80 bg-slate-50 p-5 " +
+  "transition-colors duration-200 hover:border-blue-600/30";
 
 const stepNumber =
   "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white";
 
 export default function GradeProfileGuide() {
   return (
-    <section className="mt-12">
+    // Khung ngoai dung y het CalcPointGuide va Convert10To4 - ba man GPA
+    // dung chung mot kieu khung.
+    <section className="mt-12 rounded-2xl border border-blue-200 bg-white px-5 py-8 shadow-sm sm:px-8">
       <div className="text-center">
-        <span className="text-3xl" role="img" aria-label="Sách">
-          📚
+        {/* Vong tron xanh lay theo hai man kia; ben trong van giu emoji sach
+            thay vi doi sang icon lucide, de khong doi y nghia san co. */}
+        <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 text-2xl">
+          <span role="img" aria-label="Sách">
+            📚
+          </span>
         </span>
-        <h2 className="mt-2 text-xl font-extrabold text-blue-600">Hướng dẫn sử dụng</h2>
+        {/* Van la h2: trang co h1 "Ho so diem", nen muc nay dung cap 2 moi dung
+            thu tu tieu de. Hai man kia dung h3 vi chung nam sau mot h2 khac. */}
+        <h2 className="mt-3 text-xl font-extrabold text-blue-600">Hướng dẫn sử dụng</h2>
         <p className="mx-auto mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
           Dưới đây là phần giới thiệu màn hình tính điểm trung bình học kỳ (GPA), điểm
           trung bình tích lũy (CPA/CGPA), xây dựng mục tiêu và điểm của sinh viên.
         </p>
       </div>
 
-      <ol className="mt-8 space-y-4">
+      <ol className="mt-8 space-y-3">
         {STEPS.map((s, i) => (
           <li key={s.title} className={stepCard}>
             <span className={stepNumber}>{i + 1}</span>
@@ -72,10 +75,10 @@ export default function GradeProfileGuide() {
               Đăng nhập để trải nghiệm đầy đủ
             </h4>
             <p className="mt-1 text-sm leading-relaxed text-slate-600">
-              Nếu là sinh viên Học Viện Công Nghệ Bưu Chính Viễn Thông (PTIT), các bạn
-              hãy đăng ký hoặc đăng nhập để sử dụng đầy đủ tính năng của hệ thống, bao
-              gồm việc tạo hồ sơ điểm theo khóa học, ngành học, tạo được nhiều hồ sơ
-              điểm và còn nhiều tính năng khác nữa.
+              Nếu là sinh viên Học Viện Công Nghệ Bưu Chính Viễn Thông (PTIT), các bạn hãy
+              đăng ký hoặc đăng nhập để sử dụng đầy đủ tính năng của hệ thống, bao gồm
+              việc tạo hồ sơ điểm theo khóa học, ngành học, tạo được nhiều hồ sơ điểm và
+              còn nhiều tính năng khác nữa.
             </p>
             {/* Du an nay khong co route /login rieng - dang nhap mo bang tham so
                 ?auth=login tren trang chu, giong nut Log In tren thanh dieu huong. */}

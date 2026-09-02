@@ -26,31 +26,23 @@ export default function TopNav() {
   ];
 
   return (
-    <div className="bg-[#0b0f19] text-white border-b border-[#1d2230]">
-      <div className="max-w-7xl mx-auto flex items-center h-10 px-6">
-
+    <div className="border-b border-[#1d2230] bg-[#0b0f19] text-white">
+      <div className="mx-auto flex h-10 max-w-7xl items-center px-6">
         {menus.map((item) => {
-          const active =
-            pathname === item.href ||
-            pathname.startsWith(item.href + "/");
+          const active = pathname === item.href || pathname.startsWith(item.href + "/");
 
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`
-                h-full px-6 flex items-center text-sm font-semibold transition relative
-                ${
-                  active
-                    ? "text-white"
-                    : "text-gray-300 hover:text-white"
-                }
-              `}
+              className={`relative flex h-full items-center px-6 text-sm font-semibold transition ${
+                active ? "text-white" : "text-gray-300 hover:text-white"
+              } `}
             >
               {item.title}
 
               {active && (
-                <span className="absolute bottom-0 left-0 w-full h-[3px] bg-white" />
+                <span className="absolute bottom-0 left-0 h-[3px] w-full bg-white" />
               )}
             </Link>
           );

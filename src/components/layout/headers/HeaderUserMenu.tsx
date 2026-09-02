@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ChevronDown, User, Settings, LogOut } from "lucide-react";
+import AnhDaiDien from "@/src/components/ui/AnhDaiDien";
 import { useEffect, useRef, useState } from "react";
 
 // Tach rieng khoi IndividualsHeader de moi header trang deu co menu tai khoan.
@@ -20,7 +21,6 @@ interface UserInfo {
 
 export default function HeaderUserMenu() {
   const [user, setUser] = useState<UserInfo | null>(null);
-  const [avatarError, setAvatarError] = useState(false);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -30,7 +30,6 @@ export default function HeaderUserMenu() {
       if (raw && raw !== "undefined") {
         try {
           setUser(JSON.parse(raw));
-          setAvatarError(false);
         } catch {
           setUser(null);
         }
@@ -80,7 +79,7 @@ export default function HeaderUserMenu() {
         </Link>
         <Link
           href="/?auth=register"
-          className="border border-blue-600 text-blue-600 px-4 py-2 rounded-md text-sm font-semibold hover:bg-blue-50 transition"
+          className="rounded-md border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
         >
           Join for Free
         </Link>
@@ -94,41 +93,37 @@ export default function HeaderUserMenu() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-3 hover:bg-gray-100 px-3 py-2 rounded-xl transition"
+        className="flex items-center gap-3 rounded-xl px-3 py-2 transition hover:bg-gray-100"
       >
-        {src && !avatarError ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={src}
-            alt={user.name}
-            onError={() => setAvatarError(true)}
-            className="w-10 h-10 rounded-full object-cover"
-          />
-        ) : (
-          <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold uppercase shadow">
-            {user.name.charAt(0)}
-          </div>
-        )}
+        <AnhDaiDien
+          src={src}
+          ten={user.name}
+          size={40}
+          nenChuCai="bg-blue-600 text-white shadow"
+        />
 
-        <div className="hidden md:flex flex-col items-start max-w-[150px]">
-          <span className="text-sm font-semibold leading-none truncate w-full text-slate-900">
+        <div className="hidden max-w-[150px] flex-col items-start md:flex">
+          <span className="w-full truncate text-sm leading-none font-semibold text-slate-900">
             {user.name}
           </span>
-          <span className="text-xs text-gray-500 capitalize mt-1">{user.role}</span>
+          <span className="mt-1 text-xs text-gray-500 capitalize">{user.role}</span>
         </div>
         <ChevronDown size={16} />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-14 w-64 bg-white border rounded-2xl shadow-xl py-2 overflow-hidden z-50">
-          <div className="px-4 py-4 border-b">
+        <div className="absolute top-14 right-0 z-50 w-64 overflow-hidden rounded-2xl border bg-white py-2 shadow-xl">
+          <div className="border-b px-4 py-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold uppercase">
-                {user.name.charAt(0)}
-              </div>
+              <AnhDaiDien
+                src={src}
+                ten={user.name}
+                size={48}
+                nenChuCai="bg-blue-600 text-white"
+              />
               <div className="overflow-hidden">
-                <p className="font-semibold truncate text-slate-900">{user.name}</p>
-                <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                <p className="truncate font-semibold text-slate-900">{user.name}</p>
+                <p className="truncate text-sm text-gray-500">{user.email}</p>
               </div>
             </div>
           </div>
@@ -136,7 +131,7 @@ export default function HeaderUserMenu() {
           <Link
             href="/user/profile"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-gray-100 hover:text-slate-900 transition"
+            className="flex items-center gap-3 px-4 py-3 text-slate-700 transition hover:bg-gray-100 hover:text-slate-900"
           >
             <User size={18} /> <span>Profile</span>
           </Link>
@@ -144,7 +139,7 @@ export default function HeaderUserMenu() {
           <Link
             href="/user/settings"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-gray-100 hover:text-slate-900 transition"
+            className="flex items-center gap-3 px-4 py-3 text-slate-700 transition hover:bg-gray-100 hover:text-slate-900"
           >
             <Settings size={18} /> <span>Settings</span>
           </Link>
@@ -153,7 +148,7 @@ export default function HeaderUserMenu() {
             <Link
               href="/admin/dashboard"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-gray-100 hover:text-slate-900 transition"
+              className="flex items-center gap-3 px-4 py-3 text-slate-700 transition hover:bg-gray-100 hover:text-slate-900"
             >
               <User size={18} /> <span>Admin Dashboard</span>
             </Link>
@@ -163,7 +158,7 @@ export default function HeaderUserMenu() {
             <Link
               href="/instructor/courses"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-gray-100 hover:text-slate-900 transition"
+              className="flex items-center gap-3 px-4 py-3 text-slate-700 transition hover:bg-gray-100 hover:text-slate-900"
             >
               <User size={18} /> <span>Instructor Dashboard</span>
             </Link>
@@ -171,7 +166,7 @@ export default function HeaderUserMenu() {
 
           <button
             onClick={logout}
-            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-red-500 transition"
+            className="flex w-full items-center gap-3 px-4 py-3 text-red-500 transition hover:bg-red-50"
           >
             <LogOut size={18} /> <span>Logout</span>
           </button>

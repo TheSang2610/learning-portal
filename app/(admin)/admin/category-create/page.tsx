@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getErrorMessage } from "@/src/services/apiHelper";
 import { useRouter } from "next/navigation";
 import { createCategory } from "@/src/services/categoryService";
 import { ArrowLeft } from "lucide-react";
@@ -41,11 +42,11 @@ export default function CreateCategoryPage() {
       // Gọi service gửi name và slug (Đã loại bỏ icon)
       await createCategory({ name, slug: slug.trim() });
       alert("Category created successfully!");
-      
+
       // Chuyển hướng Admin quay lại trang danh sách sau khi tạo xong
       router.push("/admin/categories");
-    } catch (error: any) {
-      alert(error.message || "Create failed");
+    } catch (error) {
+      alert(getErrorMessage(error, "Create failed"));
     } finally {
       setSubmitting(false);
     }
@@ -56,7 +57,7 @@ export default function CreateCategoryPage() {
       {/* NÚT BACK QUAY LẠI */}
       <button
         onClick={() => router.push("/admin/categories")}
-        className="flex items-center gap-2 text-slate-500 hover:text-slate-800 font-medium transition text-sm"
+        className="flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-800"
       >
         <ArrowLeft size={16} />
         Back to Categories
@@ -64,34 +65,36 @@ export default function CreateCategoryPage() {
 
       <div>
         <h1 className="text-4xl font-bold text-slate-800">Create Category</h1>
-        <p className="text-gray-500 mt-1">Add a new category to classify your academic courses</p>
+        <p className="mt-1 text-gray-500">
+          Add a new category to classify your academic courses
+        </p>
       </div>
 
       {/* FORM TẠO */}
-      <div className="bg-white p-8 rounded-3xl border shadow-sm">
+      <div className="rounded-3xl border bg-white p-8 shadow-sm">
         <form onSubmit={submitHandler} className="space-y-5">
           {/* FIELD: NAME */}
           <div>
-            <label className="block mb-2 font-medium text-slate-700">Category Name</label>
+            <label className="mb-2 block font-medium text-slate-700">Category Name</label>
             <input
               type="text"
               placeholder="e.g. Lập trình Web, Thiết kế Đồ họa..."
               value={name}
               onChange={handleNameChange}
-              className="w-full border rounded-2xl p-4 outline-none focus:border-blue-500 transition"
+              className="w-full rounded-2xl border p-4 transition outline-none focus:border-blue-500"
               required
             />
           </div>
 
           {/* FIELD: SLUG (THAY THẾ CHO ICON) */}
           <div>
-            <label className="block mb-2 font-medium text-slate-700">Category Slug</label>
+            <label className="mb-2 block font-medium text-slate-700">Category Slug</label>
             <input
               type="text"
               placeholder="e.g. lap-trinh-web, thiet-ke-do-hoa"
               value={slug}
               onChange={(e) => setSlug(convertToSlug(e.target.value))} // Đảm bảo người dùng nhập tay vẫn ra format slug chuẩn
-              className="w-full border rounded-2xl p-4 outline-none focus:border-blue-500 transition"
+              className="w-full rounded-2xl border p-4 transition outline-none focus:border-blue-500"
               required
             />
           </div>
@@ -99,7 +102,7 @@ export default function CreateCategoryPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium p-4 rounded-2xl transition disabled:bg-slate-300"
+            className="w-full rounded-2xl bg-blue-600 p-4 font-medium text-white transition hover:bg-blue-700 disabled:bg-slate-300"
           >
             {submitting ? "Creating..." : "Publish Category"}
           </button>

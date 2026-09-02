@@ -114,9 +114,7 @@ export default function CalcPoint() {
                 value={scores[i] ?? ""}
                 placeholder={`Điểm ${w}%`}
                 aria-label={`Điểm thành phần hệ số ${w}%`}
-                onChange={(e) =>
-                  setScores((p) => ({ ...p, [i]: e.target.value }))
-                }
+                onChange={(e) => setScores((p) => ({ ...p, [i]: e.target.value }))}
                 className="w-full bg-transparent px-3 py-3.5 text-center text-sm font-semibold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400 focus:bg-blue-50"
               />
             </div>

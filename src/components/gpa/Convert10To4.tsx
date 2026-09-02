@@ -37,7 +37,7 @@ export default function Convert10To4({ children }: { children?: ReactNode }) {
             value={scaleId}
             onChange={(e) => setScaleId(e.target.value)}
             aria-label="Chọn cấu trúc thang điểm"
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
           >
             {SCALES.map((s) => (
               <option key={s.id} value={s.id}>
@@ -107,9 +107,9 @@ export default function Convert10To4({ children }: { children?: ReactNode }) {
 
           <Step n={1} title="Chọn thang điểm">
             <p className="mt-2 text-sm leading-relaxed text-slate-600">
-              Chọn cấu trúc thang điểm phù hợp với trường của bạn. Hệ thống hỗ trợ 3
-              cấu trúc thang điểm phổ biến: (A+ A B+ B C+ C D+ D F),
-              (A B+ B C+ C D+ D F), (A B C D F).
+              Chọn cấu trúc thang điểm phù hợp với trường của bạn. Hệ thống hỗ trợ 3 cấu
+              trúc thang điểm phổ biến: (A+ A B+ B C+ C D+ D F), (A B+ B C+ C D+ D F), (A
+              B C D F).
             </p>
           </Step>
 
@@ -124,8 +124,8 @@ export default function Convert10To4({ children }: { children?: ReactNode }) {
 
           <Step n={3} title="Nhập và quy đổi">
             <p className="mt-2 text-sm leading-relaxed text-slate-600">
-              Nhập điểm hệ 10 vào bảng, hệ thống sẽ tự động tính toán và quy đổi sang
-              hệ 4 cùng thang điểm chữ ngay lập tức.
+              Nhập điểm hệ 10 vào bảng, hệ thống sẽ tự động tính toán và quy đổi sang hệ 4
+              cùng thang điểm chữ ngay lập tức.
             </p>
           </Step>
         </div>
@@ -134,15 +134,7 @@ export default function Convert10To4({ children }: { children?: ReactNode }) {
   );
 }
 
-function Step({
-  n,
-  title,
-  children,
-}: {
-  n: number;
-  title: string;
-  children: ReactNode;
-}) {
+function Step({ n, title, children }: { n: number; title: string; children: ReactNode }) {
   return (
     <div className="text-center">
       {/* relative de vong tron ve DE LEN duong ke, khong bi ke cat ngang */}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getErrorMessage } from "@/src/services/apiHelper";
 import { Plus, Edit3, Trash2, X, Loader2, FolderOpen } from "lucide-react";
 import {
   getCategories,
@@ -29,26 +30,42 @@ export default function AdminCategoriesPage() {
       setError("");
       const data = await getCategories();
       setCategories(Array.isArray(data) ? data : []);
-    } catch (e: any) {
-      setError(e?.message || "Không tải được danh mục");
+    } catch (e) {
+      setError(getErrorMessage(e, "Không tải được danh mục"));
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    // Goi qua mot vong microtask thay vi goi thang. Ham tai du lieu bat dau
+    // bang setLoading(true), nen goi thang la setState dong bo ngay trong than
+    // effect: React phai chay them mot vong ve lai truoc khi hien man hinh
+    // (rule react-hooks/set-state-in-effect canh bao dung cho nay). Hoan mot
+    // vong microtask thi mat thuong khong thay khac, ma vong ve thua het.
+    void Promise.resolve().then(load);
+  }, []);
 
   const openCreate = () => {
-    setName(""); setIcon(""); setFormError(""); setEditingId("");
+    setName("");
+    setIcon("");
+    setFormError("");
+    setEditingId("");
   };
 
   const openEdit = (c: Category) => {
-    setName(c.name); setIcon(c.icon ?? ""); setFormError(""); setEditingId(c._id);
+    setName(c.name);
+    setIcon(c.icon ?? "");
+    setFormError("");
+    setEditingId(c._id);
   };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) { setFormError("Tên danh mục là bắt buộc"); return; }
+    if (!name.trim()) {
+      setFormError("Tên danh mục là bắt buộc");
+      return;
+    }
     try {
       setSaving(true);
       setFormError("");
@@ -60,8 +77,8 @@ export default function AdminCategoriesPage() {
       }
       setEditingId(null);
       await load();
-    } catch (e: any) {
-      setFormError(e?.message || "Lưu thất bại");
+    } catch (e) {
+      setFormError(getErrorMessage(e, "Lưu thất bại"));
     } finally {
       setSaving(false);
     }
@@ -74,9 +91,9 @@ export default function AdminCategoriesPage() {
       setError("");
       await deleteCategory(c._id);
       await load();
-    } catch (e: any) {
+    } catch (e) {
       // Backend chan xoa khi con khoa hoc dang dung danh muc nay
-      setError(e?.message || "Xóa thất bại");
+      setError(getErrorMessage(e, "Xóa thất bại"));
     } finally {
       setBusyId(null);
     }
@@ -112,7 +129,7 @@ export default function AdminCategoriesPage() {
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[560px]">
-            <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
+            <thead className="bg-slate-50 text-left text-xs font-bold tracking-wider text-slate-600 uppercase">
               <tr>
                 <th className="px-4 py-3">Tên</th>
                 <th className="px-4 py-3">Slug (tự sinh)</th>
@@ -129,7 +146,10 @@ export default function AdminCategoriesPage() {
                 </tr>
               ) : categories.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-16 text-center text-sm text-slate-500">
+                  <td
+                    colSpan={4}
+                    className="px-4 py-16 text-center text-sm text-slate-500"
+                  >
                     Chưa có danh mục nào.
                   </td>
                 </tr>
@@ -141,10 +161,14 @@ export default function AdminCategoriesPage() {
                         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
                           <FolderOpen size={15} />
                         </span>
-                        <span className="text-sm font-semibold text-slate-900">{c.name}</span>
+                        <span className="text-sm font-semibold text-slate-900">
+                          {c.name}
+                        </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-slate-600">{c.slug}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-slate-600">
+                      {c.slug}
+                    </td>
                     <td className="px-4 py-3 text-xs text-slate-600">{c.icon || "--"}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1.5">
@@ -196,7 +220,9 @@ export default function AdminCategoriesPage() {
               )}
 
               <div>
-                <label className="mb-1.5 block text-xs font-bold text-slate-700">Tên danh mục *</label>
+                <label className="mb-1.5 block text-xs font-bold text-slate-700">
+                  Tên danh mục *
+                </label>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -209,7 +235,9 @@ export default function AdminCategoriesPage() {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-bold text-slate-700">Icon</label>
+                <label className="mb-1.5 block text-xs font-bold text-slate-700">
+                  Icon
+                </label>
                 <input
                   value={icon}
                   onChange={(e) => setIcon(e.target.value)}

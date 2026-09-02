@@ -1,4 +1,4 @@
-import { apiRequest } from "./apiHelper"; 
+import { apiRequest } from "./apiHelper";
 
 export interface CreateReviewData {
   courseId: string;
@@ -47,11 +47,11 @@ export interface ReviewStats {
   totalReviews: number;
   averageRating: string | number;
   ratingDistribution: {
-    '1': number;
-    '2': number;
-    '3': number;
-    '4': number;
-    '5': number;
+    "1": number;
+    "2": number;
+    "3": number;
+    "4": number;
+    "5": number;
   };
 }
 
@@ -65,7 +65,11 @@ export const reviewService = {
 
   getCourseReviews: async (
     courseId: string,
-    query?: { sortBy?: "newest" | "highest" | "lowest" | "helpful"; page?: number; limit?: number }
+    query?: {
+      sortBy?: "newest" | "highest" | "lowest" | "helpful";
+      page?: number;
+      limit?: number;
+    },
   ): Promise<GetReviewsResponse> => {
     const params = new URLSearchParams();
     if (query?.sortBy) params.append("sortBy", query.sortBy);
@@ -84,7 +88,10 @@ export const reviewService = {
     });
   },
 
-  getAllReviewsForAdmin: async (query?: { page?: number; limit?: number }): Promise<GetReviewsResponse> => {
+  getAllReviewsForAdmin: async (query?: {
+    page?: number;
+    limit?: number;
+  }): Promise<GetReviewsResponse> => {
     const params = new URLSearchParams();
     if (query?.page) params.append("page", query.page.toString());
     if (query?.limit) params.append("limit", query.limit.toString());
@@ -125,5 +132,4 @@ export const reviewService = {
       method: "POST",
     });
   },
-  
 };

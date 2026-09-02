@@ -1,12 +1,4 @@
-const RAW_API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  "http://localhost:5000";
-
-const API_BASE_URL = RAW_API_BASE_URL.replace(/\/+$/, "");
-const API_ORIGIN = API_BASE_URL.endsWith("/api")
-  ? API_BASE_URL.slice(0, -4)
-  : API_BASE_URL;
+import { GOC_API as API_ORIGIN } from "./diaChiApi";
 
 const resolveApiUrl = (path: string) => {
   if (/^https?:\/\//i.test(path)) {
@@ -81,15 +73,44 @@ export const handleResponse = async (res: Response) => {
 // ---------------------------------------------------------------------------
 const CACHE_TTL_MS = 30_000;
 
-const inflight = new Map<string, Promise<any>>();
-const cache = new Map<string, { at: number; data: any }>();
+// unknown chu khong phai any: hai bang nay giu phan hoi cua moi endpoint nen
+// khong the co mot kieu chung. apiRequest van tra ve any de cac ham boc ben
+// ngoai tu khai kieu dung cua tung endpoint - do la ranh gioi kieu duy nhat cua
+// tang service.
+const inflight = new Map<string, Promise<unknown>>();
+const cache = new Map<string, { at: number; data: unknown }>();
 
 const isGet = (options: RequestInit) =>
   !options.method || options.method.toUpperCase() === "GET";
 
+// So the he cua bo dem. Moi lan don sach thi tang len mot.
+//
+// Can no vi mot cuoc dua co that: GET bat dau chay -> nguoi dung bam Xoa ->
+// POST/DELETE goi clearApiCache() -> GET (van dang bay, mang du lieu CU) ve va
+// ghi de len bo dem vua don sach. Ket qua la muc da xoa con hien them 30 giay,
+// dung cai ma viec don bo dem sinh ra de tranh.
+//
+// Doi chieu the he luc goi voi the he luc ve: khac nhau thi bo qua khong ghi.
+let theHe = 0;
+
 export const clearApiCache = () => {
   cache.clear();
   inflight.clear();
+  theHe += 1;
+};
+
+// Bo dem chi song 30 giay nhung khong ai don cac muc het han, nen Map cu the
+// phinh ra suot phien lam viec. Chan tren mot con so, cham nguong thi don muc
+// het han truoc, van day thi xoa sach - mat bo dem khong sai gi, chi cham hon.
+const CACHE_TOI_DA = 100;
+
+const donBotCache = () => {
+  if (cache.size < CACHE_TOI_DA) return;
+  const bayGio = Date.now();
+  for (const [k, v] of cache) {
+    if (bayGio - v.at >= CACHE_TTL_MS) cache.delete(k);
+  }
+  if (cache.size >= CACHE_TOI_DA) cache.clear();
 };
 
 export const apiRequest = async (path: string, options: RequestInit = {}) => {
@@ -111,13 +132,22 @@ export const apiRequest = async (path: string, options: RequestInit = {}) => {
   const pending = inflight.get(key);
   if (pending) return pending;
 
+  const theHeLucGoi = theHe;
+
   const p = rawRequest(url, options)
     .then((data) => {
-      cache.set(key, { at: Date.now(), data });
+      // Co ai don bo dem trong luc minh dang bay khong? Co thi du lieu nay da
+      // cu, tra ve cho nguoi goi nhung KHONG ghi vao bo dem.
+      if (theHe === theHeLucGoi) {
+        donBotCache();
+        cache.set(key, { at: Date.now(), data });
+      }
       return data;
     })
     .finally(() => {
-      inflight.delete(key);
+      // Chi go dung promise cua minh: clearApiCache() da don roi thi o nay co
+      // the dang giu mot request moi hon cho cung dia chi.
+      if (inflight.get(key) === p) inflight.delete(key);
     });
 
   inflight.set(key, p);
@@ -125,7 +155,6 @@ export const apiRequest = async (path: string, options: RequestInit = {}) => {
 };
 
 const rawRequest = async (url: string, options: RequestInit = {}) => {
-
   const mergedHeaders: Record<string, string> = {
     ...getHeaders(),
     ...((options.headers as Record<string, string>) || {}),
@@ -143,3 +172,39 @@ const rawRequest = async (url: string, options: RequestInit = {}) => {
 
   return handleResponse(response);
 };
+
+// ---------------------------------------------------------------------------
+// Lay thong bao loi tu mot gia tri nem ra.
+//
+// Trong TypeScript che do strict, bien cua khoi catch co kieu unknown, vi
+// JavaScript cho phep nem ra BAT KY thu gi (chuoi, so, object...), khong chi
+// Error. Viet "catch (err: any)" roi doc thang err.message la bo qua dieu do:
+// neu thu duoc nem ra khong phai Error thi ta nhan undefined.
+//
+// Ham nay xu ly du cac truong hop that su gap trong du an:
+//   - Error chuan            -> err.message
+//   - Nem ra mot chuoi        -> chinh chuoi do
+//   - Loi tra ve tu backend   -> err.response.data.message
+// Khong khop cai nao thi tra ve cau mac dinh, de nguoi dung khong bao gio
+// nhin thay chu "undefined" tren man hinh.
+// ---------------------------------------------------------------------------
+export function getErrorMessage(
+  err: unknown,
+  fallback = "Đã có lỗi xảy ra, vui lòng thử lại.",
+): string {
+  if (err instanceof Error && err.message) return err.message;
+  if (typeof err === "string" && err.trim()) return err;
+
+  const shaped = err as {
+    message?: unknown;
+    response?: { data?: { message?: unknown } };
+  } | null;
+
+  const fromBackend = shaped?.response?.data?.message;
+  if (typeof fromBackend === "string" && fromBackend.trim()) return fromBackend;
+
+  const direct = shaped?.message;
+  if (typeof direct === "string" && direct.trim()) return direct;
+
+  return fallback;
+}

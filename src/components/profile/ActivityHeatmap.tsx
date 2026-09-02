@@ -10,14 +10,24 @@ const CELL = 11;
 const GAP = 3;
 const PITCH = CELL + GAP;
 const LEFT_LABEL = 30; // cho nhan Mon / Wed / Fri
-const TOP_LABEL = 18;  // cho nhan thang
+const TOP_LABEL = 18; // cho nhan thang
 
 // 5 muc nhu anh mau: trong -> dam dan
 const LEVEL_COLORS = ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"];
 
 const MONTHS_VI = [
-  "Th1", "Th2", "Th3", "Th4", "Th5", "Th6",
-  "Th7", "Th8", "Th9", "Th10", "Th11", "Th12",
+  "Th1",
+  "Th2",
+  "Th3",
+  "Th4",
+  "Th5",
+  "Th6",
+  "Th7",
+  "Th8",
+  "Th9",
+  "Th10",
+  "Th11",
+  "Th12",
 ];
 
 const dayKey = (d: Date) => {
@@ -38,7 +48,12 @@ interface Props {
 }
 
 export default function ActivityHeatmap({ days, total }: Props) {
-  const [hover, setHover] = useState<{ x: number; y: number; day: ActivityDay | null; date: string } | null>(null);
+  const [hover, setHover] = useState<{
+    x: number;
+    y: number;
+    day: ActivityDay | null;
+    date: string;
+  } | null>(null);
 
   const { weeks, monthLabels, width, height } = useMemo(() => {
     const byDate = new Map(days.map((d) => [d.date, d]));
@@ -59,14 +74,19 @@ export default function ActivityHeatmap({ days, total }: Props) {
     const start = shift(today, -364);
     start.setDate(start.getDate() - start.getDay());
 
-    const cols: { date: string; level: number; day: ActivityDay | null; inRange: boolean }[][] = [];
+    const cols: {
+      date: string;
+      level: number;
+      day: ActivityDay | null;
+      inRange: boolean;
+    }[][] = [];
     const labels: { x: number; text: string }[] = [];
     let lastMonth = -1;
 
     let cursor = new Date(start);
     let col = 0;
     while (cursor <= today) {
-      const week: typeof cols[number] = [];
+      const week: (typeof cols)[number] = [];
       for (let row = 0; row < 7; row++) {
         const cellDate = shift(cursor, row);
         const key = dayKey(cellDate);
@@ -112,7 +132,12 @@ export default function ActivityHeatmap({ days, total }: Props) {
 
       {/* Bieu do rong hon man hinh dien thoai -> cuon ngang trong khung rieng */}
       <div className="relative overflow-x-auto pb-1">
-        <svg width={width} height={height} role="img" aria-label={`Biểu đồ hoạt động: ${total} hoạt động trong 12 tháng qua`}>
+        <svg
+          width={width}
+          height={height}
+          role="img"
+          aria-label={`Biểu đồ hoạt động: ${total} hoạt động trong 12 tháng qua`}
+        >
           {monthLabels.map((l) => (
             <text
               key={l.text + l.x}
@@ -167,7 +192,7 @@ export default function ActivityHeatmap({ days, total }: Props) {
                   onMouseLeave={() => setHover(null)}
                 />
               );
-            })
+            }),
           )}
         </svg>
 
@@ -189,7 +214,12 @@ export default function ActivityHeatmap({ days, total }: Props) {
           <span
             key={c}
             className="inline-block rounded-sm"
-            style={{ width: CELL, height: CELL, background: c, border: "1px solid rgba(27,31,35,0.06)" }}
+            style={{
+              width: CELL,
+              height: CELL,
+              background: c,
+              border: "1px solid rgba(27,31,35,0.06)",
+            }}
           />
         ))}
         <span>Nhiều hơn</span>

@@ -1,5 +1,27 @@
 import { apiRequest } from "./apiHelper";
 
+// GET /certificates/verify/:code khong tra ve ban ghi Certificate day du ma mot
+// ban rut gon danh cho nguoi tra cuu cong khai - xem verifyCertificate trong
+// certificateController.
+export interface VerifyCertificateResponse {
+  valid: true;
+  certificate: {
+    certificateNumber: string;
+    student: string;
+    course: string;
+    completionDate: string;
+    issuedAt: string;
+    instructorName: string;
+    signedBy: string;
+  };
+}
+
+export interface LeaderboardRow {
+  student: { _id: string; name: string; avatar?: string };
+  totalPoints: number;
+  achievements: number;
+}
+
 export interface Certificate {
   _id: string;
   course: {
@@ -67,13 +89,13 @@ export const certificateService = {
     return apiRequest(`/certificates/${id}`);
   },
 
-  verifyCertificate: async (code: string): Promise<any> => {
+  verifyCertificate: async (code: string): Promise<VerifyCertificateResponse> => {
     return apiRequest(`/certificates/verify/${code}`);
   },
 
   updateCertificate: async (
     id: string,
-    data: { isPublic: boolean }
+    data: { isPublic: boolean },
   ): Promise<Certificate> => {
     return apiRequest(`/certificates/${id}`, {
       method: "PUT",
@@ -95,7 +117,9 @@ export const achievementService = {
     return apiRequest("/certificates/achievements/my-achievements");
   },
 
-  getUserPublicAchievements: async (userId: string): Promise<{
+  getUserPublicAchievements: async (
+    userId: string,
+  ): Promise<{
     totalAchievements: number;
     totalPoints: number;
     achievements: Achievement[];
@@ -103,7 +127,7 @@ export const achievementService = {
     return apiRequest(`/certificates/achievements/user/${userId}`);
   },
 
-  getLeaderboard: async (limit: number = 10): Promise<any[]> => {
+  getLeaderboard: async (limit: number = 10): Promise<LeaderboardRow[]> => {
     return apiRequest(`/certificates/achievements/leaderboard?limit=${limit}`);
   },
 };

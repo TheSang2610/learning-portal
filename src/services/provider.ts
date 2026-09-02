@@ -21,7 +21,10 @@ export const createProviderAdmin = async (formData: FormData): Promise<ProviderD
   });
 };
 
-export const updateProviderAdmin = async (id: string, formData: FormData): Promise<ProviderData> => {
+export const updateProviderAdmin = async (
+  id: string,
+  formData: FormData,
+): Promise<ProviderData> => {
   return apiRequest(`/providers/${id}`, {
     method: "PUT",
     body: formData,

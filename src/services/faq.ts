@@ -1,4 +1,4 @@
-import { apiRequest } from "./apiHelper"; 
+import { apiRequest } from "./apiHelper";
 
 export interface FaqItem {
   _id?: string;
@@ -10,13 +10,12 @@ export interface FaqItem {
 }
 
 export interface FaqData {
-  courseId?: string | null; 
+  courseId?: string | null;
   question: string;
   answer: string;
 }
 
 export const faqService = {
-
   getHomepageFaqs: async (): Promise<FaqItem[]> => {
     const res = await apiRequest("/faqs/homepage", { method: "GET" });
     return res.data; // Vì Backend trả về cấu trúc { success: true, count: ..., data: [...] }

@@ -156,7 +156,7 @@ export function suggestImprovements(
   scale: Scale,
   targetMin: number,
   subjects: SuggestInput[],
-  variant = 0
+  variant = 0,
 ): SuggestResult {
   const bySubject: Record<string, string> = {};
 
@@ -172,9 +172,9 @@ export function suggestImprovements(
   const room = (s: SuggestInput) => (top.gpa4 - s.gpa4) * s.credits;
 
   const orders: ((a: SuggestInput, b: SuggestInput) => number)[] = [
-    (a, b) => room(b) - room(a),      // it mon, moi mon nang nhieu
-    (a, b) => room(a) - room(b),      // nhieu mon, moi mon nang it
-    (a, b) => b.credits - a.credits,  // uu tien mon nhieu tin chi
+    (a, b) => room(b) - room(a), // it mon, moi mon nang nhieu
+    (a, b) => room(a) - room(b), // nhieu mon, moi mon nang it
+    (a, b) => b.credits - a.credits, // uu tien mon nhieu tin chi
   ];
 
   const sorted = valid

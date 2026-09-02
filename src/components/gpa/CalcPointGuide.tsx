@@ -37,13 +37,13 @@ export default function CalcPointGuide() {
       </div>
 
       <div className="relative mt-8 grid gap-8 pt-8 md:grid-cols-2 lg:grid-cols-4">
-          {/* Duong ke noi cac buoc, chay qua TAM cac vong tron so.
+        {/* Duong ke noi cac buoc, chay qua TAM cac vong tron so.
               Phan tu absolute dinh vi theo PADDING BOX cua khung cha, nen phai
               cong ca pt-8 (2rem) vao, khong thi duong ke nam lo lung phia tren. */}
-          <div
-            aria-hidden
-            className="absolute inset-x-0 top-[calc(2rem_+_18px)] hidden h-px bg-blue-600/30 lg:block"
-          />
+        <div
+          aria-hidden
+          className="absolute inset-x-0 top-[calc(2rem_+_18px)] hidden h-px bg-blue-600/30 lg:block"
+        />
 
         {STEPS.map((s, i) => (
           <div key={s.title} className="text-center">

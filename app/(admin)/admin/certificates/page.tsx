@@ -1,8 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { getErrorMessage } from "@/src/services/apiHelper";
 import {
-  Loader2, ChevronLeft, ChevronRight, Award, Ban, ShieldCheck, Copy, Check,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Award,
+  Ban,
+  ShieldCheck,
+  Copy,
+  Check,
 } from "lucide-react";
 
 import {
@@ -43,7 +51,7 @@ export default function AdminCertificatesPage() {
     try {
       setFetching(true);
       setError("");
-      const data: any = await getAllCertificatesAdmin({
+      const data = await getAllCertificatesAdmin({
         page,
         limit: PAGE_SIZE,
         isValid: validFilter === "" ? undefined : validFilter === "valid",
@@ -51,21 +59,28 @@ export default function AdminCertificatesPage() {
       setRows(Array.isArray(data?.certificates) ? data.certificates : []);
       setTotal(data?.pagination?.total ?? 0);
       setPages(data?.pagination?.pages ?? 1);
-    } catch (e: any) {
-      setError(e?.message || "Không tải được danh sách chứng chỉ");
+    } catch (e) {
+      setError(getErrorMessage(e, "Không tải được danh sách chứng chỉ"));
       setRows([]);
     } finally {
       setFetching(false);
     }
   }, [page, validFilter]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    // Goi qua mot vong microtask thay vi goi thang. Ham tai du lieu bat dau
+    // bang setLoading(true), nen goi thang la setState dong bo ngay trong than
+    // effect: React phai chay them mot vong ve lai truoc khi hien man hinh
+    // (rule react-hooks/set-state-in-effect canh bao dung cho nay). Hoan mot
+    // vong microtask thi mat thuong khong thay khac, ma vong ve thua het.
+    void Promise.resolve().then(load);
+  }, [load]);
 
   const revoke = async (c: Certificate) => {
     const ok = confirm(
       `Thu hồi chứng chỉ của "${c.student?.name || "học viên"}"?\n\n` +
-      `Số hiệu: ${c.certificateNumber || c._id}\n` +
-      `Chứng chỉ sẽ bị đánh dấu không hợp lệ và không xác thực được nữa.`
+        `Số hiệu: ${c.certificateNumber || c._id}\n` +
+        `Chứng chỉ sẽ bị đánh dấu không hợp lệ và không xác thực được nữa.`,
     );
     if (!ok) return;
     try {
@@ -73,8 +88,8 @@ export default function AdminCertificatesPage() {
       setError("");
       await revokeCertificateAdmin(c._id);
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Thu hồi thất bại");
+    } catch (e) {
+      setError(getErrorMessage(e, "Thu hồi thất bại"));
     } finally {
       setBusyId(null);
     }
@@ -106,7 +121,10 @@ export default function AdminCertificatesPage() {
       <div className="flex flex-wrap gap-3">
         <select
           value={validFilter}
-          onChange={(e) => { setValidFilter(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setValidFilter(e.target.value);
+            setPage(1);
+          }}
           className={selectCls}
         >
           <option value="">Mọi trạng thái</option>
@@ -124,7 +142,7 @@ export default function AdminCertificatesPage() {
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px]">
-            <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
+            <thead className="bg-slate-50 text-left text-xs font-bold tracking-wider text-slate-600 uppercase">
               <tr>
                 <th className="px-4 py-3">Học viên</th>
                 <th className="px-4 py-3">Khóa học</th>
@@ -143,7 +161,10 @@ export default function AdminCertificatesPage() {
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-16 text-center text-sm text-slate-500">
+                  <td
+                    colSpan={6}
+                    className="px-4 py-16 text-center text-sm text-slate-500"
+                  >
                     Chưa có chứng chỉ nào được cấp.
                   </td>
                 </tr>
@@ -173,7 +194,9 @@ export default function AdminCertificatesPage() {
                           {c.course?.title || c.courseName || "(đã xóa)"}
                         </p>
                         {c.instructorName && (
-                          <p className="truncate text-xs text-slate-500">GV: {c.instructorName}</p>
+                          <p className="truncate text-xs text-slate-500">
+                            GV: {c.instructorName}
+                          </p>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -192,11 +215,15 @@ export default function AdminCertificatesPage() {
                         )}
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-700">
-                        {c.scorePercentage != null ? `${c.scorePercentage}%` : c.finalScore ?? "--"}
+                        {c.scorePercentage != null
+                          ? `${c.scorePercentage}%`
+                          : (c.finalScore ?? "--")}
                       </td>
                       <td className="px-4 py-3 text-xs text-slate-600">
                         {c.issuedAt || c.completionDate
-                          ? new Date((c.issuedAt || c.completionDate) as string).toLocaleDateString("vi-VN")
+                          ? new Date(
+                              (c.issuedAt || c.completionDate) as string,
+                            ).toLocaleDateString("vi-VN")
                           : "--"}
                       </td>
                       <td className="px-4 py-3">
@@ -231,7 +258,9 @@ export default function AdminCertificatesPage() {
 
         {pages > 1 && (
           <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
-            <p className="text-xs text-slate-600">Trang {page} / {pages}</p>
+            <p className="text-xs text-slate-600">
+              Trang {page} / {pages}
+            </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}

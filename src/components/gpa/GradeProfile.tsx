@@ -33,8 +33,7 @@ const STORAGE_KEY = "grade-profile";
 const uid = () => Math.random().toString(36).slice(2);
 
 /** Hoc ky thu i -> "Học kì 1 năm 1", "Học kì 2 năm 1", "Học kì 1 năm 2"... */
-const semesterName = (i: number) =>
-  `Học kì ${(i % 2) + 1} năm ${Math.floor(i / 2) + 1}`;
+const semesterName = (i: number) => `Học kì ${(i % 2) + 1} năm ${Math.floor(i / 2) + 1}`;
 
 const newSubject = (n: number): Subject => ({
   id: uid(),
@@ -57,7 +56,13 @@ const initial = (): Semester[] => [
     id: uid(),
     name: semesterName(0),
     subjects: [
-      { id: uid(), name: "Môn học số 1 (môn học mẫu)", credits: "2", letter: "B", improved: "" },
+      {
+        id: uid(),
+        name: "Môn học số 1 (môn học mẫu)",
+        credits: "2",
+        letter: "B",
+        improved: "",
+      },
     ],
   },
 ];
@@ -120,7 +125,7 @@ export default function GradeProfile() {
         const old = from.grades.find((g) => g.letter === letter);
         if (!old) return "";
         return to.grades.reduce((best, g) =>
-          Math.abs(g.gpa4 - old.gpa4) < Math.abs(best.gpa4 - old.gpa4) ? g : best
+          Math.abs(g.gpa4 - old.gpa4) < Math.abs(best.gpa4 - old.gpa4) ? g : best,
         ).letter;
       };
 
@@ -132,11 +137,11 @@ export default function GradeProfile() {
             letter: remap(sub.letter),
             improved: remap(sub.improved),
           })),
-        }))
+        })),
       );
       setScaleId(nextId);
     },
-    [scaleId]
+    [scaleId],
   );
 
   const resetProfile = useCallback(() => {
@@ -157,12 +162,14 @@ export default function GradeProfile() {
             ? s
             : {
                 ...s,
-                subjects: s.subjects.map((x) => (x.id === subId ? { ...x, ...patch } : x)),
-              }
-        )
+                subjects: s.subjects.map((x) =>
+                  x.id === subId ? { ...x, ...patch } : x,
+                ),
+              },
+        ),
       );
     },
-    []
+    [],
   );
 
   // ---- Tinh toan ----
@@ -235,7 +242,7 @@ export default function GradeProfile() {
         id: sub.id,
         credits: num(sub.credits),
         gpa4: gpa4Of(scale, sub.improved || sub.letter),
-      }))
+      })),
     );
 
     return suggestImprovements(scale, target.min, flat, variant);
@@ -256,7 +263,6 @@ export default function GradeProfile() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-12">
-
       {/* ============ THANG DIEM + RESET ============ */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <select
@@ -287,7 +293,7 @@ export default function GradeProfile() {
         <div className="relative">
           <TargetIcon
             size={15}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-blue-600"
+            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-blue-600"
           />
           <select
             value={targetId}
@@ -348,11 +354,11 @@ export default function GradeProfile() {
                 value={sem.name}
                 onChange={(e) =>
                   setSemesters((s) =>
-                    s.map((x) => (x.id === sem.id ? { ...x, name: e.target.value } : x))
+                    s.map((x) => (x.id === sem.id ? { ...x, name: e.target.value } : x)),
                   )
                 }
                 aria-label={`Tên học kỳ ${si + 1}`}
-                className="w-full rounded-lg border border-transparent px-2 py-1 text-lg font-extrabold text-slate-900 outline-none transition hover:border-slate-300 focus:border-blue-600"
+                className="w-full rounded-lg border border-transparent px-2 py-1 text-lg font-extrabold text-slate-900 transition outline-none hover:border-slate-300 focus:border-blue-600"
               />
 
               {/* --- Danh sach mon --- */}
@@ -372,7 +378,7 @@ export default function GradeProfile() {
                           onChange={(e) =>
                             patchSubject(sem.id, sub.id, { name: e.target.value })
                           }
-                          className="min-w-0 flex-1 rounded-lg border border-transparent px-2 py-1 text-sm font-bold text-slate-900 outline-none transition hover:border-slate-300 focus:border-blue-600"
+                          className="min-w-0 flex-1 rounded-lg border border-transparent px-2 py-1 text-sm font-bold text-slate-900 transition outline-none hover:border-slate-300 focus:border-blue-600"
                         />
                         <button
                           type="button"
@@ -387,8 +393,8 @@ export default function GradeProfile() {
                                         x.subjects.length > 1
                                           ? x.subjects.filter((y) => y.id !== sub.id)
                                           : [newSubject(1)],
-                                    }
-                              )
+                                    },
+                              ),
                             )
                           }
                           aria-label={`Xóa ${sub.name || `môn học số ${i + 1}`}`}
@@ -478,9 +484,15 @@ export default function GradeProfile() {
                     setSemesters((s) =>
                       s.map((x) =>
                         x.id === sem.id
-                          ? { ...x, subjects: [...x.subjects, newSubject(x.subjects.length + 1)] }
-                          : x
-                      )
+                          ? {
+                              ...x,
+                              subjects: [
+                                ...x.subjects,
+                                newSubject(x.subjects.length + 1),
+                              ],
+                            }
+                          : x,
+                      ),
                     )
                   }
                   className={outlineBtn}
@@ -528,8 +540,7 @@ export default function GradeProfile() {
           )}
         </div>
       </div>
-
-      </div>
+    </div>
   );
 }
 

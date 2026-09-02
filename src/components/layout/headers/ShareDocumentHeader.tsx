@@ -6,24 +6,24 @@ import HeaderUserMenu from "./HeaderUserMenu";
 
 export default function ShareDocumentHeader() {
   return (
-    <div className="bg-white border-b">
-      <div className="max-w-7xl mx-auto h-16 px-6 flex items-center justify-between">
+    <div className="border-b bg-white">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <div className="flex items-center gap-10">
-          <Link href="/share-document" className="flex items-center gap-2.5 shrink-0">
+          <Link href="/share-document" className="flex shrink-0 items-center gap-2.5">
             <FileUp size={22} className="text-blue-600" />
             <span className="text-lg font-extrabold text-slate-900">
               Chia sẻ tài liệu
             </span>
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-8 text-[15px] text-slate-700">
-            <Link href="/blog" className="hover:text-blue-600 transition">
+          <nav className="hidden items-center gap-8 text-[15px] text-slate-700 lg:flex">
+            <Link href="/blog" className="transition hover:text-blue-600">
               Cẩm nang môn học
             </Link>
-            <Link href="/courses" className="hover:text-blue-600 transition">
+            <Link href="/courses" className="transition hover:text-blue-600">
               Khóa học
             </Link>
-            <Link href="/help" className="hover:text-blue-600 transition">
+            <Link href="/help" className="transition hover:text-blue-600">
               Trợ giúp
             </Link>
           </nav>

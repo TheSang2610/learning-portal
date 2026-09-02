@@ -2,20 +2,14 @@
 
 :root {
   color-scheme: light;
+
+  /* Chi giu hai bien nay: body ben duoi doc chung. Cac bien --primary,
+     --primary-hover, --card-bg, --border-color, --shadow cung khoi @theme inline
+     da bo - khong file nao dung toi, va --primary con dat sai he mau (tim
+     #6366f1 trong khi ca giao dien dung xanh #0056d2), ai lo dung phai la lech
+     mau ngay. */
   --background: #f8fafc;
   --foreground: #0f172a;
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --card-bg: rgba(255, 255, 255, 0.8);
-  --border-color: rgba(226, 232, 240, 0.8);
-  --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-hover: var(--primary-hover);
 }
 
 /* Da BO block @media (prefers-color-scheme: dark).
@@ -27,32 +21,29 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
   min-height: 100vh;
 }
 
-/* Glassmorphism utility */
-.glass {
-  background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow);
-}
-
-/* Premium gradient background */
-.gradient-bg {
-  background: radial-gradient(circle at top left, rgba(99, 102, 241, 0.1), transparent 40%),
-              radial-gradient(circle at bottom right, rgba(168, 85, 247, 0.1), transparent 40%);
-}
-
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
+/* Dung o hop thoai sua danh gia trong /admin/reviews. */
 .animate-fade-in {
   animation: fadeIn 0.5s ease-out forwards;
 }
-
