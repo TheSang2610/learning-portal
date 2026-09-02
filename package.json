@@ -1,20 +1,34 @@
 {
   "name": "learning-portal-backend",
   "version": "1.0.0",
-  "description": "<p align=\"center\"><a href=\"https://laravel.com\" target=\"_blank\"><img src=\"https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg\" width=\"400\" alt=\"Laravel Logo\"></a></p>",
+  "description": "API cho cong hoc truc tuyen aLMS: khoa hoc, bai hoc, bai kiem tra, chung chi, bai viet va tai lieu chia se.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
     "build": "echo 'No build step required'",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test \"src/**/*.test.js\"",
+    "test:filter": "node src/utils/contentFilter.test.js",
+    "check:cloudinary": "node src/utils/checkCloudinary.js",
+    "check:db": "node src/utils/checkDb.js"
   },
-  "keywords": [],
+  "keywords": [
+    "lms",
+    "express",
+    "mongoose",
+    "api"
+  ],
   "author": "",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.10.0",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",

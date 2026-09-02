@@ -1,5 +1,8 @@
 node_modules/
-.env
+# Chan moi bien the (.env.local, .env.production...) chu khong chi .env.
+# Nhung PHAI chua .env.example lai - do la file mau, khong co bi mat nao.
+.env*
+!.env.example
 .DS_Store
 dist/
 build/
