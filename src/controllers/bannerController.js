@@ -1,6 +1,6 @@
 const Banner = require('../models/Banner');
 const { uploadToCloudinary } = require('../utils/uploadCloud'); 
-const cloudinary = require('../config/cloudinary');
+const layCloudinary = require('../config/cloudinary');
 
 /**
  * 1. LẤY DANH SÁCH BANNER (Lọc theo từng Page & đồng bộ format)
@@ -92,7 +92,7 @@ const updateBanner = async (req, res) => {
 
     if (req.file) {
       if (banner.cloudinaryId) {
-        await cloudinary.uploader.destroy(banner.cloudinaryId);
+        await layCloudinary().uploader.destroy(banner.cloudinaryId, { invalidate: true });
       }
       
       const result = await uploadToCloudinary(req.file.buffer, 'image');
@@ -133,7 +133,7 @@ const deleteBanner = async (req, res) => {
     }
 
     if (banner.cloudinaryId) {
-      await cloudinary.uploader.destroy(banner.cloudinaryId);
+      await layCloudinary().uploader.destroy(banner.cloudinaryId, { invalidate: true });
     }
 
     await Banner.findByIdAndDelete(id);

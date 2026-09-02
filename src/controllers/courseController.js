@@ -74,7 +74,7 @@ const createCourse = async (req, res) => {
 const getCourses = async (req, res) => {
     try {
         const courses = await Course.find({ isPublished: true })
-            .populate('instructor', 'name email')
+            .populate('instructor', 'name')
             .populate('category', 'name')
             .populate('provider' );
         res.json(courses);
@@ -87,7 +87,7 @@ const getCourses = async (req, res) => {
 const getCourseById = async (req, res) => {
     try {
         const course = await Course.findById(req.params.id)
-            .populate('instructor', 'name email')
+            .populate('instructor', 'name')
             .populate('category', 'name')
             .populate('provider')
             .populate('lessons')
@@ -110,7 +110,7 @@ const getCourseById = async (req, res) => {
 const getCourseBySlug = async (req, res) => {
     try {
         const course = await Course.findOne({ slug: req.params.slug, isPublished: true })
-            .populate('instructor', 'name email')
+            .populate('instructor', 'name')
             .populate('category', 'name')
             .populate('provider')
             .populate('lessons')
