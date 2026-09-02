@@ -1,5 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const { capIdHopLe } = require('../middlewares/idHopLe');
+
+// Chan id sai dinh dang -> 404 thay vi 500. Xem middlewares/idHopLe.js
+capIdHopLe(router);
 
 const {
     createCourse,
@@ -19,10 +23,9 @@ const {
     getAdminNewReleasesCourses
 } = require('../controllers/courseController');
 
-const { protect, instructor } = require('../middlewares/authMiddleware');
-// Mẹo: Nếu bạn có middleware riêng để check admin (ví dụ: admin), hãy import vào đây. 
-// Nếu chưa có, tạm thời dùng 'protect' để check đăng nhập nhé.
+const { protect, instructor, admin } = require('../middlewares/authMiddleware');
 const { uploadCloud } = require('../utils/uploadCloud');
+const { datCache } = require('../middlewares/cacheControl');
 
 /* ==========================================================================
    1. ROUTE TĨNH (STATIC ROUTES) - Bắt buộc nằm trên cùng để tránh xung đột :id
@@ -30,12 +33,15 @@ const { uploadCloud } = require('../utils/uploadCloud');
 
 // 🎯 THÊM: 3 Route lấy toàn bộ danh sách đổ vào view quản lý của Admin
 // URL tạo thành: /api/courses/admin/courses/home-sections/... (Khớp chuẩn service FE của bạn)
-router.get('/admin/courses/home-sections/most-popular', protect, getAdminPopularCourses);
-router.get('/admin/courses/home-sections/trending-now', protect, getAdminTrendingCourses);
-router.get('/admin/courses/home-sections/new-releases', protect, getAdminNewReleasesCourses);
+// Ba duong nay tra ve email giang vien va chi ba man hinh quan tri goi den.
+// Truoc day chi co `protect`: bat ky tai khoan hoc vien nao dang nhap cung lay
+// duoc danh sach email do.
+router.get('/admin/courses/home-sections/most-popular', protect, admin, getAdminPopularCourses);
+router.get('/admin/courses/home-sections/trending-now', protect, admin, getAdminTrendingCourses);
+router.get('/admin/courses/home-sections/new-releases', protect, admin, getAdminNewReleasesCourses);
 
 // Lấy cấu trúc 3 mục trang chủ (Most Popular, Trending, New Releases) - Public cho học viên
-router.get('/home-sections', getHomeSections);
+router.get('/home-sections', datCache(120), getHomeSections);
 
 // Lấy danh sách khóa học của Instructor/Admin đang đăng nhập
 router.get('/instructor', protect, instructor, getInstructorCourses);
@@ -49,7 +55,7 @@ router.get('/slug/:slug', getCourseBySlug);
    ========================================================================== */
 
 router.route('/')
-    .get(getCourses)                                                              
+    .get(datCache(60), getCourses)                                                              
     .post(protect, instructor, uploadCloud.single('thumbnail'), createCourse);  
 
 
@@ -61,7 +67,7 @@ router.route('/')
 router.put('/:id/publish', protect, publishCourse);
 
 // API cập nhật nhãn điều khiển trang chủ dành riêng cho Admin (Bật/Tắt Popular, Trending, New)
-router.patch('/:id/tags', updateCourseTags);
+router.patch('/:id/tags', protect, admin, updateCourseTags);
 
 
 /* ==========================================================================

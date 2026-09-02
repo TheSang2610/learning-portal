@@ -1,5 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const { capIdHopLe } = require('../middlewares/idHopLe');
+
+// Chan id sai dinh dang -> 404 thay vi 500. Xem middlewares/idHopLe.js
+capIdHopLe(router);
+const { datCache } = require('../middlewares/cacheControl');
 
 // 🎯 SỬA TẠI ĐÂY: Thay authorize bằng instructor
 const { protect, instructor } = require('../middlewares/authMiddleware');
@@ -13,7 +18,7 @@ const {
 } = require('../controllers/faqController');
 
 // 🔓 API CÔNG KHAI (Học viên xem)
-router.get('/homepage', getHomepageFaqs);      
+router.get('/homepage', datCache(300), getHomepageFaqs);      
 router.get('/course/:courseId', getFaqsByCourse); 
 
 // 🔒 API BẢO MẬT (Admin/Instructor quản lý)

@@ -8,6 +8,7 @@ const Course = require('../models/Course');
 const Lesson = require('../models/Lesson');
 const Enrollment = require('../models/Enrollment');
 const Certificate = require('../models/Certificate');
+const { phanTrang, timGan } = require('../utils/truyVan');
 const Review = require('../models/Review');
 const Quiz = require('../models/Quiz');
 
@@ -76,24 +77,24 @@ const getDashboardStatistics = async (req, res) => {
 // @route   GET /api/admin/users
 const getAllUsers = async (req, res) => {
     try {
-        const { role, status, page = 1, limit = 10, search } = req.query;
-        const skip = (page - 1) * limit;
+        const { role, status, search } = req.query;
+        const { trang, soDong, boQua } = phanTrang(req.query);
 
         const filter = {};
         if (role) filter.role = role;
         if (status !== undefined) filter.status = status === 'true';
         if (search) {
             filter.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } },
-                { userId: { $regex: search, $options: 'i' } }
+                { name: timGan(search) },
+                { email: timGan(search) },
+                { userId: timGan(search) }
             ];
         }
 
         const users = await User.find(filter)
             .select('-password')
-            .limit(limit * 1)
-            .skip(skip)
+            .limit(soDong)
+            .skip(boQua)
             .sort({ createdAt: -1 });
 
         const total = await User.countDocuments(filter);
@@ -102,9 +103,9 @@ const getAllUsers = async (req, res) => {
             users,
             pagination: {
                 total,
-                page: parseInt(page),
-                pages: Math.ceil(total / limit),
-                limit: parseInt(limit)
+                page: trang,
+                pages: Math.ceil(total / soDong),
+                limit: soDong
             }
         });
     } catch (error) {
@@ -303,6 +304,9 @@ const updateUserAdmin = async (req, res) => {
                 return res.status(400).json({ message: 'Password phải có ít nhất 6 ký tự' });
             }
             user.password = await bcrypt.hash(password, await bcrypt.genSalt(10));
+            // Admin dat lai mat khau cho nguoi khac thuong la vi tai khoan do
+            // co van de - cac phien dang mo phai bi cat, khong thi viec dat lai
+            // gan nhu vo nghia. Xem ghi chu o model User.
         }
 
         if (name !== undefined) user.name = name;
@@ -326,23 +330,23 @@ const updateUserAdmin = async (req, res) => {
 // @route   GET /api/admin/courses
 const getAllCourses = async (req, res) => {
     try {
-        const { isPublished, page = 1, limit = 10, search } = req.query;
-        const skip = (page - 1) * limit;
+        const { isPublished, search } = req.query;
+        const { trang, soDong, boQua } = phanTrang(req.query);
 
         const filter = {};
         if (isPublished !== undefined) filter.isPublished = isPublished === 'true';
         if (search) {
             filter.$or = [
-                { title: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } }
+                { title: timGan(search) },
+                { description: timGan(search) }
             ];
         }
 
         const courses = await Course.find(filter)
             .populate('instructor', 'name email')
             .populate('category', 'name')
-            .limit(limit * 1)
-            .skip(skip)
+            .limit(soDong)
+            .skip(boQua)
             .sort({ createdAt: -1 });
 
         const total = await Course.countDocuments(filter);
@@ -351,9 +355,9 @@ const getAllCourses = async (req, res) => {
             courses,
             pagination: {
                 total,
-                page: parseInt(page),
-                pages: Math.ceil(total / limit),
-                limit: parseInt(limit)
+                page: trang,
+                pages: Math.ceil(total / soDong),
+                limit: soDong
             }
         });
     } catch (error) {
@@ -365,11 +369,13 @@ const getAllCourses = async (req, res) => {
 // @route   GET /api/admin/courses/:id
 const getCourseDetailsAdmin = async (req, res) => {
     try {
+        // KHONG populate 'students': Course khong he co truong do (chi co
+        // `studentsCount`), nen dong ay lam duong nay nem loi voi MOI khoa hoc.
+        // So nguoi hoc lay tu Enrollment o duoi, dung nguon that.
         const course = await Course.findById(req.params.id)
             .populate('instructor', 'name email')
             .populate('category', 'name')
-            .populate('lessons')
-            .populate('students', 'name email');
+            .populate('lessons');
 
         if (!course) {
             return res.status(404).json({ message: 'Khóa học không tìm thấy' });
@@ -454,8 +460,8 @@ const deleteCourseAdmin = async (req, res) => {
 // @route   GET /api/admin/enrollments
 const getAllEnrollments = async (req, res) => {
     try {
-        const { status, page = 1, limit = 10, courseId, studentId } = req.query;
-        const skip = (page - 1) * limit;
+        const { status, courseId, studentId } = req.query;
+        const { trang, soDong, boQua } = phanTrang(req.query);
 
         const filter = {};
         if (status) filter.status = status;
@@ -464,9 +470,9 @@ const getAllEnrollments = async (req, res) => {
 
         const enrollments = await Enrollment.find(filter)
             .populate('course', 'title')
-            .populate('student', 'name email')
-            .limit(limit * 1)
-            .skip(skip)
+            .populate('student', 'name email avatar')
+            .limit(soDong)
+            .skip(boQua)
             .sort({ createdAt: -1 });
 
         const total = await Enrollment.countDocuments(filter);
@@ -475,9 +481,9 @@ const getAllEnrollments = async (req, res) => {
             enrollments,
             pagination: {
                 total,
-                page: parseInt(page),
-                pages: Math.ceil(total / limit),
-                limit: parseInt(limit)
+                page: trang,
+                pages: Math.ceil(total / soDong),
+                limit: soDong
             }
         });
     } catch (error) {
@@ -489,10 +495,17 @@ const getAllEnrollments = async (req, res) => {
 // @route   GET /api/admin/enrollments/:id
 const getEnrollmentDetailsAdmin = async (req, res) => {
     try {
+        // Hai loi o ban cu, ca hai deu o ngay day:
+        //
+        //   .populate('student')          -> khong gioi han truong nen keo ve
+        //     CA chuoi bam mat khau (User khong dat select:false cho password).
+        //     Chua lo ra ngoai bao gio vi dong duoi day lam ca ham nem loi truoc.
+        //   .populate('completedLessons') -> Enrollment khong co truong nay
+        //     (ten that la `lessonProgress`), nen duong nay tra 500 voi MOI ban ghi.
         const enrollment = await Enrollment.findById(req.params.id)
             .populate('course')
-            .populate('student')
-            .populate('completedLessons');
+            .populate('student', 'name email avatar')
+            .populate('lessonProgress.lesson', 'title');
 
         if (!enrollment) {
             return res.status(404).json({ message: 'Enrollment không tìm thấy' });
@@ -536,8 +549,8 @@ const updateEnrollmentStatus = async (req, res) => {
 // @route   GET /api/admin/certificates
 const getAllCertificates = async (req, res) => {
     try {
-        const { isValid, page = 1, limit = 10, studentId, courseId } = req.query;
-        const skip = (page - 1) * limit;
+        const { isValid, studentId, courseId } = req.query;
+        const { trang, soDong, boQua } = phanTrang(req.query);
 
         const filter = {};
         if (isValid !== undefined) filter.isValid = isValid === 'true';
@@ -547,8 +560,8 @@ const getAllCertificates = async (req, res) => {
         const certificates = await Certificate.find(filter)
             .populate('student', 'name email')
             .populate('course', 'title')
-            .limit(limit * 1)
-            .skip(skip)
+            .limit(soDong)
+            .skip(boQua)
             .sort({ issuedAt: -1 });
 
         const total = await Certificate.countDocuments(filter);
@@ -557,9 +570,9 @@ const getAllCertificates = async (req, res) => {
             certificates,
             pagination: {
                 total,
-                page: parseInt(page),
-                pages: Math.ceil(total / limit),
-                limit: parseInt(limit)
+                page: trang,
+                pages: Math.ceil(total / soDong),
+                limit: soDong
             }
         });
     } catch (error) {
@@ -613,19 +626,22 @@ const revokeCertificate = async (req, res) => {
 // @route   GET /api/admin/reviews
 const getAllReviews = async (req, res) => {
     try {
-        const { page = 1, limit = 10, courseId, studentId, rating } = req.query;
-        const skip = (page - 1) * limit;
+        const { courseId, studentId, rating } = req.query;
+        const { trang, soDong, boQua } = phanTrang(req.query);
 
         const filter = {};
         if (courseId) filter.course = courseId;
         if (studentId) filter.student = studentId;
-        if (rating) filter.rating = parseInt(rating);
+        // parseInt('abc') ra NaN, ma Mongo tu choi NaN o truong so -> 500.
+        // Chi loc khi that su la mot diem hop le 1..5.
+        const diem = Number.parseInt(rating, 10);
+        if (Number.isInteger(diem) && diem >= 1 && diem <= 5) filter.rating = diem;
 
         const reviews = await Review.find(filter)
             .populate('course', 'title')
             .populate('student', 'name email avatar')
-            .limit(limit * 1)
-            .skip(skip)
+            .limit(soDong)
+            .skip(boQua)
             .sort({ createdAt: -1 });
 
         const total = await Review.countDocuments(filter);
@@ -634,9 +650,9 @@ const getAllReviews = async (req, res) => {
             reviews,
             pagination: {
                 total,
-                page: parseInt(page),
-                pages: Math.ceil(total / limit),
-                limit: parseInt(limit)
+                page: trang,
+                pages: Math.ceil(total / soDong),
+                limit: soDong
             }
         });
     } catch (error) {

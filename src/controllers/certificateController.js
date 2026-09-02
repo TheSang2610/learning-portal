@@ -4,6 +4,7 @@ const Enrollment = require('../models/Enrollment');
 const Course = require('../models/Course');
 const User = require('../models/User');
 const crypto = require('crypto');
+const { phanTrang } = require('../utils/truyVan');
 
 // @desc    Tạo chứng chỉ khi hoàn thành khóa học
 // @route   POST /api/certificates
@@ -259,7 +260,8 @@ const getUserPublicAchievements = async (req, res) => {
 // @route   GET /api/achievements/leaderboard
 const getLeaderboard = async (req, res) => {
     try {
-        const limit = parseInt(req.query.limit) || 10;
+        // $limit cua Mongo tu choi so <= 0 -> ?limit=-1 tung lam duong nay tra 500.
+        const { soDong: limit } = phanTrang(req.query, { macDinh: 10, toiDa: 50 });
 
         const leaderboard = await Achievement.aggregate([
             {

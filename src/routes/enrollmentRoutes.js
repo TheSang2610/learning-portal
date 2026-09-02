@@ -1,5 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const { capIdHopLe } = require('../middlewares/idHopLe');
+
+// Chan id sai dinh dang -> 404 thay vi 500. Xem middlewares/idHopLe.js
+capIdHopLe(router);
 
 const {
     getMyEnrolledCourses,

@@ -2,6 +2,7 @@ const Review = require('../models/Review');
 const Course = require('../models/Course');
 const User = require('../models/User');
 const Enrollment = require('../models/Enrollment'); // 🔥 Import thêm model Enrollment để kiểm tra tiến độ
+const { phanTrang } = require('../utils/truyVan');
 
 // @desc    Tạo review mới cho khóa học (Chống Seeding & Review rác)
 // @route   POST /api/reviews
@@ -95,7 +96,8 @@ const createReview = async (req, res) => {
 const getCourseReviews = async (req, res) => {
     try {
         const { courseId } = req.params;
-        const { sortBy = 'newest', page = 1, limit = 10 } = req.query;
+        const { sortBy = 'newest' } = req.query;
+        const { trang, soDong, boQua } = phanTrang(req.query);
 
         const course = await Course.findById(courseId);
         if (!course) {
@@ -108,21 +110,19 @@ const getCourseReviews = async (req, res) => {
         else if (sortBy === 'helpful') sortOption = { helpful: -1 };
         else sortOption = { createdAt: -1 };
 
-        const skip = (page - 1) * limit;
-
         const reviews = await Review.find({ course: courseId })
             .populate('student', 'name avatar')
             .sort(sortOption)
-            .skip(skip)
-            .limit(parseInt(limit));
+            .skip(boQua)
+            .limit(soDong);
 
         const totalReviews = await Review.countDocuments({ course: courseId });
 
         res.json({
             reviews,
             totalReviews,
-            totalPages: Math.ceil(totalReviews / limit),
-            currentPage: parseInt(page)
+            totalPages: Math.ceil(totalReviews / soDong),
+            currentPage: trang
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -304,24 +304,23 @@ const updateCourseRating = async (courseId) => {
 // @route   GET /api/reviews/admin/all
 const getAllReviewsForAdmin = async (req, res) => {
     try {
-        const { page = 1, limit = 50 } = req.query;
-        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const { trang, soDong, boQua } = phanTrang(req.query, { macDinh: 50 });
 
         // Lấy tất cả review, nạp kèm thông tin student (name, email, avatar) và course (title)
         const reviews = await Review.find({})
             .populate('student', 'name email avatar')
             .populate('course', 'title')
             .sort({ createdAt: -1 }) // Mới nhất xếp lên đầu
-            .skip(skip)
-            .limit(parseInt(limit));
+            .skip(boQua)
+            .limit(soDong);
 
         const totalReviews = await Review.countDocuments({});
 
         res.json({
             reviews,
             totalReviews,
-            totalPages: Math.ceil(totalReviews / limit),
-            currentPage: parseInt(page)
+            totalPages: Math.ceil(totalReviews / soDong),
+            currentPage: trang
         });
     } catch (error) {
         res.status(500).json({ message: error.message });

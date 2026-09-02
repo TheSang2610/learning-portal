@@ -1,5 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const { capIdHopLe } = require('../middlewares/idHopLe');
+
+// Chan id sai dinh dang -> 404 thay vi 500. Xem middlewares/idHopLe.js
+capIdHopLe(router);
 
 const {
     createReview,
@@ -13,7 +17,7 @@ const {
     getReviewStats
 } = require('../controllers/reviewController');
 
-const { protect } = require('../middlewares/authMiddleware');
+const { protect, admin } = require('../middlewares/authMiddleware');
 
 // @route   POST /api/reviews
 // @desc    Tạo review mới
@@ -28,10 +32,11 @@ router.get('/course/:courseId', getCourseReviews);
 router.get('/stats/:courseId', getReviewStats);
 
 // ==========================================================================
-// 🔥 ROUTE MỚI: Lấy toàn bộ reviews hệ thống dành cho Admin (Không bọc protect)
+// Lấy toàn bộ reviews hệ thống dành cho Admin.
+// Trả về email của mọi học viên nên BẮT BUỘC phải qua protect + admin.
 // @route   GET /api/reviews/admin/all
 // ==========================================================================
-router.get('/admin/all', getAllReviewsForAdmin);
+router.get('/admin/all', protect, admin, getAllReviewsForAdmin);
 
 // @route   GET /api/reviews/:id
 // @desc    Lấy review theo ID
