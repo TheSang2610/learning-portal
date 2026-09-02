@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev, TheSang]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 20 het han ho tro tu thang 4/2025. Giu cung so voi Dockerfile
+      # de cho nao cung chay tren mot phien ban.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - run: npm ci
+
+      # Tach tung buoc de log chi thang vao dung cho vo,
+      # thay vi mot buoc "verify" duy nhat khong biet hong o dau.
+      - name: Format
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build

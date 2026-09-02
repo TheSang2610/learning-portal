@@ -1,0 +1,20 @@
+# Xem ghi chu day du o backend/.dockerignore.
+# Ben frontend .env.local chi co NEXT_PUBLIC_API_URL (von se lo ra trinh duyet),
+# nhung van loai ra cho nhat quan: dia chi API luc build truyen bang --build-arg.
+.env
+.env.*
+!.env.example
+
+node_modules
+.next
+npm-debug.log*
+*.log
+
+.git
+.gitignore
+.github
+
+Dockerfile
+.dockerignore
+.vscode
+.idea

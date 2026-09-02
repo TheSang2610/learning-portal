@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...tru file mau. ".env*" o tren chan luon ca no, ma file mau thi PHAI duoc
+# commit - khong thi nguoi moi clone ve khong biet du an can nhung bien nao.
+!.env.example
 
 # vercel
 .vercel

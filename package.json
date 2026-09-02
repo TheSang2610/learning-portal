@@ -1,12 +1,18 @@
 {
-  "name": "my-app",
+  "name": "learning-portal-frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint --max-warnings 0",
+    "lint:fix": "eslint --fix",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run build",
+    "prepare": "husky"
   },
   "dependencies": {
     "hls.js": "^1.6.16",
@@ -23,20 +29,36 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.4.1",
+    "prettier": "^3.9.6",
+    "prettier-plugin-tailwindcss": "^0.8.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
-  "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).",
-  "main": "index.js",
+  "description": "Giao dien cong hoc truc tuyen aLMS, dung Next.js App Router.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/shuangsangghom999/learning-portal-frontend.git"
   },
-  "keywords": [],
+  "keywords": [
+    "lms",
+    "nextjs",
+    "react"
+  ],
   "author": "",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/shuangsangghom999/learning-portal-frontend/issues"
   },
-  "homepage": "https://github.com/shuangsangghom999/learning-portal-frontend#readme"
+  "homepage": "https://github.com/shuangsangghom999/learning-portal-frontend#readme",
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write"
+    ]
+  }
 }
