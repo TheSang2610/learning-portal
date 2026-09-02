@@ -26,3 +26,25 @@ const THO =
  */
 export const GOC_API = THO.replace(/\/+$/, "").replace(/\/api$/, "");
 
+/**
+ * Địa chỉ mà TRÌNH DUYỆT dùng để gọi backend.
+ *
+ * Khác `GOC_API` ở trên: đó là địa chỉ thật của backend, dùng cho mã chạy trên
+ * máy chủ (Server Component, route handler). Còn trình duyệt gọi qua đường
+ * tương đối, để Next chuyển tiếp sang backend — xem `rewrites()` trong
+ * next.config.ts.
+ *
+ * VÌ SAO PHẢI VÒNG QUA NEXT: token nằm trong cookie. Nếu trình duyệt gọi thẳng
+ * `api.mien-khac.com` trong khi trang đang ở `app.vercel.app` thì cookie đó là
+ * cookie bên thứ ba — Safari chặn sẵn, Chrome đang bỏ dần, và đăng nhập sẽ
+ * hỏng mà không có thông báo gì. Đi qua Next thì trình duyệt chỉ thấy một
+ * miền duy nhất, cookie là bên thứ nhất, chạy trên mọi trình duyệt.
+ *
+ * Thêm một cái lợi: không còn request nào của trình duyệt là cross-origin nữa,
+ * nên CORS không còn nằm trên đường đi của người dùng thật.
+ *
+ * Đặt NEXT_PUBLIC_GOI_THANG_BACKEND=1 để quay lại cách gọi thẳng (ví dụ khi
+ * chạy giao diện mà không có máy chủ Next đứng trước).
+ */
+export const GOC_API_TRINH_DUYET =
+  process.env.NEXT_PUBLIC_GOI_THANG_BACKEND === "1" ? GOC_API : "";

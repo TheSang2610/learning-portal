@@ -33,6 +33,7 @@ import type { User } from "@/src/services/userApi";
 import { useNguoiDungLuu } from "@/src/hooks/nguoiDungLuu";
 import AnhDaiDien from "@/src/components/ui/AnhDaiDien";
 import SafeImage from "@/src/components/ui/SafeImage";
+import { DAI_MAT_KHAU_TOI_THIEU } from "@/src/services/quyDinh";
 
 // Truoc day cho nay khai lai mot ban AdminUser rieng, gan trung voi User cua
 // tang service nhung khai status la bat buoc. Dung chung mot kieu de khi backend
@@ -199,12 +200,12 @@ export default function AdminUsersPage() {
       setFormError("Tên và email là bắt buộc");
       return;
     }
-    if (!editingId && form.password.length < 6) {
-      setFormError("Mật khẩu phải có ít nhất 6 ký tự");
+    if (!editingId && form.password.length < DAI_MAT_KHAU_TOI_THIEU) {
+      setFormError(`Mật khẩu phải có ít nhất ${DAI_MAT_KHAU_TOI_THIEU} ký tự`);
       return;
     }
-    if (editingId && form.password && form.password.length < 6) {
-      setFormError("Mật khẩu mới phải có ít nhất 6 ký tự");
+    if (editingId && form.password && form.password.length < DAI_MAT_KHAU_TOI_THIEU) {
+      setFormError(`Mật khẩu mới phải có ít nhất ${DAI_MAT_KHAU_TOI_THIEU} ký tự`);
       return;
     }
 
@@ -623,7 +624,7 @@ export default function AdminUsersPage() {
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   className={inputCls}
                   placeholder={
-                    editingId ? "Không đổi" : "Tối thiểu 6 ký tự"
+                    editingId ? "Không đổi" : `Tối thiểu ${DAI_MAT_KHAU_TOI_THIEU} ký tự`
                   }
                 />
               </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { googleLogin } from "@/src/services/api";
 
 export default function GoogleCallbackInner() {
   const searchParams = useSearchParams();
@@ -21,19 +22,32 @@ export default function GoogleCallbackInner() {
       setStatus("Finishing Google sign-in...");
 
       try {
-        const response = await fetch(`/api/auth/google/token?code=${encodeURIComponent(code)}`);
+        // Buoc 1: doi ma lay id_token. Buoc nay PHAI o may chu vi no can
+        // GOOGLE_CLIENT_SECRET.
+        const response = await fetch(
+          `/api/auth/google/token?code=${encodeURIComponent(code)}`,
+        );
         const data = await response.json();
 
-        if (!response.ok) {
+        if (!response.ok || !data.idToken) {
           console.error(data);
           setStatus("Google login failed. Please try again.");
           return;
         }
 
+        // Buoc 2: trinh duyet tu goi backend.
+        //
+        // Phai la trinh duyet chu khong phai may chu Next, vi backend dat
+        // cookie dang nhap trong phan hoi - may chu Next goi thay thi cookie
+        // ve tay may chu Next, trinh duyet chang nhan duoc gi.
+        const user = await googleLogin(data.idToken);
+
         if (typeof window !== "undefined" && window.opener) {
+          // Cookie da duoc dat cho ca mien nay nen tab chinh dung duoc ngay,
+          // khong can chuyen token qua postMessage nua.
           window.opener.postMessage(
-            { type: "google-auth-success", payload: { user: data.user, token: data.token } },
-            window.location.origin
+            { type: "google-auth-success", payload: { user } },
+            window.location.origin,
           );
           setStatus("Login successful! Closing...");
           setTimeout(() => {
@@ -42,10 +56,6 @@ export default function GoogleCallbackInner() {
           return;
         }
 
-        if (data.token) {
-          localStorage.setItem("authToken", data.token);
-        }
-        localStorage.setItem("userInfo", JSON.stringify(data.user));
         window.dispatchEvent(new Event("userInfoChanged"));
         setStatus("Login successful! Redirecting...");
 
@@ -62,9 +72,9 @@ export default function GoogleCallbackInner() {
   }, [code, error, router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12">
-      <div className="w-full max-w-lg rounded-3xl bg-white p-10 shadow-2xl ring-1 ring-slate-200 text-center">
-        <h1 className="text-2xl font-semibold mb-4">Google sign-in</h1>
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12">
+      <div className="w-full max-w-lg rounded-3xl bg-white p-10 text-center shadow-2xl ring-1 ring-slate-200">
+        <h1 className="mb-4 text-2xl font-semibold">Google sign-in</h1>
         <p className="text-sm text-slate-600">{status}</p>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { xoaPhien } from "@/src/services/apiHelper";
 import { useNguoiDungLuu } from "@/src/hooks/nguoiDungLuu";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -109,7 +110,10 @@ export default function InstructorPanelLayout({
   }, [router]);
 
   const logoutHandler = () => {
-    localStorage.removeItem("userInfo");
+    // Truoc day cho nay chi xoa userInfo, KHONG xoa authToken - da "dang xuat"
+    // ma getHeaders van gan token cu vao moi request, nguoi ke tiep dung may
+    // van con la giang vien voi backend. xoaPhien() lam du bon viec, xem apiHelper.
+    xoaPhien();
     router.push("/");
   };
 

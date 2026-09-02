@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { xoaPhien } from "@/src/services/apiHelper";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -245,7 +246,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [router]);
 
   const logoutHandler = () => {
-    localStorage.removeItem("userInfo");
+    // Truoc day cho nay chi xoa userInfo, KHONG xoa authToken - da "dang xuat"
+    // ma getHeaders van gan token cu vao moi request, nguoi ke tiep dung may
+    // van con la admin voi backend. xoaPhien() lam du bon viec, xem apiHelper.
+    xoaPhien();
     router.push("/");
   };
 

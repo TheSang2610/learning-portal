@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { xoaPhien } from "@/src/services/apiHelper";
 import Link from "next/link";
 import {
   User as UserIcon,
@@ -10,22 +11,44 @@ import {
   CheckCircle2,
   AlertCircle,
   Link2,
+  Upload,
+  X,
 } from "lucide-react";
 import SettingRow, { SettingCard } from "@/src/components/settings/SettingRow";
+import { DAI_MAT_KHAU_TOI_THIEU } from "@/src/services/quyDinh";
 import {
   getMyProfile,
   updateUserProfileApi,
+  uploadAvatarApi,
   deactivateMyAccount,
   getProvidersApi,
   type User,
   type Provider,
   type UpdateProfilePayload,
 } from "@/src/services/userApi";
-import { getMyEnrolledCourses } from "@/src/services/enrollment.api";
+import {
+  getMyEnrolledCourses,
+  type EnrolledCourseItem,
+  type EnrollmentStatus,
+} from "@/src/services/enrollment.api";
 
 type TabKey = "personal" | "security" | "courses";
 
-const NAV: { group: string; items: { key: TabKey; label: string; icon: typeof UserIcon }[] }[] = [
+// Giu dung mot bo luat voi may chu (backend/src/routes/userRoutes.js). Lech
+// nhau la nguoi dung chon duoc anh ma tai len lai bi tu choi.
+const MAX_ANH_MB = 5;
+const MIME_ANH = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+const doiKichThuoc = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+};
+
+const NAV: {
+  group: string;
+  items: { key: TabKey; label: string; icon: typeof UserIcon }[];
+}[] = [
   {
     group: "Tài khoản",
     items: [
@@ -87,10 +110,14 @@ export default function SettingsPage() {
         const p = await getMyProfile();
         setUser(p);
         if (p.role === "instructor") {
-          getProvidersApi().then(setProviders).catch(() => {});
+          getProvidersApi()
+            .then(setProviders)
+            .catch(() => {});
         }
       } catch (e) {
-        setLoadError(e instanceof Error ? e.message : "Không tải được thông tin tài khoản");
+        setLoadError(
+          e instanceof Error ? e.message : "Không tải được thông tin tài khoản",
+        );
       } finally {
         setLoading(false);
       }
@@ -128,7 +155,31 @@ export default function SettingsPage() {
         setSaving(false);
       }
     },
-    [syncLocal]
+    [syncLocal],
+  );
+
+  // Tai anh len di duong rieng (multipart) chu khong qua save() vi save() gui
+  // JSON. Phan con lai - cap nhat man hinh, dong bo localStorage, bao thanh
+  // cong - giong het nhau.
+  const saveAvatarFile = useCallback(
+    async (file: File) => {
+      setSaving(true);
+      setMsg(null);
+      try {
+        const updated = await uploadAvatarApi(file);
+        setUser(updated);
+        syncLocal(updated);
+        setEditing(null);
+        setMsg({ ok: true, text: "Đã cập nhật ảnh đại diện." });
+        return true;
+      } catch (e) {
+        setMsg({ ok: false, text: e instanceof Error ? e.message : "Tải ảnh thất bại." });
+        return false;
+      } finally {
+        setSaving(false);
+      }
+    },
+    [syncLocal],
   );
 
   if (loading) {
@@ -160,12 +211,13 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-[#f8fafc] py-8">
       <div className="mx-auto max-w-6xl px-4">
         <div className="grid gap-6 lg:grid-cols-12">
-
           {/* ============ THANH DIEU HUONG ============ */}
           <aside className="lg:col-span-4 xl:col-span-3">
             <div className="lg:sticky lg:top-[120px]">
               <div className="mb-4 hidden lg:block">
-                <h1 className="text-lg font-extrabold text-slate-900">Cài đặt tài khoản</h1>
+                <h1 className="text-lg font-extrabold text-slate-900">
+                  Cài đặt tài khoản
+                </h1>
                 <p className="mt-1 text-sm text-slate-600">
                   Quản lý hồ sơ, bảo mật và khóa học của bạn.
                 </p>
@@ -178,7 +230,7 @@ export default function SettingsPage() {
               >
                 {NAV.map((section) => (
                   <div key={section.group} className="contents lg:block">
-                    <h3 className="hidden px-1 pb-2 text-xs font-bold uppercase tracking-wide text-slate-500 lg:block">
+                    <h3 className="hidden px-1 pb-2 text-xs font-bold tracking-wide text-slate-500 uppercase lg:block">
                       {section.group}
                     </h3>
                     <div className="contents lg:block lg:overflow-hidden lg:rounded-2xl lg:border lg:border-slate-200 lg:bg-white lg:shadow-sm">
@@ -194,7 +246,7 @@ export default function SettingsPage() {
                               setMsg(null);
                             }}
                             aria-current={active ? "page" : undefined}
-                            className={`flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition lg:w-full lg:rounded-none lg:border-0 lg:border-b lg:border-slate-100 lg:px-5 lg:py-3.5 lg:last:border-b-0 ${
+                            className={`flex shrink-0 items-center gap-2.5 rounded-full border px-4 py-2 text-sm font-semibold whitespace-nowrap transition lg:w-full lg:rounded-none lg:border-0 lg:border-b lg:border-slate-100 lg:px-5 lg:py-3.5 lg:last:border-b-0 ${
                               active
                                 ? "border-blue-600 bg-blue-600 text-white lg:border-slate-100 lg:bg-blue-50 lg:text-blue-700"
                                 : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 lg:border-slate-100"
@@ -248,6 +300,7 @@ export default function SettingsPage() {
                 toggle={toggle}
                 saving={saving}
                 save={save}
+                saveAvatarFile={saveAvatarFile}
               />
             )}
 
@@ -289,16 +342,56 @@ function PersonalTab({
   toggle,
   saving,
   save,
-}: TabProps & { providers: Provider[] }) {
+  saveAvatarFile,
+}: TabProps & {
+  providers: Provider[];
+  saveAvatarFile: (file: File) => Promise<boolean>;
+}) {
   const [name, setName] = useState(user.name ?? "");
   const [fullname, setFullname] = useState(user.fullname ?? "");
   const [birthday, setBirthday] = useState(toDateInput(user.birthday));
   const [bio, setBio] = useState(user.bio ?? "");
   const [phone, setPhone] = useState(user.phone ?? "");
   const [avatar, setAvatar] = useState(user.avatar ?? "");
+  const [anhChon, setAnhChon] = useState<File | null>(null);
+  const [xemTruoc, setXemTruoc] = useState("");
+  const [loiAnh, setLoiAnh] = useState("");
   const [providerId, setProviderId] = useState(
-    typeof user.provider === "object" && user.provider ? user.provider._id : (user.provider ?? "")
+    typeof user.provider === "object" && user.provider
+      ? user.provider._id
+      : (user.provider ?? ""),
   );
+
+  // Doi hoac roi trang -> tra lai bo nho cua anh xem truoc. Khong lam thi moi
+  // lan chon anh khac lai bo lai mot blob trong bo nho tab.
+  useEffect(() => {
+    if (!xemTruoc) return;
+    return () => URL.revokeObjectURL(xemTruoc);
+  }, [xemTruoc]);
+
+  // Kiem ngay tren trinh duyet bang dung mot bo luat voi may chu, de nguoi
+  // dung biet lien thay vi cho tai het 5MB roi moi bi tu choi.
+  const chonAnh = (f: File | null) => {
+    setLoiAnh("");
+    setAnhChon(null);
+    setXemTruoc("");
+    if (!f) return;
+
+    if (!MIME_ANH.includes(f.type)) {
+      setLoiAnh("Chỉ nhận ảnh JPG, PNG, WEBP hoặc GIF.");
+      return;
+    }
+    if (f.size > MAX_ANH_MB * 1024 * 1024) {
+      setLoiAnh(`Ảnh tối đa ${MAX_ANH_MB}MB. Ảnh bạn chọn nặng ${doiKichThuoc(f.size)}.`);
+      return;
+    }
+
+    setAnhChon(f);
+    setXemTruoc(URL.createObjectURL(f));
+  };
+
+  // Chon file thi day file len (multipart), khong thi luu duong dan (JSON).
+  const luuAnh = () => (anhChon ? saveAvatarFile(anhChon) : save({ avatar }));
 
   const providerName =
     typeof user.provider === "object" && user.provider ? user.provider.name : "";
@@ -408,33 +501,103 @@ function PersonalTab({
         >
           <FieldForm
             saving={saving}
-            onSave={() => save({ avatar })}
+            saveLabel={anhChon ? "Tải ảnh lên" : "Lưu"}
+            onSave={luuAnh}
             onCancel={() => toggle("avatar")}
-            hint="Dán đường dẫn ảnh. Hệ thống chưa có chức năng tải ảnh lên, nên hãy dùng link từ nơi khác."
+            hint={`Ảnh JPG, PNG, WEBP hoặc GIF, tối đa ${MAX_ANH_MB}MB. Ảnh được cắt vuông về 400×400 khi tải lên.`}
           >
+            {anhChon ? (
+              /* Da chon file -> an han o dan duong dan, de khong phai doan
+                 cai nao se duoc dung khi bam Luu. */
+              <div className="flex items-center gap-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={xemTruoc}
+                  alt="Xem trước ảnh vừa chọn"
+                  className="h-20 w-20 shrink-0 rounded-full border border-white object-cover shadow-sm"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-slate-900">
+                    {anhChon.name}
+                  </p>
+                  <p className="text-xs text-slate-600">{doiKichThuoc(anhChon.size)}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => chonAnh(null)}
+                  aria-label="Bỏ ảnh đã chọn"
+                  className="rounded-lg p-1.5 text-slate-500 transition hover:bg-white hover:text-slate-900"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <>
+                <label
+                  htmlFor="anh-dai-dien"
+                  className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-white px-4 py-6 text-center transition hover:border-blue-500 hover:bg-blue-50/40"
+                >
+                  <Upload size={22} className="text-slate-500" />
+                  <span className="mt-2 text-sm font-semibold text-slate-800">
+                    Bấm để chọn ảnh từ máy
+                  </span>
+                  <span className="mt-0.5 text-xs text-slate-600">
+                    JPG, PNG, WEBP hoặc GIF &middot; tối đa {MAX_ANH_MB}MB
+                  </span>
+                </label>
+
+                <div className="my-4 flex items-center gap-3">
+                  <span className="h-px flex-1 bg-slate-200" />
+                  <span className="text-xs font-medium text-slate-500">
+                    hoặc dán đường dẫn
+                  </span>
+                  <span className="h-px flex-1 bg-slate-200" />
+                </div>
+
+                <input
+                  className={inputCls}
+                  value={avatar}
+                  placeholder="https://..."
+                  onChange={(e) => setAvatar(e.target.value)}
+                />
+                {avatar.trim() && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={avatar}
+                    alt="Xem trước ảnh đại diện"
+                    className="mt-3 h-20 w-20 rounded-full border border-slate-200 object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                )}
+              </>
+            )}
+
             <input
-              className={inputCls}
-              value={avatar}
-              placeholder="https://..."
-              onChange={(e) => setAvatar(e.target.value)}
-              autoFocus
+              id="anh-dai-dien"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="hidden"
+              onChange={(e) => chonAnh(e.target.files?.[0] ?? null)}
             />
-            {avatar.trim() && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={avatar}
-                alt="Xem trước ảnh đại diện"
-                className="mt-3 h-20 w-20 rounded-full border border-slate-200 object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
+
+            {loiAnh && (
+              <p
+                role="alert"
+                className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+              >
+                {loiAnh}
+              </p>
             )}
           </FieldForm>
         </SettingRow>
       </SettingCard>
 
-      <SettingCard title="Liên hệ" desc="Thông tin dùng để liên lạc và định danh tài khoản.">
+      <SettingCard
+        title="Liên hệ"
+        desc="Thông tin dùng để liên lạc và định danh tài khoản."
+      >
         <SettingRow
           label="Số điện thoại"
           value={user.phone}
@@ -537,8 +700,11 @@ function SecurityTab({
       setMsg({ ok: false, text: "Vui lòng nhập mật khẩu hiện tại." });
       return false;
     }
-    if (next.length < 6) {
-      setMsg({ ok: false, text: "Mật khẩu mới phải có ít nhất 6 ký tự." });
+    if (next.length < DAI_MAT_KHAU_TOI_THIEU) {
+      setMsg({
+        ok: false,
+        text: `Mật khẩu mới phải có ít nhất ${DAI_MAT_KHAU_TOI_THIEU} ký tự.`,
+      });
       return false;
     }
     if (next !== confirm) {
@@ -559,19 +725,23 @@ function SecurityTab({
     setMsg(null);
     try {
       await deactivateMyAccount(delPassword);
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("userInfo");
-      window.dispatchEvent(new Event("userInfoChanged"));
+      xoaPhien();
       window.location.href = "/";
     } catch (e) {
-      setMsg({ ok: false, text: e instanceof Error ? e.message : "Không thể vô hiệu hóa." });
+      setMsg({
+        ok: false,
+        text: e instanceof Error ? e.message : "Không thể vô hiệu hóa.",
+      });
       setDeleting(false);
     }
   };
 
   return (
     <>
-      <SettingCard title="Đăng nhập" desc="Quản lý mật khẩu dùng để đăng nhập vào tài khoản.">
+      <SettingCard
+        title="Đăng nhập"
+        desc="Quản lý mật khẩu dùng để đăng nhập vào tài khoản."
+      >
         <SettingRow
           label="Mật khẩu"
           value={hasPassword ? "••••••••" : "Chưa đặt mật khẩu"}
@@ -604,8 +774,8 @@ function SecurityTab({
                 </div>
               ) : (
                 <p className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-                  Tài khoản của bạn đăng nhập bằng Google và chưa có mật khẩu.
-                  Đặt mật khẩu để đăng nhập được bằng email.
+                  Tài khoản của bạn đăng nhập bằng Google và chưa có mật khẩu. Đặt mật
+                  khẩu để đăng nhập được bằng email.
                 </p>
               )}
               <div>
@@ -669,8 +839,8 @@ function SecurityTab({
           >
             <div className="space-y-3">
               <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                Dữ liệu học tập của bạn được giữ nguyên, nhưng bạn sẽ không đăng nhập
-                lại được cho tới khi quản trị viên mở khóa.
+                Dữ liệu học tập của bạn được giữ nguyên, nhưng bạn sẽ không đăng nhập lại
+                được cho tới khi quản trị viên mở khóa.
               </div>
               <div>
                 <label className={labelCls}>Nhập mật khẩu để xác nhận</label>
@@ -711,28 +881,16 @@ function SecurityTab({
    TAB: KHOA HOC CUA TOI
    ========================================================================== */
 
-interface Enrollment {
-  _id: string;
-  course: {
-    _id: string;
-    title: string;
-    slug?: string;
-    thumbnail?: string;
-  } | null;
-  totalProgress: number;
-  status: "active" | "completed" | "dropped";
-  createdAt: string;
-  lastAccessedAt?: string;
-}
-
-const STATUS_LABEL: Record<Enrollment["status"], { text: string; cls: string }> = {
+// Kieu nay truoc day khai lai o day mot ban rieng. Nay dung chung voi tang
+// service de khi backend doi hinh dang thi chi phai sua mot cho.
+const STATUS_LABEL: Record<EnrollmentStatus, { text: string; cls: string }> = {
   active: { text: "Đang học", cls: "bg-blue-50 text-blue-700" },
   completed: { text: "Hoàn thành", cls: "bg-green-50 text-green-800" },
   dropped: { text: "Đã dừng", cls: "bg-slate-100 text-slate-700" },
 };
 
 function CoursesTab() {
-  const [rows, setRows] = useState<Enrollment[] | null>(null);
+  const [rows, setRows] = useState<EnrolledCourseItem[] | null>(null);
   const [err, setErr] = useState("");
 
   useEffect(() => {
@@ -761,7 +919,9 @@ function CoursesTab() {
     return (
       <SettingCard title="Khóa học đã đăng ký">
         <div className="px-5 py-10 text-center">
-          <p className="text-sm font-semibold text-slate-900">Chưa đăng ký khóa học nào</p>
+          <p className="text-sm font-semibold text-slate-900">
+            Chưa đăng ký khóa học nào
+          </p>
           <p className="mt-1 text-sm text-slate-600">
             Các khóa học bạn đăng ký sẽ xuất hiện tại đây.
           </p>
@@ -806,16 +966,23 @@ function CoursesTab() {
                   {/* Khoa hoc co the da bi xoa nhung ban ghi dang ky van con */}
                   {r.course?.title ?? "Khóa học không còn tồn tại"}
                 </h4>
-                <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${s.cls}`}>
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${s.cls}`}
+                >
                   {s.text}
                 </span>
               </div>
 
               <div className="mt-2 flex items-center gap-2.5">
                 <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200">
-                  <div className="h-full rounded-full bg-blue-600" style={{ width: `${pct}%` }} />
+                  <div
+                    className="h-full rounded-full bg-blue-600"
+                    style={{ width: `${pct}%` }}
+                  />
                 </div>
-                <span className="shrink-0 text-xs font-semibold text-slate-700">{pct}%</span>
+                <span className="shrink-0 text-xs font-semibold text-slate-700">
+                  {pct}%
+                </span>
               </div>
 
               <p className="mt-1.5 text-xs text-slate-600">

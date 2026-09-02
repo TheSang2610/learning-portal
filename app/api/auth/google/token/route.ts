@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -12,13 +12,17 @@ export async function GET(req: Request) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
-  // 🌟 SỬA ĐỔI 1: Ưu tiên lấy GOOGLE_REDIRECT_URI từ file .env 
+  // 🌟 SỬA ĐỔI 1: Ưu tiên lấy GOOGLE_REDIRECT_URI từ file .env
   // Nếu deploy lên Vercel không điền biến này, nó sẽ tự động lấy domain hiện tại của Vercel làm phương án dự phòng (fallback)
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI ||
+  const redirectUri =
+    process.env.GOOGLE_REDIRECT_URI ||
     `${process.env.GOOGLE_ORIGIN || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")}/auth/callback`;
 
   if (!clientId || !clientSecret) {
-    return NextResponse.json({ error: "Missing Google OAuth credentials" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Missing Google OAuth credentials" },
+      { status: 500 },
+    );
   }
 
   const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
@@ -38,56 +42,34 @@ export async function GET(req: Request) {
   const tokenData = await tokenResponse.json();
 
   if (!tokenResponse.ok) {
-    return NextResponse.json({ error: "Token exchange failed", details: tokenData }, { status: 500 });
+    return NextResponse.json(
+      { error: "Token exchange failed", details: tokenData },
+      { status: 500 },
+    );
   }
 
-  const userInfoResponse = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-    headers: {
-      Authorization: `Bearer ${tokenData.access_token}`,
-    },
-  });
-
-  const userInfo = await userInfoResponse.json();
-
-  // 🌟 SỬA ĐỔI 2: Khớp tên biến với file .env của bạn
-  // Thay thế việc tìm process.env.BACKEND_URL thành biến đúng: process.env.NEXT_PUBLIC_BACKEND_URL
-  const rawBackendUrl =
-    process.env.BACKEND_URL ||
-    process.env.NEXT_PUBLIC_BACKEND_URL ||
-    process.env.NEXT_PUBLIC_API_URL ||
-    "http://localhost:5000";
-  const backendUrl = rawBackendUrl.replace(/\/+$/, "").replace(/\/api$/, "");
-  const backendGoogleAuthPath = process.env.BACKEND_GOOGLE_AUTH_PATH || "/api/users/google";
-
-  const googleUserPayload = {
-    googleId: userInfo.sub,
-    name: userInfo.name,
-    email: userInfo.email,
-    picture: userInfo.picture,
-    provider: "google",
-    role: "student",
-  };
-
-  let finalUser = userInfo;
-
-   try {
-    const backendResponse = await fetch(`${backendUrl}${backendGoogleAuthPath}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(googleUserPayload),
-    });
-
-    if (backendResponse.ok) {
-      finalUser = await backendResponse.json();
-    }
-  } catch (error) {
-    console.warn("Google backend request failed:", error);
+  // id_token la mot khang dinh CO CHU KY cua Google ve danh tinh nguoi dung.
+  // Day la thu duy nhat can chuyen tiep: backend tu kiem chu ky va tu doc
+  // email tu do.
+  if (!tokenData.id_token) {
+    return NextResponse.json({ error: "Google khong tra ve id_token" }, { status: 500 });
   }
 
-  const { token, ...userData } = finalUser;
-
-  return NextResponse.json({
-    user: userData,        
-    token: token || null    
-  });
+  // KHONG goi backend tu day nua.
+  //
+  // Truoc day buoc doi ma chay o may chu Next, roi may chu Next goi tiep sang
+  // backend. Hai van de:
+  //
+  //   1. Backend dat cookie dang nhap trong phan hoi, nhung phan hoi do ve
+  //      may chu Next chu khong ve trinh duyet - nen trinh duyet khong bao gio
+  //      nhan duoc cookie.
+  //   2. De may chu Next goi thay, backend phai chap nhan mot than request
+  //      kieu {googleId, email} khong kem chung cu gi. Nhanh do la mot cua hau:
+  //      ai cung POST duoc {"email":"admin@gmail.com"} de lay token admin.
+  //      Nhanh do da bi xoa khoi backend.
+  //
+  // Nay chi tra id_token ve trinh duyet, trinh duyet tu goi backend. Backend
+  // kiem chu ky Google roi dat cookie thang cho trinh duyet - dung mot duong
+  // voi nut "Dang nhap bang Google" o trang chu.
+  return NextResponse.json({ idToken: tokenData.id_token });
 }

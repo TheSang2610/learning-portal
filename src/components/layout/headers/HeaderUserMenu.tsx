@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { xoaPhien } from "@/src/services/apiHelper";
 import { ChevronDown, User, Settings, LogOut } from "lucide-react";
 import AnhDaiDien from "@/src/components/ui/AnhDaiDien";
 import { useEffect, useRef, useState } from "react";
@@ -65,8 +66,7 @@ export default function HeaderUserMenu() {
   }, []);
 
   const logout = () => {
-    localStorage.removeItem("userInfo");
-    localStorage.removeItem("authToken");
+    xoaPhien();
     setUser(null);
     window.location.href = "/";
   };

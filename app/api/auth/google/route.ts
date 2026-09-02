@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-export async function GET(req: Request) {
-  const origin = process.env.GOOGLE_ORIGIN ;
+export async function GET(_req: Request) {
+  const origin = process.env.GOOGLE_ORIGIN;
   const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${origin}/auth/callback`;
   const clientId = process.env.GOOGLE_CLIENT_ID;
 

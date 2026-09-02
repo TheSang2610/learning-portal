@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, ChangeEvent, FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { getErrorMessage } from "@/src/services/apiHelper";
+import Image from "next/image";
 import { loginUser, registerUser } from "@/src/services/api";
+import { DAI_MAT_KHAU_TOI_THIEU } from "@/src/services/quyDinh";
 
 interface AuthModalProps {
   open: boolean;
@@ -13,7 +15,6 @@ interface AuthModalProps {
 const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
 
 export default function AuthModal({ open, onClose }: AuthModalProps) {
-  const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -68,12 +69,9 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
       // Gui email da chuan hoa, khong gui nguyen chuoi nguoi dung go
       const data = await loginUser({ email, password: loginData.password });
 
-      if (data.token) {
-        localStorage.setItem("authToken", data.token);
-      }
-
-      const { token, ...userWithoutToken } = data;
-      localStorage.setItem("userInfo", JSON.stringify(userWithoutToken));
+      // Token nam trong cookie httpOnly do may chu dat, khong con trong than
+      // phan hoi. localStorage chi giu phan thong tin de hien thi.
+      localStorage.setItem("userInfo", JSON.stringify(data));
 
       window.dispatchEvent(new Event("userInfoChanged"));
       alert("Đăng nhập thành công");
@@ -82,8 +80,8 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
       setTimeout(() => {
         window.location.reload();
       }, 500);
-    } catch (error: any) {
-      setError(error.message || "Đăng nhập thất bại");
+    } catch (error) {
+      setError(getErrorMessage(error, "Đăng nhập thất bại"));
     } finally {
       setLoading(false);
     }
@@ -111,20 +109,15 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
         return;
       }
 
-      if (registerData.password.length < 6) {
-        setError("Mật khẩu phải có ít nhất 6 ký tự");
+      if (registerData.password.length < DAI_MAT_KHAU_TOI_THIEU) {
+        setError(`Mật khẩu phải có ít nhất ${DAI_MAT_KHAU_TOI_THIEU} ký tự`);
         setLoading(false);
         return;
       }
 
       const data = await registerUser({ ...registerData, name, email });
 
-      if (data.token) {
-        localStorage.setItem("authToken", data.token);
-      }
-
-      const { token, ...userWithoutToken } = data;
-      localStorage.setItem("userInfo", JSON.stringify(userWithoutToken));
+      localStorage.setItem("userInfo", JSON.stringify(data));
 
       window.dispatchEvent(new Event("userInfoChanged"));
       alert("Đăng ký thành công");
@@ -133,8 +126,8 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
       setTimeout(() => {
         window.location.reload();
       }, 500);
-    } catch (error: any) {
-      setError(error.message || "Đăng ký thất bại");
+    } catch (error) {
+      setError(getErrorMessage(error, "Đăng ký thất bại"));
     } finally {
       setLoading(false);
     }
@@ -152,7 +145,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
     const popup = window.open(
       "/api/auth/google",
       "googleSignIn",
-      `width=${width},height=${height},left=${left},top=${top}`
+      `width=${width},height=${height},left=${left},top=${top}`,
     );
 
     if (!popup) {
@@ -171,11 +164,11 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
         const { type, payload } = e.data || {};
 
         if (type === "google-auth-success") {
-          const { user, token } = payload;
+          const { user } = payload;
 
-          if (token) {
-            localStorage.setItem("authToken", token);
-          }
+          // Khong con nhan token qua postMessage: cua so bat len da dang nhap
+          // voi may chu roi, va cookie httpOnly duoc dat cho ca mien nay nen
+          // tab chinh dung duoc ngay.
           localStorage.setItem("userInfo", JSON.stringify(user));
 
           console.log("✅ Google login success");
@@ -222,17 +215,17 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-full bg-slate-100 p-2 text-slate-600 transition hover:bg-slate-200"
+          className="absolute top-4 right-4 rounded-full bg-slate-100 p-2 text-slate-600 transition hover:bg-slate-200"
           aria-label="Close auth modal"
         >
           ×
         </button>
 
-        <h2 className="text-3xl font-bold text-center mb-6">
+        <h2 className="mb-6 text-center text-3xl font-bold">
           {isLogin ? "Đăng nhập" : "Đăng ký"}
         </h2>
 
-        <div className="flex bg-slate-100 rounded-2xl p-1 mb-6">
+        <div className="mb-6 flex rounded-2xl bg-slate-100 p-1">
           <button
             type="button"
             onClick={() => {
@@ -261,7 +254,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600">
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-600">
             {error}
           </div>
         )}
@@ -272,12 +265,22 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
           disabled={loading}
           className="mb-4 flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
         >
-          <img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google logo" className="h-5 w-5" />
+          <Image
+            src="https://www.svgrepo.com/show/355037/google.svg"
+            alt="Google logo"
+            width={20}
+            height={20}
+            className="h-5 w-5"
+          />
           Tiếp tục với Google
         </button>
 
         {isLogin ? (
-          <form onSubmit={handleLoginSubmit} className="space-y-4" onClick={(e) => e.stopPropagation()}>
+          <form
+            onSubmit={handleLoginSubmit}
+            className="space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <input
               type="email"
               name="email"
@@ -285,7 +288,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               value={loginData.email}
               onChange={handleLoginChange}
               required
-              className="w-full rounded-2xl border border-slate-300 p-3 text-black placeholder:text-slate-500 outline-none transition focus:border-blue-600"
+              className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
             />
             <input
               type="password"
@@ -294,7 +297,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               value={loginData.password}
               onChange={handleLoginChange}
               required
-              className="w-full rounded-2xl border border-slate-300 p-3 text-black placeholder:text-slate-500 outline-none transition focus:border-blue-600"
+              className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
             />
             <button
               type="submit"
@@ -305,7 +308,11 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
             </button>
           </form>
         ) : (
-          <form onSubmit={handleRegisterSubmit} className="space-y-4" onClick={(e) => e.stopPropagation()}>
+          <form
+            onSubmit={handleRegisterSubmit}
+            className="space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <input
               type="text"
               name="name"
@@ -313,7 +320,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               value={registerData.name}
               onChange={handleRegisterChange}
               required
-              className="w-full rounded-2xl border border-slate-300 p-3 text-black placeholder:text-slate-500 outline-none transition focus:border-blue-600"
+              className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
             />
             <input
               type="email"
@@ -322,7 +329,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               value={registerData.email}
               onChange={handleRegisterChange}
               required
-              className="w-full rounded-2xl border border-slate-300 p-3 text-black placeholder:text-slate-500 outline-none transition focus:border-blue-600"
+              className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
             />
             <input
               type="password"
@@ -331,8 +338,8 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               value={registerData.password}
               onChange={handleRegisterChange}
               required
-              minLength={6}
-              className="w-full rounded-2xl border border-slate-300 p-3 text-black placeholder:text-slate-500 outline-none transition focus:border-blue-600"
+              minLength={DAI_MAT_KHAU_TOI_THIEU}
+              className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
             />
             <button
               type="submit"

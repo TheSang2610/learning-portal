@@ -1,4 +1,4 @@
-import { GOC_API as API_ORIGIN } from "./diaChiApi";
+import { GOC_API_TRINH_DUYET as API_ORIGIN } from "./diaChiApi";
 
 const resolveApiUrl = (path: string) => {
   if (/^https?:\/\//i.test(path)) {
@@ -13,20 +13,51 @@ const resolveApiUrl = (path: string) => {
   return `${API_ORIGIN}/api${normalizedPath}`;
 };
 
-export const getHeaders = () => {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+/**
+ * Khong con gan Authorization o day nua.
+ *
+ * Token gio nam trong cookie httpOnly do may chu dat, va trinh duyet tu gui
+ * kem moi request co `credentials: "include"`. JavaScript khong doc duoc no -
+ * do chinh la muc dich: mot lo XSS khong con lay duoc token.
+ */
+export const getHeaders = () => ({
+  "Content-Type": "application/json",
+});
 
-  if (typeof window !== "undefined") {
-    const authToken = localStorage.getItem("authToken");
-    if (authToken) {
-      const cleanToken = authToken.replace(/^"|"$/g, "");
-      headers.Authorization = `Bearer ${cleanToken}`;
-    }
-  }
+/**
+ * Xoa sach dau vet cua phien dang nhap. Goi o MOI cho dang xuat.
+ *
+ * Phai lam du bon viec, thieu mot la sinh loi:
+ *   1. POST /users/logout - cookie token la httpOnly nen JavaScript KHONG xoa
+ *      duoc; bo buoc nay thi da "dang xuat" ma nguoi ke tiep dung may van con
+ *      la admin voi backend. Hai man hinh /admin va /instructor truoc day chi
+ *      xoa userInfo nen dinh dung loi do.
+ *   2. userInfo  - de giao dien biet la da dang xuat.
+ *   3. clearApiCache - bo dem GET song 30 giay va CHI khoa theo dia chi, khong
+ *      theo nguoi. Khong xoa thi nguoi dang nhap ngay sau do co the nhan lai
+ *      du lieu cua nguoi truoc (vi du /enrollments/my-courses).
+ *   4. Ban su kien userInfoChanged - Header, HeaderUserMenu va hook
+ *      useNguoiDungLuu deu nghe su kien nay. Su kien 'storage' cua trinh duyet
+ *      KHONG ban cho chinh tab dang sua, nen phai tu ban.
+ */
+export const xoaPhien = () => {
+  if (typeof window === "undefined") return;
 
-  return headers;
+  // Cookie httpOnly thi JavaScript KHONG xoa duoc - phai nho may chu xoa.
+  // Khong cho ket qua: dang xuat o phia giao dien phai xay ra ngay ca khi
+  // mang hong, va cookie du con lai thi token trong no cung het han sau 1 ngay.
+  void fetch(resolveApiUrl("/users/logout"), {
+    method: "POST",
+    credentials: "include",
+  }).catch(() => {});
+
+  // Ban cu con xoa "authToken" trong localStorage. Gio khong luu o do nua,
+  // nhung van xoa mot lan de don rac cua nhung nguoi dang mo trang tu truoc
+  // khi doi sang cookie.
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("userInfo");
+  clearApiCache();
+  window.dispatchEvent(new Event("userInfoChanged"));
 };
 
 export const handleResponse = async (res: Response) => {
@@ -46,8 +77,7 @@ export const handleResponse = async (res: Response) => {
       res.status === 403 && /bị khóa/i.test(String(data?.message || ""));
 
     if ((res.status === 401 || accountLocked) && typeof window !== "undefined") {
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("userInfo");
+      xoaPhien();
       setTimeout(() => {
         window.location.href = "/";
       }, 100);
@@ -168,6 +198,10 @@ const rawRequest = async (url: string, options: RequestInit = {}) => {
   const response = await fetch(url, {
     ...options,
     headers: mergedHeaders,
+    // Bat buoc: token nam trong cookie httpOnly, va fetch KHONG gui cookie
+    // sang mien khac neu thieu dong nay. Bo di thi moi duong can dang nhap
+    // deu tra 401.
+    credentials: "include",
   });
 
   return handleResponse(response);
