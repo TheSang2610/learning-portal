@@ -1,9 +1,23 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const { BCRYPT_ROUNDS, DAI_MAT_KHAU_TOI_THIEU, HAN_TOKEN } = require('../utils/matKhau');
+const { datCookieToken, xoaCookieToken } = require('../utils/cookieToken');
 const jwt = require('jsonwebtoken');
-const { OAuth2Client } = require('google-auth-library');
 const { recordLoginFailure, clearLoginAttempts } = require('../middlewares/loginRateLimit');
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const layCloudinary = require('../config/cloudinary');
+const { uploadToCloudinary } = require('../utils/uploadCloud');
+
+// google-auth-library nap mat ~144ms nhung chi mot duong duy nhat can den no
+// (dang nhap bang Google). Nap luoi de moi cold start khac khong phai tra
+// khoan do. Node co dem module san nen chi lan goi dau tien moi cham.
+let googleClient = null;
+const layGoogleClient = () => {
+  if (!googleClient) {
+    const { OAuth2Client } = require('google-auth-library');
+    googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  }
+  return googleClient;
+};
 
 // Email luon luu/tra cuu o dang chu thuong da trim -> tranh tao trung tai khoan
 // va tranh truong hop go hoa mot chu la khong dang nhap duoc.
@@ -14,7 +28,7 @@ const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
 
 // Tạo Token JWT (hàm tiện ích nội bộ)
 const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: HAN_TOKEN });
 };
 
 // @desc    Auth user & get token (Login)
@@ -77,12 +91,16 @@ const loginUser = async (req, res) => {
 
         clearLoginAttempts(req.loginAttemptKey);
 
+        // Token di bang cookie httpOnly, KHONG nam trong than phan hoi.
+        // De no trong than thi JavaScript cua trang doc duoc, va the la mat
+        // dung cai loi ich vua doi sang cookie de co.
+        datCookieToken(res, generateToken(user._id));
+
         res.json({
             _id: user._id,
             name: user.name,
             email: user.email,
             role: user.role,
-            token: generateToken(user._id),
         });
 
     } catch (error) {
@@ -94,27 +112,46 @@ const loginUser = async (req, res) => {
 };
 const googleLogin = async (req, res) => {
   try {
-    console.log('googleLogin body:', req.body);
+    // KHONG log req.body o day. No chua req.body.credential - la id token cua
+    // Google, dung duoc de mao danh nguoi dung cho toi khi het han. In ra log
+    // la nem thang vao noi luu log cua nha cung cap, noi thuong duoc giu lau va
+    // nhieu nguoi doc duoc hon la ta tuong.
+    // CHI nhan id token cua Google va tu kiem chu ky. Khong co duong nao khac.
+    //
+    // Ban cu con mot nhanh thu hai: neu than request co `googleId` hoac
+    // `email` thi tin luon, khong kiem gi. Do la mot cua hau mo toang - bat ky
+    // ai cung chi can:
+    //
+    //     POST /api/users/google   {"email":"admin@gmail.com"}
+    //
+    // la nhan ve token admin hop le. Khong mat khau, khong Google, khong gi
+    // ca. Moi lop bao ve khac - gioi han so lan dang nhap sai, bcrypt 12 vong,
+    // passwordChangedAt, cookie httpOnly - deu bi di vong hoan toan.
+    //
+    // Nhanh do sinh ra de phuc vu luong doi code phia may chu (Next route
+    // app/api/auth/google/token). Nay luong do tra id_token ve trinh duyet va
+    // trinh duyet goi thang vao day, nen khong con ly do ton tai.
+    if (!req.body.credential) {
+      return res.status(400).json({ message: 'Thiếu Google credential' });
+    }
 
+    // Chu ky sai / het han / sai audience deu la "khong chung minh duoc danh
+    // tinh" -> 401, khong phai 500. De nem thang ra thi khoi catch o duoi tra
+    // 500, ma 500 nghia la "may chu hong" - sai han ban chat, va lam nhieu log
+    // vi moi lan go token linh tinh deu thanh mot loi may chu.
     let payload;
-
-    // Case A: frontend sends id token (credential)
-    if (req.body.credential) {
-      const ticket = await client.verifyIdToken({
+    try {
+      const ticket = await layGoogleClient().verifyIdToken({
         idToken: req.body.credential,
         audience: process.env.GOOGLE_CLIENT_ID,
       });
       payload = ticket.getPayload();
-    } else if (req.body.googleId || req.body.email) {
-      // Case B: frontend sends user payload after server-side exchange
-      payload = {
-        sub: req.body.googleId || req.body.sub,
-        email: req.body.email,
-        name: req.body.name,
-        picture: req.body.picture,
-      };
-    } else {
-      return res.status(400).json({ message: 'Missing Google credential or user payload' });
+    } catch {
+      return res.status(401).json({ message: 'Google credential không hợp lệ' });
+    }
+
+    if (!payload || !payload.email) {
+      return res.status(401).json({ message: 'Google credential không hợp lệ' });
     }
 
     const { sub, name, picture } = payload;
@@ -171,16 +208,29 @@ const googleLogin = async (req, res) => {
       googlePicture: picture || '',         // temporary picture from Google (not persisted)
     };
 
-    res.json({
-      ...responseUser,
-      token: generateToken(user._id),
-    });
+    datCookieToken(res, generateToken(user._id));
+
+    res.json(responseUser);
 
   } catch (error) {
     console.error('googleLogin error:', error);
     res.status(500).json({ message: error.message });
   }
 };
+// @desc    Dang xuat - xoa cookie token
+// @route   POST /api/users/logout
+//
+// Phai co duong nay o phia may chu: cookie httpOnly thi JavaScript khong xoa
+// duoc, nen truoc day chi can localStorage.removeItem la xong, gio thi khong.
+//
+// KHONG dat protect() o day: nguoi dung phai dang xuat duoc ca khi token da
+// het han hoac da hong. Bat dang nhap moi cho dang xuat la vo ly, va se de lai
+// cookie chet trong trinh duyet.
+const logoutUser = (req, res) => {
+    xoaCookieToken(res);
+    res.json({ message: 'Đã đăng xuất' });
+};
+
 // @desc    Register a new user (Cập nhật từ hàm createUser của bạn)
 // @route   POST /api/users
 const registerUser = async (req, res) => {
@@ -197,8 +247,8 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ message: 'Email không hợp lệ' });
         }
 
-        if (password.length < 6) {
-            return res.status(400).json({ message: 'Password phải có ít nhất 6 ký tự' });
+        if (password.length < DAI_MAT_KHAU_TOI_THIEU) {
+            return res.status(400).json({ message: `Password phải có ít nhất ${DAI_MAT_KHAU_TOI_THIEU} ký tự` });
         }
 
         const userExists = await User.findOne({ email });
@@ -207,7 +257,7 @@ const registerUser = async (req, res) => {
         }
 
         // Mã hóa mật khẩu
-        const salt = await bcrypt.genSalt(10);
+        const salt = await bcrypt.genSalt(BCRYPT_ROUNDS);
         const hashedPassword = await bcrypt.hash(password, salt);
 
         const user = await User.create({
@@ -218,12 +268,13 @@ const registerUser = async (req, res) => {
         });
 
         if (user) {
+            datCookieToken(res, generateToken(user._id));
+
             res.status(201).json({
                 _id: user._id,
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                token: generateToken(user._id),
             });
         }
     } catch (error) {
@@ -320,7 +371,17 @@ const updateUserProfile = async (req, res) => {
         // se roi vao nhanh "giu gia tri cu" -> khong bao gio xoa duoc bio/fullname.
         if (has('fullname')) user.fullname = String(req.body.fullname || '').trim().slice(0, 100);
         if (has('bio')) user.bio = String(req.body.bio || '').trim().slice(0, 500);
-        if (has('avatar')) user.avatar = String(req.body.avatar || '').trim();
+        // --- Anh dai dien dat bang duong dan ---
+        if (has('avatar')) {
+            const moi = String(req.body.avatar || '').trim();
+            // Bo anh cu da tai len de khong de lai file rac tren Cloudinary.
+            // Xoa hong thi ke, khong duoc chan viec luu ho so cua nguoi dung.
+            if (user.avatarPublicId && moi !== user.avatar) {
+                await xoaAnhCu(user.avatarPublicId);
+                user.avatarPublicId = '';
+            }
+            user.avatar = moi;
+        }
 
         if (has('birthday')) {
             if (!req.body.birthday) {
@@ -347,7 +408,7 @@ const updateUserProfile = async (req, res) => {
             const newPassword = String(req.body.password);
 
             if (newPassword.length < 6) {
-                return res.status(400).json({ message: 'Mật khẩu mới phải có ít nhất 6 ký tự' });
+                return res.status(400).json({ message: `Mật khẩu mới phải có ít nhất ${DAI_MAT_KHAU_TOI_THIEU} ký tự` });
             }
 
             // Tai khoan dang nhap bang Google chua tung dat mat khau -> cho dat lan dau
@@ -368,8 +429,14 @@ const updateUserProfile = async (req, res) => {
                 }
             }
 
-            const salt = await bcrypt.genSalt(10);
+            const salt = await bcrypt.genSalt(BCRYPT_ROUNDS);
             user.password = await bcrypt.hash(newPassword, salt);
+
+            // Vo hieu hoa moi token da cap truoc thoi diem nay - xem ghi chu o
+            // model User va o protect(). Lui lai 1 giay vi truong iat cua JWT
+            // chi tinh den giay: khong lui thi chinh token vua cap trong cung
+            // giay do cung co the bi tu choi.
+            user.passwordChangedAt = new Date(Date.now() - 1000);
         }
 
         await user.save();
@@ -473,13 +540,94 @@ const getUsers = async (req, res) => {
     }
 };
 
+// ---------------------------------------------------------------------------
+// Anh dai dien tai tu may len
+// ---------------------------------------------------------------------------
+
+// Xoa mot anh da tai len. Khong bao gio nem loi ra ngoai: xoa anh cu that bai
+// khong phai ly do de tu choi luu anh moi cua nguoi dung.
+const xoaAnhCu = async (publicId) => {
+    if (!publicId) return;
+    try {
+        await layCloudinary().uploader.destroy(publicId, { invalidate: true });
+    } catch (e) {
+        console.error('Khong xoa duoc anh dai dien cu:', publicId, e.message);
+    }
+};
+
+// Cloudinary chua cau hinh thi upload nem loi kho hieu tan sau. Kiem o day de
+// tra ve dung nguyen nhan, giong cach lam o documentController.
+const cloudinaryReady = () => {
+    const c = layCloudinary().config();
+    return Boolean(c.cloud_name && c.api_key && c.api_secret);
+};
+
+// @desc    Tai anh dai dien tu may len
+// @route   POST /api/users/profile/avatar
+const uploadAvatar = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'Vui lòng chọn một tấm ảnh' });
+        }
+
+        if (!cloudinaryReady()) {
+            return res.status(503).json({
+                message:
+                    'Máy chủ chưa cấu hình Cloudinary nên chưa nhận được ảnh tải lên. ' +
+                    'Cần đặt CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY và ' +
+                    'CLOUDINARY_API_SECRET trong backend/.env. ' +
+                    'Trong lúc chờ, bạn vẫn dán được đường dẫn ảnh.',
+            });
+        }
+
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: 'User không tìm thấy' });
+
+        const anhCu = user.avatarPublicId;
+
+        // Cat vuong quanh khuon mat va ep ve 400x400 ngay tren Cloudinary.
+        // Lam o day chu khong phai o trinh duyet: anh 4000px chup bang dien
+        // thoai ma de nguyen thi moi lan hien avatar 28px deu tai ve vai MB.
+        const ketQua = await uploadToCloudinary(req.file.buffer, 'image', {
+            folder: 'learning-portal/avatars',
+            public_id: `avatar-${user._id}-${Date.now()}`,
+            use_filename: false,
+            unique_filename: false,
+            transformation: [
+                { width: 400, height: 400, crop: 'fill', gravity: 'face' },
+                { quality: 'auto', fetch_format: 'auto' },
+            ],
+        });
+
+        user.avatar = ketQua.secure_url;
+        user.avatarPublicId = ketQua.public_id;
+        await user.save();
+
+        // Anh cu xoa SAU khi da luu anh moi: doi lai thi upload hong se lam
+        // nguoi dung mat luon anh dang co.
+        await xoaAnhCu(anhCu);
+
+        const fresh = await User.findById(user._id).populate('provider', 'name logo');
+        const out = fresh.toObject();
+        out.hasPassword = Boolean(out.password);
+        delete out.password;
+
+        res.json(out);
+    } catch (error) {
+        console.error('uploadAvatar error:', error);
+        res.status(500).json({ message: error.message || 'Không tải được ảnh lên' });
+    }
+};
+
 module.exports = {
     deactivateMyAccount,
+    logoutUser,
     getUsers,
     registerUser,
     loginUser,
     googleLogin,
     updateUserProfile,
+    uploadAvatar,
     getInstructorsByProvider,
     updateUserRole,
     deleteUser

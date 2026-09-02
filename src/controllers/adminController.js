@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const { BCRYPT_ROUNDS, DAI_MAT_KHAU_TOI_THIEU } = require('../utils/matKhau');
 const User = require('../models/User');
 
 // Giu dong nhat voi userController: email luon luu dang chu thuong da trim
@@ -229,8 +230,8 @@ const createUserAdmin = async (req, res) => {
         if (!isValidEmail(email)) {
             return res.status(400).json({ message: 'Email không hợp lệ' });
         }
-        if (password.length < 6) {
-            return res.status(400).json({ message: 'Password phải có ít nhất 6 ký tự' });
+        if (password.length < DAI_MAT_KHAU_TOI_THIEU) {
+            return res.status(400).json({ message: `Password phải có ít nhất ${DAI_MAT_KHAU_TOI_THIEU} ký tự` });
         }
         if (!['student', 'instructor', 'admin'].includes(role)) {
             return res.status(400).json({ message: 'Role không hợp lệ' });
@@ -241,7 +242,7 @@ const createUserAdmin = async (req, res) => {
             return res.status(400).json({ message: 'Email đã tồn tại' });
         }
 
-        const hashedPassword = await bcrypt.hash(password, await bcrypt.genSalt(10));
+        const hashedPassword = await bcrypt.hash(password, await bcrypt.genSalt(BCRYPT_ROUNDS));
 
         const user = await User.create({
             name, email, password: hashedPassword, role, status,
@@ -300,13 +301,14 @@ const updateUserAdmin = async (req, res) => {
         }
 
         if (password) {
-            if (password.length < 6) {
-                return res.status(400).json({ message: 'Password phải có ít nhất 6 ký tự' });
+            if (password.length < DAI_MAT_KHAU_TOI_THIEU) {
+                return res.status(400).json({ message: `Password phải có ít nhất ${DAI_MAT_KHAU_TOI_THIEU} ký tự` });
             }
-            user.password = await bcrypt.hash(password, await bcrypt.genSalt(10));
+            user.password = await bcrypt.hash(password, await bcrypt.genSalt(BCRYPT_ROUNDS));
             // Admin dat lai mat khau cho nguoi khac thuong la vi tai khoan do
             // co van de - cac phien dang mo phai bi cat, khong thi viec dat lai
             // gan nhu vo nghia. Xem ghi chu o model User.
+            user.passwordChangedAt = new Date(Date.now() - 1000);
         }
 
         if (name !== undefined) user.name = name;

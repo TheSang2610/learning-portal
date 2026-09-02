@@ -1,14 +1,13 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { layToken } = require('../utils/cookieToken');
 
 const protect = async (req, res, next) => {
     try {
-        let token;
-
-        // 1. Lấy token từ Authorization header
-        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-            token = req.headers.authorization.split(' ')[1];
-        }
+        // 1. Lay token: uu tien cookie httpOnly, sau do moi den header Bearer.
+        //    Cookie la duong chinh cua trinh duyet; header giu lai cho curl,
+        //    Postman va cac ung dung ngoai trinh duyet. Xem utils/cookieToken.js.
+        const token = layToken(req);
 
         // 2. Kiểm tra token tồn tại
         if (!token) {
@@ -35,6 +34,22 @@ const protect = async (req, res, next) => {
             return res.status(403).json({
                 message: 'Tài khoản của bạn đã bị khóa'
             });
+        }
+
+        // 4c. Token cap TRUOC lan doi mat khau gan nhat thi khong con gia tri.
+        //
+        //     Khong co buoc nay thi doi mat khau gan nhu vo tac dung ve mat bao
+        //     mat: ke da lay duoc token cu van dung tiep duoc toi 30 ngay, du
+        //     nan nhan da doi mat khau ngay sau khi phat hien.
+        //
+        //     decoded.iat tinh bang GIAY, passwordChangedAt tinh bang mili giay.
+        if (req.user.passwordChangedAt && decoded.iat) {
+            const doiLuc = Math.floor(req.user.passwordChangedAt.getTime() / 1000);
+            if (decoded.iat < doiLuc) {
+                return res.status(401).json({
+                    message: 'Mật khẩu đã được thay đổi, vui lòng đăng nhập lại'
+                });
+            }
         }
 
         // 5. Gọi next() để tiếp tục xử lý

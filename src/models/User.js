@@ -37,6 +37,24 @@ const userSchema = new mongoose.Schema({
         default: ''
     },
 
+    // public_id cua anh tren Cloudinary, chi co khi anh do NGUOI DUNG TU TAI LEN.
+    // Dan link tu noi khac thi de trong - de biet luc doi anh moi thi anh cu
+    // nao la cua minh ma xoa, anh nao la cua nguoi ta ma dung dong vao.
+    avatarPublicId: {
+        type: String,
+        default: ''
+    },
+
+    // Moc thoi gian doi mat khau gan nhat.
+    //
+    // JWT khong the thu hoi: da cap ra la con hieu luc du 30 ngay. Nen khi
+    // nguoi dung doi mat khau vi nghi bi lo, cac token cu VAN dung duoc neu
+    // khong co truong nay. protect() so sanh moc do voi thoi diem cap token
+    // (iat) va tu choi moi token cap TRUOC luc doi.
+    //
+    // Bo trong voi tai khoan chua tung doi mat khau - luc do khong co gi de so.
+    passwordChangedAt: Date,
+
     role: {
         type: String,
         enum: ['student', 'instructor', 'admin'],

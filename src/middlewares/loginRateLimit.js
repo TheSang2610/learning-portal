@@ -1,20 +1,34 @@
-// Gioi han so lan dang nhap sai - chan do mat khau (brute force).
+// Gioi han so lan dang nhap sai - chan do mat khau.
 //
-// Luu trong bo nho tien trinh: du cho 1 server dev/1 instance.
-// Neu sau nay chay nhieu instance hoac serverless thi phai doi sang
-// Redis hoac express-rate-limit + store dung chung, vi moi tien trinh
-// se co bo dem rieng.
+// Dem theo HAI khoa cung luc, vi co hai kieu tan cong khac han nhau:
+//
+//   ip|email  Do mat khau cua MOT tai khoan. Nguong thap (5 lan).
+//   ip        Thu MOT mat khau pho bien tren HANG NGHIN email khac nhau
+//             (credential stuffing). Ban cu chi dem theo ip|email nen moi
+//             email la mot bo dem moi tinh: kieu tan cong nay di qua tu do,
+//             khong lan nao cham nguong.
+//
+// Nguong theo ip de cao hon nhieu, vi ca mot truong hoc / van phong co the
+// dung chung mot IP qua NAT.
+//
+// Luu trong bo nho tien trinh: du cho mot instance. Chay nhieu instance hoac
+// serverless thi phai doi sang Redis, vi moi tien trinh se co bo dem rieng.
 
 const WINDOW_MS = 15 * 60 * 1000; // 15 phut
-const MAX_FAILS = 5;              // qua 5 lan sai thi khoa tam
+const MAX_FAILS_EMAIL = 5;        // sai qua 5 lan tren CUNG mot email
+const MAX_FAILS_IP = 30;          // sai qua 30 lan tu CUNG mot IP, moi email
 const MAX_ENTRIES = 10000;        // tran bo nho neu bi spam ip/email
 
 const attempts = new Map(); // key -> { count, firstAt, blockedUntil }
 
-const keyOf = (req) => {
-  const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+// req.ip chi dung khi index.js da dat app.set('trust proxy', 1).
+// Thieu dong do thi day la IP cua proxy, va moi khach chung mot o dem.
+const ipOf = (req) => req.ip || req.socket?.remoteAddress || 'unknown';
+
+const keysOf = (req) => {
+  const ip = ipOf(req);
   const email = String(req.body?.email || '').trim().toLowerCase();
-  return `${ip}|${email}`;
+  return { theoEmail: `${ip}|${email}`, theoIp: `ip:${ip}` };
 };
 
 // Don cac ban ghi da het han, tranh Map phinh vo han
@@ -26,35 +40,19 @@ const sweep = (now) => {
   }
 };
 
-const loginRateLimit = (req, res, next) => {
-  const now = Date.now();
-  if (attempts.size > MAX_ENTRIES) sweep(now);
-
-  const key = keyOf(req);
+// Tra ve so giay con bi khoa, 0 neu khong bi khoa.
+const conBiKhoa = (key, now) => {
   const rec = attempts.get(key);
-
-  if (rec) {
-    if (rec.blockedUntil && rec.blockedUntil > now) {
-      const secondsLeft = Math.ceil((rec.blockedUntil - now) / 1000);
-      res.set('Retry-After', String(secondsLeft));
-      return res.status(429).json({
-        message: `Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau ${Math.ceil(secondsLeft / 60)} phút.`,
-        retryAfter: secondsLeft,
-      });
-    }
-    // Het cua so dem thi lam moi lai
-    if (now - rec.firstAt > WINDOW_MS) attempts.delete(key);
+  if (!rec) return 0;
+  if (rec.blockedUntil && rec.blockedUntil > now) {
+    return Math.ceil((rec.blockedUntil - now) / 1000);
   }
-
-  // Cho controller bao ket qua nguoc lai
-  req.loginAttemptKey = key;
-  next();
+  // Het cua so dem thi lam moi lai
+  if (now - rec.firstAt > WINDOW_MS) attempts.delete(key);
+  return 0;
 };
 
-// Goi khi dang nhap SAI
-const recordLoginFailure = (key) => {
-  if (!key) return;
-  const now = Date.now();
+const ghiNhanSai = (key, nguong, now) => {
   const rec = attempts.get(key);
 
   if (!rec || now - rec.firstAt > WINDOW_MS) {
@@ -63,12 +61,55 @@ const recordLoginFailure = (key) => {
   }
 
   rec.count += 1;
-  if (rec.count >= MAX_FAILS) rec.blockedUntil = now + WINDOW_MS;
+  if (rec.count >= nguong) rec.blockedUntil = now + WINDOW_MS;
 };
 
-// Goi khi dang nhap DUNG -> xoa bo dem
-const clearLoginAttempts = (key) => {
-  if (key) attempts.delete(key);
+const loginRateLimit = (req, res, next) => {
+  const now = Date.now();
+  if (attempts.size > MAX_ENTRIES) sweep(now);
+
+  const keys = keysOf(req);
+  const giayCon = Math.max(conBiKhoa(keys.theoEmail, now), conBiKhoa(keys.theoIp, now));
+
+  if (giayCon > 0) {
+    res.set('Retry-After', String(giayCon));
+    return res.status(429).json({
+      message: `Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau ${Math.ceil(giayCon / 60)} phút.`,
+      retryAfter: giayCon,
+    });
+  }
+
+  // Cho controller bao ket qua nguoc lai
+  req.loginAttemptKey = keys;
+  next();
 };
 
-module.exports = { loginRateLimit, recordLoginFailure, clearLoginAttempts };
+// Goi khi dang nhap SAI
+const recordLoginFailure = (keys) => {
+  if (!keys) return;
+  const now = Date.now();
+  ghiNhanSai(keys.theoEmail, MAX_FAILS_EMAIL, now);
+  ghiNhanSai(keys.theoIp, MAX_FAILS_IP, now);
+};
+
+// Goi khi dang nhap DUNG.
+//
+// CHI xoa bo dem cua email do. KHONG dung bo dem theo IP: ke tan cong do trung
+// mot tai khoan bat ky ma duoc lam moi han muc IP thi nguong kia thanh vo dung.
+// Bo dem IP tu het han sau 15 phut.
+const clearLoginAttempts = (keys) => {
+  if (keys?.theoEmail) attempts.delete(keys.theoEmail);
+};
+
+// Chi dung cho test: xoa sach trang thai giua cac lan chay.
+const _resetForTest = () => attempts.clear();
+
+module.exports = {
+  loginRateLimit,
+  recordLoginFailure,
+  clearLoginAttempts,
+  _resetForTest,
+  WINDOW_MS,
+  MAX_FAILS_EMAIL,
+  MAX_FAILS_IP,
+};
