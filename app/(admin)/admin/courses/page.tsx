@@ -102,10 +102,10 @@ export default function AdminCoursesPage() {
                   </span>
                 </td>
                 <td className="p-5 text-sm font-medium text-slate-700">
-                  {course.price === 0 ? (
-                    <span className="font-bold text-emerald-600">Free</span>
+                  {(course.price ?? 0) === 0 ? (
+                    <span className="font-bold text-emerald-600">Miễn phí</span>
                   ) : (
-                    `${course.price.toLocaleString("vi-VN")} đ`
+                    `${(course.price ?? 0).toLocaleString("vi-VN")}đ`
                   )}
                 </td>
                 <td className="p-5">

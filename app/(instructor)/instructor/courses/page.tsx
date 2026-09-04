@@ -127,9 +127,9 @@ export default function AllCoursesPage() {
                     {course.studentsCount || 0} học viên
                   </span>
                   <span className="text-sm font-bold text-slate-800">
-                    {course.price === 0
+                    {(course.price ?? 0) === 0
                       ? "Miễn phí"
-                      : `${course.price.toLocaleString("vi-VN")} đ`}
+                      : `${(course.price ?? 0).toLocaleString("vi-VN")}đ`}
                   </span>
                 </div>
 

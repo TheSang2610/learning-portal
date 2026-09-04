@@ -852,10 +852,10 @@ function CourseDetailPageContent() {
                   Mức giá chương trình
                 </span>
                 <div className="text-3xl font-bold tracking-tight text-slate-900">
-                  {course.price === 0 ? (
-                    <span className="font-bold text-emerald-600">Miễn Phí</span>
+                  {(course.price ?? 0) === 0 ? (
+                    <span className="font-bold text-emerald-600">Miễn phí</span>
                   ) : (
-                    <span>{course.price?.toLocaleString("vi-VN")}đ</span>
+                    <span>{(course.price ?? 0).toLocaleString("vi-VN")}đ</span>
                   )}
                 </div>
               </div>
