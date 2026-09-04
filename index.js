@@ -194,6 +194,7 @@ app.use('/api/courses', require('./src/routes/courseRoutes'));
 app.use('/api/lessons', require('./src/routes/lessonRoutes'));
 app.use('/api/reviews', require('./src/routes/reviewRoutes'));
 app.use('/api/enrollments', require('./src/routes/enrollmentRoutes'));
+app.use('/api/orders', require('./src/routes/orderRoutes'));
 app.use('/api/quizzes', require('./src/routes/quizRoutes'));
 app.use('/api/certificates', require('./src/routes/certificateRoutes'));
 app.use('/api/admin', require('./src/routes/adminRoutes'));
