@@ -18,11 +18,26 @@
    chu thua ke tu body thanh gan trang nam tren hop bg-white -> tuong phan ~1.05:1, mat chu.
    Muon lam dark mode that thi phai them bien the dark: cho tung nen, khong chi doi body. */
 
+/* Bang mau va bo chu cua khu vuc hoc vien.
+   --chu-than / --chu-hien do (portal)/layout.tsx dat qua next/font. Trang
+   quan tri khong dat hai bien do nen roi thang ve Inter nhu truoc. */
+@theme inline {
+  --font-than: var(--chu-than), "Inter", system-ui, sans-serif;
+  --font-hien: var(--chu-hien), "Inter", system-ui, sans-serif;
+
+  --color-tim: #4f2bff;
+  --color-tim-2: #8b6bff;
+  --color-ngoc: #00bfb3;
+  --color-hong: #ff3e9d;
+  --color-pha: #ffb000;
+  --color-muc: #0b0c1e;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family:
-    "Inter",
+    var(--chu-than, "Inter"),
     system-ui,
     -apple-system,
     sans-serif;
@@ -46,4 +61,16 @@ body {
 /* Dung o hop thoai sua danh gia trong /admin/reviews. */
 .animate-fade-in {
   animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Dai ten don vi dao tao chay ngang o trang chu (DaiDonVi.tsx).
+   Chay -50% vi noi dung duoc lap DUNG hai lan: het nua dau thi nua sau da
+   nam dung vi tri nua dau, nen vong lap khong thay duong noi. */
+@keyframes troi-ngang {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }

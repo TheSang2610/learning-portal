@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { Be_Vietnam_Pro, Lexend } from "next/font/google";
 import "../globals.css";
 import Header from "@/src/components/layout/Header";
 import Footer from "@/src/components/layout/Footer";
@@ -6,6 +7,28 @@ import { layTuMayChu, hoacNull } from "@/src/services/serverFetch";
 import type { Category } from "@/src/services/categoryService";
 import type { Course } from "@/src/services/course";
 import type { ProviderData } from "@/src/services/provider";
+
+// Hai bo chu nay CHI nap o khu vuc hoc vien. Trang quan tri co layout rieng
+// va khong dat hai bien nay, nen no van dung Inter nhu cu - doi giao dien
+// trang chu khong keo theo viec doi mau va chu cua ca trang admin.
+//
+// Be Vietnam Pro: bo chu ve rieng cho dau tieng Viet. Dau mu, dau nga, chu
+// "ữ" "ỗ" "ế" trong cac bo chu he thong thuong bi ghep tu font khac nen dat
+// lech va nang nhe khong deu.
+const chuThan = Be_Vietnam_Pro({
+  subsets: ["vietnamese", "latin"],
+  weight: ["400", "500", "600"],
+  variable: "--chu-than",
+  display: "swap",
+});
+
+// Lexend: ve ra de tang toc do doc, co nghien cuu kem theo. Dung cho tieu de.
+const chuHien = Lexend({
+  subsets: ["vietnamese", "latin"],
+  weight: ["500", "700", "800"],
+  variable: "--chu-hien",
+  display: "swap",
+});
 
 export default async function PortalRootLayout({
   children,
@@ -30,7 +53,11 @@ export default async function PortalRootLayout({
   const phoBien = homeSections?.success ? (homeSections.data?.mostPopular ?? []) : [];
 
   return (
-    <html lang="vi" suppressHydrationWarning>
+    <html
+      lang="vi"
+      className={`${chuThan.variable} ${chuHien.variable}`}
+      suppressHydrationWarning
+    >
       <body className="antialiased">
         {/* Header goi useSearchParams(). Khong boc Suspense thi TOAN BO trang portal
             khong prerender tinh duoc -> moi luot xem deu ton mot lan chay serverless. */}
