@@ -39,6 +39,13 @@ const {
 } = require('../controllers/adminController');
 
 // Middleware: Protect all routes with admin authentication
+const {
+    getOrdersAdmin,
+    getOrderAdmin,
+    confirmOrder,
+    rejectOrder
+} = require('../controllers/adminOrderController');
+
 router.use(protect, admin);
 
 // ============ Dashboard ============
@@ -71,5 +78,16 @@ router.put('/certificates/:id/revoke', revokeCertificate);
 // ============ Reviews Management ============
 router.get('/reviews', getAllReviews);
 router.delete('/reviews/:id', deleteReviewAdmin);
+
+// ---------------------------------------------------------------------------
+// Don hang
+//
+// Ma don di qua ':code' chu khong phai ':id', nen capIdHopLe khong dong toi -
+// dung vay: ma don la dang "DHxxxx", khong phai ObjectId.
+// ---------------------------------------------------------------------------
+router.get('/orders', getOrdersAdmin);
+router.get('/orders/:code', getOrderAdmin);
+router.put('/orders/:code/confirm', confirmOrder);
+router.put('/orders/:code/reject', rejectOrder);
 
 module.exports = router;
