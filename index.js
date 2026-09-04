@@ -64,9 +64,32 @@ app.use((req, res, next) => {
 // cung duoc nen.
 app.use(compression());
 
-const allowedOrigins = [
-  'https://learning-portal-frontend-gilt.vercel.app',
-];
+// Cac origin duoc phep goi API, doc tu bien moi truong.
+//
+// Truoc day cho nay ghi cung dung MOT ten mien Vercel. Doi ten mien la phai
+// sua ma nguon roi deploy lai backend - ma backend nam trong repo rieng, nen
+// nguoi deploy frontend chua chac dong vao duoc. Dua ra bien moi truong thi
+// doi ten mien chi la sua mot bien roi khoi dong lai.
+//
+// Dinh dang: cac origin cach nhau bang dau phay, moi cai la GOC (co giao thuc,
+// khong co duong dan). Dau "/" thua o cuoi duoc bo giup.
+//   FRONTEND_ORIGINS=https://abc.vercel.app,https://learning-portal.com
+//
+// De trong khi chay that thi KHONG origin nao duoc phep - hong ro rang ngay
+// tu request dau, hon la am tham cho qua mot ten mien cu khong con la cua minh.
+//
+// VE BAN NHAP (preview) CUA VERCEL: moi lan push, Vercel cap mot ten mien MOI
+// dang <du-an>-<ma-bam>-<tai-khoan>.vercel.app. Ten do khong nam trong danh
+// sach nay nen moi thao tac ghi tren ban nhap se bi 403. Muon test tren ban
+// nhap thi them dung ten mien do vao bien.
+//
+// KHONG khop kieu "*.vercel.app": ai cung deploy len vercel.app duoc, khop
+// rong nhu vay la cho phep MOI trang tren do goi API nay KEM COOKIE dang nhap
+// cua nguoi dung - dung nghia la tu mo lai lo CSRF vua bit.
+const allowedOrigins = (process.env.FRONTEND_ORIGINS || '')
+  .split(',')
+  .map((o) => o.trim().replace(/\/+$/, ''))
+  .filter(Boolean);
 
 // Khi dev: chap nhan MOI port cua localhost / 127.0.0.1.
 // Ly do: Next tu nhay sang 3001, 3002... neu 3000 dang bi chiem,
