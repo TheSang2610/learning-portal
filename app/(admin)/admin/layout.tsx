@@ -27,6 +27,7 @@ import {
   ClipboardList,
   Newspaper,
   Award as AwardIcon,
+  Receipt,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useNguoiDungLuu } from "@/src/hooks/nguoiDungLuu";
@@ -121,6 +122,11 @@ const menuItems: MenuItem[] = [
     label: "Banners Management",
     href: "/admin/banners",
     icon: ImageIcon,
+  },
+  {
+    label: "Orders",
+    href: "/admin/orders",
+    icon: Receipt,
   },
   {
     label: "Home Sections",
