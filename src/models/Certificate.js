@@ -83,7 +83,7 @@ const certificateSchema = new mongoose.Schema({
 certificateSchema.index({ course: 1, student: 1 }, { unique: true });
 
 // Auto-generate certificateNumber
-certificateSchema.pre('save', async function (next) {
+certificateSchema.pre('save', async function () {
     if (!this.certificateNumber) {
         const count = await mongoose.model('Certificate').countDocuments();
         this.certificateNumber = `CERT-${Date.now()}-${count + 1}`;

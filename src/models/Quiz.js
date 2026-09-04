@@ -96,7 +96,10 @@ const quizSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Tính totalPoints từ questions
-quizSchema.pre('save', function (next) {
+// Mongoose 9 da bo kieu callback `next`: hook chi can chay xong, hoac tra ve
+// mot promise. Khai bao tham so `next` o day la thua va gay hieu nham - nhin
+// vao tuong la ai do quen goi no. Xem User.js de doi chieu kieu dung.
+quizSchema.pre('save', function () {
     if (this.questions.length > 0) {
         this.totalPoints = this.questions.reduce((sum, q) => sum + (q.points || 1), 0);
     }
