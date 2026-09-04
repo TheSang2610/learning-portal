@@ -45,3 +45,6 @@ next-env.d.ts
 
 # bao cao lint sinh tu may (1.5MB, chua duong dan tuyet doi tren may)
 lint-report.json
+
+.vercel
+.env*
