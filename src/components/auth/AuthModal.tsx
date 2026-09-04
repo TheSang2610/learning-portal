@@ -27,8 +27,20 @@ const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
 const vaoThang = (vaiTro?: string) => {
   if (vaiTro === "admin") return window.location.replace("/admin/dashboard");
   if (vaiTro === "instructor") return window.location.replace("/instructor");
+
   // Hoc vien: o lai dung trang dang xem, chi tai lai de lay phien moi.
-  return window.location.reload();
+  //
+  // Phai BO tham so ?auth truoc khi tai lai. O day tung dung reload(), ma
+  // reload() tai lai DUNG dia chi hien tai - van con ?auth=login. Modal nay
+  // mo ra chinh vi tham so do (xem AuthModalGate), nen nguoi dung dang nhap
+  // xong lai thay hop dang nhap hien len lan nua, du da vao duoc tai khoan.
+  //
+  // onClose() o noi goi co router.replace("/") de xoa tham so, nhung do la
+  // dieu huong cua Next chay bat dong bo: no chua kip cham vao thanh dia chi
+  // thi dong duoi da tai lai trang roi.
+  const diaChi = new URL(window.location.href);
+  diaChi.searchParams.delete("auth");
+  return window.location.replace(diaChi.toString());
 };
 
 export default function AuthModal({ open, onClose }: AuthModalProps) {
