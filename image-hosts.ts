@@ -15,6 +15,7 @@ export const REMOTE_IMAGE_HOSTS = [
   "images.unsplash.com",
   "www.svgrepo.com",
   "lh3.googleusercontent.com", // anh dai dien tai khoan Google
+  "img.vietqr.io", // ma QR chuyen khoan, sinh theo tung don hang
 ] as const;
 
 // Anh nay co the giao cho next/image toi uu khong?
