@@ -217,7 +217,6 @@ function CourseLearnPageContent() {
     const setupVideo = async () => {
       try {
         setVideoError("");
-        console.log("📹 Loading video URL:", videoUrl);
 
         const videoElement = videoRef.current;
         if (!videoElement) return;
@@ -237,7 +236,6 @@ function CourseLearnPageContent() {
           if (canNativeHls) {
             videoElement.src = videoUrl;
             videoElement.load();
-            console.log("✅ Native HLS source set");
           } else {
             try {
               const hlsModule = await import("hls.js");
@@ -258,9 +256,7 @@ function CourseLearnPageContent() {
                 hls.loadSource(videoUrl);
                 hls.attachMedia(videoElement);
 
-                hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                  console.log("✅ HLS manifest loaded successfully");
-                });
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {});
 
                 hls.on(Hls.Events.ERROR, (event, data) => {
                   console.error("❌ HLS Error:", event, data);
@@ -289,7 +285,6 @@ function CourseLearnPageContent() {
         } else {
           videoElement.src = videoUrl;
           videoElement.load();
-          console.log("✅ MP4/Direct video loaded");
         }
       } catch (error) {
         console.error("Lỗi setup video:", error);

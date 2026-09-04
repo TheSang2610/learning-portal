@@ -105,17 +105,6 @@ function AdminEditLessonPageContent() {
 
       await updateLesson(lessonId, formData);
 
-      // 🎯 LẤY LẠI DỮ LIỆU LESSON MỚI ĐỂ CẬP NHẬT VIDEOURL TỪ CLOUDINARY
-      try {
-        const updatedLesson = await getLessonById(lessonId);
-        console.log("✅ Updated lesson with new videoUrl:", updatedLesson.videoUrl);
-      } catch (refreshErr) {
-        console.warn(
-          "⚠️ Could not refresh lesson data, but save was successful:",
-          refreshErr,
-        );
-      }
-
       alert("Lesson updated successfully!");
       router.push(`/admin/course-detail?courseId=${courseId}`);
     } catch (error) {

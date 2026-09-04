@@ -247,7 +247,6 @@ function CourseDetailPageContent() {
             }
           }
         } catch {
-          console.log("Học viên chưa đăng ký khóa học.");
           if (isComponentMounted) {
             setIsEnrolled(false);
             setUserProgress(0);
