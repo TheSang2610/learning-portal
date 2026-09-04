@@ -14,6 +14,23 @@ interface AuthModalProps {
 // Kiem tra dinh dang co ban, khop voi validate phia backend
 const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
 
+/**
+ * Vao thang khu vuc cua nguoi vua dang nhap.
+ *
+ * Dung window.location chu khong phai router cua Next: token nam trong cookie
+ * httpOnly, ma Server Component chi doc cookie luc tai trang. Dieu huong bang
+ * router thi phan render tren may chu van la cua phien cu.
+ *
+ * replace() chu khong phai assign(): khong de lai trang truoc trong lich su,
+ * nen bam Back sau khi dang nhap khong quay ve man hinh chua dang nhap.
+ */
+const vaoThang = (vaiTro?: string) => {
+  if (vaiTro === "admin") return window.location.replace("/admin/dashboard");
+  if (vaiTro === "instructor") return window.location.replace("/instructor");
+  // Hoc vien: o lai dung trang dang xem, chi tai lai de lay phien moi.
+  return window.location.reload();
+};
+
 export default function AuthModal({ open, onClose }: AuthModalProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -74,12 +91,8 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
       localStorage.setItem("userInfo", JSON.stringify(data));
 
       window.dispatchEvent(new Event("userInfoChanged"));
-      alert("Đăng nhập thành công");
       onClose();
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
+      vaoThang(data?.role);
     } catch (error) {
       setError(getErrorMessage(error, "Đăng nhập thất bại"));
     } finally {
@@ -120,12 +133,8 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
       localStorage.setItem("userInfo", JSON.stringify(data));
 
       window.dispatchEvent(new Event("userInfoChanged"));
-      alert("Đăng ký thành công");
       onClose();
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
+      vaoThang(data?.role);
     } catch (error) {
       setError(getErrorMessage(error, "Đăng ký thất bại"));
     } finally {
@@ -171,16 +180,10 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
           // tab chinh dung duoc ngay.
           localStorage.setItem("userInfo", JSON.stringify(user));
 
-          console.log("✅ Google login success");
-
           window.dispatchEvent(new Event("userInfoChanged"));
-          onClose();
-
-          setTimeout(() => {
-            window.location.reload();
-          }, 500);
-
           window.removeEventListener("message", messageHandler);
+          onClose();
+          vaoThang(user?.role);
         }
 
         if (type === "google-auth-failed") {
