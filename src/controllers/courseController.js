@@ -1,4 +1,5 @@
 const Course = require('../models/Course');
+const { taoGhiDanh } = require('../utils/ghiDanh');
 const User = require('../models/User');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
 
@@ -257,64 +258,55 @@ const publishCourse = async (req, res) => {
 // @desc    Đăng ký khóa học
 const enrollInCourse = async (req, res) => {
     try {
-        const Enrollment = require('../models/Enrollment'); 
         const courseId = req.params.id;
 
-        const course = await Course.findById(courseId);
+        const course = await Course.findById(courseId).select('price lessons');
         if (!course) {
             return res.status(404).json({ message: 'Không tìm thấy khóa học' });
         }
 
-        const alreadyEnrolled = await Enrollment.findOne({ course: courseId, student: req.user._id });
-        if (alreadyEnrolled) {
-            if (alreadyEnrolled.status === 'dropped') {
-                alreadyEnrolled.status = 'active';
-                await alreadyEnrolled.save();
-                
-                const updatedCourse = await Course.findByIdAndUpdate(
-                    courseId,
-                    { $inc: { studentsCount: 1 } },
-                    { new: true }
-                );
-                return res.status(200).json({ message: 'Kích hoạt lại khóa học thành công', enrollment: alreadyEnrolled, studentsCount: updatedCourse.studentsCount });
+        // CHAN KHOA CO PHI.
+        //
+        // Truoc day duong nay khong he doc gia: bam Dang ky la vao hoc duoc moi
+        // khoa, ke ca khoa 1.099.000d. Truong price ton tai va hien ra tren
+        // giao dien, nhung khong cho nao thuc thi no.
+        //
+        // Kiem tra o day chu khong phai o giao dien: an nut Mua di thi nguoi ta
+        // van goi thang duong nay bang curl.
+        if (course.price > 0) {
+            const Order = require('../models/Order');
+            const donDaTra = await Order.findOne({
+                course: courseId,
+                student: req.user._id,
+                status: 'paid'
+            });
+
+            if (!donDaTra) {
+                // 402 Payment Required - dung nghia den cua ma trang thai nay.
+                return res.status(402).json({
+                    message: 'Khóa học này có phí, vui lòng thanh toán trước',
+                    requiresPayment: true,
+                    price: course.price
+                });
             }
+        }
+
+        const { enrollment, moiTao } = await taoGhiDanh(courseId, req.user._id);
+
+        if (!moiTao) {
             return res.status(400).json({ message: 'Bạn đã đăng ký khóa học này rồi' });
         }
 
-        const lessonProgressData = course.lessons.map(lessonId => ({
-            lesson: lessonId,
-            status: 'not_started',
-            watchedDuration: 0
-        }));
+        const capNhat = await Course.findById(courseId).select('studentsCount');
 
-        const enrollment = new Enrollment({
-            course: courseId,
-            student: req.user._id,
-            status: 'active',
-            totalProgress: 0,
-            lessonProgress: lessonProgressData,
-            lastAccessedAt: new Date()
-        });
-        await enrollment.save();
-
-        const updatedCourse = await Course.findByIdAndUpdate(
-            courseId,
-            { $inc: { studentsCount: 1 } },
-            { new: true }
-        );
-
-        const User = require('../models/User');
-        await User.findByIdAndUpdate(req.user._id, {
-            $addToSet: { enrolledCourses: courseId }
-        });
-
-        res.status(200).json({ 
+        return res.status(200).json({
             message: 'Đăng ký khóa học thành công',
             enrollment,
-            studentsCount: updatedCourse.studentsCount 
+            studentsCount: capNhat?.studentsCount
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('enrollInCourse:', error.message);
+        return res.status(500).json({ message: 'Không đăng ký được khóa học' });
     }
 };
 

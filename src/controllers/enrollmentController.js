@@ -1,5 +1,6 @@
 const Enrollment = require('../models/Enrollment');
 const Course = require('../models/Course');
+const { taoGhiDanh } = require('../utils/ghiDanh');
 const Lesson = require('../models/Lesson');
 const User = require('../models/User');
 const Quiz = require('../models/Quiz');
@@ -354,79 +355,49 @@ const enrollInCourse = async (req, res) => {
     try {
         const { courseId } = req.params;
 
-        // 1. Kiểm tra khóa học có tồn tại không
-        const course = await Course.findById(courseId);
+        const course = await Course.findById(courseId).select('price');
         if (!course) {
             return res.status(404).json({ message: 'Khóa học không tồn tại' });
         }
 
-        // 2. Kiểm tra xem học viên này đã đăng ký khóa học này chưa
-        const existingEnrollment = await Enrollment.findOne({
-            course: courseId,
-            student: req.user._id
-        });
+        // CHAN KHOA CO PHI.
+        //
+        // Duong nay moi la duong giao dien that su goi (POST /api/enrollments/
+        // :courseId). Con POST /api/courses/:id/enroll la mot ban trung lap
+        // khong ai goi - chan mot ben ma quen ben kia thi coi nhu khong chan.
+        if (course.price > 0) {
+            const Order = require('../models/Order');
+            const donDaTra = await Order.findOne({
+                course: courseId,
+                student: req.user._id,
+                status: 'paid'
+            });
 
-        if (existingEnrollment) {
-            // Nếu đã từng hủy (dropped), kích hoạt lại trạng thái active
-            if (existingEnrollment.status === 'dropped') {
-                existingEnrollment.status = 'active';
-                await existingEnrollment.save();
-                
-                // Đồng thời tăng lại số lượng học viên nếu cần thiết
-                const updatedCourse = await Course.findByIdAndUpdate(
-                    courseId,
-                    { $inc: { studentsCount: 1 } },
-                    { new: true }
-                );
-
-                return res.json({ 
-                    message: 'Kích hoạt lại khóa học thành công', 
-                    enrollment: existingEnrollment,
-                    studentsCount: updatedCourse ? updatedCourse.studentsCount : 1
+            if (!donDaTra) {
+                return res.status(402).json({
+                    message: 'Khóa học này có phí, vui lòng thanh toán trước',
+                    requiresPayment: true,
+                    price: course.price
                 });
             }
+        }
+
+        const { enrollment, moiTao } = await taoGhiDanh(courseId, req.user._id);
+
+        if (!moiTao) {
             return res.status(400).json({ message: 'Bạn đã đăng ký khóa học này rồi' });
         }
 
-        // 3. Khởi tạo mảng lessonProgress ban đầu cho tất cả bài học thuộc khóa học đó
-        const lessonProgressData = course.lessons.map(lessonId => ({
-            lesson: lessonId,
-            status: 'not_started',
-            watchedDuration: 0
-        }));
+        const capNhat = await Course.findById(courseId).select('studentsCount');
 
-        // 4. Tiến hành tạo mới bản ghi Enrollment
-        const newEnrollment = new Enrollment({
-            course: courseId,
-            student: req.user._id,
-            status: 'active',
-            totalProgress: 0,
-            lessonProgress: lessonProgressData,
-            lastAccessedAt: new Date()
-        });
-
-        await newEnrollment.save();
-
-        // 5. 🔥 ĐỒNG BỘ: Tăng số lượng học viên bên bảng Course bằng toán tử $inc
-        const updatedCourse = await Course.findByIdAndUpdate(
-            courseId,
-            { $inc: { studentsCount: 1 } },
-            { new: true } // Trả về dữ liệu mới nhất sau cập nhật
-        );
-
-        // 6. 🔥 ĐỒNG BỘ: Đẩy thông tin khóa học vào mảng của User
-        await User.findByIdAndUpdate(req.user._id, {
-            $addToSet: { enrolledCourses: courseId } // Dùng $addToSet để tránh trùng lặp phần tử
-        });
-
-        // 7. Trả dữ liệu sạch đẹp về cho Frontend render
-        res.status(201).json({
-            message: 'Đăng ký khóa học thành công!',
-            enrollment: newEnrollment,
-            studentsCount: updatedCourse ? updatedCourse.studentsCount : 1
+        return res.status(201).json({
+            message: 'Đăng ký khóa học thành công',
+            enrollment,
+            studentsCount: capNhat?.studentsCount
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('enrollInCourse:', error.message);
+        return res.status(500).json({ message: 'Không đăng ký được khóa học' });
     }
 };
 
