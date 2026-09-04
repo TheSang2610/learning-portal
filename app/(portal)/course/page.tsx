@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { getErrorMessage } from "@/src/services/apiHelper";
+import { taoDonHang, dinhDangTien } from "@/src/services/order";
 import AnhDaiDien from "@/src/components/ui/AnhDaiDien";
 import SafeImage from "@/src/components/ui/SafeImage";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -293,6 +294,15 @@ function CourseDetailPageContent() {
       setSubmitting(true);
       setError("");
 
+      // Khoa co phi: tao don roi sang trang thanh toan, khong goi ghi danh.
+      // May chu cung chan duong ghi danh cho khoa co phi (402), day chi la de
+      // nguoi dung khong phai bam mot nut roi nhan loi.
+      if ((course.price ?? 0) > 0) {
+        const { order } = await taoDonHang(course._id);
+        router.push(`/payment?code=${order.code}`);
+        return;
+      }
+
       const result = await enrollInCourse(course._id);
 
       setCourse((prevCourse) => {
@@ -415,8 +425,14 @@ function CourseDetailPageContent() {
                   disabled={submitting}
                   className="flex items-center gap-3 rounded-lg bg-blue-700 px-10 py-4 text-center text-base font-bold tracking-wide text-white shadow-md transition hover:bg-blue-800 disabled:bg-blue-400"
                 >
-                  {submitting ? "Đang xử lý..." : "Đăng ký học miễn phí"}
-                  <span className="text-xs font-normal opacity-80">Bắt đầu ngay</span>
+                  {submitting
+                    ? "Đang xử lý..."
+                    : (course.price ?? 0) > 0
+                      ? `Mua khóa học - ${dinhDangTien(course.price ?? 0)}`
+                      : "Đăng ký học miễn phí"}
+                  <span className="text-xs font-normal opacity-80">
+                    {(course.price ?? 0) > 0 ? "Chuyển khoản QR" : "Bắt đầu ngay"}
+                  </span>
                 </button>
               )}
               <div className="text-xs text-slate-500">
