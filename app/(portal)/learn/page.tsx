@@ -11,6 +11,7 @@ import {
   BookOpen,
   Clock,
   FileText,
+  Lock,
 } from "lucide-react";
 
 import CertificateModal from "@/src/components/certificate/CertificateModal";
@@ -182,18 +183,21 @@ function CourseLearnPageContent() {
 
           setActiveLesson(defaultLesson);
 
-          try {
-            await startLesson(realCourseId, defaultLesson._id);
+          // Bai bi khoa thi khong ghi tien do - xem ghi chu o handleSelectLesson.
+          if (!defaultLesson.biKhoa) {
+            try {
+              await startLesson(realCourseId, defaultLesson._id);
 
-            const history = layTienDo(enrollData).find(
-              (lp) => layIdBaiHoc(lp.lesson) === defaultLesson._id,
-            );
+              const history = layTienDo(enrollData).find(
+                (lp) => layIdBaiHoc(lp.lesson) === defaultLesson._id,
+              );
 
-            if (history?.watchedDuration && videoRef.current) {
-              videoRef.current.currentTime = history.watchedDuration;
+              if (history?.watchedDuration && videoRef.current) {
+                videoRef.current.currentTime = history.watchedDuration;
+              }
+            } catch (err) {
+              console.error("Lỗi kích hoạt bài học mặc định:", err);
             }
-          } catch (err) {
-            console.error("Lỗi kích hoạt bài học mặc định:", err);
           }
         }
       } catch (error) {
@@ -346,6 +350,11 @@ function CourseLearnPageContent() {
     if (!course?._id) return;
     setActiveLesson(lesson);
     setVideoError("");
+
+    // Bai bi khoa thi khong ghi tien do: nguoi nay chua duoc mo khoa hoc, may
+    // chu se tu choi, goi vao chi de lai mot dong loi do trong console.
+    if (lesson.biKhoa) return;
+
     try {
       await startLesson(course._id, lesson._id);
 
@@ -447,8 +456,11 @@ function CourseLearnPageContent() {
       {/* HEADER SÁNG */}
       <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4 shadow-sm">
         <div className="flex min-w-0 items-center gap-4">
+          {/* xem=1 bao trang gioi thieu dung day nguoc lai vao day. Khoa mien
+              phi da ghi danh mac dinh nhay thang vao bai hoc, thieu tham so nay
+              thi bam Quay lai se bi nem tro ve chinh trang nay. */}
           <button
-            onClick={() => router.push(`/course?slug=${courseSlug}`)}
+            onClick={() => router.push(`/course?slug=${courseSlug}&xem=1`)}
             className="rounded-lg p-2 text-gray-500 transition hover:bg-slate-100 hover:text-black"
           >
             <ArrowLeft size={18} />
@@ -516,6 +528,26 @@ function CourseLearnPageContent() {
                       </div>
                     )}
                   </>
+                ) : activeLesson.biKhoa ? (
+                  /* May chu da cat videoUrl vi nguoi xem chua duoc mo khoa hoc.
+                     Truoc day cho nay hien "chua cau hinh video" - nguoi hoc doc
+                     xong tuong he thong hong, khong biet la minh chua duoc duyet. */
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-900 px-6 text-center">
+                    <Lock size={40} className="text-amber-400" />
+                    <p className="text-sm font-semibold text-white">
+                      Bài học chưa được mở
+                    </p>
+                    <p className="max-w-sm text-xs leading-relaxed text-slate-400">
+                      Khóa học này có phí. Sau khi bạn chuyển khoản, ban quản trị đối
+                      chiếu rồi xác nhận đơn — toàn bộ bài giảng sẽ mở ra ngay tại đây.
+                    </p>
+                    <button
+                      onClick={() => router.push(`/course?slug=${courseSlug}`)}
+                      className="mt-1 rounded-xl bg-amber-500 px-5 py-2.5 text-xs font-bold text-white transition hover:bg-amber-600"
+                    >
+                      Xem cách đăng ký khóa học
+                    </button>
+                  </div>
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-900 text-gray-500">
                     <BookOpen size={48} className="animate-pulse text-gray-600" />
@@ -603,7 +635,9 @@ function CourseLearnPageContent() {
                       }`}
                     >
                       <div className="mt-0.5 flex-shrink-0">
-                        {isCompleted ? (
+                        {lesson.biKhoa ? (
+                          <Lock size={15} className="text-amber-500" />
+                        ) : isCompleted ? (
                           <CheckCircle
                             size={16}
                             className="fill-emerald-50 text-emerald-500"

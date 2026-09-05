@@ -140,9 +140,19 @@ function CourseDetailPageContent() {
   // Lay slug tu query string: ?slug=ten-khoa-hoc
   const courseSlug = searchParams.get("slug") || "";
 
+  // ?xem=1 => o lai trang gioi thieu, dung nhay vao bai hoc. Doc ra bien roi
+  // moi dung trong effect: de nguyen searchParams thi phai bo ca doi tuong do
+  // vao mang phu thuoc, ma no doi tham chieu moi lan dieu huong nen effect se
+  // goi lai toan bo API mot cach thua thai.
+  const boQuaNhayVaoHoc = searchParams.get("xem") === "1";
+
   const [course, setCourse] = useState<Course | null>(null);
   const [isEnrolled, setIsEnrolled] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  // Bat khi trang nay chi la tram trung chuyen sang /learn. Giu khung xam cho
+  // toi luc doi trang, neu khong nguoi hoc thay trang gioi thieu nhap nhay mot
+  // cai roi bien mat.
+  const [dangNhayVaoHoc, setDangNhayVaoHoc] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   // false khi dung HTML o may chu, true sau khi React gan vao trinh duyet.
@@ -234,6 +244,22 @@ function CourseDetailPageContent() {
           if (isComponentMounted) {
             if (enrollmentData && enrollmentData.isEnrolled === true) {
               setIsEnrolled(true);
+
+              // Khoa mien phi da ghi danh roi thi khong bat xem lai trang gioi
+              // thieu nua - vao thang bai giang.
+              //
+              // Chi ap cho khoa gia 0. Khoa co phi van phai qua trang nay vi do
+              // la noi hien gia, noi dung va nut thanh toan; nhay thang vao
+              // /learn se bo qua ca luong mua.
+              //
+              // ?xem=1 la duong lui: nut quay lai o trang hoc mang tham so nay
+              // nen van mo duoc trang gioi thieu de doc danh gia, hoi dap. Thieu
+              // no thi hai trang day qua day lai thanh vong lap.
+              if ((courseData.price ?? 0) === 0 && !boQuaNhayVaoHoc) {
+                setDangNhayVaoHoc(true);
+                router.replace(`/learn?slug=${courseSlug}`);
+                return;
+              }
               // Truoc day dong nay doc progressData?.totalProgress, ma
               // ProgressStats khong he co truong do (ten that la
               // progressPercentage). Ve mat kieu la undefined, nen ve phai cua
@@ -269,7 +295,7 @@ function CourseDetailPageContent() {
     return () => {
       isComponentMounted = false;
     };
-  }, [courseSlug, isMounted]);
+  }, [courseSlug, isMounted, boQuaNhayVaoHoc, router]);
 
   const handleMarkHelpful = async (reviewId: string) => {
     try {
@@ -337,7 +363,7 @@ function CourseDetailPageContent() {
     }
   };
 
-  if (loading) {
+  if (loading || dangNhayVaoHoc) {
     return <CourseDetailSkeleton />;
   }
 
