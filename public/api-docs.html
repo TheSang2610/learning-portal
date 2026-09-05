@@ -19,9 +19,17 @@
   }
   .bang b { color: #7fd1ff; }
   .bang a { color: #7fd1ff; }
-  .bang p { margin: 0; max-width: 84ch; }
+  .bang p { margin: 0; max-width: 88ch; }
   .bang p + p { margin-top: 6px; }
   .bang .canh { color: #ffcf7a; }
+  .bang code {
+    background: rgba(255,255,255,.08); border-radius: 4px; padding: 1px 5px;
+    font-size: 13px;
+  }
+  #nguon {
+    margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.12);
+    font-size: 13px; color: #9fb0c9;
+  }
   #loi { display: none; background: #3a1113; color: #ffd9d6; padding: 14px 20px;
     font: 14px/1.5 system-ui, sans-serif; }
 </style>
@@ -29,10 +37,11 @@
 <body>
 
 <div class="bang">
-  <p><b>Learning Portal API — bản gọi thử.</b> Nút <b>Try it out</b> ở đây gọi thẳng backend thật và đọc dữ liệu thật trong MongoDB.</p>
-  <p>Trang này nằm <b>cùng nguồn với frontend</b>, và mọi lời gọi đi qua proxy <code>/api</code> của Next sang backend — nên không dính CORS, và cookie phiên là cookie first-party y như khi dùng trang web.</p>
-  <p><span class="canh">Đăng nhập trước khi thử endpoint cần quyền:</span> mở <code>POST /api/users/login</code> → Try it out → điền email và mật khẩu → Execute. Máy chủ đặt cookie, các lệnh sau tự dùng nó.</p>
-  <p>Bản tài liệu để đọc (không gọi thử): <a href="https://thesang2610.github.io/learning-portal-frontend/">thesang2610.github.io/learning-portal-frontend</a></p>
+  <p><b>Learning Portal API — bản gọi thử.</b> Mặc định <b>Try it out</b> bắn thẳng vào backend thật đang chạy trên Vercel, đọc dữ liệu thật trong MongoDB.</p>
+  <p>Muốn đổi đích thì dùng ô <b>Servers</b> ngay dưới đây — Swagger tự dựng nó từ danh sách máy chủ, không cần tải lại trang.</p>
+  <p><span class="canh">Endpoint cần quyền:</span> mở <code>POST /api/users/login</code> → Try it out → điền email và mật khẩu → Execute. Máy chủ đặt cookie, các lệnh sau tự dùng nó.
+    Gọi Vercel từ máy mình thì cookie đó là <b>cookie bên thứ ba</b> — Chrome và Safari có thể chặn, lúc đó chuyển sang máy chủ <b>Máy này</b> rồi đăng nhập lại.</p>
+  <p id="nguon">Đang nạp đặc tả…</p>
 </div>
 
 <div id="loi"></div>
@@ -41,24 +50,56 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-standalone-preset.min.js"></script>
 <script>
-// Nap dac ta THANG TU BACKEND dang chay, khong dung ban chup.
-// Sua API la tai lai trang thay ngay, khong phai xuat lai file nao.
-fetch("/api/docs.json", { credentials: "include" })
-  .then((r) => {
-    if (!r.ok) throw new Error("máy chủ trả " + r.status);
-    return r.json();
-  })
-  .then((spec) => {
-    // Ep moi loi goi ve DUONG DAN TUONG DOI.
+// Dia chi backend that tren Vercel. Doi ten mien thi sua o day.
+var API_VERCEL = "https://learning-portal-backend-ten.vercel.app";
+
+// Hai duong lay dac ta, thu theo thu tu.
+//
+//   /api/docs.json  la ban SONG: qua proxy /api cua Next sang backend dang
+//                   chay. Sua route xong tai lai trang la thay ngay.
+//   ./openapi.json  la ban CHUP, nam canh trang nay. Can no vi backend tren
+//                   Vercel hien chua co phan tai lieu - goi /api/docs.json o
+//                   do se ra 404 va trang se trong tron.
+var NGUON = [
+  { url: "/api/docs.json", ten: "backend đang chạy (qua proxy /api)" },
+  { url: "./openapi.json", ten: "bản chụp kèm theo trang" },
+];
+
+function napDacTa(i) {
+  if (i >= NGUON.length) return Promise.reject(new Error("không nguồn nào đọc được"));
+  return fetch(NGUON[i].url, { credentials: "include" })
+    .then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    })
+    .then(function (spec) {
+      return { spec: spec, ten: NGUON[i].ten };
+    })
+    .catch(function () {
+      return napDacTa(i + 1);
+    });
+}
+
+napDacTa(0)
+  .then(function (kq) {
+    // Danh sach may chu Try it out se ban toi. Cai DUNG DAU la mac dinh.
     //
-    // Dac ta khai san dia chi tuyet doi cua backend. De nguyen thi Try it out
-    // goi cheo mien tu trinh duyet va dinh CORS. Doi thanh chuoi rong thi lenh
-    // di ra chinh nguon dang mo, roi rewrites() cua Next chuyen tiep sang
-    // backend - cung duong ma giao dien that van dung.
-    spec.servers = [{ url: "", description: "Cùng nguồn, qua proxy /api của Next" }];
+    // Chuoi rong nghia la duong dan tuong doi: lenh di ra chinh nguon dang mo,
+    // roi rewrites() cua Next chuyen tiep sang backend. Duong nay khong dinh
+    // CORS va cookie phien la cookie ben thu nhat, nen dung de thu cac
+    // endpoint can dang nhap.
+    kq.spec.servers = [
+      { url: API_VERCEL, description: "Vercel — backend thật đang chạy" },
+      { url: "", description: "Máy này — qua proxy /api của Next" },
+    ];
+
+    var n = Object.keys(kq.spec.paths || {}).length;
+    document.getElementById("nguon").innerHTML =
+      "Đặc tả: <b>" + n + "</b> đường dẫn, lấy từ " + kq.ten +
+      ". Máy chủ mặc định: <b>" + API_VERCEL.replace("https://", "") + "</b>";
 
     window.ui = SwaggerUIBundle({
-      spec,
+      spec: kq.spec,
       dom_id: "#swagger",
       deepLinking: true,
       docExpansion: "none",
@@ -68,7 +109,7 @@ fetch("/api/docs.json", { credentials: "include" })
       persistAuthorization: true,
       // Gui kem cookie phien, neu khong moi endpoint can quyen deu tra 401.
       withCredentials: true,
-      requestInterceptor: (req) => {
+      requestInterceptor: function (req) {
         req.credentials = "include";
         return req;
       },
@@ -76,14 +117,15 @@ fetch("/api/docs.json", { credentials: "include" })
       layout: "BaseLayout",
     });
   })
-  .catch((e) => {
-    const el = document.getElementById("loi");
+  .catch(function (e) {
+    var el = document.getElementById("loi");
     el.style.display = "block";
     el.innerHTML =
-      "<b>Không nạp được đặc tả từ <code>/api/docs.json</code>: " + e.message + "</b><br>" +
-      "Backend chưa chạy, hoặc bản backend đang chạy chưa có phần tài liệu. " +
+      "<b>Không nạp được đặc tả API: " + e.message + "</b><br>" +
+      "Đã thử <code>/api/docs.json</code> rồi tới <code>./openapi.json</code>. " +
       "Ở máy: chạy <code>npm run dev</code> trong thư mục <code>backend</code>. " +
-      "Trên Vercel: deploy lại backend.";
+      "Nếu mở trang này bằng file:// thì phải mở qua máy chủ web, không mở trực tiếp từ ổ đĩa.";
+    document.getElementById("nguon").textContent = "Không nạp được đặc tả.";
   });
 </script>
 

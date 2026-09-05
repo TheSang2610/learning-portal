@@ -1,0 +1,4678 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Learning Portal API",
+    "version": "1.0.0",
+    "description": "API của nền tảng học trực tuyến Learning Portal: khóa học, bài giảng,\nghi danh, tiến độ, trắc nghiệm, đơn hàng và chứng nhận.\n\n### Đăng nhập\n\nGọi `POST /api/users/login`. Máy chủ đặt token vào **cookie httpOnly**,\nkhông trả token trong thân phản hồi — JavaScript ở trình duyệt không đọc\nđược nó. Những lần gọi sau trình duyệt tự gửi cookie kèm theo.\n\nThử ngay trên trang này thì đăng nhập trước bằng `POST /api/users/login`,\ncookie sẽ được giữ cho các lệnh sau. Gọi từ máy khác thì nhớ bật gửi\ncookie: `credentials: 'include'` với fetch, `-c/-b` với curl.\n\n### Bốn mức quyền\n\n| Mức | Nghĩa |\n|---|---|\n| Công khai | Không cần đăng nhập |\n| Cần đăng nhập | Có phiên hợp lệ là được |\n| Giảng viên hoặc Admin | `role` là `instructor` hoặc `admin` |\n| Chỉ Admin | `role` là `admin` |\n\nThiếu phiên nhận **401**, có phiên nhưng sai vai trò nhận **403**.\n\n### CORS\n\nChỉ những origin khai trong biến môi trường mới gọi được từ trình duyệt.\nGọi bằng curl hay Postman thì không dính CORS.",
+    "contact": { "name": "Nguyễn Thế Sang", "url": "https://github.com/TheSang2610" }
+  },
+  "servers": [
+    { "url": "http://localhost:5000", "description": "Máy của lập trình viên" }
+  ],
+  "tags": [
+    { "name": "Người dùng", "description": "Đăng ký, đăng nhập, hồ sơ" },
+    { "name": "Khóa học", "description": "Danh mục khóa, chi tiết, ghi danh" },
+    { "name": "Bài học", "description": "Nội dung bài giảng và video" },
+    { "name": "Ghi danh & tiến độ", "description": "Theo dõi học viên học tới đâu" },
+    { "name": "Trắc nghiệm", "description": "Đề, lượt làm bài và chấm điểm" },
+    { "name": "Chứng nhận", "description": "Cấp và tra cứu chứng nhận" },
+    { "name": "Đơn hàng", "description": "Mua khóa học có phí" },
+    { "name": "Đánh giá", "description": "Nhận xét và số sao của khóa học" },
+    { "name": "Danh mục", "description": "Phân loại khóa học" },
+    { "name": "Đơn vị đào tạo", "description": "Trường và tổ chức cung cấp khóa" },
+    { "name": "Hỏi đáp", "description": "Câu hỏi thường gặp" },
+    { "name": "Tài liệu", "description": "Tài liệu do người dùng chia sẻ" },
+    { "name": "Bài viết", "description": "Blog" },
+    { "name": "Băng quảng cáo", "description": "Băng hiển thị do admin đặt" },
+    { "name": "Quản trị", "description": "Toàn bộ nhóm này chỉ Admin gọi được" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "cookiePhien": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "token",
+        "description": "Cookie httpOnly do POST /api/users/login đặt. Trình duyệt tự gửi kèm, không cần khai tay."
+      }
+    },
+    "schemas": {
+      "Loi": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "example": "Không tìm thấy khóa học" }
+        }
+      },
+      "NguoiDung": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "name": { "type": "string", "example": "Nguyễn Thế Sang" },
+          "email": { "type": "string", "format": "email", "example": "sang@example.com" },
+          "role": {
+            "type": "string",
+            "enum": ["student", "instructor", "admin"],
+            "example": "student"
+          },
+          "avatar": {
+            "type": "string",
+            "example": "https://res.cloudinary.com/.../avatar.jpg"
+          },
+          "provider": {
+            "type": "string",
+            "enum": ["local", "google"],
+            "example": "local"
+          },
+          "isActive": { "type": "boolean", "example": true },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "DanhMuc": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "name": { "type": "string", "example": "Lập trình web" },
+          "slug": { "type": "string", "example": "lap-trinh-web" },
+          "description": { "type": "string" }
+        }
+      },
+      "DonVi": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "name": {
+            "type": "string",
+            "example": "Học viện Công nghệ Bưu chính Viễn thông"
+          },
+          "slug": { "type": "string", "example": "ptit" },
+          "logo": { "type": "string" }
+        }
+      },
+      "BaiHoc": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "courseId": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "title": { "type": "string", "example": "Giới thiệu React và môi trường" },
+          "slug": { "type": "string", "example": "gioi-thieu-react" },
+          "duration": { "type": "string", "example": "12:40" },
+          "order": { "type": "integer", "example": 1 },
+          "videoUrl": { "type": "string", "example": "https://.../bai-1.m3u8" },
+          "content": { "type": "string" },
+          "documentUrl": { "type": "string" },
+          "biKhoa": {
+            "type": "boolean",
+            "description": "May chu dat true khi nguoi xem chua duoc mo khoa hoc. Luc do videoUrl, content va documentUrl bi cat, chi con muc luc.",
+            "example": false
+          }
+        }
+      },
+      "KhoaHoc": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "title": { "type": "string", "example": "Lập trình Web với React & Node.js" },
+          "slug": { "type": "string", "example": "lap-trinh-web-react-nodejs" },
+          "description": { "type": "string" },
+          "thumbnail": { "type": "string" },
+          "price": {
+            "type": "number",
+            "example": 799000,
+            "description": "Don vi VND. 0 la mien phi."
+          },
+          "category": {
+            "oneOf": [
+              { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+              { "$ref": "#/components/schemas/DanhMuc" }
+            ]
+          },
+          "instructor": {
+            "oneOf": [
+              { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+              { "$ref": "#/components/schemas/NguoiDung" }
+            ]
+          },
+          "lessons": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/BaiHoc" }
+          },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "isPublished": {
+            "type": "boolean",
+            "description": "Chi tai khoan admin doi duoc co nay.",
+            "example": true
+          },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "TienDoBai": {
+        "type": "object",
+        "properties": {
+          "lesson": {
+            "oneOf": [
+              { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+              { "$ref": "#/components/schemas/BaiHoc" }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["not-started", "in-progress", "completed"]
+          },
+          "watchTime": {
+            "type": "integer",
+            "description": "So giay da xem",
+            "example": 340
+          },
+          "completedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "GhiDanh": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "course": {
+            "oneOf": [
+              { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+              { "$ref": "#/components/schemas/KhoaHoc" }
+            ]
+          },
+          "student": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "status": { "type": "string", "enum": ["active", "completed", "dropped"] },
+          "totalProgress": { "type": "integer", "example": 50 },
+          "lessonProgress": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TienDoBai" }
+          },
+          "enrolledAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "GhiDanhTheoKhoa": {
+        "type": "object",
+        "properties": {
+          "isEnrolled": { "type": "boolean", "example": true },
+          "_id": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "course": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "lessonProgress": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TienDoBai" }
+          },
+          "totalProgress": { "type": "integer", "example": 50 }
+        }
+      },
+      "ThongKeTienDo": {
+        "type": "object",
+        "properties": {
+          "progressPercentage": { "type": "integer", "example": 50 },
+          "completedLessons": { "type": "integer", "example": 3 },
+          "totalLessons": { "type": "integer", "example": 6 }
+        }
+      },
+      "DonHang": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "code": { "type": "string", "example": "LP7K2M93" },
+          "course": {
+            "oneOf": [
+              { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+              { "$ref": "#/components/schemas/KhoaHoc" }
+            ]
+          },
+          "student": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "amount": { "type": "number", "example": 799000 },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "paid", "cancelled", "rejected"]
+          },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CauHoiTracNghiem": {
+        "type": "object",
+        "properties": {
+          "question": { "type": "string" },
+          "options": { "type": "array", "items": { "type": "string" } },
+          "correctIndex": { "type": "integer", "example": 2 }
+        }
+      },
+      "BaiTracNghiem": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "course": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "title": { "type": "string", "example": "Bài kiểm tra cuối khóa" },
+          "passingScore": { "type": "integer", "example": 70 },
+          "isPublished": { "type": "boolean" },
+          "questions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CauHoiTracNghiem" }
+          }
+        }
+      },
+      "LuotLamBai": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "quiz": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "student": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "score": { "type": "integer", "example": 80 },
+          "passed": {
+            "type": "boolean",
+            "example": true,
+            "description": "score >= passingScore"
+          },
+          "submittedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ChungNhan": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "course": {
+            "oneOf": [
+              { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+              { "$ref": "#/components/schemas/KhoaHoc" }
+            ]
+          },
+          "student": {
+            "oneOf": [
+              { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+              { "$ref": "#/components/schemas/NguoiDung" }
+            ]
+          },
+          "certificateNumber": {
+            "type": "string",
+            "example": "LP-7K2M-93XA",
+            "description": "Ma duy nhat, tra cuu cong khai qua GET /api/certificates/verify/{code}."
+          },
+          "title": { "type": "string" },
+          "issuedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "DanhGia": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "course": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "user": {
+            "oneOf": [
+              { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+              { "$ref": "#/components/schemas/NguoiDung" }
+            ]
+          },
+          "rating": { "type": "integer", "minimum": 1, "maximum": 5, "example": 5 },
+          "comment": { "type": "string" },
+          "helpfulCount": { "type": "integer", "example": 3 },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ThongKeDanhGia": {
+        "type": "object",
+        "properties": {
+          "averageRating": { "type": "number", "example": 4.6 },
+          "totalReviews": { "type": "integer", "example": 25 },
+          "distribution": {
+            "type": "object",
+            "additionalProperties": { "type": "integer" },
+            "example": { "1": 0, "2": 1, "3": 1, "4": 5, "5": 18 }
+          }
+        }
+      },
+      "CauHoiThuongGap": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "question": { "type": "string" },
+          "answer": { "type": "string" },
+          "course": {
+            "type": "string",
+            "example": "66f1a2b3c4d5e6f7a8b9c0d1",
+            "nullable": true,
+            "description": "Rong nghia la FAQ cua trang chu."
+          },
+          "order": { "type": "integer" }
+        }
+      },
+      "BangQuangCao": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "title": { "type": "string" },
+          "image": { "type": "string" },
+          "link": { "type": "string" },
+          "isActive": { "type": "boolean" }
+        }
+      },
+      "TaiLieu": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "title": { "type": "string" },
+          "fileUrl": { "type": "string" },
+          "filePublicId": { "type": "string" },
+          "uploader": {
+            "oneOf": [
+              { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+              { "$ref": "#/components/schemas/NguoiDung" }
+            ]
+          },
+          "downloadCount": { "type": "integer", "example": 12 }
+        }
+      },
+      "BaiViet": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "title": { "type": "string" },
+          "slug": { "type": "string" },
+          "topic": { "type": "string" },
+          "content": {
+            "type": "string",
+            "description": "Van ban thuong hoac HTML da qua bo loc danh sach trang. Khong bao gio chua script hay thuoc tinh su kien."
+          },
+          "isPublished": { "type": "boolean" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ThanhTich": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "user": { "type": "string", "example": "66f1a2b3c4d5e6f7a8b9c0d1" },
+          "type": { "type": "string", "example": "first-course" },
+          "title": { "type": "string" },
+          "earnedAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  },
+  "security": [{ "cookiePhien": [] }],
+  "paths": {
+    "/api/users": {
+      "get": {
+        "tags": ["Người dùng"],
+        "summary": "Danh sách người dùng",
+        "description": "**Quyền:** Chỉ Admin",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/NguoiDung" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Người dùng"],
+        "summary": "Đăng ký tài khoản",
+        "description": "**Quyền:** Công khai",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NguoiDung" }
+              }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NguoiDung" }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/users/login": {
+      "post": {
+        "tags": ["Người dùng"],
+        "summary": "Đăng nhập",
+        "description": "**Quyền:** Công khai\n\nĐặt token vào cookie httpOnly. Trình duyệt tự gửi kèm ở các lần gọi sau, JavaScript không đọc được. Có giới hạn số lần thử.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NguoiDung" }
+              }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NguoiDung" }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/users/logout": {
+      "post": {
+        "tags": ["Người dùng"],
+        "summary": "Đăng xuất",
+        "description": "**Quyền:** Công khai\n\nXóa cookie phiên.",
+        "responses": {
+          "200": { "description": "Thành công" },
+          "201": { "description": "Thành công" }
+        },
+        "security": []
+      }
+    },
+    "/api/users/google": {
+      "post": {
+        "tags": ["Người dùng"],
+        "summary": "Đăng nhập bằng Google",
+        "description": "**Quyền:** Công khai\n\nNhận id_token từ Google Identity Services, xác minh ở máy chủ rồi cấp phiên như đăng nhập thường.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "credential": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NguoiDung" }
+              }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NguoiDung" }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/users/profile": {
+      "get": {
+        "tags": ["Người dùng"],
+        "summary": "Hồ sơ của tôi",
+        "description": "**Quyền:** Cần đăng nhập",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NguoiDung" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Người dùng"],
+        "summary": "Cập nhật hồ sơ",
+        "description": "**Quyền:** Cần đăng nhập",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NguoiDung" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/profile/avatar": {
+      "post": {
+        "tags": ["Người dùng"],
+        "summary": "Đổi ảnh đại diện",
+        "description": "**Quyền:** Cần đăng nhập",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": { "avatar": { "type": "string", "format": "binary" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NguoiDung" }
+              }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NguoiDung" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/deactivate": {
+      "put": {
+        "tags": ["Người dùng"],
+        "summary": "Vô hiệu hóa tài khoản của tôi",
+        "description": "**Quyền:** Cần đăng nhập",
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/activity": {
+      "get": {
+        "tags": ["Người dùng"],
+        "summary": "Hoạt động gần đây của tôi",
+        "description": "**Quyền:** Cần đăng nhập",
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/instructors": {
+      "get": {
+        "tags": ["Người dùng"],
+        "summary": "Danh sách giảng viên theo đơn vị",
+        "description": "**Quyền:** Chỉ Admin",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/NguoiDung" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{id}/role": {
+      "put": {
+        "tags": ["Người dùng"],
+        "summary": "Đổi vai trò người dùng",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "role": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NguoiDung" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{id}": {
+      "delete": {
+        "tags": ["Người dùng"],
+        "summary": "Xóa người dùng",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/categories": {
+      "get": {
+        "tags": ["Danh mục"],
+        "summary": "Danh sách danh mục",
+        "description": "**Quyền:** Công khai",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/DanhMuc" }
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      },
+      "post": {
+        "tags": ["Danh mục"],
+        "summary": "Tạo danh mục",
+        "description": "**Quyền:** Chỉ Admin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/DanhMuc" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DanhMuc" } }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DanhMuc" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/categories/{id}": {
+      "put": {
+        "tags": ["Danh mục"],
+        "summary": "Sửa danh mục",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/DanhMuc" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DanhMuc" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Danh mục"],
+        "summary": "Xóa danh mục",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/providers": {
+      "get": {
+        "tags": ["Đơn vị đào tạo"],
+        "summary": "Danh sách đơn vị đào tạo",
+        "description": "**Quyền:** Công khai",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/DonVi" }
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      },
+      "post": {
+        "tags": ["Đơn vị đào tạo"],
+        "summary": "Tạo đơn vị",
+        "description": "**Quyền:** Chỉ Admin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/DonVi" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DonVi" } }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DonVi" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/providers/slug/{slug}": {
+      "get": {
+        "tags": ["Đơn vị đào tạo"],
+        "summary": "Chi tiết đơn vị theo slug",
+        "description": "**Quyền:** Công khai",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DonVi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/providers/{id}": {
+      "put": {
+        "tags": ["Đơn vị đào tạo"],
+        "summary": "Sửa đơn vị",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/DonVi" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DonVi" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Đơn vị đào tạo"],
+        "summary": "Xóa đơn vị",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses": {
+      "get": {
+        "tags": ["Khóa học"],
+        "summary": "Danh sách khóa học",
+        "description": "**Quyền:** Công khai\n\nChỉ trả về khóa đã xuất bản. Trường lessons ở đây là mảng ObjectId, muốn nội dung bài thì gọi /api/courses/slug/{slug}.",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/KhoaHoc" }
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      },
+      "post": {
+        "tags": ["Khóa học"],
+        "summary": "Tạo khóa học",
+        "description": "**Quyền:** Giảng viên hoặc Admin\n\nKhóa mới nằm ở dạng nháp (isPublished = false) cho tới khi admin xuất bản.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "description": { "type": "string" },
+                  "price": { "type": "number" },
+                  "category": { "type": "string" },
+                  "thumbnail": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/KhoaHoc" } }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/KhoaHoc" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/slug/{slug}": {
+      "get": {
+        "tags": ["Khóa học"],
+        "summary": "Chi tiết khóa học theo slug",
+        "description": "**Quyền:** Công khai\n\nKèm danh sách bài học đầy đủ. Người chưa được mở khóa nhận bài học có biKhoa = true và bị cắt videoUrl.",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/KhoaHoc" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/courses/{id}": {
+      "get": {
+        "tags": ["Khóa học"],
+        "summary": "Chi tiết khóa học theo id",
+        "description": "**Quyền:** Công khai",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/KhoaHoc" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        },
+        "security": []
+      },
+      "put": {
+        "tags": ["Khóa học"],
+        "summary": "Sửa khóa học",
+        "description": "**Quyền:** Giảng viên hoặc Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/KhoaHoc" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Khóa học"],
+        "summary": "Xóa khóa học",
+        "description": "**Quyền:** Giảng viên hoặc Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/home-sections": {
+      "get": {
+        "tags": ["Khóa học"],
+        "summary": "Ba nhóm khóa học của trang chủ",
+        "description": "**Quyền:** Công khai\n\nTrả về mostPopular, trendingNow, newReleases. Có cache 120 giây.",
+        "responses": { "200": { "description": "Thành công" } },
+        "security": []
+      }
+    },
+    "/api/courses/instructor": {
+      "get": {
+        "tags": ["Khóa học"],
+        "summary": "Khóa học do tôi tạo",
+        "description": "**Quyền:** Giảng viên hoặc Admin",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/KhoaHoc" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{id}/publish": {
+      "put": {
+        "tags": ["Khóa học"],
+        "summary": "Xuất bản / gỡ xuất bản khóa học",
+        "description": "**Quyền:** Chỉ Admin\n\nRoute chỉ gắn protect, nhưng controller tự chặn: tài khoản không phải admin nhận 403.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "isPublished": { "type": "boolean" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{id}/tags": {
+      "patch": {
+        "tags": ["Khóa học"],
+        "summary": "Gắn thẻ cho khóa học",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tags": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/KhoaHoc" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{id}/enroll": {
+      "post": {
+        "tags": ["Khóa học"],
+        "summary": "Ghi danh vào khóa học",
+        "description": "**Quyền:** Cần đăng nhập\n\nKhóa có phí mà chưa có đơn hàng ở trạng thái paid thì trả 402 kèm requiresPayment = true.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/GhiDanh" } }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/GhiDanh" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/admin/courses/home-sections/most-popular": {
+      "get": {
+        "tags": ["Khóa học"],
+        "summary": "Nhóm phổ biến nhất (bản quản trị)",
+        "description": "**Quyền:** Chỉ Admin",
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/admin/courses/home-sections/trending-now": {
+      "get": {
+        "tags": ["Khóa học"],
+        "summary": "Nhóm đang thịnh hành (bản quản trị)",
+        "description": "**Quyền:** Chỉ Admin",
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/admin/courses/home-sections/new-releases": {
+      "get": {
+        "tags": ["Khóa học"],
+        "summary": "Nhóm mới ra mắt (bản quản trị)",
+        "description": "**Quyền:** Chỉ Admin",
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/lessons/{id}": {
+      "get": {
+        "tags": ["Bài học"],
+        "summary": "Chi tiết bài học",
+        "description": "**Quyền:** Cần đăng nhập\n\nChưa được mở khóa thì videoUrl, content, documentUrl bị cắt và biKhoa = true.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BaiHoc" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Bài học"],
+        "summary": "Sửa bài học",
+        "description": "**Quyền:** Giảng viên hoặc Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BaiHoc" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Bài học"],
+        "summary": "Xóa bài học",
+        "description": "**Quyền:** Giảng viên hoặc Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/lessons/course/{courseSlug}/lesson/{lessonSlug}": {
+      "get": {
+        "tags": ["Bài học"],
+        "summary": "Bài học theo slug khóa và slug bài",
+        "description": "**Quyền:** Cần đăng nhập",
+        "parameters": [
+          {
+            "name": "courseSlug",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "lessonSlug",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BaiHoc" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/lessons": {
+      "post": {
+        "tags": ["Bài học"],
+        "summary": "Thêm bài học",
+        "description": "**Quyền:** Giảng viên hoặc Admin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "courseId": { "type": "string" },
+                  "title": { "type": "string" },
+                  "duration": { "type": "string" },
+                  "order": { "type": "number" },
+                  "video": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BaiHoc" } }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BaiHoc" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/enrollments/my-courses": {
+      "get": {
+        "tags": ["Ghi danh & tiến độ"],
+        "summary": "Các khóa tôi đã ghi danh",
+        "description": "**Quyền:** Cần đăng nhập\n\nMột học viên ghi danh được nhiều khóa; ràng buộc duy nhất đặt trên cặp (khóa, học viên).",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/GhiDanh" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/enrollments/{courseId}": {
+      "get": {
+        "tags": ["Ghi danh & tiến độ"],
+        "summary": "Trạng thái ghi danh của tôi ở một khóa",
+        "description": "**Quyền:** Cần đăng nhập\n\nChưa ghi danh vẫn trả 200 kèm isEnrolled = false chứ không trả 404. Phải kiểm cờ này trước khi đọc lessonProgress.",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GhiDanhTheoKhoa" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Ghi danh & tiến độ"],
+        "summary": "Ghi danh vào khóa học",
+        "description": "**Quyền:** Cần đăng nhập",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/GhiDanh" } }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/GhiDanh" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/enrollments/{courseId}/progress": {
+      "get": {
+        "tags": ["Ghi danh & tiến độ"],
+        "summary": "Thống kê tiến độ của tôi",
+        "description": "**Quyền:** Cần đăng nhập",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ThongKeTienDo" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/enrollments/{courseId}/students": {
+      "get": {
+        "tags": ["Ghi danh & tiến độ"],
+        "summary": "Danh sách học viên của khóa",
+        "description": "**Quyền:** Cần đăng nhập\n\nController tự kiểm người gọi có phải giảng viên của chính khóa đó không.",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/enrollments/{courseId}/start-lesson": {
+      "put": {
+        "tags": ["Ghi danh & tiến độ"],
+        "summary": "Bắt đầu một bài học",
+        "description": "**Quyền:** Cần đăng nhập",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "lessonId": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/enrollments/{courseId}/update-watch-time": {
+      "put": {
+        "tags": ["Ghi danh & tiến độ"],
+        "summary": "Cập nhật thời lượng đã xem",
+        "description": "**Quyền:** Cần đăng nhập",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "lessonId": { "type": "string" },
+                  "watchTime": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/enrollments/{courseId}/complete-lesson": {
+      "put": {
+        "tags": ["Ghi danh & tiến độ"],
+        "summary": "Đánh dấu hoàn thành bài học",
+        "description": "**Quyền:** Cần đăng nhập",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "lessonId": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/enrollments/{courseId}/complete-course": {
+      "put": {
+        "tags": ["Ghi danh & tiến độ"],
+        "summary": "Hoàn thành khóa học",
+        "description": "**Quyền:** Cần đăng nhập\n\nĐủ điều kiện thì sinh chứng nhận có mã tra cứu.",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/enrollments/{courseId}/drop": {
+      "put": {
+        "tags": ["Ghi danh & tiến độ"],
+        "summary": "Bỏ khóa học",
+        "description": "**Quyền:** Cần đăng nhập",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/my": {
+      "get": {
+        "tags": ["Đơn hàng"],
+        "summary": "Đơn hàng của tôi",
+        "description": "**Quyền:** Cần đăng nhập",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/DonHang" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders": {
+      "post": {
+        "tags": ["Đơn hàng"],
+        "summary": "Tạo đơn mua khóa học",
+        "description": "**Quyền:** Cần đăng nhập\n\nTrả về mã đơn để dựng mã QR chuyển khoản. Đơn ở trạng thái pending cho tới khi admin xác nhận.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "courseId": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DonHang" } }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DonHang" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/{code}": {
+      "get": {
+        "tags": ["Đơn hàng"],
+        "summary": "Xem đơn theo mã",
+        "description": "**Quyền:** Cần đăng nhập",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DonHang" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/{code}/cancel": {
+      "put": {
+        "tags": ["Đơn hàng"],
+        "summary": "Hủy đơn",
+        "description": "**Quyền:** Cần đăng nhập",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DonHang" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/quizzes/course/{courseId}": {
+      "get": {
+        "tags": ["Trắc nghiệm"],
+        "summary": "Các bài trắc nghiệm của khóa",
+        "description": "**Quyền:** Cần đăng nhập",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/BaiTracNghiem" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/quizzes/{id}": {
+      "get": {
+        "tags": ["Trắc nghiệm"],
+        "summary": "Chi tiết bài trắc nghiệm",
+        "description": "**Quyền:** Cần đăng nhập",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BaiTracNghiem" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Trắc nghiệm"],
+        "summary": "Sửa bài trắc nghiệm",
+        "description": "**Quyền:** Giảng viên hoặc Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BaiTracNghiem" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BaiTracNghiem" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Trắc nghiệm"],
+        "summary": "Xóa bài trắc nghiệm",
+        "description": "**Quyền:** Giảng viên hoặc Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/quizzes/{id}/submit": {
+      "post": {
+        "tags": ["Trắc nghiệm"],
+        "summary": "Nộp bài",
+        "description": "**Quyền:** Cần đăng nhập\n\nChấm ngay ở máy chủ; passed = score >= passingScore.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "answers": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LuotLamBai" }
+              }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LuotLamBai" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/quizzes/{id}/attempts": {
+      "get": {
+        "tags": ["Trắc nghiệm"],
+        "summary": "Các lượt làm bài",
+        "description": "**Quyền:** Cần đăng nhập",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/LuotLamBai" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/quizzes/{id}/attempt/{attemptId}": {
+      "get": {
+        "tags": ["Trắc nghiệm"],
+        "summary": "Chi tiết một lượt làm bài",
+        "description": "**Quyền:** Cần đăng nhập",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "attemptId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LuotLamBai" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/quizzes/{id}/stats": {
+      "get": {
+        "tags": ["Trắc nghiệm"],
+        "summary": "Thống kê điểm của bài trắc nghiệm",
+        "description": "**Quyền:** Giảng viên hoặc Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/quizzes": {
+      "post": {
+        "tags": ["Trắc nghiệm"],
+        "summary": "Tạo bài trắc nghiệm",
+        "description": "**Quyền:** Giảng viên hoặc Admin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BaiTracNghiem" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BaiTracNghiem" }
+              }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BaiTracNghiem" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/quizzes/{id}/publish": {
+      "put": {
+        "tags": ["Trắc nghiệm"],
+        "summary": "Xuất bản bài trắc nghiệm",
+        "description": "**Quyền:** Giảng viên hoặc Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/quizzes/{id}/allow-retry/{studentId}": {
+      "put": {
+        "tags": ["Trắc nghiệm"],
+        "summary": "Cho một học viên làm lại",
+        "description": "**Quyền:** Giảng viên hoặc Admin",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "studentId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/certificates/verify/{code}": {
+      "get": {
+        "tags": ["Chứng nhận"],
+        "summary": "Tra cứu chứng nhận theo mã",
+        "description": "**Quyền:** Công khai\n\nCông khai có chủ đích: nhà tuyển dụng gõ mã vào là kiểm chứng được, không cần tài khoản.",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChungNhan" }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/certificates/user/{userId}": {
+      "get": {
+        "tags": ["Chứng nhận"],
+        "summary": "Chứng nhận công khai của một người",
+        "description": "**Quyền:** Công khai",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ChungNhan" }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/certificates/achievements/user/{userId}": {
+      "get": {
+        "tags": ["Chứng nhận"],
+        "summary": "Thành tích công khai của một người",
+        "description": "**Quyền:** Công khai",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ThanhTich" }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/certificates/achievements/leaderboard": {
+      "get": {
+        "tags": ["Chứng nhận"],
+        "summary": "Bảng xếp hạng thành tích",
+        "description": "**Quyền:** Công khai",
+        "responses": { "200": { "description": "Thành công" } },
+        "security": []
+      }
+    },
+    "/api/certificates/my-certificates": {
+      "get": {
+        "tags": ["Chứng nhận"],
+        "summary": "Chứng nhận của tôi",
+        "description": "**Quyền:** Cần đăng nhập",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ChungNhan" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/certificates/achievements/my-achievements": {
+      "get": {
+        "tags": ["Chứng nhận"],
+        "summary": "Thành tích của tôi",
+        "description": "**Quyền:** Cần đăng nhập",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ThanhTich" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/certificates/{id}": {
+      "get": {
+        "tags": ["Chứng nhận"],
+        "summary": "Chi tiết chứng nhận",
+        "description": "**Quyền:** Công khai",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChungNhan" }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        },
+        "security": []
+      },
+      "put": {
+        "tags": ["Chứng nhận"],
+        "summary": "Sửa chứng nhận",
+        "description": "**Quyền:** Cần đăng nhập",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChungNhan" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/certificates": {
+      "post": {
+        "tags": ["Chứng nhận"],
+        "summary": "Cấp chứng nhận",
+        "description": "**Quyền:** Cần đăng nhập",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChungNhan" }
+              }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChungNhan" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/reviews/course/{courseId}": {
+      "get": {
+        "tags": ["Đánh giá"],
+        "summary": "Đánh giá của một khóa",
+        "description": "**Quyền:** Công khai",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/DanhGia" }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/reviews/stats/{courseId}": {
+      "get": {
+        "tags": ["Đánh giá"],
+        "summary": "Thống kê đánh giá của một khóa",
+        "description": "**Quyền:** Công khai",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ThongKeDanhGia" }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/reviews/{id}": {
+      "get": {
+        "tags": ["Đánh giá"],
+        "summary": "Chi tiết đánh giá",
+        "description": "**Quyền:** Công khai",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DanhGia" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        },
+        "security": []
+      },
+      "put": {
+        "tags": ["Đánh giá"],
+        "summary": "Sửa đánh giá của mình",
+        "description": "**Quyền:** Cần đăng nhập",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DanhGia" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Đánh giá"],
+        "summary": "Xóa đánh giá của mình",
+        "description": "**Quyền:** Cần đăng nhập",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/reviews/{id}/helpful": {
+      "post": {
+        "tags": ["Đánh giá"],
+        "summary": "Bấm hữu ích",
+        "description": "**Quyền:** Công khai",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "201": { "description": "Thành công" },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/reviews/{id}/unhelpful": {
+      "post": {
+        "tags": ["Đánh giá"],
+        "summary": "Bỏ bấm hữu ích",
+        "description": "**Quyền:** Công khai",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "201": { "description": "Thành công" },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/reviews": {
+      "post": {
+        "tags": ["Đánh giá"],
+        "summary": "Viết đánh giá",
+        "description": "**Quyền:** Cần đăng nhập",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "course": { "type": "string" },
+                  "rating": { "type": "number" },
+                  "comment": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DanhGia" } }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DanhGia" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/reviews/admin/all": {
+      "get": {
+        "tags": ["Đánh giá"],
+        "summary": "Toàn bộ đánh giá (quản trị)",
+        "description": "**Quyền:** Chỉ Admin",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/DanhGia" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/faqs/homepage": {
+      "get": {
+        "tags": ["Hỏi đáp"],
+        "summary": "Hỏi đáp trang chủ",
+        "description": "**Quyền:** Công khai",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CauHoiThuongGap" }
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/faqs/course/{courseId}": {
+      "get": {
+        "tags": ["Hỏi đáp"],
+        "summary": "Hỏi đáp của một khóa",
+        "description": "**Quyền:** Công khai",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CauHoiThuongGap" }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/faqs": {
+      "post": {
+        "tags": ["Hỏi đáp"],
+        "summary": "Tạo câu hỏi",
+        "description": "**Quyền:** Giảng viên hoặc Admin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CauHoiThuongGap" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CauHoiThuongGap" }
+              }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CauHoiThuongGap" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/faqs/{id}": {
+      "put": {
+        "tags": ["Hỏi đáp"],
+        "summary": "Sửa câu hỏi",
+        "description": "**Quyền:** Giảng viên hoặc Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CauHoiThuongGap" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CauHoiThuongGap" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Hỏi đáp"],
+        "summary": "Xóa câu hỏi",
+        "description": "**Quyền:** Giảng viên hoặc Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/banners": {
+      "get": {
+        "tags": ["Băng quảng cáo"],
+        "summary": "Danh sách băng quảng cáo",
+        "description": "**Quyền:** Công khai",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/BangQuangCao" }
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      },
+      "post": {
+        "tags": ["Băng quảng cáo"],
+        "summary": "Tạo băng",
+        "description": "**Quyền:** Chỉ Admin",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BangQuangCao" }
+              }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BangQuangCao" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/banners/{id}": {
+      "put": {
+        "tags": ["Băng quảng cáo"],
+        "summary": "Sửa băng",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BangQuangCao" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Băng quảng cáo"],
+        "summary": "Xóa băng",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/documents": {
+      "get": {
+        "tags": ["Tài liệu"],
+        "summary": "Danh sách tài liệu",
+        "description": "**Quyền:** Công khai",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TaiLieu" }
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      },
+      "post": {
+        "tags": ["Tài liệu"],
+        "summary": "Đăng tài liệu",
+        "description": "**Quyền:** Cần đăng nhập\n\nHọc viên cũng đăng được, không riêng giảng viên.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "file": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/TaiLieu" } }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/TaiLieu" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/documents/{id}": {
+      "get": {
+        "tags": ["Tài liệu"],
+        "summary": "Chi tiết tài liệu",
+        "description": "**Quyền:** Công khai",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/TaiLieu" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        },
+        "security": []
+      },
+      "delete": {
+        "tags": ["Tài liệu"],
+        "summary": "Xóa tài liệu",
+        "description": "**Quyền:** Cần đăng nhập\n\nController kiểm chủ sở hữu: chỉ người đăng hoặc admin mới xóa được, người khác nhận 403.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/documents/{id}/download": {
+      "post": {
+        "tags": ["Tài liệu"],
+        "summary": "Đếm một lượt tải",
+        "description": "**Quyền:** Công khai",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "201": { "description": "Thành công" },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/posts": {
+      "get": {
+        "tags": ["Bài viết"],
+        "summary": "Danh sách bài viết",
+        "description": "**Quyền:** Công khai",
+        "parameters": [
+          {
+            "name": "topic",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/BaiViet" }
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      },
+      "post": {
+        "tags": ["Bài viết"],
+        "summary": "Tạo bài viết",
+        "description": "**Quyền:** Chỉ Admin\n\nTrường content nhận văn bản thường hoặc HTML. HTML được lọc theo danh sách trắng (h1-h4, p, ul, ol, a, img, figure, blockquote, table, code): thẻ script, iframe, style cùng mọi thuộc tính sự kiện và địa chỉ javascript: đều bị bỏ trước khi lưu, nên phần lưu lại có thể ngắn hơn hẳn phần gửi lên.",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BaiViet" } }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BaiViet" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/posts/topics": {
+      "get": {
+        "tags": ["Bài viết"],
+        "summary": "Danh sách chủ đề",
+        "description": "**Quyền:** Công khai",
+        "responses": { "200": { "description": "Thành công" } },
+        "security": []
+      }
+    },
+    "/api/posts/{slug}": {
+      "get": {
+        "tags": ["Bài viết"],
+        "summary": "Chi tiết bài viết theo slug",
+        "description": "**Quyền:** Công khai",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BaiViet" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/posts/admin/all": {
+      "get": {
+        "tags": ["Bài viết"],
+        "summary": "Toàn bộ bài viết kể cả bản nháp",
+        "description": "**Quyền:** Chỉ Admin",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/BaiViet" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/posts/admin/{id}": {
+      "get": {
+        "tags": ["Bài viết"],
+        "summary": "Chi tiết bài viết (quản trị)",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BaiViet" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/posts/{id}": {
+      "put": {
+        "tags": ["Bài viết"],
+        "summary": "Sửa bài viết",
+        "description": "**Quyền:** Chỉ Admin\n\nNội dung gửi lên đi qua đúng bộ lọc HTML như khi tạo bài.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BaiViet" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Bài viết"],
+        "summary": "Xóa bài viết",
+        "description": "**Quyền:** Cần đăng nhập\n\nRoute chỉ gắn protect. Controller kiểm tiếp: chỉ tác giả hoặc admin xóa được, người khác nhận 403.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/dashboard/statistics": {
+      "get": {
+        "tags": ["Quản trị"],
+        "summary": "Số liệu tổng quan",
+        "description": "**Quyền:** Chỉ Admin",
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "tags": ["Quản trị"],
+        "summary": "Danh sách người dùng",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          {
+            "name": "role",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/NguoiDung" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Quản trị"],
+        "summary": "Tạo người dùng",
+        "description": "**Quyền:** Chỉ Admin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/NguoiDung" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NguoiDung" }
+              }
+            }
+          },
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NguoiDung" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users/{id}": {
+      "get": {
+        "tags": ["Quản trị"],
+        "summary": "Chi tiết người dùng",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NguoiDung" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Quản trị"],
+        "summary": "Sửa người dùng",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/NguoiDung" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NguoiDung" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Quản trị"],
+        "summary": "Xóa người dùng",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users/{id}/status": {
+      "put": {
+        "tags": ["Quản trị"],
+        "summary": "Khóa / mở tài khoản",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "isActive": { "type": "boolean" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/courses": {
+      "get": {
+        "tags": ["Quản trị"],
+        "summary": "Danh sách khóa học",
+        "description": "**Quyền:** Chỉ Admin",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/KhoaHoc" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/courses/{id}": {
+      "get": {
+        "tags": ["Quản trị"],
+        "summary": "Chi tiết khóa học",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/KhoaHoc" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Quản trị"],
+        "summary": "Xóa khóa học",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/courses/{id}/publish": {
+      "put": {
+        "tags": ["Quản trị"],
+        "summary": "Xuất bản khóa học",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "isPublished": { "type": "boolean" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/enrollments": {
+      "get": {
+        "tags": ["Quản trị"],
+        "summary": "Danh sách ghi danh",
+        "description": "**Quyền:** Chỉ Admin",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/GhiDanh" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/enrollments/{id}": {
+      "get": {
+        "tags": ["Quản trị"],
+        "summary": "Chi tiết ghi danh",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/GhiDanh" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/enrollments/{id}/status": {
+      "put": {
+        "tags": ["Quản trị"],
+        "summary": "Đổi trạng thái ghi danh",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "status": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/certificates": {
+      "get": {
+        "tags": ["Quản trị"],
+        "summary": "Danh sách chứng nhận",
+        "description": "**Quyền:** Chỉ Admin",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ChungNhan" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/certificates/{verificationCode}/verify": {
+      "get": {
+        "tags": ["Quản trị"],
+        "summary": "Tra cứu chứng nhận",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          {
+            "name": "verificationCode",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChungNhan" }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/certificates/{id}/revoke": {
+      "put": {
+        "tags": ["Quản trị"],
+        "summary": "Thu hồi chứng nhận",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/reviews": {
+      "get": {
+        "tags": ["Quản trị"],
+        "summary": "Danh sách đánh giá",
+        "description": "**Quyền:** Chỉ Admin",
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/DanhGia" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/reviews/{id}": {
+      "delete": {
+        "tags": ["Quản trị"],
+        "summary": "Xóa đánh giá",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/orders": {
+      "get": {
+        "tags": ["Quản trị"],
+        "summary": "Danh sách đơn hàng",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/DonHang" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/orders/{code}": {
+      "get": {
+        "tags": ["Quản trị"],
+        "summary": "Chi tiết đơn hàng",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DonHang" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/orders/{code}/confirm": {
+      "put": {
+        "tags": ["Quản trị"],
+        "summary": "Xác nhận đã nhận tiền",
+        "description": "**Quyền:** Chỉ Admin\n\nXác nhận xong thì học viên vào học được ngay.",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DonHang" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/orders/{code}/reject": {
+      "put": {
+        "tags": ["Quản trị"],
+        "summary": "Từ chối đơn hàng",
+        "description": "**Quyền:** Chỉ Admin",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DonHang" } }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc phiên đã hết hạn",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "403": {
+            "description": "Đăng nhập rồi nhưng không đủ quyền",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Loi" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}
