@@ -3,464 +3,133 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Learning Portal API — Tài liệu</title>
-<meta name="description" content="Tài liệu 129 endpoint của Learning Portal API: khóa học, bài giảng, ghi danh, trắc nghiệm, đơn hàng và chứng nhận.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='14'%3E%F0%9F%93%98%3C/text%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<title>Learning Portal API</title>
+<meta name="description" content="Tài liệu API của Learning Portal: 101 đường dẫn, 22 kiểu dữ liệu, bốn mức quyền.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='14'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui.min.css">
 <style>
-:root{
-  --nen:#FBFAF7; --the:#FFFFFF; --muc:#16181D; --nhat:#6B6F7A; --mo:#9A9EA8;
-  --vien:#E7E3DA; --chinh:#0F6B5C; --chinh-nen:#E4F1ED;
-  --get:#0E6E86; --post:#1F7A3D; --put:#9A5B08; --patch:#6042B8; --delete:#AE2A20;
-  --q0:#7A7F89; --q1:#1B5FA8; --q2:#9A5B08; --q3:#AE2A20;
-  --bong:0 1px 2px rgb(22 24 29/.05), 0 8px 24px -18px rgb(22 24 29/.35);
-}
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --nen:#101216; --the:#171A20; --muc:#E9EAED; --nhat:#9CA2AD; --mo:#6E7480;
-    --vien:#282C34; --chinh:#5FC9B4; --chinh-nen:#12302B;
-    --get:#54B8D0; --post:#5FBE7C; --put:#DFA65B; --patch:#A78BFA; --delete:#F0776C;
-    --q0:#8B919C; --q1:#6FA8E8; --q2:#DFA65B; --q3:#F0776C;
-    --bong:0 1px 2px rgb(0 0 0/.4), 0 8px 24px -18px rgb(0 0 0/.8);
+  body { margin: 0; background: #fafafa; }
+  /* Thanh tren cua Swagger chi co o nhap URL dac ta. Dac ta o day nap tu file
+     ben canh va bi sua servers ben duoi, doi URL o do chi lam hong trang. */
+  .swagger-ui .topbar { display: none; }
+
+  .bang {
+    background: #0b1220; color: #e8ecf4; padding: 18px 20px;
+    font: 14px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
   }
-}
-:root[data-theme="dark"]{
-  --nen:#101216; --the:#171A20; --muc:#E9EAED; --nhat:#9CA2AD; --mo:#6E7480;
-  --vien:#282C34; --chinh:#5FC9B4; --chinh-nen:#12302B;
-  --get:#54B8D0; --post:#5FBE7C; --put:#DFA65B; --patch:#A78BFA; --delete:#F0776C;
-  --q0:#8B919C; --q1:#6FA8E8; --q2:#DFA65B; --q3:#F0776C;
-  --bong:0 1px 2px rgb(0 0 0/.4), 0 8px 24px -18px rgb(0 0 0/.8);
-}
-
-*{box-sizing:border-box}
-body{margin:0;background:var(--nen);color:var(--muc);
-  font-family:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif;
-  font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
-code,.mono{font-family:"JetBrains Mono",ui-monospace,Consolas,monospace}
-a{color:var(--chinh)}
-button{font:inherit;cursor:pointer}
-
-/* ---------------------------------------------------------------- khung */
-.khung{display:grid;grid-template-columns:266px minmax(0,1fr);
-  max-width:1320px;margin:0 auto;gap:34px;padding:0 22px}
-@media(max-width:940px){.khung{grid-template-columns:1fr;gap:0}}
-
-/* -------------------------------------------------------------- cot trai */
-.ben{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;
-  padding:26px 0 40px;border-right:1px solid var(--vien);margin-right:-1px}
-@media(max-width:940px){.ben{position:static;height:auto;border-right:0;
-  border-bottom:1px solid var(--vien);padding-bottom:18px}}
-
-.hieu{font-size:1.06rem;font-weight:800;letter-spacing:-.03em;margin:0 0 2px}
-.hieu-phu{font-size:.78rem;color:var(--nhat);margin:0 0 18px}
-
-.o-tim{position:relative;margin-bottom:14px}
-.o-tim input{width:100%;padding:.55rem .7rem .55rem 2rem;border-radius:9px;
-  border:1px solid var(--vien);background:var(--the);color:inherit;font-size:.86rem}
-.o-tim input:focus{outline:2px solid var(--chinh);outline-offset:1px;border-color:transparent}
-.o-tim svg{position:absolute;left:.6rem;top:50%;transform:translateY(-50%);
-  width:14px;height:14px;stroke:var(--mo);fill:none;stroke-width:2}
-
-.nhan-loc{font-size:.66rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--mo);margin:16px 0 7px}
-.chip-hang{display:flex;flex-wrap:wrap;gap:5px}
-.chip{border:1px solid var(--vien);background:transparent;color:var(--nhat);
-  border-radius:99px;padding:.2rem .58rem;font-size:.74rem;font-weight:600}
-.chip[aria-pressed="true"]{background:var(--chinh);border-color:var(--chinh);color:var(--nen)}
-
-.dsn{list-style:none;margin:8px 0 0;padding:0}
-.dsn a{display:flex;justify-content:space-between;gap:8px;align-items:center;
-  padding:.34rem .5rem;border-radius:7px;color:var(--nhat);text-decoration:none;font-size:.85rem}
-.dsn a:hover{background:var(--chinh-nen);color:var(--chinh)}
-.dsn a.dang{background:var(--chinh-nen);color:var(--chinh);font-weight:600}
-.dsn b{font-family:"JetBrains Mono",monospace;font-size:.7rem;font-weight:500;color:var(--mo)}
-
-/* ------------------------------------------------------------- cot phai */
-main{padding:26px 0 90px;min-width:0}
-
-.mo-dau{margin-bottom:30px}
-.mo-dau h1{font-size:clamp(1.7rem,3.4vw,2.3rem);font-weight:800;letter-spacing:-.035em;
-  line-height:1.12;margin:0 0 10px;text-wrap:balance}
-.mo-dau p{color:var(--nhat);max-width:66ch;margin:0 0 12px}
-
-.so-lieu{display:flex;flex-wrap:wrap;gap:9px;margin:16px 0 22px}
-.so-lieu div{border:1px solid var(--vien);background:var(--the);border-radius:11px;
-  padding:.5rem .8rem;box-shadow:var(--bong)}
-.so-lieu b{display:block;font-family:"JetBrains Mono",monospace;font-size:1.15rem;
-  font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.so-lieu span{font-size:.7rem;color:var(--mo);letter-spacing:.05em;text-transform:uppercase}
-
-.hop-y{border:1px solid var(--vien);border-left:3px solid var(--chinh);
-  background:var(--the);border-radius:0 11px 11px 0;padding:.85rem 1rem;margin:0 0 14px}
-.hop-y h3{margin:0 0 5px;font-size:.9rem;font-weight:700}
-.hop-y p{margin:0;font-size:.87rem;color:var(--nhat);max-width:70ch}
-.hop-y p+p{margin-top:6px}
-
-table.quyen{border-collapse:collapse;width:100%;max-width:560px;font-size:.85rem;margin:6px 0 0}
-table.quyen td{border-top:1px solid var(--vien);padding:.34rem .5rem .34rem 0;vertical-align:top}
-table.quyen td:last-child{color:var(--nhat)}
-
-/* --------------------------------------------------------------- nhom */
-.nhom{margin-top:34px;scroll-margin-top:14px}
-.nhom>h2{font-size:1.16rem;font-weight:800;letter-spacing:-.025em;margin:0 0 2px;
-  display:flex;align-items:baseline;gap:9px}
-.nhom>h2 b{font-family:"JetBrains Mono",monospace;font-size:.72rem;font-weight:500;color:var(--mo)}
-.nhom>p{margin:0 0 12px;font-size:.86rem;color:var(--nhat)}
-
-/* ------------------------------------------------------------ endpoint */
-.ep{border:1px solid var(--vien);background:var(--the);border-radius:11px;
-  margin-bottom:7px;overflow:hidden;box-shadow:var(--bong)}
-.ep[hidden]{display:none}
-
-.ep>summary{list-style:none;display:flex;align-items:center;gap:11px;
-  padding:.6rem .8rem;cursor:pointer}
-.ep>summary::-webkit-details-marker{display:none}
-.ep>summary:hover{background:var(--chinh-nen)}
-.ep[open]>summary{border-bottom:1px solid var(--vien)}
-
-.pt{flex:none;width:62px;text-align:center;border-radius:6px;padding:.16rem 0;
-  font-family:"JetBrains Mono",monospace;font-size:.66rem;font-weight:700;letter-spacing:.06em;
-  color:#fff}
-.pt-get{background:var(--get)} .pt-post{background:var(--post)} .pt-put{background:var(--put)}
-.pt-patch{background:var(--patch)} .pt-delete{background:var(--delete)}
-
-.duong{font-family:"JetBrains Mono",monospace;font-size:.83rem;font-weight:500;
-  white-space:nowrap;overflow-x:auto;scrollbar-width:none}
-.duong::-webkit-scrollbar{display:none}
-.duong i{color:var(--chinh);font-style:normal}
-.tomtat{color:var(--nhat);font-size:.85rem;margin-left:auto;text-align:right;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:38%}
-@media(max-width:760px){.tomtat{display:none}}
-
-.q{flex:none;font-size:.63rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
-  border:1px solid currentColor;border-radius:99px;padding:.08rem .45rem}
-.q0{color:var(--q0)} .q1{color:var(--q1)} .q2{color:var(--q2)} .q3{color:var(--q3)}
-
-.than{padding:.9rem 1rem 1.1rem}
-.than .tt{font-size:.9rem;font-weight:600;margin:0 0 4px}
-.than .ghi{color:var(--nhat);font-size:.87rem;margin:0 0 12px;max-width:74ch}
-.than h4{font-size:.68rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
-  color:var(--mo);margin:14px 0 6px}
-.than h4:first-of-type{margin-top:4px}
-
-table.o{border-collapse:collapse;width:100%;font-size:.84rem}
-table.o th{text-align:left;font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;
-  color:var(--mo);font-weight:700;padding:0 .7rem .3rem 0;border-bottom:1px solid var(--vien)}
-table.o td{padding:.32rem .7rem .32rem 0;border-bottom:1px solid var(--vien);vertical-align:top}
-table.o td:first-child{font-family:"JetBrains Mono",monospace;font-size:.8rem;white-space:nowrap}
-table.o .kieu{color:var(--nhat);font-family:"JetBrains Mono",monospace;font-size:.76rem}
-.bat{color:var(--delete);font-size:.7rem}
-
-.ma{display:inline-block;min-width:2.2rem;font-family:"JetBrains Mono",monospace;
-  font-weight:700;font-size:.8rem}
-.ma-2{color:var(--post)} .ma-4{color:var(--put)} .ma-5{color:var(--delete)}
-
-.tag-schema{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:.76rem;
-  background:var(--chinh-nen);color:var(--chinh);border-radius:5px;padding:.04rem .38rem;
-  text-decoration:none}
-
-.chep{margin-left:auto;flex:none;border:1px solid var(--vien);background:transparent;
-  color:var(--mo);border-radius:6px;padding:.14rem .45rem;font-size:.68rem;font-weight:600}
-.chep:hover{color:var(--chinh);border-color:var(--chinh)}
-
-/* -------------------------------------------------------------- schema */
-.kho{margin-top:46px;padding-top:26px;border-top:1px solid var(--vien)}
-.kho-luoi{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:9px}
-.sc{border:1px solid var(--vien);background:var(--the);border-radius:11px;overflow:hidden;
-  box-shadow:var(--bong);scroll-margin-top:14px}
-.sc>summary{list-style:none;padding:.5rem .75rem;font-family:"JetBrains Mono",monospace;
-  font-size:.83rem;font-weight:700;cursor:pointer}
-.sc>summary::-webkit-details-marker{display:none}
-.sc>summary:hover{background:var(--chinh-nen)}
-.sc[open]>summary{border-bottom:1px solid var(--vien)}
-.sc .than{padding:.6rem .75rem .8rem}
-
-.trong{color:var(--mo);font-size:.88rem;padding:1.4rem 0}
-footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--vien);
-  color:var(--mo);font-size:.8rem}
+  .bang b { color: #7fd1ff; }
+  .bang a { color: #7fd1ff; }
+  .bang p { margin: 0; max-width: 88ch; }
+  .bang p + p { margin-top: 7px; }
+  .bang code {
+    background: rgba(255,255,255,.08); border-radius: 4px; padding: 1px 5px;
+    font-size: 13px;
+  }
+  .bang .canh { color: #ffcf7a; }
+  #trang-thai {
+    margin-top: 12px; padding-top: 11px;
+    border-top: 1px solid rgba(255,255,255,.12);
+    font-size: 13px; color: #9fb0c9;
+  }
+  #loi {
+    display: none; background: #3a1113; color: #ffd9d6; padding: 14px 20px;
+    font: 14px/1.5 system-ui, sans-serif;
+  }
 </style>
 </head>
 <body>
 
-<div class="khung">
-
-  <aside class="ben">
-    <p class="hieu">Learning Portal API</p>
-    <p class="hieu-phu">Tài liệu tham chiếu · v1.0.0</p>
-
-    <div class="o-tim">
-      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input id="tim" type="search" placeholder="Tìm đường dẫn hoặc mô tả…" autocomplete="off">
-    </div>
-
-    <p class="nhan-loc">Lọc theo quyền</p>
-    <div class="chip-hang" id="locQuyen"></div>
-
-    <p class="nhan-loc">Nhóm</p>
-    <ul class="dsn" id="dsNhom"></ul>
-  </aside>
-
-  <main>
-    <div class="mo-dau">
-      <h1>Tài liệu API Learning Portal</h1>
-      <p id="loiMo">Đang tải bản đặc tả…</p>
-
-      <div class="so-lieu" id="soLieu"></div>
-
-      <div class="hop-y">
-        <h3>Đăng nhập bằng cookie, không phải header</h3>
-        <p>Gọi <code>POST /api/users/login</code>. Máy chủ đặt token vào <b>cookie httpOnly</b> chứ không trả token trong thân phản hồi — JavaScript ở trình duyệt không đọc được nó. Những lần gọi sau trình duyệt tự gửi cookie kèm theo.</p>
-        <p>Gọi từ nơi khác thì nhớ bật gửi cookie: <code>credentials: 'include'</code> với fetch, cờ <code>-c</code> và <code>-b</code> với curl.</p>
-      </div>
-
-      <div class="hop-y">
-        <h3>Bốn mức quyền</h3>
-        <table class="quyen">
-          <tr><td><span class="q q0">Công khai</span></td><td>Không cần đăng nhập</td></tr>
-          <tr><td><span class="q q1">Cần đăng nhập</span></td><td>Có phiên hợp lệ là được</td></tr>
-          <tr><td><span class="q q2">Giảng viên</span></td><td><code>role</code> là <code>instructor</code> hoặc <code>admin</code></td></tr>
-          <tr><td><span class="q q3">Chỉ Admin</span></td><td><code>role</code> là <code>admin</code></td></tr>
-        </table>
-        <p style="margin-top:8px">Thiếu phiên nhận <b>401</b>. Có phiên nhưng sai vai trò nhận <b>403</b>.</p>
-      </div>
-
-      <div class="hop-y">
-        <h3>Trang này không cần máy chủ</h3>
-        <p>Toàn bộ nội dung đọc từ <a href="./openapi.json">openapi.json</a> nằm cạnh nó — nạp file đó thẳng vào Postman là có sẵn toàn bộ request.</p>
-        <p>Vì vậy ở đây <b>không có nút gọi thử</b>: trang tĩnh trên <code>github.io</code> gọi sang backend thật sẽ bị trình duyệt chặn vì CORS. Muốn gọi thử thì dùng curl, Postman, hoặc chạy backend ở máy rồi mở <code>/api/docs</code>.</p>
-      </div>
-    </div>
-
-    <div id="noiDung"></div>
-
-    <section class="kho" id="kho">
-      <h2 style="font-size:1.16rem;font-weight:800;letter-spacing:-.025em;margin:0 0 3px">Kiểu dữ liệu</h2>
-      <p style="margin:0 0 12px;font-size:.86rem;color:var(--nhat)">Hình dạng JSON mà API trả về. Bấm để mở danh sách trường.</p>
-      <div class="kho-luoi" id="dsSchema"></div>
-    </section>
-
-    <footer id="chan"></footer>
-  </main>
+<div class="bang">
+  <p><b>Learning Portal API.</b> Nền tảng học trực tuyến: khóa học, bài giảng, ghi danh, tiến độ, trắc nghiệm, đơn hàng và chứng nhận. Node.js/Express + MongoDB, xác thực bằng cookie httpOnly.</p>
+  <p>Mã nguồn: <a href="https://github.com/TheSang2610/learning-portal-frontend">frontend</a> · Bản chạy thật: <a href="https://learning-portal-frontend-ebon.vercel.app">learning-portal-frontend-ebon.vercel.app</a></p>
+  <p id="trang-thai">Đang nạp đặc tả…</p>
 </div>
 
+<div id="loi"></div>
+<div id="swagger"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-standalone-preset.min.js"></script>
 <script>
-const MAY = "https://learning-portal-backend-ten.vercel.app";
-const MUC_QUYEN = ["Công khai", "Cần đăng nhập", "Giảng viên hoặc Admin", "Chỉ Admin"];
-const NGAN = { "Công khai": "Công khai", "Cần đăng nhập": "Đăng nhập", "Giảng viên hoặc Admin": "Giảng viên", "Chỉ Admin": "Admin" };
+var API = "https://learning-portal-backend-ten.vercel.app";
 
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-
-// Ten schema tu mot $ref, hoac tu mang chua $ref.
-function tenSchema(sc) {
-  if (!sc) return null;
-  if (sc.$ref) return sc.$ref.split("/").pop();
-  if (sc.type === "array" && sc.items) {
-    const t = tenSchema(sc.items);
-    return t ? t + "[]" : null;
-  }
-  return null;
+// Trang nay la trang TINH tren GitHub Pages: khong co may chu nao ben duoi de
+// chuyen tiep, nen moi loi goi Try it out deu la goi CHEO MIEN thang sang
+// backend. Trinh duyet chi cho doc phan hoi khi backend gui kem header CORS
+// cho dung ten mien nay.
+//
+// Vi vay khong bat cung Try it out. Do thu mot endpoint cong khai truoc:
+//
+//   doc duoc   -> bat Try it out, trang thanh ban goi thu that
+//   bi chan    -> chi de doc, va noi ro vi sao, thay vi de nguoi ta bam Execute
+//                 roi nhan "Failed to fetch" khong hieu gi
+//
+// Nho vay ngay nao them ten mien nay vao FRONTEND_ORIGINS cua backend la trang
+// tu chuyen sang goi duoc, khong phai sua lai file nay.
+function doGoiDuoc() {
+  return fetch(API + "/api/courses?limit=1", { credentials: "include" })
+    .then(function (r) { return r.ok; })
+    .catch(function () { return false; });
 }
 
-// Mo ta kieu ngan gon cho mot node schema.
-function moTaKieu(sc) {
-  if (!sc) return "";
-  const t = tenSchema(sc);
-  if (t) return t;
-  if (sc.type === "array") return (sc.items && sc.items.type ? sc.items.type : "any") + "[]";
-  if (sc.format === "binary") return "file";
-  if (sc.oneOf) return sc.oneOf.map(moTaKieu).filter(Boolean).join(" | ");
-  return sc.type || "object";
-}
+Promise.all([
+  fetch("./openapi.json").then(function (r) {
+    if (!r.ok) throw new Error("không đọc được openapi.json (" + r.status + ")");
+    return r.json();
+  }),
+  doGoiDuoc(),
+])
+  .then(function (kq) {
+    var spec = kq[0];
+    var goiDuoc = kq[1];
 
-function bangTruong(props, batBuoc = []) {
-  const ten = Object.keys(props || {});
-  if (!ten.length) return "";
-  return `<table class="o"><thead><tr><th>Trường</th><th>Kiểu</th><th>Mô tả</th></tr></thead><tbody>` +
-    ten.map((k) => {
-      const v = props[k] || {};
-      const t = tenSchema(v);
-      const kieu = t
-        ? `<a class="tag-schema" href="#sc-${esc(t.replace("[]", ""))}">${esc(t)}</a>`
-        : `<span class="kieu">${esc(moTaKieu(v))}</span>`;
-      const bat = batBuoc.includes(k) ? ` <span class="bat">bắt buộc</span>` : "";
-      return `<tr><td>${esc(k)}${bat}</td><td>${kieu}</td><td>${esc(v.description || "")}</td></tr>`;
-    }).join("") + `</tbody></table>`;
-}
+    spec.servers = [{ url: API, description: "Vercel — backend thật đang chạy" }];
 
-function veEndpoint(duong, pt, op) {
-  // Mo ta duoc sinh ra theo dang "**Quyen:** X" roi den ghi chu.
-  const kq = /\*\*Quyền:\*\* ([^\n]+)/.exec(op.description || "");
-  const quyen = kq ? kq[1].trim() : "Công khai";
-  const iq = Math.max(0, MUC_QUYEN.indexOf(quyen));
-  const ghi = (op.description || "").replace(/\*\*Quyền:\*\*[^\n]*\n*/, "").trim();
+    var soDuong = Object.keys(spec.paths || {}).length;
+    var trangThai = document.getElementById("trang-thai");
 
-  const duongDep = esc(duong).replace(/\{([^}]+)\}/g, "<i>{$1}</i>");
-  const id = (pt + duong).replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase();
-
-  let ct = "";
-  if (ghi) ct += `<p class="ghi">${esc(ghi)}</p>`;
-
-  const tsDuong = (op.parameters || []).filter((p) => p.in === "path");
-  const tsQuery = (op.parameters || []).filter((p) => p.in === "query");
-  if (tsDuong.length) {
-    ct += `<h4>Tham số đường dẫn</h4><table class="o"><tbody>` +
-      tsDuong.map((p) => `<tr><td>${esc(p.name)} <span class="bat">bắt buộc</span></td><td class="kieu">${esc(p.schema?.type || "string")}</td></tr>`).join("") +
-      `</tbody></table>`;
-  }
-  if (tsQuery.length) {
-    ct += `<h4>Tham số truy vấn</h4><table class="o"><tbody>` +
-      tsQuery.map((p) => `<tr><td>${esc(p.name)}</td><td class="kieu">${esc(p.schema?.type || "string")}</td></tr>`).join("") +
-      `</tbody></table>`;
-  }
-
-  const rb = op.requestBody;
-  if (rb) {
-    const loai = Object.keys(rb.content || {})[0] || "application/json";
-    const sc = rb.content[loai].schema || {};
-    const t = tenSchema(sc);
-    ct += `<h4>Thân yêu cầu · ${esc(loai)}</h4>`;
-    ct += t
-      ? `<p class="ghi" style="margin:0">Theo kiểu <a class="tag-schema" href="#sc-${esc(t)}">${esc(t)}</a></p>`
-      : bangTruong(sc.properties, sc.required || []);
-  }
-
-  const ma = Object.keys(op.responses || {});
-  if (ma.length) {
-    ct += `<h4>Phản hồi</h4><table class="o"><tbody>` + ma.map((m) => {
-      const r = op.responses[m];
-      const sc = r.content?.["application/json"]?.schema;
-      const t = tenSchema(sc);
-      const nhom = m[0];
-      return `<tr><td><span class="ma ma-${nhom}">${esc(m)}</span></td>` +
-        `<td>${t ? `<a class="tag-schema" href="#sc-${esc(t.replace("[]", ""))}">${esc(t)}</a>` : ""}</td>` +
-        `<td>${esc(r.description || "")}</td></tr>`;
-    }).join("") + `</tbody></table>`;
-  }
-
-  return `<details class="ep" id="${id}" data-q="${iq}" data-tim="${esc((pt + " " + duong + " " + (op.summary || "") + " " + ghi).toLowerCase())}">
-    <summary>
-      <span class="pt pt-${pt}">${pt.toUpperCase()}</span>
-      <span class="duong">${duongDep}</span>
-      <span class="q q${iq}">${esc(NGAN[quyen] || quyen)}</span>
-      <span class="tomtat">${esc(op.summary || "")}</span>
-    </summary>
-    <div class="than">
-      <p class="tt">${esc(op.summary || "")}</p>
-      ${ct}
-      <h4>Gọi thử bằng curl</h4>
-      <table class="o"><tbody><tr><td colspan="2" style="white-space:normal">
-        <code>curl -b phien.txt -X ${pt.toUpperCase()} "${MAY}${esc(duong)}"</code>
-      </td></tr></tbody></table>
-    </div>
-  </details>`;
-}
-
-fetch("./openapi.json")
-  .then((r) => r.json())
-  .then((spec) => {
-    // Gom endpoint theo nhom, giu dung thu tu tags da khai trong dac ta.
-    const theoNhom = new Map(spec.tags.map((t) => [t.name, { mo: t.description, ds: [] }]));
-    let tong = 0;
-    for (const [duong, ops] of Object.entries(spec.paths)) {
-      for (const [pt, op] of Object.entries(ops)) {
-        tong++;
-        const ten = (op.tags || ["Khác"])[0];
-        if (!theoNhom.has(ten)) theoNhom.set(ten, { mo: "", ds: [] });
-        theoNhom.get(ten).ds.push({ duong, pt, op });
-      }
+    if (goiDuoc) {
+      trangThai.innerHTML =
+        "<b>" + soDuong + "</b> đường dẫn · <b>Try it out đang bật</b> — lệnh bắn thẳng vào " +
+        API.replace("https://", "") + " và đọc dữ liệu thật.";
+    } else {
+      trangThai.innerHTML =
+        "<b>" + soDuong + "</b> đường dẫn · trang này <b>để đọc</b>. " +
+        "Backend chỉ nhận lời gọi từ những tên miền khai trong biến <code>FRONTEND_ORIGINS</code>, " +
+        "chưa có tên miền của trang tài liệu — nên nút Execute đã được ẩn thay vì để nó báo lỗi khó hiểu. " +
+        "Muốn gọi thử thì chạy dự án ở máy rồi mở <code>/api-docs.html</code>.";
     }
 
-    document.getElementById("loiMo").textContent = spec.info.title +
-      " — nền tảng học trực tuyến: khóa học, bài giảng, ghi danh, tiến độ, trắc nghiệm, đơn hàng và chứng nhận.";
-
-    const soSchema = Object.keys(spec.components.schemas).length;
-    document.getElementById("soLieu").innerHTML =
-      [[tong, "endpoint"], [theoNhom.size, "nhóm"], [soSchema, "kiểu dữ liệu"], [4, "mức quyền"]]
-        .map(([n, t]) => `<div><b>${n}</b><span>${t}</span></div>`).join("");
-
-    // Cot trai
-    document.getElementById("dsNhom").innerHTML = [...theoNhom].map(([ten, n]) =>
-      `<li><a href="#n-${encodeURIComponent(ten)}">${esc(ten)}<b>${n.ds.length}</b></a></li>`).join("");
-
-    document.getElementById("locQuyen").innerHTML =
-      `<button class="chip" data-q="tat" aria-pressed="true">Tất cả</button>` +
-      MUC_QUYEN.map((q, i) => `<button class="chip" data-q="${i}" aria-pressed="false">${esc(NGAN[q])}</button>`).join("");
-
-    // Cot phai
-    document.getElementById("noiDung").innerHTML = [...theoNhom].map(([ten, n]) =>
-      `<section class="nhom" id="n-${encodeURIComponent(ten)}">
-         <h2>${esc(ten)}<b>${n.ds.length} endpoint</b></h2>
-         ${n.mo ? `<p>${esc(n.mo)}</p>` : ""}
-         ${n.ds.map((e) => veEndpoint(e.duong, e.pt, e.op)).join("")}
-       </section>`).join("") + `<p class="trong" id="khongThay" hidden>Không có endpoint nào khớp.</p>`;
-
-    // Kho kieu du lieu
-    document.getElementById("dsSchema").innerHTML = Object.entries(spec.components.schemas)
-      .map(([ten, sc]) => `<details class="sc" id="sc-${esc(ten)}">
-        <summary>${esc(ten)}</summary>
-        <div class="than">${bangTruong(sc.properties) || '<p class="ghi" style="margin:0">Không có trường nào.</p>'}</div>
-      </details>`).join("");
-
-    document.getElementById("chan").innerHTML =
-      `Sinh từ <a href="./openapi.json">openapi.json</a> · OpenAPI ${esc(spec.openapi)} · ` +
-      `máy chủ <code>${esc(MAY)}</code>`;
-
-    guiLoc();
-    // Mo va cuon toi muc duoc tro bang #. Phai lam o day chu khong de trinh
-    // duyet tu lo: luc no xu ly hash thi fetch chua xong, phan tu chua ton tai.
-    if (location.hash) {
-      const dich = document.querySelector(CSS.escape ? "#" + CSS.escape(decodeURIComponent(location.hash.slice(1))) : location.hash);
-      if (dich) {
-        dich.setAttribute("open", "");
-        dich.scrollIntoView({ block: "center" });
-      }
-    }
+    window.ui = SwaggerUIBundle({
+      spec: spec,
+      dom_id: "#swagger",
+      deepLinking: true,
+      docExpansion: "none",
+      filter: true,
+      tagsSorter: "alpha",
+      tryItOutEnabled: goiDuoc,
+      // Mang rong = an han nut Execute o moi endpoint.
+      supportedSubmitMethods: goiDuoc
+        ? ["get", "post", "put", "delete", "patch"]
+        : [],
+      persistAuthorization: true,
+      withCredentials: true,
+      requestInterceptor: function (req) {
+        req.credentials = "include";
+        return req;
+      },
+      presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+      layout: "BaseLayout",
+    });
   })
-  .catch((e) => {
-    document.getElementById("loiMo").textContent = "Không đọc được openapi.json: " + e.message;
+  .catch(function (e) {
+    var el = document.getElementById("loi");
+    el.style.display = "block";
+    el.innerHTML =
+      "<b>Không nạp được đặc tả API: " + e.message + "</b><br>" +
+      "File <code>openapi.json</code> phải nằm cùng thư mục với trang này.";
+    document.getElementById("trang-thai").textContent = "Không nạp được đặc tả.";
   });
-
-// ------------------------------------------------------------------ loc
-let locQ = "tat";
-function guiLoc() {
-  const tu = document.getElementById("tim").value.trim().toLowerCase();
-  let hien = 0;
-  for (const ep of document.querySelectorAll(".ep")) {
-    const hopQ = locQ === "tat" || ep.dataset.q === locQ;
-    const hopTu = !tu || ep.dataset.tim.includes(tu);
-    const ok = hopQ && hopTu;
-    ep.hidden = !ok;
-    if (ok) hien++;
-  }
-  // An ca nhom khi moi endpoint trong do deu bi loc.
-  for (const nh of document.querySelectorAll(".nhom")) {
-    nh.hidden = !nh.querySelector(".ep:not([hidden])");
-  }
-  const trong = document.getElementById("khongThay");
-  if (trong) trong.hidden = hien > 0;
-}
-
-document.getElementById("tim").addEventListener("input", guiLoc);
-
-document.getElementById("locQuyen").addEventListener("click", (e) => {
-  const b = e.target.closest("button");
-  if (!b) return;
-  locQ = b.dataset.q;
-  for (const x of document.querySelectorAll("#locQuyen .chip"))
-    x.setAttribute("aria-pressed", String(x === b));
-  guiLoc();
-});
-
-// Danh dau nhom dang xem o cot trai.
-addEventListener("scroll", () => {
-  let dang = null;
-  for (const nh of document.querySelectorAll(".nhom")) {
-    if (!nh.hidden && nh.getBoundingClientRect().top < 120) dang = nh.id;
-  }
-  for (const a of document.querySelectorAll(".dsn a"))
-    a.classList.toggle("dang", decodeURIComponent(a.getAttribute("href").slice(1)) === decodeURIComponent(dang || ""));
-}, { passive: true });
 </script>
 
 </body>
