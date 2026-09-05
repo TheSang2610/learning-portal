@@ -204,6 +204,25 @@ app.use('/api/banners', require('./src/routes/bannerRoutes'));
 app.use('/api/documents', require('./src/routes/documentRoutes'));
 app.use('/api/posts', require('./src/routes/postRoutes'));
 
+// Tai lieu API. Dat SAU cac route that de khong bao gio che mat chung, va
+// TRUOC middleware 404.
+//
+//   /api/docs       giao dien Swagger UI, bam thu duoc tung endpoint
+//   /api/docs.json  ban dac ta tho, nap thang vao Postman hay bo sinh client
+const swaggerUi = require('swagger-ui-express');
+const dacTaApi = require('./src/docs/openapi');
+
+app.get('/api/docs.json', (req, res) => res.json(dacTaApi));
+app.use(
+  '/api/docs',
+  swaggerUi.serve,
+  swaggerUi.setup(dacTaApi, {
+    customSiteTitle: 'Learning Portal API',
+    // Gui kem cookie phien khi bam Try it out, neu khong moi loi thu deu 401.
+    swaggerOptions: { withCredentials: true, persistAuthorization: true },
+  }),
+);
+
 // Middleware xử lý lỗi 404 (Khi không tìm thấy route)
 app.use((req, res, next) => {
   const error = new Error(`Not Found - ${req.originalUrl}`);
