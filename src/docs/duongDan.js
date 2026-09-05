@@ -295,8 +295,14 @@ const BANG = [
   ["get", "/api/posts/:slug", "", "Chi tiết bài viết theo slug", { tag: "Bài viết", tra: "BaiViet" }],
   ["get", "/api/posts/admin/all", "ad", "Toàn bộ bài viết kể cả bản nháp", { tag: "Bài viết", tra: ["BaiViet"] }],
   ["get", "/api/posts/admin/:id", "ad", "Chi tiết bài viết (quản trị)", { tag: "Bài viết", tra: "BaiViet" }],
-  ["post", "/api/posts", "ad", "Tạo bài viết", { tag: "Bài viết", file: true, tra: "BaiViet" }],
-  ["put", "/api/posts/:id", "ad", "Sửa bài viết", { tag: "Bài viết", file: true, tra: "BaiViet" }],
+  ["post", "/api/posts", "ad", "Tạo bài viết", {
+    tag: "Bài viết", file: true, tra: "BaiViet",
+    ghiChu: "Trường content nhận văn bản thường hoặc HTML. HTML được lọc theo danh sách trắng (h1-h4, p, ul, ol, a, img, figure, blockquote, table, code): thẻ script, iframe, style cùng mọi thuộc tính sự kiện và địa chỉ javascript: đều bị bỏ trước khi lưu, nên phần lưu lại có thể ngắn hơn hẳn phần gửi lên.",
+  }],
+  ["put", "/api/posts/:id", "ad", "Sửa bài viết", {
+    tag: "Bài viết", file: true, tra: "BaiViet",
+    ghiChu: "Nội dung gửi lên đi qua đúng bộ lọc HTML như khi tạo bài.",
+  }],
   ["delete", "/api/posts/:id", "dn", "Xóa bài viết", {
     tag: "Bài viết",
     ghiChu: "Route chỉ gắn protect. Controller kiểm tiếp: chỉ tác giả hoặc admin xóa được, người khác nhận 403.",

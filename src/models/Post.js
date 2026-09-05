@@ -45,10 +45,17 @@ const postSchema = new mongoose.Schema({
         maxlength: [400, 'Mô tả ngắn tối đa 400 ký tự']
     },
 
+    // Chua duoc CA van ban thuong lan HTML da qua bo loc (xem utils/htmlBaiViet).
+    //
+    // Gioi han 120.000 chu khong con 50.000 vi bai viet bang HTML ton cho hon
+    // han van ban thuong: moi doan cong them cap the <p></p>, moi anh la ca
+    // cum <figure><img><figcaption>. Con so nay do TREN NOI DUNG DA LOC, khong
+    // phai tren doan tho nguoi ta dan vao - dan ca trang bao vao thi phan
+    // quang cao bi cat het truoc khi dem.
     content: {
         type: String,
         required: [true, 'Vui lòng nhập nội dung bài viết'],
-        maxlength: [50000, 'Nội dung tối đa 50000 ký tự']
+        maxlength: [120000, 'Nội dung tối đa 120000 ký tự']
     },
 
     thumbnail: {

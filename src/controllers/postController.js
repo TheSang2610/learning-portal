@@ -3,6 +3,10 @@ const { phanTrang } = require('../utils/truyVan');
 const { CHU_DE, TEN_CHU_DE } = require('../models/Post');
 const { checkText } = require('../utils/contentFilter');
 const { taoSlug, tachTags } = require('../utils/vanBan');
+const { chuanHoaNoiDung, boThe } = require('../utils/htmlBaiViet');
+
+// Bang dung gioi han cua truong content trong model.
+const NOI_DUNG_TOI_DA = 120000;
 
 const TRUONG_DANH_SACH =
     'title slug excerpt thumbnail topic tags author views createdAt';
@@ -92,6 +96,25 @@ const getPostBySlug = async (req, res) => {
     }
 };
 
+// Bai qua dai thi chan ngay o day chu khong tha xuong cho Mongoose bao loi:
+// loi validate roi vao khoi catch va tra ve 500, nguoi dung nhan mot man hinh
+// "loi may chu" trong khi loi la cua bai viet va ho sua duoc.
+function loiDoDai(content) {
+    if (content.length <= NOI_DUNG_TOI_DA) return null;
+    return {
+        message:
+            `Nội dung sau khi lọc còn ${content.length.toLocaleString('vi-VN')} ký tự, ` +
+            `vượt giới hạn ${NOI_DUNG_TOI_DA.toLocaleString('vi-VN')}. Hãy tách thành nhiều bài.`,
+    };
+}
+
+// Nguoi dung go co noi dung ma sau khi loc con rong: nghia la ho dan mot cum
+// ma toan quang cao / script. Bao dung cai do thay vi bao "chua nhap gi", neu
+// khong ho se dan lai y het lan dau.
+function laHtmlRong(tho) {
+    return Boolean(String(tho || '').trim()) && !chuanHoaNoiDung(tho);
+}
+
 // Kiem duyet ca ba truong, khong chi tieu de. Tra ve chuoi loi hoac null.
 // Dung chung cho ca dang moi lan sua: sua bai cung phai qua bo loc, neu khong
 // nguoi ta dang bai sach roi sua thanh bai ban la lot.
@@ -99,7 +122,11 @@ function loiKiemDuyet(title, excerpt, content) {
     for (const [ten, giaTri] of [
         ['Tiêu đề', title],
         ['Mô tả ngắn', excerpt],
-        ['Nội dung', content],
+        // Loc tren CHU MA NGUOI DOC THAY, khong loc tren ma nguon. Bai viet
+        // bang HTML thi ten the va dia chi anh cung nam trong chuoi; de nguyen
+        // ma cho qua bo loc thi mot dia chi vo tinh chua chuoi cam se lam bai
+        // sach bi tu choi, con nguoi co y viet bay van bi bat nhu thuong.
+        ['Nội dung', boThe(content)],
     ]) {
         const r = checkText(giaTri);
         if (!r.ok) {
@@ -118,17 +145,25 @@ const createPost = async (req, res) => {
     try {
         const title = (req.body.title || '').trim();
         const excerpt = (req.body.excerpt || '').trim();
-        const content = (req.body.content || '').trim();
+        // Loc ngay o day, TRUOC moi buoc khac. Tu sau cho nay tro di khong con
+        // doan HTML tho nao trong luong xu ly, nen khong co duong nao de mot
+        // the <script> di lac vao co so du lieu.
+        const content = chuanHoaNoiDung(req.body.content);
 
         if (!title || !excerpt || !content) {
             return res.status(400).json({
-                message: 'Vui lòng nhập đầy đủ tiêu đề, mô tả ngắn và nội dung',
+                message: laHtmlRong(req.body.content)
+                    ? 'Đoạn HTML dán vào không còn nội dung nào dùng được sau khi lọc. Hãy chép phần thân bài (các thẻ h2, p, figure), đừng chép cả trang.'
+                    : 'Vui lòng nhập đầy đủ tiêu đề, mô tả ngắn và nội dung',
             });
         }
 
         // Cung bo loc dung cho tai lieu chia se.
         const loi = loiKiemDuyet(title, excerpt, content);
         if (loi) return res.status(400).json(loi);
+
+        const qua = loiDoDai(content);
+        if (qua) return res.status(400).json(qua);
 
         const tags = tachTags(req.body.tags);
 
@@ -217,16 +252,21 @@ const updatePost = async (req, res) => {
 
         const title = (req.body.title ?? post.title).trim();
         const excerpt = (req.body.excerpt ?? post.excerpt).trim();
-        const content = (req.body.content ?? post.content).trim();
+        const content = chuanHoaNoiDung(req.body.content ?? post.content);
 
         if (!title || !excerpt || !content) {
             return res.status(400).json({
-                message: 'Vui lòng nhập đầy đủ tiêu đề, mô tả ngắn và nội dung',
+                message: laHtmlRong(req.body.content)
+                    ? 'Đoạn HTML dán vào không còn nội dung nào dùng được sau khi lọc. Hãy chép phần thân bài (các thẻ h2, p, figure), đừng chép cả trang.'
+                    : 'Vui lòng nhập đầy đủ tiêu đề, mô tả ngắn và nội dung',
             });
         }
 
         const loi = loiKiemDuyet(title, excerpt, content);
         if (loi) return res.status(400).json(loi);
+
+        const qua = loiDoDai(content);
+        if (qua) return res.status(400).json(qua);
 
         // Doi tieu de KHONG doi duong dan cua bai da dang: link nguoi ta da
         // chia se ra ngoai se chet. Bai con nhap thi chua ai co link nen sua

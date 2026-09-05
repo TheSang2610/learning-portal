@@ -270,7 +270,11 @@ const BaiViet = {
     title: { type: "string" },
     slug: { type: "string" },
     topic: { type: "string" },
-    content: { type: "string" },
+    content: {
+      type: "string",
+      description:
+        "Van ban thuong hoac HTML da qua bo loc danh sach trang. Khong bao gio chua script hay thuoc tinh su kien.",
+    },
     isPublished: { type: "boolean" },
     createdAt: { type: "string", format: "date-time" },
   },
