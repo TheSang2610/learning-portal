@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Learning Portal API — Tài liệu</title>
+  <meta name="description" content="Tài liệu 129 endpoint của Learning Portal API: khóa học, bài giảng, ghi danh, trắc nghiệm, đơn hàng và chứng nhận.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='14'%3E📘%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui.min.css">
+  <style>
+    body { margin: 0; background: #fafafa; }
+    /* Swagger UI tu chen mot thanh dieu huong co o nhap URL - bo di vi dac ta
+       da nhung san trong trang, khong co gi de doi. */
+    .swagger-ui .topbar { display: none; }
+    .bang-tin {
+      background: #0b1220; color: #e8ecf4; padding: 18px 20px;
+      font: 14px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    .bang-tin b { color: #7fd1ff; }
+    .bang-tin a { color: #7fd1ff; }
+    .bang-tin p { margin: 0; max-width: 78ch; }
+    .bang-tin p + p { margin-top: 6px; }
+  </style>
+</head>
+<body>
+
+<div class="bang-tin">
+  <p><b>Learning Portal API</b> — 129 endpoint, tài liệu tĩnh không cần máy chủ.</p>
+  <p>Mã nguồn: <a href="https://github.com/TheSang2610/learning-portal-frontend">github.com/TheSang2610</a>
+     · Đặc tả thô: <a href="./openapi.json">openapi.json</a> (nạp thẳng vào Postman)</p>
+</div>
+
+<div id="swagger"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-standalone-preset.min.js"></script>
+<script>
+  // Doc dac ta tu file canh ben. De file rieng thay vi nhung thang vao HTML
+  // de Postman va cac bo sinh client nap duoc no truc tiep.
+  window.ui = SwaggerUIBundle({
+    url: "./openapi.json",
+    dom_id: "#swagger",
+    deepLinking: true,
+    docExpansion: "none",
+    filter: true,
+    tagsSorter: "alpha",
+    presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+    layout: "BaseLayout",
+  });
+</script>
+
+</body>
+</html>
