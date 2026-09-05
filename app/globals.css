@@ -74,3 +74,174 @@ body {
     transform: translateX(-50%);
   }
 }
+
+/* ===========================================================================
+   Bai viet soan bang HTML (.bai-html)
+   ---------------------------------------------------------------------------
+   Than bai duoc chen bang dangerouslySetInnerHTML nen KHONG the gan class
+   Tailwind cho tung the ben trong - the do nguoi viet go ra, khong qua JSX.
+   Vi vay trinh bay phai viet o day, nham vao ten the.
+
+   Cac tri so lay dung theo nhanh van ban thuong trong ArticleWithOutline
+   (15px / 1.85 / slate-700), de hai kieu bai doc len giong het nhau.
+   =========================================================================== */
+.bai-html {
+  font-size: 15px;
+  line-height: 1.85;
+  color: #334155; /* slate-700 */
+}
+
+.bai-html > *:first-child {
+  margin-top: 0;
+}
+
+.bai-html h1,
+.bai-html h2,
+.bai-html h3,
+.bai-html h4 {
+  font-weight: 700;
+  color: #0f172a; /* slate-900 */
+  /* Neo muc luc dung duoi header dinh chu khong chui len sau no. */
+  scroll-margin-top: 128px;
+  text-wrap: balance;
+}
+
+.bai-html h1,
+.bai-html h2 {
+  margin-top: 2.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+
+.bai-html h3 {
+  margin-top: 1.75rem;
+  font-size: 1.125rem;
+  line-height: 1.45;
+}
+
+.bai-html h4 {
+  margin-top: 1.5rem;
+  font-size: 1rem;
+}
+
+.bai-html p {
+  margin-top: 1rem;
+}
+
+.bai-html ul,
+.bai-html ol {
+  margin-top: 0.75rem;
+  padding-left: 1.5rem;
+}
+
+.bai-html ul {
+  list-style: disc;
+}
+.bai-html ol {
+  list-style: decimal;
+}
+.bai-html li + li {
+  margin-top: 0.375rem;
+}
+
+.bai-html a {
+  color: #1d4ed8; /* blue-700 */
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.bai-html a:hover {
+  color: #1e40af;
+}
+
+/* Anh trong bai bao thuong khai width/height that cua file (641x360). De
+   nguyen thi anh tran ra ngoai cot chu tren man hinh hep - ep ve be rong o
+   chua va tra chieu cao ve auto de khong bop meo. */
+.bai-html img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.25rem auto;
+  border-radius: 0.75rem;
+}
+
+.bai-html figure {
+  margin: 1.5rem 0;
+}
+.bai-html figure img {
+  margin-bottom: 0.5rem;
+}
+.bai-html figcaption,
+.bai-html figcaption p {
+  margin-top: 0;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #64748b; /* slate-500 */
+  font-style: italic;
+}
+
+.bai-html blockquote {
+  margin: 1.25rem 0;
+  border-left: 3px solid #93c5fd;
+  background: #f8fafc;
+  padding: 0.75rem 1rem;
+  color: #475569;
+  font-style: italic;
+}
+
+.bai-html hr {
+  margin: 2rem 0;
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+}
+
+.bai-html code {
+  background: #f1f5f9;
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.9em;
+  color: #be123c;
+}
+.bai-html pre {
+  margin-top: 1rem;
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  background: #0f172a;
+  padding: 1rem;
+  color: #e2e8f0;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.bai-html pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+/* Bang rong hon cot chu thi tu cuon TRONG khung cua no, khong day ca trang
+   lech sang ngang. */
+.bai-html .khung-bang,
+.bai-html table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.bai-html table {
+  margin-top: 1rem;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.bai-html th,
+.bai-html td {
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+.bai-html th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #0f172a;
+}

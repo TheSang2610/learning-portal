@@ -33,6 +33,9 @@ export function thoiGianTuongDoi(iso: string): string {
 /** Uoc luong thoi gian doc. Nguoi Viet doc khoang 200 tu mot phut. */
 export function phutDoc(text: string): number {
   const soTu = String(text || "")
+    // Bai soan bang HTML thi ten the va dia chi anh cung bi dem la "tu": mot
+    // bai ba doan co the ra "12 phut doc". Go the truoc khi dem.
+    .replace(/<[^>]+>/g, " ")
     .trim()
     .split(/\s+/)
     .filter(Boolean).length;

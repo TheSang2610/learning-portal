@@ -17,22 +17,21 @@ import {
 } from "lucide-react";
 import SafeImage from "@/src/components/ui/SafeImage";
 import { layMucLuc, phanTichNoiDung } from "@/src/components/common/articleOutline";
+import { laHtml, neoHoaTieuDe } from "@/src/components/common/htmlBaiViet";
+import TrinhSoanBai from "@/src/components/admin/TrinhSoanBai";
 import { getErrorMessage } from "@/src/services/apiHelper";
 import { postService, type Topic } from "@/src/services/post";
 
 const MAX_TIEU_DE = 200;
 const MAX_MO_TA = 400;
-const MAX_NOI_DUNG = 50000;
-
-// Cung dinh dang o trang soan bai chia se tai lieu, de nguoi viet khong phai
-// hoc hai kieu go khac nhau.
-const GOI_Y_NOI_DUNG =
-  "Viết toàn bộ bài ở đây.\n\n" +
-  "Chương 1: Tên chương\n" +
-  "Đoạn nội dung của chương...\n\n" +
-  "Mục 1.1 Tên mục nhỏ\n" +
-  "- Ý thứ nhất\n" +
-  "- Ý thứ hai";
+// Con so nay do phan NGUOI VIET GO VAO, khong phai phan duoc luu.
+//
+// Rong tay hon han gioi han 120.000 cua co so du lieu vi viec thuong lam nhat
+// la dan ca doan HTML tu mot trang bao vao: doan tho keo theo script, khung
+// quang cao va hang tram class, co the gap may lan bai that. May chu se cat
+// het truoc khi luu. De maxLength dung bang gioi han luu tru thi cu dan la bi
+// cat cut giua mot the, hong ca bai - te hon nhieu.
+const MAX_NOI_DUNG = 400000;
 
 function AdminPostEditor() {
   const router = useRouter();
@@ -101,7 +100,13 @@ function AdminPostEditor() {
   // Muc luc o trang doc duoc dung tu chinh nhung dong nay. Hien ra day de
   // nguoi viet biet ngay dong nao da thanh de muc, thay vi dang xong moi phat
   // hien menu ben trai bai trong khong.
-  const mucLuc = useMemo(() => layMucLuc(phanTichNoiDung(noiDung)), [noiDung]);
+  const mucLuc = useMemo(
+    () =>
+      laHtml(noiDung)
+        ? neoHoaTieuDe(noiDung).mucLuc
+        : layMucLuc(phanTichNoiDung(noiDung)),
+    [noiDung],
+  );
 
   const luu = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -272,18 +277,20 @@ function AdminPostEditor() {
             >
               Nội dung bài <span className="text-red-500">*</span>
             </label>
-            <textarea
+            <TrinhSoanBai
               id="noi-dung"
-              value={noiDung}
-              onChange={(e) => setNoiDung(e.target.value)}
-              maxLength={MAX_NOI_DUNG}
-              rows={22}
-              placeholder={GOI_Y_NOI_DUNG}
-              className={`${oNhap} resize-y font-mono text-[13px] leading-relaxed`}
+              giaTri={noiDung}
+              doiGiaTri={setNoiDung}
+              toiDa={MAX_NOI_DUNG}
             />
-            <p className="mt-1 text-right text-xs text-slate-400">
-              {noiDung.length.toLocaleString("vi-VN")}/
-              {MAX_NOI_DUNG.toLocaleString("vi-VN")}
+            <p className="mt-1 flex items-center justify-between gap-4 text-xs text-slate-400">
+              <span>
+                Gõ chữ thường vẫn chạy như cũ. Dán HTML vào thì máy chủ chỉ giữ lại thẻ
+                bài viết — script và khung quảng cáo bị bỏ.
+              </span>
+              <span className="shrink-0">
+                {noiDung.length.toLocaleString("vi-VN")} ký tự
+              </span>
             </p>
           </div>
         </div>
@@ -409,7 +416,12 @@ function AdminPostEditor() {
 
             {mucLuc.length === 0 ? (
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">
-                Chưa dòng nào thành đề mục. Mở đầu dòng bằng{" "}
+                Chưa dòng nào thành đề mục. Bấm <b>Tiêu đề lớn</b> để bọc dòng đang chọn
+                trong{" "}
+                <code className="rounded bg-amber-100 px-1 font-semibold">
+                  &lt;h2&gt;
+                </code>
+                . Nếu gõ chữ thường thì mở đầu dòng bằng{" "}
                 <code className="rounded bg-amber-100 px-1 font-semibold">Chương 1:</code>
                 , <code className="rounded bg-amber-100 px-1 font-semibold">Mục 1.1</code>{" "}
                 hoặc{" "}

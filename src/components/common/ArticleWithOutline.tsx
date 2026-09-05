@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ListTree } from "lucide-react";
 import { layMucLuc, phanTichNoiDung } from "./articleOutline";
+import { laHtml, neoHoaTieuDe } from "./htmlBaiViet";
 
 // Bo cuc hai o dung chung cho tai lieu chia se va bai viet blog:
 // o trai la muc luc dinh theo man hinh, o giua la toan bo bai.
@@ -14,8 +15,22 @@ interface Props {
 }
 
 export default function ArticleWithOutline({ content, goiYKhiTrong }: Props) {
-  const blocks = useMemo(() => phanTichNoiDung(content), [content]);
-  const mucLuc = useMemo(() => layMucLuc(blocks), [blocks]);
+  // Hai kieu bai cung song: bai go van ban thuong (tach khoi bang bo doan luat
+  // trong articleOutline) va bai soan bang HTML (may chu da loc sach truoc khi
+  // luu). Quyet dinh mot lan o day, ben duoi chi ve.
+  //
+  // Gop vao MOT useMemo chu khong tach hai: muc luc va than bai phai sinh ra
+  // cung mot luot thi id neo moi trung nhau.
+  const bai = useMemo(() => {
+    if (laHtml(content)) {
+      const { html, mucLuc } = neoHoaTieuDe(content);
+      return { laHtml: true as const, html, mucLuc, blocks: [] };
+    }
+    const blocks = phanTichNoiDung(content);
+    return { laHtml: false as const, html: "", mucLuc: layMucLuc(blocks), blocks };
+  }, [content]);
+
+  const { blocks, mucLuc } = bai;
 
   const [dangXem, setDangXem] = useState<string>("");
 
@@ -113,7 +128,13 @@ export default function ArticleWithOutline({ content, goiYKhiTrong }: Props) {
         {/* max-w theo do dai DONG CHU (ch) chu khong theo pixel: khoang 78 ky tu
             moi dong la vung de doc nhat cho van ban dai. */}
         <div className="mx-auto max-w-[78ch]">
-          {blocks.length === 0 ? (
+          {bai.laHtml ? (
+            // Noi dung nay da qua bo loc danh sach trang o may chu
+            // (backend/src/utils/htmlBaiViet.js) truoc khi vao co so du lieu:
+            // khong con script, khung nhung, thuoc tinh su kien hay dia chi
+            // javascript:. Cach trinh bay do lop .bai-html trong globals.css lo.
+            <div className="bai-html" dangerouslySetInnerHTML={{ __html: bai.html }} />
+          ) : blocks.length === 0 ? (
             <p className="text-sm text-slate-500 italic">Bài này chưa có nội dung.</p>
           ) : (
             blocks.map((b, i) => {
