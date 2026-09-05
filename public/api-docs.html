@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learning Portal API — Gọi thử</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='14'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui.min.css">
+<style>
+  body { margin: 0; background: #fafafa; }
+  /* Thanh tren cua Swagger chi co o nhap URL dac ta - bo di vi dac ta da duoc
+     nap san va bi sua servers ben duoi, doi URL o day chi lam hong. */
+  .swagger-ui .topbar { display: none; }
+
+  .bang {
+    background: #0b1220; color: #e8ecf4; padding: 16px 20px;
+    font: 14px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .bang b { color: #7fd1ff; }
+  .bang a { color: #7fd1ff; }
+  .bang p { margin: 0; max-width: 84ch; }
+  .bang p + p { margin-top: 6px; }
+  .bang .canh { color: #ffcf7a; }
+  #loi { display: none; background: #3a1113; color: #ffd9d6; padding: 14px 20px;
+    font: 14px/1.5 system-ui, sans-serif; }
+</style>
+</head>
+<body>
+
+<div class="bang">
+  <p><b>Learning Portal API — bản gọi thử.</b> Nút <b>Try it out</b> ở đây gọi thẳng backend thật và đọc dữ liệu thật trong MongoDB.</p>
+  <p>Trang này nằm <b>cùng nguồn với frontend</b>, và mọi lời gọi đi qua proxy <code>/api</code> của Next sang backend — nên không dính CORS, và cookie phiên là cookie first-party y như khi dùng trang web.</p>
+  <p><span class="canh">Đăng nhập trước khi thử endpoint cần quyền:</span> mở <code>POST /api/users/login</code> → Try it out → điền email và mật khẩu → Execute. Máy chủ đặt cookie, các lệnh sau tự dùng nó.</p>
+  <p>Bản tài liệu để đọc (không gọi thử): <a href="https://thesang2610.github.io/learning-portal-frontend/">thesang2610.github.io/learning-portal-frontend</a></p>
+</div>
+
+<div id="loi"></div>
+<div id="swagger"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-standalone-preset.min.js"></script>
+<script>
+// Nap dac ta THANG TU BACKEND dang chay, khong dung ban chup.
+// Sua API la tai lai trang thay ngay, khong phai xuat lai file nao.
+fetch("/api/docs.json", { credentials: "include" })
+  .then((r) => {
+    if (!r.ok) throw new Error("máy chủ trả " + r.status);
+    return r.json();
+  })
+  .then((spec) => {
+    // Ep moi loi goi ve DUONG DAN TUONG DOI.
+    //
+    // Dac ta khai san dia chi tuyet doi cua backend. De nguyen thi Try it out
+    // goi cheo mien tu trinh duyet va dinh CORS. Doi thanh chuoi rong thi lenh
+    // di ra chinh nguon dang mo, roi rewrites() cua Next chuyen tiep sang
+    // backend - cung duong ma giao dien that van dung.
+    spec.servers = [{ url: "", description: "Cùng nguồn, qua proxy /api của Next" }];
+
+    window.ui = SwaggerUIBundle({
+      spec,
+      dom_id: "#swagger",
+      deepLinking: true,
+      docExpansion: "none",
+      filter: true,
+      tagsSorter: "alpha",
+      tryItOutEnabled: true,
+      persistAuthorization: true,
+      // Gui kem cookie phien, neu khong moi endpoint can quyen deu tra 401.
+      withCredentials: true,
+      requestInterceptor: (req) => {
+        req.credentials = "include";
+        return req;
+      },
+      presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+      layout: "BaseLayout",
+    });
+  })
+  .catch((e) => {
+    const el = document.getElementById("loi");
+    el.style.display = "block";
+    el.innerHTML =
+      "<b>Không nạp được đặc tả từ <code>/api/docs.json</code>: " + e.message + "</b><br>" +
+      "Backend chưa chạy, hoặc bản backend đang chạy chưa có phần tài liệu. " +
+      "Ở máy: chạy <code>npm run dev</code> trong thư mục <code>backend</code>. " +
+      "Trên Vercel: deploy lại backend.";
+  });
+</script>
+
+</body>
+</html>
