@@ -23,7 +23,7 @@ const {
     getAdminNewReleasesCourses
 } = require('../controllers/courseController');
 
-const { protect, instructor, admin } = require('../middlewares/authMiddleware');
+const { protect, docNguoiDungNeuCo, instructor, admin } = require('../middlewares/authMiddleware');
 const { uploadCloud } = require('../utils/uploadCloud');
 const { datCache } = require('../middlewares/cacheControl');
 
@@ -47,7 +47,7 @@ router.get('/home-sections', datCache(120), getHomeSections);
 router.get('/instructor', protect, instructor, getInstructorCourses);
 
 // Tìm khóa học thông qua link slug định dạng chữ viết liền
-router.get('/slug/:slug', getCourseBySlug);
+router.get('/slug/:slug', docNguoiDungNeuCo, getCourseBySlug);
 
 
 /* ==========================================================================
@@ -75,7 +75,7 @@ router.patch('/:id/tags', protect, admin, updateCourseTags);
    ========================================================================== */
 
 router.route('/:id')
-    .get(getCourseById)                                                                                             
+    .get(docNguoiDungNeuCo, getCourseById)                                                                                             
     .put(protect, instructor, uploadCloud.single('thumbnail'), updateCourse)
     .delete(protect, instructor, deleteCourse);     
 

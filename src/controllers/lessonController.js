@@ -4,6 +4,7 @@ const Quiz = require('../models/Quiz');
 const QuizAttempt = require('../models/QuizAttempt');
 const { protect } = require('../middlewares/authMiddleware');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
+const { duocXemNoiDung } = require('../utils/quyenNoiDung');
 
 // Hàm helper chuyển đổi Tiếng Việt có dấu thành Slug gọn đẹp
 const slugify = (str) => {
@@ -83,6 +84,17 @@ const getLessonById = async (req, res) => {
             return res.status(404).json({ message: 'Không tìm thấy bài học' });
         }
 
+        // Dang nhap thoi CHUA du. Truoc day duong nay chi co `protect`, nen mot
+        // tai khoan mien phi bat ky goi thang vao day la lay duoc videoUrl cua
+        // khoa co phi - di vong hoan toan qua cong 402 o enrollInCourse.
+        const course = await Course.findById(lesson.courseId).select('instructor');
+        if (!(await duocXemNoiDung(course, req.user))) {
+            return res.status(403).json({
+                message: 'Bạn cần đăng ký khóa học này để xem nội dung bài học',
+                requiresEnrollment: true,
+            });
+        }
+
         res.status(200).json(lesson);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -105,6 +117,15 @@ const getLessonBySlug = async (req, res) => {
         const lesson = await Lesson.findOne({ courseId: course._id, slug: lessonSlug });
         if (!lesson) {
             return res.status(404).json({ message: 'Không tìm thấy bài học trong khóa học này' });
+        }
+
+        // Cung mot cong nhu getLessonById - hai duong dan khac nhau toi cung
+        // mot tai san thi phai khoa ca hai, khoa mot cai la nhu khong khoa.
+        if (!(await duocXemNoiDung(course, req.user))) {
+            return res.status(403).json({
+                message: 'Bạn cần đăng ký khóa học này để xem nội dung bài học',
+                requiresEnrollment: true,
+            });
         }
 
         res.status(200).json(lesson);

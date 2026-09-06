@@ -2,6 +2,20 @@ const Course = require('../models/Course');
 const { taoGhiDanh } = require('../utils/ghiDanh');
 const User = require('../models/User');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
+const { duocXemNoiDung, catNoiDung } = require('../utils/quyenNoiDung');
+
+// Tra khoa hoc ve cho nguoi goi, cat video/bai viet neu ho chua co quyen.
+//
+// Muc luc van giu nguyen: ten bai, thu tu, thoi luong - do la thu thuyet phuc
+// nguoi ta dang ky. Chi cat dung phan noi dung.
+const traKhoaTheoQuyen = async (khoa, nguoiDung, res) => {
+    const duoc = await duocXemNoiDung(khoa, nguoiDung);
+    if (duoc) return res.json(khoa);
+
+    const doi = khoa.toObject();
+    doi.lessons = (doi.lessons || []).map(catNoiDung);
+    return res.json(doi);
+};
 
 // Hàm tạo Slug URL thân thiện
 const slugify = (str) => {
@@ -98,7 +112,7 @@ const getCourseById = async (req, res) => {
             });
 
         if (course) {
-            res.json(course);
+            await traKhoaTheoQuyen(course, req.user, res);
         } else {
             res.status(404).json({ message: 'Không tìm thấy khóa học' });
         }
@@ -121,7 +135,7 @@ const getCourseBySlug = async (req, res) => {
             });
 
         if (course) {
-            res.json(course);
+            await traKhoaTheoQuyen(course, req.user, res);
         } else {
             res.status(404).json({ message: 'Không tìm thấy khóa học hoặc khóa học chưa được xuất bản.' });
         }
