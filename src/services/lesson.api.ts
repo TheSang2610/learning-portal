@@ -14,6 +14,10 @@ export interface LessonData {
   // La CHUOI trong model chu khong phai so, vi du "12:30".
   duration?: string;
   order?: number;
+  // May chu dat co nay khi nguoi xem CHUA duoc mo khoa hoc: luc do videoUrl,
+  // content va documentUrl bi cat het, chi con muc luc. Xem
+  // backend/src/utils/quyenNoiDung.js.
+  biKhoa?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
