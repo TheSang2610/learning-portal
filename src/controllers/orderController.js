@@ -5,6 +5,8 @@ const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
 const { thongTinChuyenKhoan } = require('../config/thanhToan');
 const { phanTrang } = require('../utils/truyVan');
+const { guiMail, daCauHinh: mailDaCauHinh } = require('../config/mail');
+const { soanMailBaoChuyenKhoan } = require('../utils/mailDonHang');
 
 const { sinhMa, HAN_GIU_DON_MS } = Order;
 
@@ -38,6 +40,7 @@ const dangDon = (don, khoaHoc) => ({
     // dung thi lech mui gio hay dong ho sai la dem sai.
     secondsLeft: Math.max(0, Math.floor((don.expiresAt.getTime() - Date.now()) / 1000)),
     paidAt: don.paidAt || null,
+    daBaoChuyenKhoanLuc: don.daBaoChuyenKhoanLuc || null,
     createdAt: don.createdAt,
     course: khoaHoc
         ? {
@@ -211,4 +214,82 @@ const cancelOrder = async (req, res) => {
     }
 };
 
-module.exports = { createOrder, getOrderByCode, getMyOrders, cancelOrder, dangDon, capNhatNeuHetHan };
+
+/**
+ * PUT /api/orders/:code/da-chuyen
+ *
+ * Hoc vien bam "Toi da chuyen khoan roi". Danh dau don va bao mail cho quan
+ * tri de ho mo sao ke doi chieu.
+ *
+ * KHONG doi trang thai don sang 'paid'. Day chi la loi khai cua nguoi mua -
+ * chi quan tri nhin thay tien vao tai khoan moi duoc xac nhan. Neu tin loi khai
+ * ma mo khoa luon thi ai cung bam duoc nut nay de hoc mien phi.
+ */
+const baoDaChuyenKhoan = async (req, res) => {
+    try {
+        const ma = String(req.params.code || '').toUpperCase().trim();
+
+        const don = await Order.findOne({ code: ma, student: req.user._id });
+        if (!don) {
+            return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
+        }
+        if (don.status === 'paid') {
+            return res.status(400).json({ message: 'Đơn này đã được xác nhận rồi' });
+        }
+        if (don.status === 'cancelled') {
+            return res.status(400).json({ message: 'Đơn này đã bị hủy, vui lòng đặt đơn mới' });
+        }
+
+        // Da qua han thi don chuyen sang 'expired' - nhung VAN nhan bao va van
+        // gui mail. Nguoi ta co the vua chuyen khoan xong o phut thu 16; tu
+        // choi luc nay la tien da di ma khong ai biet de doi chieu.
+        const daQuaHan = don.daHetHan();
+        await capNhatNeuHetHan(don);
+
+        // Bam nhieu lan thi giu moc DAU TIEN, khong day moc len moi lan bam.
+        // Moc do la "nguoi nay cho tu luc nao" - day len thi don cho lau nhat
+        // lai trong nhu don moi nhat, va bi xu ly sau cung.
+        const laLanDau = !don.daBaoChuyenKhoanLuc;
+        if (laLanDau) {
+            don.daBaoChuyenKhoanLuc = new Date();
+            await don.save();
+        }
+
+        let mail = { daGui: false, lyDo: 'chua_cau_hinh' };
+        if (laLanDau) {
+            const khoa = await Course.findById(don.course).select('title');
+            mail = await guiMail(
+                soanMailBaoChuyenKhoan({
+                    maDon: don.code,
+                    soTien: don.amount,
+                    tenHocVien: req.user.name || req.user.email,
+                    emailHocVien: req.user.email,
+                    tenKhoa: khoa?.title || 'Khóa học',
+                    baoLuc: don.daBaoChuyenKhoanLuc,
+                    daQuaHan,
+                    duongDanQuanTri: process.env.FRONTEND_URL
+                        ? `${process.env.FRONTEND_URL.replace(/\/+$/, '')}/admin/orders`
+                        : ''
+                })
+            );
+        }
+
+        return res.json({
+            message: daQuaHan
+                ? 'Đã ghi nhận. Mã này đã quá hạn giữ đơn nên ban quản trị sẽ đối chiếu kỹ hơn, có thể lâu hơn bình thường.'
+                : 'Đã báo cho ban quản trị. Bạn chờ đối chiếu sao kê giúp nhé.',
+            daBaoChuyenKhoanLuc: don.daBaoChuyenKhoanLuc,
+            daQuaHan,
+            // Bao ro cho giao dien biet mail co di duoc khong: chua cau hinh mail
+            // thi hoc vien can duoc nhac lien he quan tri bang duong khac, chu
+            // khong ngoi cho mot cai mail khong bao gio den.
+            daGuiMail: mail.daGui,
+            mailDaCauHinh: mailDaCauHinh()
+        });
+    } catch (error) {
+        console.error('baoDaChuyenKhoan:', error.message);
+        return res.status(500).json({ message: 'Không gửi được thông báo' });
+    }
+};
+
+module.exports = { createOrder, baoDaChuyenKhoan, getOrderByCode, getMyOrders, cancelOrder, dangDon, capNhatNeuHetHan };

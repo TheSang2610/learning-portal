@@ -9,7 +9,8 @@ const {
     createOrder,
     getOrderByCode,
     getMyOrders,
-    cancelOrder
+    cancelOrder,
+    baoDaChuyenKhoan
 } = require('../controllers/orderController');
 
 const { protect } = require('../middlewares/authMiddleware');
@@ -35,5 +36,9 @@ router.get('/:code', getOrderByCode);
 // @route   PUT /api/orders/:code/cancel
 // @desc    Huy don cua chinh minh
 router.put('/:code/cancel', cancelOrder);
+
+// @route   PUT /api/orders/:code/da-chuyen
+// @desc    Hoc vien bao da chuyen khoan -> gui mail cho quan tri doi chieu
+router.put('/:code/da-chuyen', baoDaChuyenKhoan);
 
 module.exports = router;

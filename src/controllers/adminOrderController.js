@@ -2,6 +2,10 @@ const Order = require('../models/Order');
 const { taoGhiDanh } = require('../utils/ghiDanh');
 const { phanTrang, timGan } = require('../utils/truyVan');
 const { capNhatNeuHetHan } = require('./orderController');
+const Course = require('../models/Course');
+const User = require('../models/User');
+const { guiMail } = require('../config/mail');
+const { soanMailDonDaXacNhan } = require('../utils/mailDonHang');
 
 const TRANG_THAI_HOP_LE = new Set(['pending', 'paid', 'cancelled', 'expired']);
 
@@ -23,7 +27,7 @@ const getOrdersAdmin = async (req, res) => {
             loc.code = timGan(String(req.query.search).toUpperCase());
         }
 
-        const [ds, tong, dangCho] = await Promise.all([
+        const [ds, tong, dangCho, daBao] = await Promise.all([
             Order.find(loc)
                 .populate('course', 'title slug price')
                 .populate('student', 'name email avatar')
@@ -33,7 +37,14 @@ const getOrdersAdmin = async (req, res) => {
                 .limit(soDong)
                 .lean(),
             Order.countDocuments(loc),
-            Order.countDocuments({ status: 'pending' })
+            Order.countDocuments({ status: 'pending' }),
+            // Don co nguoi DANG NGOI CHO: ho da bam "toi da chuyen khoan" va
+            // dang doi doi chieu. Dem rieng vi day moi la con so quan tri can
+            // xu ly ngay, con 'pending' thi gom ca don vua mo ra chua lam gi.
+            Order.countDocuments({
+                status: { $in: ['pending', 'expired'] },
+                daBaoChuyenKhoanLuc: { $ne: null }
+            })
         ]);
 
         return res.status(200).json({
@@ -41,7 +52,8 @@ const getOrdersAdmin = async (req, res) => {
             page: trang,
             limit: soDong,
             total: tong,
-            pendingCount: dangCho
+            pendingCount: dangCho,
+            daBaoCount: daBao
         });
     } catch (error) {
         console.error('getOrdersAdmin:', error.message);
@@ -81,6 +93,27 @@ const confirmOrder = async (req, res) => {
             don.note = req.body.note.slice(0, 500);
         }
         await don.save();
+
+        // Bao mail SAU khi da luu xong. Mail hong thi guiMail tu nuot loi va
+        // ghi console - khong duoc de mot loi gui mail lam yeu cau nay tra ve
+        // 500 trong khi don DA xac nhan va khoa DA mo.
+        const [khoa, hocVien] = await Promise.all([
+            Course.findById(don.course).select('title'),
+            User.findById(don.student).select('name email')
+        ]);
+
+        await guiMail(
+            soanMailDonDaXacNhan({
+                maDon: don.code,
+                soTien: don.amount,
+                tenHocVien: hocVien?.name || hocVien?.email || 'Không rõ',
+                emailHocVien: hocVien?.email || '',
+                tenKhoa: khoa?.title || 'Khóa học',
+                xacNhanLuc: don.paidAt,
+                nguoiXacNhan: req.user?.name || '',
+                daCoKhoaTuTruoc: !moiTao
+            })
+        );
 
         return res.status(200).json({
             message: moiTao

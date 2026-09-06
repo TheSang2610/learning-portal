@@ -71,6 +71,21 @@ const orderSchema = new mongoose.Schema({
         type: String,
         default: '',
         maxlength: 500
+    },
+
+    /**
+     * Luc hoc vien bam "Toi da chuyen khoan". Rong = chua bam.
+     *
+     * Khong phai bang chung da tra tien - chi la loi khai. Nhung no la thu
+     * quyet dinh THU TU quan tri xu ly: don co moc nay la don co nguoi dang
+     * ngoi cho, phai mo sao ke doi chieu ngay; don khong co thi cu de do.
+     *
+     * Truoc day khong co truong nay nen quan tri phai tu mo trang xem co don
+     * moi khong - tuc la hoac ngoi canh man hinh ca ngay, hoac de nguoi ta cho.
+     */
+    daBaoChuyenKhoanLuc: {
+        type: Date,
+        default: null
     }
 }, { timestamps: true });
 
