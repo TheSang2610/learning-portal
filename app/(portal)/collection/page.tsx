@@ -2,21 +2,49 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import SafeImage from "@/src/components/ui/SafeImage";
-import Link from "next/link";
-import { BookOpen, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getHomeSections, Course } from "@/src/services/course";
+import TieuDeMuc from "@/src/components/home/TieuDeMuc";
+import TheKhoaHoc from "@/src/components/home/TheKhoaHoc";
+
+// Ba muc nay chinh la ba cot o trang chu (PopularCoursesSection).
+//
+// Ten phai TRUNG voi ten cot ben do. Truoc day nguoi dung bam "Phổ biến nhất"
+// roi dap xuong mot trang de "Most Popular Courses" - doi ca ngon ngu lan cach
+// goi, khong con chac minh vua bam trung cho khong.
+//
+// Cai mo ta cung noi ro so lieu nao dung de xep - vi ca ba deu la BANG XEP
+// HANG, va thu hang chi co nghia khi biet no xep theo cai gi.
+const MUC: Record<
+  string,
+  { ten: string; moTa: string; lay: "mostPopular" | "newReleases" | "trendingNow" }
+> = {
+  "most-popular-courses": {
+    ten: "Phổ biến nhất",
+    moTa: "Xếp theo số lượt ghi danh, nhiều nhất lên đầu.",
+    lay: "mostPopular",
+  },
+  "hot-releases-courses": {
+    ten: "Mới phát hành",
+    moTa: "Xếp theo ngày phát hành, khoá ra sau lên đầu.",
+    lay: "newReleases",
+  },
+  "trending-now-courses": {
+    ten: "Đang thịnh hành",
+    moTa: "Xếp theo lượt xem gần đây, nhiều nhất lên đầu.",
+    lay: "trendingNow",
+  },
+};
 
 function CourseCollectionPageContent() {
   const router = useRouter();
   // Lay slug tu query string: /collection?slug=most-popular-courses
   const searchParams = useSearchParams();
   const collectionSlug = searchParams.get("slug") || "";
+  const muc = MUC[collectionSlug];
 
   const [courses, setCourses] = useState<Course[]>([]);
-
-  const [pageTitle, setPageTitle] = useState("Danh sách khóa học");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,19 +52,12 @@ function CourseCollectionPageContent() {
       try {
         setLoading(true);
         const response = await getHomeSections();
+        const dinhNghia = MUC[collectionSlug];
 
-        if (response && response.success && response.data) {
-          // Khớp slug từ URL để lọc mảng dữ liệu tương ứng từ API
-          if (collectionSlug === "most-popular-courses") {
-            setCourses(response.data.mostPopular || []);
-            setPageTitle("Most Popular Courses");
-          } else if (collectionSlug === "hot-releases-courses") {
-            setCourses(response.data.newReleases || []);
-            setPageTitle("Hot New Releases");
-          } else if (collectionSlug === "trending-now-courses") {
-            setCourses(response.data.trendingNow || []);
-            setPageTitle("Trending Now Courses");
-          }
+        if (response?.success && response.data && dinhNghia) {
+          setCourses(response.data[dinhNghia.lay] || []);
+        } else {
+          setCourses([]);
         }
       } catch (error) {
         console.error("Lỗi khi tải danh sách bộ sưu tập khóa học:", error);
@@ -50,89 +71,44 @@ function CourseCollectionPageContent() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f8fafc]">
+      <div className="flex min-h-screen items-center justify-center bg-[#f5f7fa]">
         <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pb-16">
+    <div className="min-h-screen bg-[#f5f7fa] pb-16">
       <div className="mx-auto max-w-7xl px-6 py-10">
         {/* NÚT QUAY LẠI & BREADCRUMB */}
         <button
           onClick={() => router.back()}
           className="mb-6 inline-flex items-center gap-2 text-xs font-semibold text-gray-500 transition hover:text-blue-600"
         >
-          <ArrowLeft size={14} /> QUAY LẠI TRANG CHỦ
+          <ArrowLeft size={14} /> QUAY LẠI
         </button>
 
-        <h1 className="mb-8 text-2xl font-extrabold text-gray-900 md:text-3xl">
-          {pageTitle}
-        </h1>
+        <TieuDeMuc nhu="h1" tieuDe={muc?.ten ?? "Danh sách khoá học"} moTa={muc?.moTa} />
 
         {courses.length === 0 ? (
-          <div className="rounded-2xl border border-dashed bg-white py-16 text-center text-gray-500">
-            Hiện không có khóa học nào hiển thị ở mục này.
+          <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center text-sm text-slate-500">
+            {muc
+              ? "Mục này chưa có khoá học nào được hiển thị."
+              : "Không có mục nào ứng với đường dẫn này."}
           </div>
         ) : (
-          /* DANH SÁCH KHÓA HỌC DẠNG GRID */
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {courses.map((course) => {
-              const rawProvider = course.provider;
-              const providerName =
-                rawProvider && typeof rawProvider === "object"
-                  ? rawProvider.name || "Hệ thống LMS"
-                  : "Hệ thống LMS";
-
-              return (
-                <Link
-                  href={`/course?slug=${course.slug}`} // Khi click sẽ nhảy thẳng vào trang chi tiết (file có sẵn của bạn)
-                  key={course._id}
-                  className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-gray-200/60 bg-white shadow-sm transition duration-200 hover:shadow-md"
-                >
-                  {/* THUMBNAIL */}
-                  <div className="relative aspect-video w-full overflow-hidden border-b border-gray-100 bg-gray-100">
-                    {course.thumbnail ? (
-                      <SafeImage
-                        src={course.thumbnail}
-                        alt={course.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 33vw"
-                        className="object-cover transition duration-300 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-gray-500">
-                        <BookOpen size={32} />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* THÔNG TIN */}
-                  <div className="flex flex-1 flex-col justify-between p-4">
-                    <div>
-                      <span className="mb-1 block text-[11px] font-semibold text-violet-600 uppercase">
-                        {providerName}
-                      </span>
-                      <h3 className="line-clamp-2 text-sm leading-snug font-bold text-gray-900 transition group-hover:text-blue-600">
-                        {course.title}
-                      </h3>
-                    </div>
-
-                    <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 text-xs font-medium text-gray-500">
-                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-600 capitalize">
-                        {course.level}
-                      </span>
-                      <span className="font-bold text-slate-800">
-                        {course.price === 0
-                          ? "Miễn phí"
-                          : `${course.price.toLocaleString("vi-VN")}đ`}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
+          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {courses.map((course, thuTu) => (
+              // Co thuHang vi day DUNG la mot bang xep hang - trang chu cung
+              // danh so cho ba cot nay. Con /courses thi khong, vi do la ket
+              // qua loc, danh so vao la noi doi voi nguoi doc.
+              <TheKhoaHoc
+                key={course._id}
+                khoa={course}
+                thuHang={thuTu + 1}
+                sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              />
+            ))}
           </div>
         )}
       </div>
@@ -146,7 +122,7 @@ export default function CourseCollectionPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-[#f8fafc]">
+        <div className="flex min-h-screen items-center justify-center bg-[#f5f7fa]">
           <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
         </div>
       }

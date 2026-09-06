@@ -1,4 +1,5 @@
 import ShareDocumentClient from "@/src/components/document/ShareDocumentClient";
+import TieuDeMuc from "@/src/components/home/TieuDeMuc";
 import type { DocumentListResponse } from "@/src/services/document";
 import { GOC_API } from "@/src/services/serverFetch";
 
@@ -41,11 +42,11 @@ export default async function ShareDocumentPage() {
     // ShareDocumentHeader, giong het trang /blog.
     <div className="min-h-screen bg-white py-8">
       <div className="mx-auto max-w-7xl px-6">
-        <h1 className="text-2xl font-extrabold text-slate-900">Chia sẻ tài liệu</h1>
-        <p className="mt-1.5 text-[15px] leading-relaxed text-slate-600">
-          Đăng đề cương, đề thi, bài giải hay slide bài giảng để mọi người cùng xem và tải
-          về.
-        </p>
+        <TieuDeMuc
+          nhu="h1"
+          tieuDe="Chia sẻ tài liệu"
+          moTa="Đăng đề cương, đề thi, bài giải hay slide bài giảng để mọi người cùng xem và tải về."
+        />
       </div>
 
       <ShareDocumentClient initialData={initialData} />

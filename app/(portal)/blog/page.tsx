@@ -1,5 +1,6 @@
 import Link from "next/link";
 import FeedCard from "@/src/components/common/FeedCard";
+import TieuDeMuc from "@/src/components/home/TieuDeMuc";
 import { thoiGianTuongDoi, phutDoc } from "@/src/components/common/thoiGian";
 import type { BlogPost, PostListResponse, Topic } from "@/src/services/post";
 import { layTuMayChu } from "@/src/services/serverFetch";
@@ -50,13 +51,16 @@ export default async function BlogPage({
       {/* max-w-7xl px-6 trung voi BlogHeader, nho vay tieu de bai va logo tren
           thanh dieu huong thang hang nhau. */}
       <div className="mx-auto max-w-7xl px-6">
-        <h1 className="text-2xl font-extrabold text-slate-900">
-          {chuDeDangChon ? chuDeDangChon.name : "Bài viết"}
-        </h1>
-        <p className="mt-1.5 text-[15px] leading-relaxed text-slate-600">
-          Tổng hợp các bài viết chia sẻ về kinh nghiệm tự học lập trình online và các kỹ
-          thuật lập trình web.
-        </p>
+        <TieuDeMuc
+          nhu="h1"
+          tieuDe={chuDeDangChon ? chuDeDangChon.name : "Bài viết"}
+          moTa="Tổng hợp các bài viết chia sẻ về kinh nghiệm tự học lập trình online và các kỹ thuật lập trình web."
+          // Dang loc theo mot chu de thi mo mot duong ra. Truoc day loi ra duy
+          // nhat la cai the chu de o cot phai - ma tren man hinh hep cot do bi
+          // day xuong tan duoi danh sach bai.
+          xemTatCa={chuDeDangChon ? "/blog" : undefined}
+          chuXemTatCa="Tất cả bài viết"
+        />
 
         <div className="mt-7 grid gap-x-14 gap-y-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           {/* --------------------------------------------------------- */}

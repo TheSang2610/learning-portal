@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRef, useState } from "react";
 
 /**
  * Phan mo dau trang chu.
@@ -20,42 +21,63 @@ import Link from "next/link";
  */
 
 // So tang = so bai hoc cua mot khoa tieu bieu. Tang tren cung la chung nhan.
+//
+// Bon cai the trang truoc day bay lo lung quanh thap ("Video bài giảng",
+// "Trắc nghiệm chấm ngay", "Tiến độ tự lưu", "Chứng nhận có mã") gio nam han
+// vao trong tang cua no. Chung von la bon dac diem cua bon buoc hoc, ma lai
+// treo o bon goc man hinh khong dinh gi den tang nao - doc xong khong biet
+// cai nao thuoc ve cai nao. Dua vao trong roi thi bam tang nao ra dac diem
+// tang do, va cung khong con bon mon do noi lo lung che mat thap nua.
 const TANG = [
-  { ten: "Bài 1 · Nhập môn", a: "#2A0F9E", b: "#4F2BFF" },
-  { ten: "Bài 2 · Thực hành", a: "#4F2BFF", b: "#8B6BFF" },
-  { ten: "Bài 3 · Dự án nhỏ", a: "#7B4BFF", b: "#B98BFF" },
-  { ten: "Bài 4 · Kiểm tra", a: "#009A90", b: "#00BFB3" },
-  { ten: "Chứng nhận", a: "#E89400", b: "#FFC93C" },
-];
-
-const THE_BAY = [
   {
-    chu: "Video bài giảng",
+    ten: "Bài 1 · Nhập môn",
+    a: "#2A0F9E",
+    b: "#4F2BFF",
     bieu: "▶",
     nen: "#EFEAFF",
     muc: "#4F2BFF",
-    vitri: "top-[6%] left-[-2%]",
+    nhan: "Video bài giảng",
+    mo: "Bài giảng quay sẵn, tua tới tua lui bao nhiêu lần cũng được.",
   },
   {
-    chu: "Trắc nghiệm chấm ngay",
-    bieu: "✓",
-    nen: "#D6F7F4",
-    muc: "#00857B",
-    vitri: "top-[30%] right-[-4%]",
-  },
-  {
-    chu: "Tiến độ tự lưu",
+    ten: "Bài 2 · Thực hành",
+    a: "#4F2BFF",
+    b: "#8B6BFF",
     bieu: "⌁",
     nen: "#FFE6F1",
     muc: "#FF3E9D",
-    vitri: "bottom-[26%] left-[-6%]",
+    nhan: "Tiến độ tự lưu",
+    mo: "Làm tới đâu lưu tới đó. Đóng máy giữa chừng, mở lại vẫn đúng chỗ cũ.",
   },
   {
-    chu: "Chứng nhận có mã",
+    ten: "Bài 3 · Dự án nhỏ",
+    a: "#7B4BFF",
+    b: "#B98BFF",
+    bieu: "◆",
+    nen: "#F1EAFF",
+    muc: "#7B4BFF",
+    nhan: "Làm thật một lần",
+    mo: "Gộp phần đã học ở hai bài trước thành một bài làm hoàn chỉnh.",
+  },
+  {
+    ten: "Bài 4 · Kiểm tra",
+    a: "#009A90",
+    b: "#00BFB3",
+    bieu: "✓",
+    nen: "#D6F7F4",
+    muc: "#00857B",
+    nhan: "Trắc nghiệm chấm ngay",
+    mo: "Nộp xong biết điểm luôn, không phải chờ ai chấm.",
+  },
+  {
+    ten: "Chứng nhận",
+    a: "#E89400",
+    b: "#FFC93C",
     bieu: "★",
     nen: "#FFF1D4",
     muc: "#B37400",
-    vitri: "bottom-[6%] right-[2%]",
+    nhan: "Chứng nhận có mã",
+    mo: "Mỗi chứng nhận mang một mã riêng, ai cũng tra lại được là thật.",
   },
 ];
 
@@ -67,6 +89,28 @@ interface Props {
 }
 
 export default function HeroSection({ soKhoa, soMienPhi }: Props) {
+  // Mac dinh chon tang 1: trang luc dung yen phai dang o dau lo trinh, dung
+  // nhu cau "đi lên từng tầng" - khong phai dang o dich.
+  const [dangChon, setDangChon] = useState(0);
+  const nut = useRef<(HTMLButtonElement | null)[]>([]);
+  const tang = TANG[dangChon];
+
+  // Mui ten LEN di len tang tren, tuc la tang chi so LON hon: chi so 0 la
+  // tang day thap. Neu lam nguoc lai thi ban phim chay nguoc voi cai mat
+  // dang nhin.
+  function bamPhim(e: React.KeyboardEvent<HTMLDivElement>) {
+    let toi = -1;
+    if (e.key === "ArrowUp") toi = (dangChon + 1) % TANG.length;
+    else if (e.key === "ArrowDown") toi = (dangChon - 1 + TANG.length) % TANG.length;
+    else if (e.key === "Home") toi = 0;
+    else if (e.key === "End") toi = TANG.length - 1;
+    if (toi < 0) return;
+
+    e.preventDefault();
+    setDangChon(toi);
+    nut.current[toi]?.focus();
+  }
+
   return (
     <header className="relative overflow-hidden bg-white pt-12 pb-10 md:pt-20 md:pb-16">
       {/* Luoi ke mo dan + hai quang sang. Thuan CSS, khong tai anh nao. */}
@@ -144,47 +188,109 @@ export default function HeroSection({ soKhoa, soMienPhi }: Props) {
           </div>
         </div>
 
-        {/* Thap 5 tang. aria-hidden vi noi dung cua no da nam trong doan chu
-            ben trai - de trinh doc man hinh doc lai lan nua la thua. */}
-        <div className="relative grid min-h-[26rem] place-items-center [perspective:1200px] md:min-h-[30rem]">
-          <div
-            aria-hidden="true"
-            className="relative size-60 [transform:rotateX(58deg)_rotateZ(-38deg)] transition-transform duration-600 [transform-style:preserve-3d] hover:[transform:rotateX(48deg)_rotateZ(-28deg)]"
-          >
-            {TANG.map((t, i) => (
-              <div
-                key={t.ten}
-                className="absolute inset-0 grid place-items-center rounded-[18px] border border-white/45"
-                style={{
-                  background: `linear-gradient(135deg, ${t.a}, ${t.b})`,
-                  boxShadow: `0 0 40px -8px ${t.a}`,
-                  transform: `translateZ(${i * 46}px) scale(${1 - i * 0.07})`,
-                }}
-              >
-                <b
-                  className="font-mono text-[.7rem] font-semibold tracking-[.1em] whitespace-nowrap text-white uppercase [text-shadow:0_1px_6px_rgb(0_0_0/.4)]"
-                  style={{ transform: "rotateZ(38deg) rotateX(-58deg)" }}
+        {/* Thap 5 tang, bam duoc tung tang.
+            Truoc day ca khoi nay la aria-hidden vi no chi la hinh trang tri.
+            Gio khong duoc nua: ben trong co nut bam that, ma de mot phan tu
+            bam duoc nam trong vung aria-hidden thi nguoi dung trinh doc man
+            hinh van tab toi duoc no nhung khong nghe thay gi ca. */}
+        <div className="relative flex min-h-[28rem] flex-col items-center justify-end gap-6 pt-[7.5rem] [perspective:1200px] md:min-h-[30rem]">
+          {/* Ba the long nhau, moi the mot viec - xem ghi chu ".thap" trong
+              globals.css. Don ca ba vao mot the thi chung dam transform nhau. */}
+          <div className="thap-troi relative size-60">
+            <div
+              role="tablist"
+              aria-orientation="vertical"
+              aria-label="Các tầng của một khoá học"
+              onKeyDown={bamPhim}
+              className="thap size-full [transform:rotateX(58deg)_rotateZ(-38deg)] transition-transform duration-600 [transform-style:preserve-3d] hover:[transform:rotateX(48deg)_rotateZ(-28deg)]"
+            >
+              {TANG.map((t, i) => (
+                <button
+                  key={t.ten}
+                  type="button"
+                  role="tab"
+                  id={`tang-${i}`}
+                  ref={(el) => {
+                    nut.current[i] = el;
+                  }}
+                  aria-selected={i === dangChon}
+                  aria-controls="o-tang"
+                  // Ca nhom nut chi chiem MOT diem dung Tab. Vao roi thi di
+                  // giua cac tang bang mui ten - dung chuan tablist, va cung
+                  // de nguoi dung ban phim khong phai bam Tab nam lan moi qua
+                  // duoc cai thap.
+                  tabIndex={i === dangChon ? 0 : -1}
+                  onClick={() => setDangChon(i)}
+                  className="tang absolute inset-0 grid cursor-pointer place-items-center rounded-[18px] border border-white/45"
+                  style={
+                    {
+                      background: `linear-gradient(135deg, ${t.a}, ${t.b})`,
+                      // Quang sang di qua bien de CSS con ghep them duoc vong
+                      // vien luc chon / luc lay tieu diem (xem globals.css).
+                      "--hao": `0 0 40px -8px ${t.a}`,
+                      // Vi tri cuoi cua tang, CSS doc lai o ca hieu ung xep
+                      // len lan luc ro chuot.
+                      "--z": `${i * 48}px`,
+                      "--s": `${1 - i * 0.07}`,
+                      // Tang duoi len truoc, cach nhau 150ms. Tang chung nhan
+                      // dap xuong sau cung, dung nhu thu tu hoc that.
+                      "--tre": `${120 + i * 150}ms`,
+                      // Nhung tang NAM TREN tang dang chon bi day cao them,
+                      // mo ra mot khe ho ngay tren no. Nho khe ho do ma tang
+                      // dang chon lo ra du chieu cao de doc duoc chu va de
+                      // bam trung bang ngon tay.
+                      "--nhoi": i > dangChon ? "32px" : "0px",
+                    } as React.CSSProperties
+                  }
                 >
-                  {t.ten}
-                </b>
-              </div>
-            ))}
+                  <b
+                    className="font-mono text-[.7rem] font-semibold tracking-[.1em] whitespace-nowrap text-white uppercase [text-shadow:0_1px_6px_rgb(0_0_0/.4)]"
+                    style={{ transform: "rotateZ(38deg) rotateX(-58deg)" }}
+                  >
+                    {t.ten}
+                  </b>
+                </button>
+              ))}
+            </div>
           </div>
 
-          {THE_BAY.map((t) => (
-            <div
-              key={t.chu}
-              className={`absolute z-5 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-[.82rem] font-medium whitespace-nowrap shadow-[0_20px_34px_-24px_rgb(11_12_30/.45)] ${t.vitri}`}
-            >
+          {/* O noi dung cua tang dang chon.
+              min-h co dinh de doi tang khong lam ca trang nhay len nhay xuong
+              theo do dai cau chu. */}
+          <div
+            id="o-tang"
+            role="tabpanel"
+            aria-labelledby={`tang-${dangChon}`}
+            tabIndex={0}
+            className="w-[min(23rem,100%)] rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_20px_34px_-24px_rgb(11_12_30/.45)]"
+          >
+            {/* key doi theo tang nen React thay the han khoi nay -> hieu ung
+                hien ra chay lai moi lan bam, chu khong chi doi chu am tham. */}
+            <div key={dangChon} className="o-tang flex items-start gap-3">
               <i
-                className="grid size-6.5 place-items-center rounded-lg text-[.85rem] not-italic"
-                style={{ background: t.nen, color: t.muc }}
+                aria-hidden="true"
+                className="grid size-9 shrink-0 place-items-center rounded-xl text-[.95rem] not-italic"
+                style={{ background: tang.nen, color: tang.muc }}
               >
-                {t.bieu}
+                {tang.bieu}
               </i>
-              {t.chu}
+              <div className="min-w-0">
+                <p className="font-mono text-[.62rem] font-semibold tracking-[.14em] text-slate-400 uppercase">
+                  Tầng {dangChon + 1} / {TANG.length}
+                </p>
+                <p className="font-hien text-muc mt-0.5 text-[.95rem] font-bold">
+                  {tang.nhan}
+                </p>
+                <p className="mt-1 text-[.85rem] leading-relaxed text-slate-500">
+                  {tang.mo}
+                </p>
+              </div>
             </div>
-          ))}
+          </div>
+
+          <p className="text-[.8rem] text-slate-500">
+            Bấm vào từng tầng để xem tầng đó có gì
+          </p>
         </div>
       </div>
     </header>

@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import SafeImage from "@/src/components/ui/SafeImage";
 import { useSearchParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import { BookOpen, ArrowLeft, User, Building2 } from "lucide-react";
-import { getCourses, Course, layIdChuDe, tenGiangVien } from "@/src/services/course";
+import { ArrowLeft } from "lucide-react";
+import { getCourses, Course, layIdChuDe } from "@/src/services/course";
 import { getCategories, Category } from "@/src/services/categoryService";
 import { locKhoaDaDang } from "@/src/components/home/locKhoaHoc";
+import TieuDeMuc from "@/src/components/home/TieuDeMuc";
+import TheKhoaHoc from "@/src/components/home/TheKhoaHoc";
 
 interface Props {
   /**
@@ -74,14 +74,14 @@ export default function CourseSearchClient({ initialCourses, initialCategories }
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f8fafc]">
+      <div className="flex min-h-screen items-center justify-center bg-[#f5f7fa]">
         <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pb-16">
+    <div className="min-h-screen bg-[#f5f7fa] pb-16">
       <div className="mx-auto max-w-7xl px-6 py-10">
         <button
           onClick={() => router.push("/")}
@@ -90,102 +90,47 @@ export default function CourseSearchClient({ initialCourses, initialCategories }
           <ArrowLeft size={14} /> VỀ TRANG CHỦ
         </button>
 
-        <div className="mb-8">
-          <span className="mb-1 block text-xs font-bold tracking-wider text-blue-600 uppercase">
-            {categoryParam ? "Khóa học theo danh mục" : "Kết quả tìm kiếm toàn trang"}
-          </span>
-          <h1 className="text-2xl font-extrabold text-gray-900 md:text-3xl">
-            {searchKeyword
+        <TieuDeMuc
+          nhu="h1"
+          tieuDe={
+            searchKeyword
               ? `Kết quả cho "${searchKeyword}"`
               : categoryParam
                 ? categories.find((c) => c.slug === categoryParam)?.name || categoryParam
-                : "Tất cả khóa học"}
-          </h1>
-        </div>
+                : "Tất cả khoá học"
+          }
+          moTa={
+            // Dem duoc bao nhieu thi noi bay nhieu. Cau chu cu ("Ket qua tim
+            // kiem toan trang") chi lap lai cai tieu de vua doc xong.
+            courses.length > 0
+              ? `${courses.length} khoá học${categoryParam ? " trong danh mục này" : ""}.`
+              : undefined
+          }
+        />
 
         {courses.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-gray-200 bg-white py-16 text-center text-gray-500 shadow-sm">
-            Không tìm thấy khóa học nào phù hợp với từ khóa{" "}
-            <strong className="text-gray-700">&quot;{searchKeyword}&quot;</strong>.
+          <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center text-sm text-slate-500">
+            {/* Khong con noi cung mot cau cho moi truong hop: tim khong ra va
+                danh muc rong la hai chuyen khac nhau, ma cau cu luon chen tu
+                khoa vao - vao tu danh muc thi hien ra cap nhay rong. */}
+            {searchKeyword ? (
+              <>
+                Không tìm thấy khoá học nào cho{" "}
+                <strong className="text-slate-700">&quot;{searchKeyword}&quot;</strong>.
+              </>
+            ) : (
+              "Danh mục này chưa có khoá học nào."
+            )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {courses.map((course) => {
-              const instructorName =
-                tenGiangVien(course.instructor) || "Expert Instructor";
-
-              const rawProvider = course.provider;
-              let providerName = "Hệ thống LMS";
-              if (rawProvider && typeof rawProvider === "object") {
-                providerName = rawProvider.name || "Hệ thống LMS";
-              }
-
-              return (
-                <Link
-                  href={`/course?slug=${course.slug}`}
-                  key={course._id}
-                  className="group flex cursor-pointer flex-col justify-between overflow-hidden rounded-2xl border border-gray-200/60 bg-white shadow-sm transition duration-300 hover:border-blue-100 hover:shadow-md"
-                >
-                  <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden border-b border-gray-100 bg-slate-100">
-                    {course.thumbnail ? (
-                      <SafeImage
-                        src={course.thumbnail}
-                        alt={course.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 33vw"
-                        className="object-cover transition duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <BookOpen size={36} className="text-slate-400" />
-                    )}
-                  </div>
-
-                  <div className="flex flex-1 flex-col justify-between p-4">
-                    <div>
-                      <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <div className="flex min-w-0 items-center gap-1">
-                          <User size={12} className="flex-shrink-0 text-gray-500" />
-                          <p className="max-w-[100px] truncate text-xs text-gray-500">
-                            {instructorName}
-                          </p>
-                        </div>
-                        <span className="text-xs text-gray-400">|</span>
-                        <div className="flex min-w-0 items-center gap-1">
-                          <Building2
-                            size={12}
-                            className="flex-shrink-0 text-violet-400"
-                          />
-                          <p className="max-w-[90px] truncate text-[11px] font-medium text-violet-600">
-                            {providerName}
-                          </p>
-                        </div>
-                      </div>
-
-                      <h4 className="mb-3 line-clamp-2 text-sm leading-snug font-bold text-gray-900 transition group-hover:text-blue-600">
-                        {course.title}
-                      </h4>
-                    </div>
-
-                    <div className="mt-auto flex items-center justify-between border-t border-gray-50 pt-3 text-[11px] font-medium text-gray-500">
-                      <div className="flex items-center gap-1.5">
-                        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-600 capitalize">
-                          {course.level}
-                        </span>
-                        <span>•</span>
-                        <span className="text-blue-600">
-                          {course.lessons?.length || 0} bài học
-                        </span>
-                      </div>
-                      <span className="text-xs font-bold text-slate-900">
-                        {course.price === 0
-                          ? "Miễn phí"
-                          : `${course.price.toLocaleString("vi-VN")}đ`}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
+          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {courses.map((course) => (
+              <TheKhoaHoc
+                key={course._id}
+                khoa={course}
+                sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              />
+            ))}
           </div>
         )}
       </div>

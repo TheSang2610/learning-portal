@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Quote } from "lucide-react";
 import SafeImage from "@/src/components/ui/SafeImage";
+import TieuDeMuc from "./TieuDeMuc";
 const testimonials = [
   {
     name: "Jessica Wong",
@@ -33,98 +34,58 @@ const testimonials = [
   },
 ];
 
-// ==========================================
-// SKELETON LOADING COMPONENT
-// ==========================================
-function TestimonialsSkeleton() {
-  return (
-    <section className="animate-pulse bg-[#f5f7fa] py-10">
-      <div className="mx-auto max-w-7xl px-6">
-        {/* Tiêu đề giả lập */}
-        <div className="h-6 w-64 rounded bg-slate-200 md:w-80"></div>
-
-        {/* Khung lưới 4 card giả lập */}
-        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((index) => (
-            <div
-              key={index}
-              className="flex h-[200px] flex-col rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
-            >
-              {/* Top: Avatar + Tên giả lập */}
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 flex-shrink-0 rounded-full bg-slate-200"></div>
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 w-2/3 rounded bg-slate-200"></div>
-                  <div className="h-3 w-1/2 rounded bg-slate-200"></div>
-                </div>
-              </div>
-
-              {/* Bottom: Đoạn văn đánh giá giả lập */}
-              <div className="mt-5 flex-grow space-y-2">
-                <div className="h-3 w-full rounded bg-slate-200"></div>
-                <div className="h-3 w-11/12 rounded bg-slate-200"></div>
-                <div className="h-3 w-4/5 rounded bg-slate-200"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ==========================================
-// MAIN COMPONENT
-// ==========================================
 export default function TestimonialsSection() {
-  // Nếu sau này bạn chuyển sang fetch API từ DB, hãy đổi giá trị khởi tạo thành true
-  const [loading] = useState<boolean>(false);
-
-  if (loading) {
-    return <TestimonialsSkeleton />;
-  }
-
   return (
     <section className="bg-[#f5f7fa]">
-      <div className="mx-auto max-w-7xl px-6 py-10">
-        {/* HEADER */}
-        <div>
-          <h2 className="text-xl font-bold text-[#1f1f1f] md:text-2xl">
-            Tại sao mọi người chọn Coursera
-          </h2>
-        </div>
+      <div className="mx-auto max-w-7xl px-6 py-14 md:py-16">
+        <TieuDeMuc
+          tieuDe="Học viên nói gì"
+          moTa="Bốn người đã học xong và đi làm, kể lại thứ họ mang theo được sau khoá học."
+        />
 
-        {/* CARDS GRID */}
-        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {/* Hai cot chu khong phai bon.
+            Ban cu xep bon the ngang mot hang: moi the con khoang 290px, doan
+            trich phai xuong bay dong voi co chu 13px - dai va kho doc. Hai cot
+            cho moi the gap doi be ngang, doan trich ve ba dong o co chu 16px. */}
+        <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
           {testimonials.map((item, index) => (
-            <div
-              key={`${item.name}-${index}`}
-              className="flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition duration-200 hover:shadow-md"
+            <figure
+              key={index}
+              className="relative overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-6 md:p-7"
             >
-              {/* TOP: AVATAR + INFO */}
-              <div className="flex items-center gap-4">
-                <SafeImage
-                  src={item.image}
-                  alt={item.name}
-                  width={48}
-                  height={48}
-                  className="h-12 w-12 flex-shrink-0 rounded-full object-cover"
-                />
-                <div className="min-w-0">
-                  <h3 className="truncate text-base font-bold text-[#1f1f1f]">
-                    {item.name}
-                  </h3>
-                  {/* <p className="text-xs text-gray-500 truncate mt-0.5">
-                    {item.role}
-                  </p> */}
-                </div>
-              </div>
+              {/* Dau nhay la trang tri -> aria-hidden de trinh doc man hinh
+                  khong doc no thanh mot tu vo nghia truoc moi doan trich. */}
+              <Quote
+                size={64}
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-2 right-2 text-blue-50"
+                strokeWidth={1.5}
+              />
 
-              {/* BOTTOM: REVIEW TEXT */}
-              <p className="mt-4 flex-grow text-sm leading-relaxed text-[#5b6780] italic md:text-base">
-                &quot;{item.review}&quot;
-              </p>
-            </div>
+              <blockquote className="relative text-[16px] leading-[1.7] text-slate-700">
+                {item.review}
+              </blockquote>
+
+              <figcaption className="mt-5 flex items-center gap-3 border-t border-slate-100 pt-5">
+                <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-slate-100">
+                  <SafeImage
+                    src={item.image}
+                    alt={item.name}
+                    fill
+                    sizes="44px"
+                    className="object-cover"
+                  />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-[15px] font-semibold text-slate-900">
+                    {item.name}
+                  </span>
+                  <span className="block truncate text-[13px] text-slate-500">
+                    {item.role}
+                  </span>
+                </span>
+              </figcaption>
+            </figure>
           ))}
         </div>
       </div>

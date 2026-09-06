@@ -9,6 +9,7 @@ import FaqSection from "@/src/components/home/FaqSection";
 import TestimonialsSection from "@/src/components/home/TestimonialsSection";
 import CourseSection from "@/src/components/home/CourseSection";
 import { locKhoaDaDang } from "@/src/components/home/locKhoaHoc";
+import { layIdChuDe } from "@/src/services/course";
 
 import type { Category } from "@/src/services/categoryService";
 import type { ProviderData } from "@/src/services/provider";
@@ -53,6 +54,21 @@ export default async function HomePage() {
 
   const khoaDaDang = locKhoaDaDang(coursesRes);
   const soMienPhi = khoaDaDang.filter((k) => (k.price ?? 0) === 0).length;
+
+  // Dem so khoa hoc trong tung danh muc, dem o day chu khong goi them API.
+  //
+  // Danh sach khoa hoc da nam san trong tay o tren, nen viec dem la mien phi.
+  // Con o phia danh muc thi con so nay la thu duy nhat tra loi duoc "bam vao
+  // day co gi khong" truoc khi nguoi ta bam.
+  //
+  // Mot khoa co the thuoc nhieu danh muc - layIdChuDe tra ve MANG - nen tong
+  // cac o dem se lon hon tong so khoa hoc, va do la dung.
+  const soKhoaTheoDanhMuc: Record<string, number> = {};
+  for (const khoa of khoaDaDang) {
+    for (const id of layIdChuDe(khoa.category)) {
+      soKhoaTheoDanhMuc[id] = (soKhoaTheoDanhMuc[id] ?? 0) + 1;
+    }
+  }
   const donVi = Array.isArray(providers) ? providers : [];
 
   return (
@@ -69,7 +85,10 @@ export default async function HomePage() {
             dao tao), nhung gon trong mot dai thay vi mot luoi the. */}
         <DaiDonVi donVi={donVi} />
         <TrinhBay />
-        <CategoriesSection initialData={hoacNull(categories)} />
+        <CategoriesSection
+          initialData={hoacNull(categories)}
+          soKhoaTheoDanhMuc={soKhoaTheoDanhMuc}
+        />
         <PopularCoursesSection initialData={coMuc && muc ? muc : null} />
         <CourseSection
           initialCourses={hoacNull(khoaDaDang)}

@@ -245,3 +245,147 @@ body {
   font-weight: 600;
   color: #0f172a;
 }
+
+/* ===========================================================================
+   Thap 5 tang o phan mo dau trang chu (HeroSection)
+   ---------------------------------------------------------------------------
+   Hieu ung o day KHONG phai trang tri: tieu de viet "Đi lên từng tầng, không
+   nhảy cóc", nen thap phai tu xep len tung tang mot theo dung thu tu, tang
+   chung nhan dap xuong sau cung. Nguoi chua doc chu cung hieu duoc y.
+
+   Viet o day chu khong dat thang trong JSX vi Tailwind khong ta duoc keyframes,
+   va vi ca ba lop chuyen dong (xep tang / thap troi / the bay) phai an khop
+   thoi gian voi nhau - de trong mot file thi con doc ra duoc trinh tu.
+
+   Ba lop chuyen dong, moi lop mot the rieng de KHONG dam nhau:
+     .thap-troi   the ngoai  - troi len xuong cham, chay mai
+     .thap        the giua   - do nghieng, doi khi ro chuot
+     .tang        tung tang  - xep len luc vao trang, tach ra khi ro chuot
+   Neu don ca ba vao mot the thi cai sau de len cai truoc, vi chung cung sua
+   thuoc tinh transform.
+
+   Moi tang la mot cai NUT (role="tab"): bam vao thi o ben duoi thap doi sang
+   noi dung cua tang do.
+   =========================================================================== */
+
+/* Vi tri cuoi cung cua moi tang. --z va --s do JSX dat vao, tinh theo so tang.
+   De o day chu khong de trong style inline la co chu dich: nho vay :hover va
+   trang thai dang chon ben duoi moi viet de len duoc no. */
+.tang {
+  /* Hai bien dieu khien do cao, mot nhan mot cong - va phai tach roi:
+       --gian  nhan  : ro chuot vao ca thap thi ca chong gian deu ra
+       --nhoi  cong  : day rieng nhung tang NAM TREN tang dang chon len, mo ra
+                       mot khe ho ngay tren no de no lo ra du chieu cao ma bam
+     Neu chi dung phep nhan thi tang day (--z: 0) nhan bao nhieu cung bang 0,
+     tuc la tang duoi cung khong bao gio bao duoc rang no dang duoc chon. */
+  transform: translateZ(calc(var(--z) * var(--gian, 1) + var(--nhoi, 0px)))
+    scale(var(--s));
+  /* Quang sang doc tu bien chu khong dat thang o style inline: dat inline thi
+     vong vien luc chon va luc lay tieu diem khong ghi de duoc. */
+  box-shadow: var(--hao);
+}
+
+/* Tang dang chon: vien trang dac vong quanh, tach han khoi bon tang con lai. */
+.tang[aria-selected="true"] {
+  border-color: #fff;
+  box-shadow:
+    var(--hao),
+    0 0 0 3px rgb(255 255 255 / 0.92);
+}
+
+/* Vong tieu diem trang ke den. Mot mau don khong du: mep tang khi thi nam
+   tren nen trang cua trang, khi thi nam de len mot tang tim - mau nao cung co
+   luc chim mat. Dat SAU luat aria-selected de tang dang chon van thay duoc
+   tieu diem ban phim. */
+.tang:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--hao),
+    0 0 0 3px #fff,
+    0 0 0 6px #0b0c1e;
+}
+
+@keyframes thap-xep-tang {
+  from {
+    opacity: 0;
+    /* Bat dau tu day thap: moi tang deu nam chong khit len tang mong. */
+    transform: translateZ(0) scale(1);
+  }
+  55% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: translateZ(calc(var(--z) * var(--gian, 1) + var(--nhoi, 0px)))
+      scale(var(--s));
+  }
+}
+
+@keyframes o-tang-hien {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes thap-troi {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+/* Toan bo chuyen dong nam trong khoi nay.
+   Dat dieu kien la "no-preference" chu khong phai chan rieng "reduce": may nao
+   khong noi duoc y muon cua nguoi dung thi mac dinh la ĐỨNG YÊN, khong phai
+   chay roi cho nguoi ta tat. Luc do cac the van o dung vi tri cuoi vi .tang o
+   tren da ta san transform. */
+@media (prefers-reduced-motion: no-preference) {
+  .tang {
+    /* backwards chu khong phai forwards: het hieu ung thi the tra ve chinh
+       transform cua .tang - trung y het khung hinh cuoi, nen khong giat. Va
+       nho tra ve nhu vay, :hover ben duoi moi gianh lai duoc quyen dieu khien;
+       neu de forwards thi hieu ung se giu transform mai mai va ro chuot khong
+       con tac dung gi. */
+    animation: thap-xep-tang 0.75s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation-delay: var(--tre);
+    transition:
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.25s ease-out,
+      border-color 0.25s ease-out;
+  }
+
+  /* Ro chuot hoac di ban phim vao thap: cac tang gian ra 1.45 lan, thay ro
+     day la mot chong nhieu lop chu khong phai mot khoi dac. Ke ca
+     :focus-within vi nguoi dung ban phim cung can thay khe ho de biet minh
+     dang o tang nao. */
+  .thap:hover .tang,
+  .thap:focus-within .tang {
+    --gian: 1.45;
+  }
+
+  .thap-troi {
+    animation: thap-troi 7s ease-in-out infinite;
+  }
+
+  /* Dung troi khi co nguoi dinh bam. Cac tang gio la nut bam, ma bam vao mot
+     cai dich dang chay cham cham la kho - nhat la tren dien thoai. */
+  .thap-troi:hover,
+  .thap-troi:focus-within {
+    animation-play-state: paused;
+  }
+
+  /* Doi tang thi o noi dung ben duoi thay chu. Khong co hieu ung nay thi chu
+     nhay cai mot, mat khong kip nhan ra la no vua doi. JSX doi key theo tang
+     dang chon nen hieu ung chay lai moi lan bam. */
+  .o-tang {
+    animation: o-tang-hien 0.3s ease-out;
+  }
+}
