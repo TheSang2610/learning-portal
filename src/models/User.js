@@ -89,6 +89,21 @@ const userSchema = new mongoose.Schema({
         sparse: true
     },
 
+    /**
+     * So coin dang co trong vi.
+     *
+     * Chi duoc doi qua utils/viCoin.js - dung $inc co dieu kien, khong bao gio
+     * doc ra roi gan de len. Ly do ghi ro trong file do.
+     *
+     * min: 0 la luoi cuoi cung o tang luoc do: du co duong nao tinh sai thi
+     * Mongoose cung tu choi luu so am, chu khong de mot cai vi mang no.
+     */
+    soDuCoin: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+
     enrolledCourses: [
         {
             type: mongoose.Schema.Types.ObjectId,
