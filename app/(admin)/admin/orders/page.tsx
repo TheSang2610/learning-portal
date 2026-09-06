@@ -46,6 +46,7 @@ const ngayGio = (chuoi: string) =>
 export default function TrangDonHang() {
   const [ds, setDs] = useState<DonHangAdmin[]>([]);
   const [dangCho, setDangCho] = useState(0);
+  const [daBao, setDaBao] = useState(0);
   const [loc, setLoc] = useState<TrangThaiDon | "">("pending");
   const [tim, setTim] = useState("");
   const [dangTai, setDangTai] = useState(true);
@@ -67,6 +68,7 @@ export default function TrangDonHang() {
         if (daRoiTrang) return;
         setDs(kq.orders);
         setDangCho(kq.pendingCount);
+        setDaBao(kq.daBaoCount ?? 0);
         setLoi("");
       } catch (e) {
         if (!daRoiTrang) setLoi(getErrorMessage(e, "Không đọc được danh sách đơn"));
@@ -126,6 +128,16 @@ export default function TrangDonHang() {
         {dangCho > 0 && (
           <span className="rounded-full bg-amber-100 px-3 py-1.5 text-sm font-semibold text-amber-800">
             {dangCho} đơn đang chờ
+          </span>
+        )}
+        {daBao > 0 && (
+          // Dem rieng so don DA CO NGUOI BAO da chuyen khoan.
+          //
+          // "Dang cho" gom ca don vua mo ra roi bo do - khong co gi de lam voi
+          // chung. Con day la nhung nguoi that su dang ngoi doi, va la viec
+          // phai mo sao ke ra doi chieu ngay.
+          <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-sm font-semibold text-emerald-800">
+            {daBao} đơn báo đã chuyển khoản
           </span>
         )}
       </div>
@@ -222,6 +234,11 @@ export default function TrangDonHang() {
                     {don.confirmedBy && (
                       <div className="mt-1 text-xs text-slate-400">
                         bởi {don.confirmedBy.name}
+                      </div>
+                    )}
+                    {don.daBaoChuyenKhoanLuc && don.status !== "paid" && (
+                      <div className="mt-1 text-xs font-semibold text-emerald-700">
+                        Đã báo CK {ngayGio(don.daBaoChuyenKhoanLuc)}
                       </div>
                     )}
                   </td>

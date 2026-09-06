@@ -5,6 +5,7 @@ import { getErrorMessage } from "@/src/services/apiHelper";
 import AnhDaiDien from "@/src/components/ui/AnhDaiDien";
 import { Users, Flame, Clock, Loader2 } from "lucide-react";
 import ActivityHeatmap from "@/src/components/profile/ActivityHeatmap";
+import ViCoinCuaToi from "@/src/components/common/ViCoinCuaToi";
 import {
   getMyProfile,
   getMyActivity,
@@ -144,6 +145,8 @@ export default function ProfilePage() {
                 Chưa tải được dữ liệu hoạt động.
               </div>
             )}
+
+            <ViCoinCuaToi />
 
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <h2 className="mb-5 text-base font-bold text-slate-900">

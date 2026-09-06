@@ -5,7 +5,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { DonHang, dinhDangTien, huyDon, layDonTheoMa } from "@/src/services/order";
+import {
+  DonHang,
+  dinhDangTien,
+  huyDon,
+  layDonTheoMa,
+  baoDaChuyenKhoan,
+  taoDonHang,
+} from "@/src/services/order";
 import { getErrorMessage } from "@/src/services/apiHelper";
 
 // Bao lau hoi lai may chu mot lan xem don da duoc xac nhan chua.
@@ -65,6 +72,12 @@ function NoiDungThanhToan() {
   const [conLai, setConLai] = useState(0);
   const [dangHuy, setDangHuy] = useState(false);
   const [daChepHet, setDaChepHet] = useState(false);
+  const [dangBao, setDangBao] = useState(false);
+  const [ketQuaBao, setKetQuaBao] = useState<{
+    chu: string;
+    mailHong: boolean;
+  } | null>(null);
+  const [dangTaoLai, setDangTaoLai] = useState(false);
 
   // Giu trang thai gan nhat de vong hoi khong phai phu thuoc vao state,
   // tranh dat lai setInterval moi lan don thay doi.
@@ -118,6 +131,43 @@ function NoiDungThanhToan() {
     }, NHIP_HOI_MS);
     return () => clearInterval(h);
   }, [don, taiLai]);
+
+  const bamDaChuyen = async () => {
+    if (!don) return;
+    setDangBao(true);
+    try {
+      const r = await baoDaChuyenKhoan(don.code);
+      setKetQuaBao({
+        chu: r.message,
+        // Chua cau hinh mail hoac gui hong -> phai noi that. De hoc vien ngoi
+        // cho mot cai mail khong bao gio den la cach chac chan nhat de mat
+        // khach: ho tuong da bao roi, con quan tri thi khong biet gi.
+        mailHong: !r.daGuiMail,
+      });
+      taiLai();
+    } catch (e) {
+      setKetQuaBao({
+        chu: getErrorMessage(e, "Không gửi được thông báo"),
+        mailHong: true,
+      });
+    } finally {
+      setDangBao(false);
+    }
+  };
+
+  // Ma cu het han thi tao thang don moi va nhay sang, thay vi day nguoi dung
+  // ve trang khoa hoc bat bam Mua lai tu dau.
+  const taoMaMoi = async () => {
+    if (!don?.course) return;
+    setDangTaoLai(true);
+    try {
+      const { order } = await taoDonHang(don.course._id);
+      router.push(`/payment?code=${order.code}`);
+    } catch (e) {
+      setLoi(getErrorMessage(e, "Không tạo được mã mới"));
+      setDangTaoLai(false);
+    }
+  };
 
   const chepThongTin = async () => {
     if (!don?.chuyenKhoan) return;
@@ -220,14 +270,27 @@ function NoiDungThanhToan() {
         <p className="mb-8 text-slate-600">
           {daHuy
             ? "Đơn này đã được hủy. Bạn có thể đặt lại đơn mới bất cứ lúc nào."
-            : "Đơn chỉ được giữ trong 15 phút. Bạn đặt lại đơn mới để lấy mã chuyển khoản còn hiệu lực nhé."}
+            : "Mã này đã quá hạn 15 phút nên không dùng để chuyển khoản được nữa — hãy lấy mã mới. Nếu bạn LỠ chuyển theo mã cũ rồi thì đừng chuyển lại: nhắn cho ban quản trị kèm mã đó, tiền vẫn đối chiếu và mở khoá được."}
         </p>
-        <Link
-          href={don.course ? `/course?slug=${don.course.slug}` : "/courses"}
-          className="rounded-2xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
-        >
-          Quay lại khóa học
-        </Link>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          {/* Tao thang ma moi ngay tai day. Truoc day chi co duong quay ve
+              trang khoa hoc roi bam Mua lai - ba buoc cho mot viec. */}
+          {don.course && (
+            <button
+              onClick={taoMaMoi}
+              disabled={dangTaoLai}
+              className="rounded-2xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:bg-slate-300"
+            >
+              {dangTaoLai ? "Đang tạo mã mới…" : "Lấy mã chuyển khoản mới"}
+            </button>
+          )}
+          <Link
+            href={don.course ? `/course?slug=${don.course.slug}` : "/courses"}
+            className="rounded-2xl border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400"
+          >
+            Quay lại khóa học
+          </Link>
+        </div>
       </div>
     );
   }
@@ -246,10 +309,24 @@ function NoiDungThanhToan() {
         }`}
       >
         {hetGio ? (
-          <span>
-            Đơn đã quá hạn giữ. Nếu bạn đã chuyển khoản, đừng lo — đơn vẫn được xác nhận
-            khi tiền về.
-          </span>
+          // Hai cau khac han nhau tuy da bao chuyen khoan hay chua.
+          //
+          // Chua bao: phai CAN ho lai, dung chuyen theo ma nay nua - tien vao
+          // mot ma da chet thi quan tri kho doi chieu, va he thong khong tu mo
+          // khoa duoc.
+          // Da bao: ho da chuyen roi, noi "dung chuyen" luc nay la vo nghia va
+          // chi lam ho hoang. Luc nay phai tran an.
+          don.daBaoChuyenKhoanLuc ? (
+            <span>
+              Bạn đã báo chuyển khoản. Mã quá hạn không sao — ban quản trị vẫn đối chiếu
+              và mở khoá khi tiền về.
+            </span>
+          ) : (
+            <span>
+              <strong>Mã này đã hết hạn — đừng chuyển khoản theo mã này nữa.</strong> Hãy
+              lấy mã mới bên dưới.
+            </span>
+          )
         ) : (
           <span>
             Giữ đơn cho bạn trong{" "}
@@ -381,10 +458,57 @@ function NoiDungThanhToan() {
         </section>
       )}
 
-      <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
-        Sau khi chuyển khoản, đơn được xác nhận thủ công nên có thể mất vài phút. Trang
-        này tự kiểm tra lại, bạn cứ để mở — khóa học mở ra là thấy ngay.
-      </div>
+      {/* Nút báo đã chuyển khoản.
+          Trước đây học viên chuyển xong chỉ biết ngồi đợi, còn quản trị thì
+          phải tự mở trang xem có đơn mới không — tức là hoặc ngồi canh màn
+          hình cả ngày, hoặc để người ta chờ. Nút này gửi một mail thẳng vào
+          hộp thư quản trị kèm mã đơn để tra sao kê. */}
+      {don.daBaoChuyenKhoanLuc ? (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+          <p className="font-semibold">
+            Đã báo ban quản trị lúc{" "}
+            {new Date(don.daBaoChuyenKhoanLuc).toLocaleString("vi-VN")}
+          </p>
+          <p className="mt-1 text-emerald-800">
+            Bên mình đang đối chiếu sao kê ngân hàng. Trang này tự kiểm tra lại — khoá học
+            mở ra là thấy ngay, không phải tải lại.
+          </p>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-sm text-slate-600">
+            Chuyển khoản xong thì bấm nút này để báo cho ban quản trị đối chiếu. Đơn được
+            xác nhận thủ công nên có thể mất vài phút.
+          </p>
+          <button
+            type="button"
+            onClick={bamDaChuyen}
+            disabled={dangBao}
+            className="mt-3 w-full rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:bg-slate-300 sm:w-auto"
+          >
+            {dangBao ? "Đang gửi…" : "Tôi đã chuyển khoản"}
+          </button>
+        </div>
+      )}
+
+      {ketQuaBao && (
+        <p
+          className={`mt-4 rounded-2xl p-3 text-sm ${
+            ketQuaBao.mailHong
+              ? "border border-amber-200 bg-amber-50 text-amber-900"
+              : "border border-emerald-200 bg-emerald-50 text-emerald-900"
+          }`}
+        >
+          {ketQuaBao.chu}
+          {ketQuaBao.mailHong && (
+            <>
+              {" "}
+              Tuy nhiên mail báo chưa gửi được, nên bạn nhắn thêm cho ban quản trị kèm mã{" "}
+              <strong className="font-mono">{don.code}</strong> cho chắc.
+            </>
+          )}
+        </p>
+      )}
 
       {loi && (
         <p className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">

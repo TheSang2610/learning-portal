@@ -28,6 +28,7 @@ import {
   Newspaper,
   Award as AwardIcon,
   Receipt,
+  Coins,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useNguoiDungLuu } from "@/src/hooks/nguoiDungLuu";
@@ -158,6 +159,11 @@ const menuItems: MenuItem[] = [
     ],
   },
   {
+    label: "Coin & Quà tặng",
+    href: "/admin/coin",
+    icon: Coins,
+  },
+  {
     label: "Enrollments",
     href: "/admin/enrollments",
     icon: ClipboardList,
@@ -268,8 +274,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       const label = path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, " ");
       const isLast = index === paths.length - 1;
 
+      // Khoa theo rawHref chu KHONG theo href.
+      //
+      // Dang o /admin/dashboard thi hai chang deu quy ve cung mot href:
+      //   chang 0: "/admin"           -> doi thanh "/admin/dashboard"
+      //   chang 1: "/admin/dashboard" -> giu nguyen
+      // React nhan hai con cung khoa, canh bao "two children with the same
+      // key" va co the ve thieu hoac ve trung mot chang. rawHref thi moi chang
+      // moi khac vi no dai dan theo tung doan duong dan.
       return (
-        <span key={href} className="flex items-center">
+        <span key={rawHref} className="flex items-center">
           <span className="mx-2 text-slate-400">/</span>
           {isLast ? (
             <span className="font-normal text-slate-500">{label}</span>

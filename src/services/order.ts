@@ -35,6 +35,13 @@ export interface DonHang {
    */
   secondsLeft: number;
   paidAt: string | null;
+  /**
+   * Lúc học viên bấm "Tôi đã chuyển khoản". `null` = chưa bấm.
+   *
+   * Không phải bằng chứng đã trả tiền — chỉ là lời khai, dùng để xếp thứ tự
+   * việc cho quản trị và để giao diện biết đã báo rồi thì đừng cho bấm lại.
+   */
+  daBaoChuyenKhoanLuc: string | null;
   createdAt: string;
   course: KhoaHocTrongDon | null;
   chuyenKhoan: ThongTinChuyenKhoan | null;
@@ -66,11 +73,29 @@ export const layDonCuaToi = async (): Promise<{
 export const huyDon = async (code: string): Promise<{ message: string }> =>
   apiRequest(`/orders/${encodeURIComponent(code)}/cancel`, { method: "PUT" });
 
+/**
+ * Học viên báo đã chuyển khoản → máy chủ gửi mail cho quản trị đối chiếu.
+ *
+ * KHÔNG đổi đơn sang "đã thanh toán": đây là lời khai của người mua, chỉ quản
+ * trị nhìn thấy tiền trong sao kê mới được xác nhận.
+ */
+export const baoDaChuyenKhoan = async (
+  code: string,
+): Promise<{
+  message: string;
+  daBaoChuyenKhoanLuc: string;
+  daQuaHan: boolean;
+  daGuiMail: boolean;
+  mailDaCauHinh: boolean;
+}> => apiRequest(`/orders/${encodeURIComponent(code)}/da-chuyen`, { method: "PUT" });
+
 // ---------------------------------------------------------------------------
 // Phần dành cho quản trị
 // ---------------------------------------------------------------------------
 
 export interface DonHangAdmin {
+  /** Lúc học viên bấm "Tôi đã chuyển khoản". `null` = chưa bấm. */
+  daBaoChuyenKhoanLuc?: string | null;
   _id: string;
   code: string;
   status: TrangThaiDon;
@@ -95,6 +120,8 @@ export const layDonHangAdmin = async (tuyChon?: {
   limit: number;
   total: number;
   pendingCount: number;
+  /** Số đơn CÓ NGƯỜI ĐANG CHỜ: đã bấm báo chuyển khoản, đang đợi đối chiếu. */
+  daBaoCount: number;
 }> => {
   const q = new URLSearchParams();
   if (tuyChon?.status) q.set("status", tuyChon.status);

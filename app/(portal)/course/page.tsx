@@ -32,6 +32,7 @@ import {
   enrollInCourse,
   getProgressStats,
 } from "@/src/services/enrollment.api";
+import NutMuaBangCoin from "@/src/components/common/NutMuaBangCoin";
 import { reviewService, Review, ReviewStats } from "@/src/services/review";
 import { faqService, FaqItem } from "@/src/services/faq";
 
@@ -245,17 +246,22 @@ function CourseDetailPageContent() {
             if (enrollmentData && enrollmentData.isEnrolled === true) {
               setIsEnrolled(true);
 
-              // Khoa mien phi da ghi danh roi thi khong bat xem lai trang gioi
-              // thieu nua - vao thang bai giang.
+              // DA GHI DANH thi vao thang bai giang, khong bat xem lai trang
+              // gioi thieu nua - ke ca khoa co phi.
               //
-              // Chi ap cho khoa gia 0. Khoa co phi van phai qua trang nay vi do
-              // la noi hien gia, noi dung va nut thanh toan; nhay thang vao
-              // /learn se bo qua ca luong mua.
+              // Truoc day cho nay chi ap cho khoa gia 0, voi ly do "khoa co phi
+              // van phai qua trang nay vi do la noi hien gia va nut thanh
+              // toan". Ly do do chi dung voi nguoi CHUA ghi danh. Ma khoa co
+              // phi thi may chu chi tao duoc ghi danh khi da co don hang trang
+              // thai 'paid' (xem enrollInCourse trong courseController) - nen
+              // chay den duoc dong nay nghia la nguoi ta tra tien xong roi.
+              // Khong con luong mua nao de "bo qua", chi con bat ho bam them
+              // mot lan nua moi vao duoc bai giang da mua.
               //
               // ?xem=1 la duong lui: nut quay lai o trang hoc mang tham so nay
               // nen van mo duoc trang gioi thieu de doc danh gia, hoi dap. Thieu
               // no thi hai trang day qua day lai thanh vong lap.
-              if ((courseData.price ?? 0) === 0 && !boQuaNhayVaoHoc) {
+              if (!boQuaNhayVaoHoc) {
                 setDangNhayVaoHoc(true);
                 router.replace(`/learn?slug=${courseSlug}`);
                 return;
@@ -900,14 +906,36 @@ function CourseDetailPageContent() {
                   Tiếp tục học tập
                 </Link>
               ) : (
-                <button
-                  onClick={handleEnrollCourse}
-                  disabled={submitting}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-3 text-center text-sm font-bold tracking-wider text-white uppercase shadow-md transition hover:bg-slate-800 disabled:bg-slate-500"
-                >
-                  <CreditCard size={15} />
-                  {submitting ? "Đang liên kết..." : "Ghi danh học viên"}
-                </button>
+                <div className="space-y-3">
+                  {/* Coin di TRUOC chuyen khoan: ai co san coin thi mo khoa
+                      ngay tai day, khong phai qua man hinh QR roi ngoi cho
+                      quan tri doi chieu. Ai khong du coin thi component nay tu
+                      bao thieu bao nhieu, va nut chuyen khoan ben duoi van con
+                      nguyen. */}
+                  {(course.price ?? 0) > 0 && (
+                    <NutMuaBangCoin
+                      courseId={course._id}
+                      gia={course.price ?? 0}
+                      khiMuaXong={() => {
+                        setIsEnrolled(true);
+                        router.push(`/learn?slug=${courseSlug}`);
+                      }}
+                    />
+                  )}
+
+                  <button
+                    onClick={handleEnrollCourse}
+                    disabled={submitting}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-3 text-center text-sm font-bold tracking-wider text-white uppercase shadow-md transition hover:bg-slate-800 disabled:bg-slate-500"
+                  >
+                    <CreditCard size={15} />
+                    {submitting
+                      ? "Đang liên kết..."
+                      : (course.price ?? 0) > 0
+                        ? "Chuyển khoản ngân hàng"
+                        : "Ghi danh học viên"}
+                  </button>
+                </div>
               )}
 
               <div className="space-y-3 border-t border-slate-100 pt-4 text-xs font-medium text-slate-600">
