@@ -3,6 +3,7 @@ const layCloudinary = require('../config/cloudinary');
 const { phanTrang } = require('../utils/truyVan');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
 const { checkDocument } = require('../utils/contentFilter');
+const { chuanHoaNoiDung, boThe } = require('../utils/htmlBaiViet');
 const { taoSlug } = require('../utils/vanBan');
 
 const LOAI_CHO_PHEP = ['pdf', 'doc', 'docx'];
@@ -73,7 +74,16 @@ const getDocumentById = async (req, res) => {
 const createDocument = async (req, res) => {
     try {
         const title = (req.body.title || '').trim();
-        const description = (req.body.description || '').trim();
+
+        // PHAI loc HTML o day. Truoc day cho nay chi .trim() roi luu thang, va
+        // giao dien thi do mo ta ra bang dangerouslySetInnerHTML (xem
+        // frontend ArticleWithOutline, no tu doan chuoi nao giong HTML thi ve
+        // nguyen). Ai dang duoc tai lieu la nhet duoc <script> chay trong
+        // trinh duyet cua MOI nguoi mo tai lieu do - XSS luu tru.
+        //
+        // postController da di qua chuanHoaNoiDung tu lau; duong nay bi bo sot.
+        // Them duong ghi mo ta moi thi cung phai goi ham nay.
+        const description = chuanHoaNoiDung(req.body.description);
 
         if (!title || !description) {
             return res.status(400).json({ message: 'Vui lòng nhập đầy đủ tiêu đề và nội dung' });
@@ -81,13 +91,19 @@ const createDocument = async (req, res) => {
         if (title.length > 200) {
             return res.status(400).json({ message: 'Tiêu đề tối đa 200 ký tự' });
         }
+        // Do dai dem SAU khi loc: bo loc cat bot nen ban tho dai hon nguong ma
+        // phan giu lai van vua thi khong co ly do tu choi.
         if (description.length > 5000) {
             return res.status(400).json({ message: 'Nội dung tối đa 5000 ký tự' });
         }
 
         // Loc noi dung TRUOC khi day file len Cloudinary, de bai vi pham
         // khong kip chiem dung luong.
-        const kiemDuyet = checkDocument({ title, description });
+        //
+        // boThe() de bo loc tu ngu doc CHU chu khong doc the: de nguyen HTML
+        // thi ten the va ten thuoc tinh lot vao phep dem tu, vua bao dong nham
+        // vua che mat tu that nam giua hai the.
+        const kiemDuyet = checkDocument({ title, description: boThe(description) });
         if (!kiemDuyet.ok) {
             return res.status(400).json({
                 message: kiemDuyet.message,

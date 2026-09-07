@@ -170,12 +170,36 @@ function donDep(html) {
 }
 
 /**
+ * Dau hieu doc, du KHONG co the nao trong danh sach cua laHtml().
+ *
+ * laHtml() tra loi cau "co phai bai viet khong", va danh sach the cua no chi
+ * gom the trinh bay - khong co 'script' hay 'iframe'. Hop ly cho viec nhan
+ * dang, nhung neu lay no lam cong bao mat thi thung: chuoi
+ * "<script>...</script>" khong khop the nao trong danh sach, bi coi la van ban
+ * thuong va di thang vao co so du lieu NGUYEN VEN.
+ *
+ * Hien tai giao dien dung dung mot bieu thuc do nen no cung ve ra chu, chua
+ * chay. Nhung do la hai ban sao o hai kho ma nguon khac nhau phai giong het
+ * nhau moi an toan - ai sua mot ben la thung. Va ma doc con nam trong CSDL,
+ * cho bat ky cho nao khac doc ra roi do thang.
+ *
+ * Nen: thay vi hoi "co giong bai viet khong", cho nay hoi them "co mui nguy
+ * hiem khong". Co thi loc, bat ke trong giong gi.
+ */
+const CO_MUI_NGUY_HIEM =
+    /<\s*\/?\s*(script|iframe|object|embed|svg|math|style|link|meta|base|form|noscript|template)\b|\son\w+\s*=|javascript\s*:|data\s*:\s*text\/html/i;
+
+/**
  * Chuan hoa noi dung truoc khi luu.
- * Van ban thuong giu nguyen - trang doc van tu tach doan duoc nhu cu.
+ *
+ * Van ban thuong giu NGUYEN VAN - khong day qua bo loc, vi sanitize-html se
+ * doi '<' thanh '&lt;' va nguoi doc se thay dung chu "&lt;" tren man hinh
+ * (trang doc ve van ban thuong bang React, khong dien giai thuc the).
+ * Do chinh la ly do cho nay phai co dieu kien chu khong loc tat.
  */
 function chuanHoaNoiDung(tho) {
     const s = String(tho || '').trim();
-    return laHtml(s) ? lamSachHtml(s) : s;
+    return laHtml(s) || CO_MUI_NGUY_HIEM.test(s) ? lamSachHtml(s) : s;
 }
 
-module.exports = { laHtml, boThe, lamSachHtml, chuanHoaNoiDung };
+module.exports = { laHtml, boThe, lamSachHtml, chuanHoaNoiDung, CO_MUI_NGUY_HIEM };
