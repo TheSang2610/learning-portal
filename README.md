@@ -118,33 +118,145 @@ nhất** — không có `sameSite` đỡ lưng.
 
 ```
 learning-portal/
-├── frontend/
-│   ├── app/                 App Router — 56 trang, 4 nhóm route
-│   │   ├── (portal)/        khu học viên
-│   │   ├── (admin)/         khu quản trị
-│   │   └── (instructor)/    khu giảng viên
-│   ├── src/
-│   │   ├── components/      13 nhóm giao diện
-│   │   ├── services/        21 tệp gọi API, mỗi tệp một miền dữ liệu
-│   │   └── hooks/
-│   └── public/
-│
-├── backend/
-│   ├── index.js
-│   └── src/
-│       ├── config/          kết nối CSDL, Cloudinary, mail
-│       ├── controllers/     logic nghiệp vụ
-│       ├── middlewares/     xác thực, CSRF, giới hạn tần suất
-│       ├── models/          17 lược đồ Mongoose
-│       ├── routes/          16 tệp, 135 endpoint
-│       └── utils/           công cụ dùng chung + tệp *.test.js
-│
-├── docs/                    Swagger UI + openapi.json (GitHub Pages)
-└── .github/workflows/       CI hai job
+├── frontend/               # Next.js 16 — giao diện
+├── backend/                # Express 5 — REST API
+├── docs/                   # Swagger UI + openapi.json (GitHub Pages)
+├── .github/workflows/      # CI hai job song song
+└── README.md
 ```
 
 `docs/` **phải** ở gốc kho — GitHub Pages chỉ đọc thư mục gốc hoặc `/docs` ở
 gốc, để nó trong thư mục con là trang tài liệu chết.
+
+### Frontend
+
+```
+frontend/
+├── public/                          # Ảnh tĩnh, favicon, api-docs.html
+├── app/                             # App Router — 56 trang, 3 nhóm route
+│   ├── globals.css                  # CSS toàn cục + Tailwind v4
+│   ├── api/auth/google/             # Đổi mã Google OAuth lấy phiên
+│   │
+│   ├── (portal)/                    # KHU HỌC VIÊN — 19 trang
+│   │   ├── page.tsx                 # Trang chủ
+│   │   ├── courses/                 # Danh sách, lọc theo danh mục
+│   │   ├── course/                  # Chi tiết khoá học
+│   │   ├── learn/                   # Trình phát bài học, theo dõi tiến độ
+│   │   ├── collection/              # Khoá đã ghi danh
+│   │   ├── payment/                 # Nạp coin, mã VietQR
+│   │   ├── share-document/          # Chia sẻ tài liệu
+│   │   │   └── [id]/                # Chi tiết một tài liệu
+│   │   ├── blog/[slug]/             # Bài viết
+│   │   ├── gpa-calculator/          # Tính GPA
+│   │   ├── convert-10-to-4/         # Quy đổi thang 10 sang thang 4
+│   │   ├── calc-point/              # Tính điểm học phần
+│   │   ├── user/profile/            # Hồ sơ, chứng chỉ đã đạt
+│   │   ├── user/settings/           # Đổi mật khẩu, ảnh đại diện
+│   │   ├── auth/callback/           # Đích quay về sau đăng nhập Google
+│   │   └── help · terms · privacy/  # Trang tĩnh
+│   │
+│   ├── (instructor)/instructor/     # KHU GIẢNG VIÊN — 10 trang
+│   │   ├── courses · course-create · course-detail/
+│   │   ├── lessons · lesson-create · lesson-detail/
+│   │   └── quiz-create · quiz-edit · quiz-stats/
+│   │
+│   └── (admin)/admin/               # KHU QUẢN TRỊ — 27 trang
+│       ├── dashboard/               # Thống kê tổng quan
+│       ├── users · courses · lessons · enrollments/
+│       ├── orders/                  # Xác nhận đơn chuyển khoản
+│       ├── coin/                    # Cộng, trừ, xem lịch sử ví
+│       ├── certificates · reviews · posts · faqs/
+│       ├── categories · providers · banners/
+│       └── home-banners · home-most-popular/    # Sắp xếp trang chủ
+│           home-new-releases · home-trending-now/
+│
+└── src/
+    ├── components/                  # 13 nhóm giao diện
+    │   ├── layout/                  # Header theo vai, Footer
+    │   ├── home/                    # Khối trang chủ
+    │   ├── courses/                 # Thẻ khoá học, bộ lọc
+    │   ├── quiz/                    # Làm bài, xem lại
+    │   ├── certificate/             # Chứng chỉ, trang xác minh
+    │   ├── document/                # Tải lên, xem tài liệu
+    │   ├── admin/                   # Bảng, biểu mẫu, trình soạn bài
+    │   ├── auth · profile · settings · gpa/
+    │   ├── common/                  # Dùng chung nhiều khu
+    │   └── ui/                      # Nút, ô nhập, hộp thoại
+    │
+    ├── services/                    # 21 tệp gọi API, mỗi tệp một miền
+    │   ├── api.ts                   # fetch bọc sẵn, credentials: include
+    │   ├── serverFetch.ts           # Dành cho Server Component
+    │   ├── apiHelper.ts             # Xử lý lỗi, chuẩn hoá phản hồi
+    │   ├── course · lesson.api · enrollment.api/
+    │   ├── quizService · certificate · review/
+    │   ├── coin.api · order/        # Ví coin, đơn chuyển khoản
+    │   ├── document · post · faq · banner/
+    │   ├── categoryService · provider · userApi · adminService/
+    │   └── diaChiApi · quyDinh/
+    │
+    └── hooks/
+        └── nguoiDungLuu.ts          # Nhớ người dùng giữa các lần dựng
+```
+
+Component **không tự gọi `fetch`** — luôn đi qua `services/`, để khi đổi cách
+xác thực chỉ phải sửa một chỗ. `serverFetch.ts` tách riêng vì Server Component
+không có cookie của trình duyệt, phải chuyển tiếp header thủ công.
+
+### Backend
+
+```
+backend/
+├── index.js                         # Điểm vào: CORS, CSRF, gắn route
+├── vercel.json                      # Cấu hình hàm serverless
+│
+└── src/
+    ├── config/
+    │   ├── db.js                    # Kết nối MongoDB, dùng lại giữa các lần gọi
+    │   ├── cloudinary.js            # Ưu tiên CLOUDINARY_URL, lùi về ba biến rời
+    │   ├── mail.js                  # Thiếu cấu hình thì bỏ qua, KHÔNG ném lỗi
+    │   └── thanhToan.js             # Sinh mã VietQR theo từng đơn
+    │
+    ├── middlewares/
+    │   ├── authMiddleware.js        # protect · instructor · admin
+    │   ├── chongCsrf.js             # Xét Origin, lùi về Referer
+    │   ├── loginRateLimit.js        # Đếm hai khoá: ip|email VÀ ip riêng
+    │   ├── rateLimit.js             # Giới hạn tần suất dùng chung
+    │   ├── cacheControl.js          # Đặt no-store cho dữ liệu riêng tư
+    │   └── idHopLe.js               # Chặn ObjectId sai dạng trước khi truy vấn
+    │
+    ├── models/                      # 17 lược đồ Mongoose
+    │   ├── User · Course · Lesson · Enrollment/
+    │   ├── Quiz · QuizAttempt · Certificate · Achievement/
+    │   ├── Order · GiaoDichCoin/    # Đơn hàng và sổ cái ví coin
+    │   ├── Post · Document · Review · Faq · Banner/
+    │   └── categoryModel · providerModel/
+    │
+    ├── routes/                      # 16 tệp, 135 endpoint
+    │   ├── userRoutes · adminRoutes/
+    │   ├── courseRoutes · lessonRoutes · enrollmentRoutes/
+    │   ├── quizRoutes · certificateRoutes · reviewRoutes/
+    │   ├── coinRoutes · orderRoutes/
+    │   └── postRoutes · documentRoutes · faqRoutes/
+    │       bannerRoutes · categoryRoutes · providerRoutes/
+    │
+    ├── controllers/                 # 18 tệp, logic nghiệp vụ
+    │   └── adminOrderController.js  # Xác nhận đơn, cộng coin, gửi mail
+    │
+    └── utils/                       # Công cụ dùng chung + tệp *.test.js
+        ├── quyenNoiDung.js          # CỬA DUY NHẤT gác nội dung có phí
+        ├── viCoin.js · coin.js      # Trừ/cộng coin bằng một lệnh ghi
+        ├── cookieToken.js           # NƠI DUY NHẤT đặt cookie phiên
+        ├── htmlBaiViet.js           # Lọc HTML chặn XSS lưu trữ
+        ├── matKhau.js               # Băm bcrypt, quy tắc độ mạnh
+        ├── contentFilter.js         # Lọc từ ngữ vi phạm
+        ├── truyVan.js               # Phân trang, sắp xếp dùng chung
+        ├── uploadCloud.js · vanBan.js · ghiDanh.js · mailDonHang.js/
+        └── checkDb · checkMail · checkCloudinary · doiMatKhauAdmin/
+                                     # Script chạy tay, không phải route
+```
+
+Tệp test đặt **ngay cạnh** tệp được kiểm, tên `*.test.js` — sửa một hàm thì
+thấy ngay bài test của nó, không phải đi tìm ở cây thư mục khác.
 
 ---
 
