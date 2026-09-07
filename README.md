@@ -1,140 +1,93 @@
-# Learning Portal — Frontend
+# Learning Portal
 
-Giao diện nền tảng học trực tuyến: học viên mua và học khoá học, giảng viên soạn
-bài, quản trị duyệt nội dung và xác nhận thanh toán.
+Nền tảng học trực tuyến: học viên mua và học khoá học, giảng viên soạn bài,
+quản trị duyệt nội dung và xác nhận thanh toán.
 
 **Xem thử:** https://learning-portal-s.vercel.app
 **API:** https://learning-portal-backend-ten.vercel.app
 
-Backend nằm ở repo riêng: [learning-portal-backend](https://github.com/TheSang2610/learning-portal-backend).
+```
+frontend/    Next.js 16 · React 19 · Tailwind v4 · TypeScript
+backend/     Express 5 · Mongoose 9 · MongoDB Atlas · JWT trong cookie httpOnly
+```
 
----
-
-## Công nghệ
-
-|           |                                                        |
-| --------- | ------------------------------------------------------ |
-| Framework | Next.js **16.2.5** — App Router, Turbopack             |
-| UI        | React **19.2.4**, TypeScript                           |
-| Styling   | Tailwind CSS **v4**                                    |
-| Kiểm tra  | ESLint, Prettier, `tsc --noEmit`, chạy tự động trên CI |
-
-Cần **Node >= 20.9** (yêu cầu tối thiểu của Next 16).
+Mỗi thư mục có README riêng, đọc kỹ hơn ở đó:
+[frontend](frontend/README.md) · [backend](backend/README.md)
 
 ---
 
 ## Chạy tại máy
 
-Backend phải chạy trước, nếu không mọi trang có dữ liệu sẽ trống.
+Hai cửa sổ dòng lệnh, backend chạy trước.
 
 ```bash
+# cua so 1
+cd backend
+npm install
+cp .env.example .env      # rồi điền giá trị thật
+npm run dev               # → http://localhost:5000
+
+# cua so 2
+cd frontend
 npm install
 echo "NEXT_PUBLIC_API_URL=http://localhost:5000" > .env.local
-npm run dev
+npm run dev               # → http://localhost:3000
 ```
 
-Mở http://localhost:3000.
-
-### Biến môi trường
-
-`.env.local` **không** được commit. Ba biến dưới đây đều là `NEXT_PUBLIC_`, nghĩa
-là chúng bị nhúng thẳng vào mã JavaScript gửi xuống trình duyệt — **tuyệt đối
-không đặt bí mật nào vào đây**.
-
-| Biến                            | Bắt buộc | Ý nghĩa                                      |
-| ------------------------------- | -------- | -------------------------------------------- |
-| `NEXT_PUBLIC_API_URL`           | có       | Địa chỉ gốc của backend                      |
-| `NEXT_PUBLIC_BACKEND_URL`       | không    | Dùng khi ảnh và tệp tĩnh nằm ở host khác API |
-| `NEXT_PUBLIC_GOI_THANG_BACKEND` | không    | Bật gọi thẳng backend, bỏ qua lớp proxy      |
-
-Biến `NEXT_PUBLIC_*` được cố định **lúc build**, không phải lúc chạy. Đổi giá trị
-trên Vercel xong phải deploy lại thì mới có tác dụng.
+Cần **Node >= 20.9** (yêu cầu tối thiểu của Next 16).
 
 ---
 
-## Các lệnh
+## Kiểm tra trước khi đẩy
 
 ```bash
-npm run dev          # máy chủ phát triển
-npm run build        # bản production
-npm run typecheck    # tsc --noEmit
-npm run lint         # ESLint
-npm run format       # Prettier ghi đè
-npm run verify       # format:check + lint + typecheck + build
+cd frontend && npm run verify    # format + lint + typecheck + build
+cd backend  && npm test          # 158 test
 ```
 
-`npm run verify` là cổng kiểm cuối trước khi đẩy. Nó chạy cả `build`, nên chậm
-hơn hẳn ba lệnh kia — nhưng đó chính là điểm: lỗi chỉ lộ ra lúc build thì phải
-bắt ở máy, đừng để CI bắt hộ.
-
----
-
-## Cấu trúc
-
-```
-app/                 App Router — 56 trang, 4 nhóm route
-  (admin)/           khu quản trị
-  (portal)/          khu học viên
-  ...
-src/
-  components/        13 nhóm: admin auth certificate common courses
-                     document gpa home layout profile quiz settings ui
-  services/          21 tệp gọi API, mỗi tệp một miền dữ liệu
-  hooks/             hook dùng chung
-```
-
-`app/` nằm ở thư mục gốc chứ không phải trong `src/` — Next hỗ trợ cả hai, đây là
-lựa chọn có chủ đích và đừng di chuyển nó, vì mọi đường dẫn tương đối trong
-`app/` đang dựa vào vị trí này.
-
-Mỗi tệp trong `services/` gói trọn một miền dữ liệu. Component **không tự gọi
-`fetch`** — luôn đi qua service, để khi đổi cách xác thực chỉ phải sửa một chỗ.
+CI chạy đúng hai lệnh đó, tách thành **hai job song song** — frontend hỏng thì
+vẫn biết backend còn xanh hay không.
 
 ---
 
 ## Vài quyết định kỹ thuật đáng chú ý
 
-**Token nằm trong cookie `httpOnly`, không nằm trong `localStorage`.**
-JavaScript không đọc được cookie đó, nên một lỗi XSS bất kỳ cũng không lấy được
-phiên đăng nhập. Đổi lại, mọi lời gọi API phải kèm `credentials: 'include'` và
-backend phải khai báo `sameSite` cho đúng.
+Ghi ở đây những chỗ nhìn qua tưởng làm phức tạp thừa, nhưng bỏ đi là mở lại một
+lỗ hổng đã từng có thật.
 
-**Nội dung có phí được chặn ở phía máy chủ, không phải phía giao diện.**
-Ẩn nút trên giao diện không phải là bảo mật — người dùng vẫn gọi thẳng API được.
-Backend là nơi quyết định, frontend chỉ hiển thị theo cờ `bị khoá` mà API trả về.
+**Nội dung có phí đi qua đúng một cửa.** `backend/src/utils/quyenNoiDung.js`
+xuất ra `duocXemNoiDung(course, user)`, và mọi đường trả về nội dung bài học đều
+phải gọi nó. Trước đây cổng 402 chỉ đặt ở đường ghi danh, còn đường đọc bài thì
+không kiểm gì — mở một tài khoản miễn phí rồi gọi thẳng `GET /api/lessons/:id`
+là lấy được video của khoá có phí.
 
-**`services/serverFetch.ts` tách riêng cho Server Component.**
-Component chạy trên máy chủ không có cookie của trình duyệt, phải chuyển tiếp
-header thủ công. Trộn chung với hàm gọi phía client là nguồn lỗi khó tìm.
+**Trừ tiền bằng một lệnh ghi duy nhất.** Điều kiện đủ tiền nằm *bên trong* lệnh
+`findOneAndUpdate` chứ không phải một lệnh đọc riêng trước đó, nên hai yêu cầu
+chạy song song không thể cùng thấy "đủ tiền" rồi cùng trừ.
+
+**Token trong cookie `httpOnly`.** JavaScript không đọc được, nên một lỗi XSS
+cũng không lấy được phiên đăng nhập. Đổi lại phải tự lo CSRF: frontend và API
+khác site nên cookie buộc phải `sameSite: 'none'`, và
+`backend/src/middlewares/chongCsrf.js` là lớp chặn duy nhất còn lại.
+
+**Lọc HTML theo dấu hiệu, không theo hình dạng.** Bộ lọc từng chỉ chạy khi chuỗi
+"trông giống bài viết", mà danh sách nhận diện lại không có `script` — nên một
+nội dung chỉ gồm `<script>` được xếp là văn bản thường và lưu nguyên vẹn. Giờ nó
+lọc khi thấy dấu hiệu nguy hiểm, bất kể chuỗi trông giống gì.
 
 ---
 
 ## Triển khai
 
-Đang chạy trên Vercel, project `learning-portal-s`.
+Hai project Vercel riêng, mỗi cái build một thư mục:
 
-Tính tới 07/09/2026, **Git integration chưa được nối** vào repo này, nên đẩy
-`main` sẽ _không_ tự deploy. Cập nhật bằng tay:
+| thư mục | project | địa chỉ |
+|---|---|---|
+| `frontend/` | `learning-portal-s` | learning-portal-s.vercel.app |
+| `backend/` | `learning-portal-s-api` | learning-portal-backend-ten.vercel.app |
 
-```bash
-npx vercel --prod
-```
+Hiện deploy bằng tay, chạy `npx vercel --prod` **trong đúng thư mục con**.
 
-Nối được Git rồi thì xoá đoạn ghi chú này đi.
-
----
-
-## Kiểm lại các con số ở trên
-
-Đừng tin số trong tài liệu — tài liệu luôn cũ hơn mã. Đếm lại:
-
-```bash
-# số trang
-find . -name 'page.tsx' -not -path './node_modules/*' | wc -l
-
-# số tệp service
-ls src/services/ | wc -l
-
-# phiên bản thật của Next / React / Tailwind
-node -e "const p=require('./package.json');console.log(p.dependencies.next,p.dependencies.react)"
-```
+Khi nào nối Git integration thì mỗi project phải đặt **Root Directory** trỏ vào
+thư mục con của nó — bỏ bước đó thì Vercel build từ gốc và không tìm thấy
+`package.json` nào.

@@ -6,7 +6,7 @@ chứng chỉ, ví coin và thanh toán chuyển khoản.
 **API đang chạy:** https://learning-portal-backend-ten.vercel.app
 **Giao diện:** https://learning-portal-s.vercel.app
 
-Frontend nằm ở repo riêng: [learning-portal-frontend](https://github.com/TheSang2610/learning-portal-frontend).
+Frontend nằm ở [`../frontend`](../frontend/README.md) trong cùng kho mã nguồn này.
 
 ---
 

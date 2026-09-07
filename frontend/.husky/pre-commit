@@ -1,0 +1,9 @@
+# Chay trong frontend/ chu khong phai goc kho.
+#
+# Sau khi gop hai du an vao mot kho, cwd cua hook la GOC, ma eslint.config.mjs
+# va muc lint-staged trong package.json deu nam trong frontend/. Chay o goc thi
+# eslint bao "khong tim thay eslint.config" va chan mat commit.
+#
+# lint-staged chay o day chi thay file da stage nam duoi frontend/. Backend
+# khong co linter nen khong mat gi; CI van kiem cu phap moi file .js cua no.
+cd frontend && npx lint-staged
