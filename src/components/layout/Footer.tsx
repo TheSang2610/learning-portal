@@ -53,7 +53,7 @@ export default function Footer({
             href="/"
             className="font-sans text-2xl font-bold tracking-tight text-[#0056d2] transition hover:opacity-80"
           >
-            coursera
+            Learning Portal
           </Link>
           <p className="text-xs leading-relaxed font-normal text-[#6a6f7a] md:text-sm">
             Nền tảng đào tạo trực tuyến chuẩn hóa thế hệ mới. Học tập mọi lúc, mọi nơi
@@ -185,8 +185,8 @@ export default function Footer({
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
           <div className="text-xs font-normal md:text-sm">
             © {new Date().getFullYear()}{" "}
-            <span className="font-semibold text-[#1f2124]">coursera</span> Inc. All rights
-            reserved.
+            <span className="font-semibold text-[#1f2124]">Learning Portal</span>. All
+            rights reserved.
           </div>
           <div className="flex gap-6 text-xs font-normal">
             <Link

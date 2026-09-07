@@ -22,9 +22,9 @@ export default function GpaHeader() {
           {/* Cung kieu chu voi logo o IndividualsHeader de dong bo toan trang */}
           <Link
             href="/"
-            className="shrink-0 text-[38px] font-bold tracking-tight text-blue-600"
+            className="shrink-0 text-[26px] font-bold tracking-tight whitespace-nowrap text-blue-600"
           >
-            coursera
+            Learning Portal
           </Link>
 
           <nav className="hidden items-center gap-8 text-[15px] lg:flex">

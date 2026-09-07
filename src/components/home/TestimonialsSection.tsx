@@ -9,7 +9,7 @@ const testimonials = [
     role: "Học viên Phân tích Dữ liệu Google",
     image: "https://randomuser.me/api/portraits/women/44.jpg",
     review:
-      "Coursera đã giúp tôi có được những kỹ năng thực tế và tìm được một công việc mới trong lĩnh vực công nghệ. Sự linh hoạt của chương trình giúp việc học trở nên dễ dàng hơn, song song với công việc.",
+      "Learning Portal đã giúp tôi có được những kỹ năng thực tế và tìm được một công việc mới trong lĩnh vực công nghệ. Sự linh hoạt của chương trình giúp việc học trở nên dễ dàng hơn, song song với công việc.",
   },
   {
     name: "Michael Johnson",

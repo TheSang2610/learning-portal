@@ -90,8 +90,11 @@ export default function IndividualsHeader() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-6">
         {/* LEFT */}
         <div className="flex items-center gap-6">
-          <Link href="/" className="text-[38px] font-bold tracking-tight text-blue-600">
-            coursera
+          <Link
+            href="/"
+            className="text-[26px] font-bold tracking-tight whitespace-nowrap text-blue-600"
+          >
+            Learning Portal
           </Link>
 
           {/* 🌟 EXPLORE DROPDOWN MENU */}
