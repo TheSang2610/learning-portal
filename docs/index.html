@@ -1,136 +1,194 @@
 <!doctype html>
 <html lang="vi">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Learning Portal API</title>
-<meta name="description" content="Tài liệu API của Learning Portal: 101 đường dẫn, 22 kiểu dữ liệu, bốn mức quyền.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='14'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui.min.css">
-<style>
-  body { margin: 0; background: #fafafa; }
-  /* Thanh tren cua Swagger chi co o nhap URL dac ta. Dac ta o day nap tu file
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Learning Portal API</title>
+    <meta
+      name="description"
+      content="Tài liệu API của Learning Portal: 101 đường dẫn, 22 kiểu dữ liệu, bốn mức quyền."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='14'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui.min.css"
+    />
+    <style>
+      body {
+        margin: 0;
+        background: #fafafa;
+      }
+      /* Thanh tren cua Swagger chi co o nhap URL dac ta. Dac ta o day nap tu file
      ben canh va bi sua servers ben duoi, doi URL o do chi lam hong trang. */
-  .swagger-ui .topbar { display: none; }
+      .swagger-ui .topbar {
+        display: none;
+      }
 
-  .bang {
-    background: #0b1220; color: #e8ecf4; padding: 18px 20px;
-    font: 14px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
-  }
-  .bang b { color: #7fd1ff; }
-  .bang a { color: #7fd1ff; }
-  .bang p { margin: 0; max-width: 88ch; }
-  .bang p + p { margin-top: 7px; }
-  .bang code {
-    background: rgba(255,255,255,.08); border-radius: 4px; padding: 1px 5px;
-    font-size: 13px;
-  }
-  .bang .canh { color: #ffcf7a; }
-  #trang-thai {
-    margin-top: 12px; padding-top: 11px;
-    border-top: 1px solid rgba(255,255,255,.12);
-    font-size: 13px; color: #9fb0c9;
-  }
-  #loi {
-    display: none; background: #3a1113; color: #ffd9d6; padding: 14px 20px;
-    font: 14px/1.5 system-ui, sans-serif;
-  }
-</style>
-</head>
-<body>
+      .bang {
+        background: #0b1220;
+        color: #e8ecf4;
+        padding: 18px 20px;
+        font:
+          14px/1.55 system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+      .bang b {
+        color: #7fd1ff;
+      }
+      .bang a {
+        color: #7fd1ff;
+      }
+      .bang p {
+        margin: 0;
+        max-width: 88ch;
+      }
+      .bang p + p {
+        margin-top: 7px;
+      }
+      .bang code {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 4px;
+        padding: 1px 5px;
+        font-size: 13px;
+      }
+      .bang .canh {
+        color: #ffcf7a;
+      }
+      #trang-thai {
+        margin-top: 12px;
+        padding-top: 11px;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        font-size: 13px;
+        color: #9fb0c9;
+      }
+      #loi {
+        display: none;
+        background: #3a1113;
+        color: #ffd9d6;
+        padding: 14px 20px;
+        font:
+          14px/1.5 system-ui,
+          sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bang">
+      <p>
+        <b>Learning Portal API.</b> Nền tảng học trực tuyến: khóa học, bài giảng, ghi
+        danh, tiến độ, trắc nghiệm, đơn hàng và chứng nhận. Node.js/Express + MongoDB, xác
+        thực bằng cookie httpOnly.
+      </p>
+      <p>
+        Mã nguồn:
+        <a href="https://github.com/TheSang2610/learning-portal-frontend">frontend</a> ·
+        Bản chạy thật:
+        <a href="https://learning-portal-s.vercel.app">learning-portal-s.vercel.app</a>
+      </p>
+      <p id="trang-thai">Đang nạp đặc tả…</p>
+    </div>
 
-<div class="bang">
-  <p><b>Learning Portal API.</b> Nền tảng học trực tuyến: khóa học, bài giảng, ghi danh, tiến độ, trắc nghiệm, đơn hàng và chứng nhận. Node.js/Express + MongoDB, xác thực bằng cookie httpOnly.</p>
-  <p>Mã nguồn: <a href="https://github.com/TheSang2610/learning-portal-frontend">frontend</a> · Bản chạy thật: <a href="https://learning-portal-frontend-ebon.vercel.app">learning-portal-frontend-ebon.vercel.app</a></p>
-  <p id="trang-thai">Đang nạp đặc tả…</p>
-</div>
+    <div id="loi"></div>
+    <div id="swagger"></div>
 
-<div id="loi"></div>
-<div id="swagger"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-standalone-preset.min.js"></script>
+    <script>
+      var API = "https://learning-portal-backend-ten.vercel.app";
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-standalone-preset.min.js"></script>
-<script>
-var API = "https://learning-portal-backend-ten.vercel.app";
+      // Trang nay la trang TINH tren GitHub Pages: khong co may chu nao ben duoi de
+      // chuyen tiep, nen moi loi goi Try it out deu la goi CHEO MIEN thang sang
+      // backend. Trinh duyet chi cho doc phan hoi khi backend gui kem header CORS
+      // cho dung ten mien nay.
+      //
+      // Vi vay khong bat cung Try it out. Do thu mot endpoint cong khai truoc:
+      //
+      //   doc duoc   -> bat Try it out, trang thanh ban goi thu that
+      //   bi chan    -> chi de doc, va noi ro vi sao, thay vi de nguoi ta bam Execute
+      //                 roi nhan "Failed to fetch" khong hieu gi
+      //
+      // Nho vay ngay nao them ten mien nay vao FRONTEND_ORIGINS cua backend la trang
+      // tu chuyen sang goi duoc, khong phai sua lai file nay.
+      function doGoiDuoc() {
+        return fetch(API + "/api/courses?limit=1", { credentials: "include" })
+          .then(function (r) {
+            return r.ok;
+          })
+          .catch(function () {
+            return false;
+          });
+      }
 
-// Trang nay la trang TINH tren GitHub Pages: khong co may chu nao ben duoi de
-// chuyen tiep, nen moi loi goi Try it out deu la goi CHEO MIEN thang sang
-// backend. Trinh duyet chi cho doc phan hoi khi backend gui kem header CORS
-// cho dung ten mien nay.
-//
-// Vi vay khong bat cung Try it out. Do thu mot endpoint cong khai truoc:
-//
-//   doc duoc   -> bat Try it out, trang thanh ban goi thu that
-//   bi chan    -> chi de doc, va noi ro vi sao, thay vi de nguoi ta bam Execute
-//                 roi nhan "Failed to fetch" khong hieu gi
-//
-// Nho vay ngay nao them ten mien nay vao FRONTEND_ORIGINS cua backend la trang
-// tu chuyen sang goi duoc, khong phai sua lai file nay.
-function doGoiDuoc() {
-  return fetch(API + "/api/courses?limit=1", { credentials: "include" })
-    .then(function (r) { return r.ok; })
-    .catch(function () { return false; });
-}
+      Promise.all([
+        fetch("./openapi.json").then(function (r) {
+          if (!r.ok) throw new Error("không đọc được openapi.json (" + r.status + ")");
+          return r.json();
+        }),
+        doGoiDuoc(),
+      ])
+        .then(function (kq) {
+          var spec = kq[0];
+          var goiDuoc = kq[1];
 
-Promise.all([
-  fetch("./openapi.json").then(function (r) {
-    if (!r.ok) throw new Error("không đọc được openapi.json (" + r.status + ")");
-    return r.json();
-  }),
-  doGoiDuoc(),
-])
-  .then(function (kq) {
-    var spec = kq[0];
-    var goiDuoc = kq[1];
+          spec.servers = [{ url: API, description: "Vercel — backend thật đang chạy" }];
 
-    spec.servers = [{ url: API, description: "Vercel — backend thật đang chạy" }];
+          var soDuong = Object.keys(spec.paths || {}).length;
+          var trangThai = document.getElementById("trang-thai");
 
-    var soDuong = Object.keys(spec.paths || {}).length;
-    var trangThai = document.getElementById("trang-thai");
+          if (goiDuoc) {
+            trangThai.innerHTML =
+              "<b>" +
+              soDuong +
+              "</b> đường dẫn · <b>Try it out đang bật</b> — lệnh bắn thẳng vào " +
+              API.replace("https://", "") +
+              " và đọc dữ liệu thật.";
+          } else {
+            trangThai.innerHTML =
+              "<b>" +
+              soDuong +
+              "</b> đường dẫn · trang này <b>để đọc</b>. " +
+              "Backend chỉ nhận lời gọi từ những tên miền khai trong biến <code>FRONTEND_ORIGINS</code>, " +
+              "chưa có tên miền của trang tài liệu — nên nút Execute đã được ẩn thay vì để nó báo lỗi khó hiểu. " +
+              "Muốn gọi thử thì chạy dự án ở máy rồi mở <code>/api-docs.html</code>.";
+          }
 
-    if (goiDuoc) {
-      trangThai.innerHTML =
-        "<b>" + soDuong + "</b> đường dẫn · <b>Try it out đang bật</b> — lệnh bắn thẳng vào " +
-        API.replace("https://", "") + " và đọc dữ liệu thật.";
-    } else {
-      trangThai.innerHTML =
-        "<b>" + soDuong + "</b> đường dẫn · trang này <b>để đọc</b>. " +
-        "Backend chỉ nhận lời gọi từ những tên miền khai trong biến <code>FRONTEND_ORIGINS</code>, " +
-        "chưa có tên miền của trang tài liệu — nên nút Execute đã được ẩn thay vì để nó báo lỗi khó hiểu. " +
-        "Muốn gọi thử thì chạy dự án ở máy rồi mở <code>/api-docs.html</code>.";
-    }
-
-    window.ui = SwaggerUIBundle({
-      spec: spec,
-      dom_id: "#swagger",
-      deepLinking: true,
-      docExpansion: "none",
-      filter: true,
-      tagsSorter: "alpha",
-      tryItOutEnabled: goiDuoc,
-      // Mang rong = an han nut Execute o moi endpoint.
-      supportedSubmitMethods: goiDuoc
-        ? ["get", "post", "put", "delete", "patch"]
-        : [],
-      persistAuthorization: true,
-      withCredentials: true,
-      requestInterceptor: function (req) {
-        req.credentials = "include";
-        return req;
-      },
-      presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
-      layout: "BaseLayout",
-    });
-  })
-  .catch(function (e) {
-    var el = document.getElementById("loi");
-    el.style.display = "block";
-    el.innerHTML =
-      "<b>Không nạp được đặc tả API: " + e.message + "</b><br>" +
-      "File <code>openapi.json</code> phải nằm cùng thư mục với trang này.";
-    document.getElementById("trang-thai").textContent = "Không nạp được đặc tả.";
-  });
-</script>
-
-</body>
+          window.ui = SwaggerUIBundle({
+            spec: spec,
+            dom_id: "#swagger",
+            deepLinking: true,
+            docExpansion: "none",
+            filter: true,
+            tagsSorter: "alpha",
+            tryItOutEnabled: goiDuoc,
+            // Mang rong = an han nut Execute o moi endpoint.
+            supportedSubmitMethods: goiDuoc
+              ? ["get", "post", "put", "delete", "patch"]
+              : [],
+            persistAuthorization: true,
+            withCredentials: true,
+            requestInterceptor: function (req) {
+              req.credentials = "include";
+              return req;
+            },
+            presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+            layout: "BaseLayout",
+          });
+        })
+        .catch(function (e) {
+          var el = document.getElementById("loi");
+          el.style.display = "block";
+          el.innerHTML =
+            "<b>Không nạp được đặc tả API: " +
+            e.message +
+            "</b><br>" +
+            "File <code>openapi.json</code> phải nằm cùng thư mục với trang này.";
+          document.getElementById("trang-thai").textContent = "Không nạp được đặc tả.";
+        });
+    </script>
+  </body>
 </html>

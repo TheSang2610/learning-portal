@@ -1,133 +1,190 @@
 <!doctype html>
 <html lang="vi">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Learning Portal API — Gọi thử</title>
-<meta name="robots" content="noindex">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='14'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui.min.css">
-<style>
-  body { margin: 0; background: #fafafa; }
-  /* Thanh tren cua Swagger chi co o nhap URL dac ta - bo di vi dac ta da duoc
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Learning Portal API — Gọi thử</title>
+    <meta name="robots" content="noindex" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='14'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui.min.css"
+    />
+    <style>
+      body {
+        margin: 0;
+        background: #fafafa;
+      }
+      /* Thanh tren cua Swagger chi co o nhap URL dac ta - bo di vi dac ta da duoc
      nap san va bi sua servers ben duoi, doi URL o day chi lam hong. */
-  .swagger-ui .topbar { display: none; }
+      .swagger-ui .topbar {
+        display: none;
+      }
 
-  .bang {
-    background: #0b1220; color: #e8ecf4; padding: 16px 20px;
-    font: 14px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
-  }
-  .bang b { color: #7fd1ff; }
-  .bang a { color: #7fd1ff; }
-  .bang p { margin: 0; max-width: 88ch; }
-  .bang p + p { margin-top: 6px; }
-  .bang .canh { color: #ffcf7a; }
-  .bang code {
-    background: rgba(255,255,255,.08); border-radius: 4px; padding: 1px 5px;
-    font-size: 13px;
-  }
-  #nguon {
-    margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.12);
-    font-size: 13px; color: #9fb0c9;
-  }
-  #loi { display: none; background: #3a1113; color: #ffd9d6; padding: 14px 20px;
-    font: 14px/1.5 system-ui, sans-serif; }
-</style>
-</head>
-<body>
+      .bang {
+        background: #0b1220;
+        color: #e8ecf4;
+        padding: 16px 20px;
+        font:
+          14px/1.55 system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+      .bang b {
+        color: #7fd1ff;
+      }
+      .bang a {
+        color: #7fd1ff;
+      }
+      .bang p {
+        margin: 0;
+        max-width: 88ch;
+      }
+      .bang p + p {
+        margin-top: 6px;
+      }
+      .bang .canh {
+        color: #ffcf7a;
+      }
+      .bang code {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 4px;
+        padding: 1px 5px;
+        font-size: 13px;
+      }
+      #nguon {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        font-size: 13px;
+        color: #9fb0c9;
+      }
+      #loi {
+        display: none;
+        background: #3a1113;
+        color: #ffd9d6;
+        padding: 14px 20px;
+        font:
+          14px/1.5 system-ui,
+          sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bang">
+      <p>
+        <b>Learning Portal API — bản gọi thử.</b> Mặc định <b>Try it out</b> bắn thẳng vào
+        backend thật đang chạy trên Vercel, đọc dữ liệu thật trong MongoDB.
+      </p>
+      <p>
+        Muốn đổi đích thì dùng ô <b>Servers</b> ngay dưới đây — Swagger tự dựng nó từ danh
+        sách máy chủ, không cần tải lại trang.
+      </p>
+      <p>
+        <span class="canh">Endpoint cần quyền:</span> mở
+        <code>POST /api/users/login</code> → Try it out → điền email và mật khẩu →
+        Execute. Máy chủ đặt cookie, các lệnh sau tự dùng nó. Gọi Vercel từ máy mình thì
+        cookie đó là <b>cookie bên thứ ba</b> — Chrome và Safari có thể chặn, lúc đó
+        chuyển sang máy chủ <b>Máy này</b> rồi đăng nhập lại.
+      </p>
+      <p id="nguon">Đang nạp đặc tả…</p>
+    </div>
 
-<div class="bang">
-  <p><b>Learning Portal API — bản gọi thử.</b> Mặc định <b>Try it out</b> bắn thẳng vào backend thật đang chạy trên Vercel, đọc dữ liệu thật trong MongoDB.</p>
-  <p>Muốn đổi đích thì dùng ô <b>Servers</b> ngay dưới đây — Swagger tự dựng nó từ danh sách máy chủ, không cần tải lại trang.</p>
-  <p><span class="canh">Endpoint cần quyền:</span> mở <code>POST /api/users/login</code> → Try it out → điền email và mật khẩu → Execute. Máy chủ đặt cookie, các lệnh sau tự dùng nó.
-    Gọi Vercel từ máy mình thì cookie đó là <b>cookie bên thứ ba</b> — Chrome và Safari có thể chặn, lúc đó chuyển sang máy chủ <b>Máy này</b> rồi đăng nhập lại.</p>
-  <p id="nguon">Đang nạp đặc tả…</p>
-</div>
+    <div id="loi"></div>
+    <div id="swagger"></div>
 
-<div id="loi"></div>
-<div id="swagger"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-standalone-preset.min.js"></script>
+    <script>
+      // Dia chi backend that tren Vercel. Doi ten mien thi sua o day.
+      var API_VERCEL = "https://learning-portal-backend-ten.vercel.app";
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-standalone-preset.min.js"></script>
-<script>
-// Dia chi backend that tren Vercel. Doi ten mien thi sua o day.
-var API_VERCEL = "https://learning-portal-backend-ten.vercel.app";
+      // Hai duong lay dac ta, thu theo thu tu.
+      //
+      //   /api/docs.json  la ban SONG: qua proxy /api cua Next sang backend dang
+      //                   chay. Sua route xong tai lai trang la thay ngay.
+      //   ./openapi.json  la ban CHUP, nam canh trang nay. Can no vi backend tren
+      //                   Vercel hien chua co phan tai lieu - goi /api/docs.json o
+      //                   do se ra 404 va trang se trong tron.
+      var NGUON = [
+        { url: "/api/docs.json", ten: "backend đang chạy (qua proxy /api)" },
+        { url: "./openapi.json", ten: "bản chụp kèm theo trang" },
+      ];
 
-// Hai duong lay dac ta, thu theo thu tu.
-//
-//   /api/docs.json  la ban SONG: qua proxy /api cua Next sang backend dang
-//                   chay. Sua route xong tai lai trang la thay ngay.
-//   ./openapi.json  la ban CHUP, nam canh trang nay. Can no vi backend tren
-//                   Vercel hien chua co phan tai lieu - goi /api/docs.json o
-//                   do se ra 404 va trang se trong tron.
-var NGUON = [
-  { url: "/api/docs.json", ten: "backend đang chạy (qua proxy /api)" },
-  { url: "./openapi.json", ten: "bản chụp kèm theo trang" },
-];
+      function napDacTa(i) {
+        if (i >= NGUON.length)
+          return Promise.reject(new Error("không nguồn nào đọc được"));
+        return fetch(NGUON[i].url, { credentials: "include" })
+          .then(function (r) {
+            if (!r.ok) throw new Error(r.status);
+            return r.json();
+          })
+          .then(function (spec) {
+            return { spec: spec, ten: NGUON[i].ten };
+          })
+          .catch(function () {
+            return napDacTa(i + 1);
+          });
+      }
 
-function napDacTa(i) {
-  if (i >= NGUON.length) return Promise.reject(new Error("không nguồn nào đọc được"));
-  return fetch(NGUON[i].url, { credentials: "include" })
-    .then(function (r) {
-      if (!r.ok) throw new Error(r.status);
-      return r.json();
-    })
-    .then(function (spec) {
-      return { spec: spec, ten: NGUON[i].ten };
-    })
-    .catch(function () {
-      return napDacTa(i + 1);
-    });
-}
+      napDacTa(0)
+        .then(function (kq) {
+          // Danh sach may chu Try it out se ban toi. Cai DUNG DAU la mac dinh.
+          //
+          // Chuoi rong nghia la duong dan tuong doi: lenh di ra chinh nguon dang mo,
+          // roi rewrites() cua Next chuyen tiep sang backend. Duong nay khong dinh
+          // CORS va cookie phien la cookie ben thu nhat, nen dung de thu cac
+          // endpoint can dang nhap.
+          kq.spec.servers = [
+            { url: API_VERCEL, description: "Vercel — backend thật đang chạy" },
+            { url: "", description: "Máy này — qua proxy /api của Next" },
+          ];
 
-napDacTa(0)
-  .then(function (kq) {
-    // Danh sach may chu Try it out se ban toi. Cai DUNG DAU la mac dinh.
-    //
-    // Chuoi rong nghia la duong dan tuong doi: lenh di ra chinh nguon dang mo,
-    // roi rewrites() cua Next chuyen tiep sang backend. Duong nay khong dinh
-    // CORS va cookie phien la cookie ben thu nhat, nen dung de thu cac
-    // endpoint can dang nhap.
-    kq.spec.servers = [
-      { url: API_VERCEL, description: "Vercel — backend thật đang chạy" },
-      { url: "", description: "Máy này — qua proxy /api của Next" },
-    ];
+          var n = Object.keys(kq.spec.paths || {}).length;
+          document.getElementById("nguon").innerHTML =
+            "Đặc tả: <b>" +
+            n +
+            "</b> đường dẫn, lấy từ " +
+            kq.ten +
+            ". Máy chủ mặc định: <b>" +
+            API_VERCEL.replace("https://", "") +
+            "</b>";
 
-    var n = Object.keys(kq.spec.paths || {}).length;
-    document.getElementById("nguon").innerHTML =
-      "Đặc tả: <b>" + n + "</b> đường dẫn, lấy từ " + kq.ten +
-      ". Máy chủ mặc định: <b>" + API_VERCEL.replace("https://", "") + "</b>";
-
-    window.ui = SwaggerUIBundle({
-      spec: kq.spec,
-      dom_id: "#swagger",
-      deepLinking: true,
-      docExpansion: "none",
-      filter: true,
-      tagsSorter: "alpha",
-      tryItOutEnabled: true,
-      persistAuthorization: true,
-      // Gui kem cookie phien, neu khong moi endpoint can quyen deu tra 401.
-      withCredentials: true,
-      requestInterceptor: function (req) {
-        req.credentials = "include";
-        return req;
-      },
-      presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
-      layout: "BaseLayout",
-    });
-  })
-  .catch(function (e) {
-    var el = document.getElementById("loi");
-    el.style.display = "block";
-    el.innerHTML =
-      "<b>Không nạp được đặc tả API: " + e.message + "</b><br>" +
-      "Đã thử <code>/api/docs.json</code> rồi tới <code>./openapi.json</code>. " +
-      "Ở máy: chạy <code>npm run dev</code> trong thư mục <code>backend</code>. " +
-      "Nếu mở trang này bằng file:// thì phải mở qua máy chủ web, không mở trực tiếp từ ổ đĩa.";
-    document.getElementById("nguon").textContent = "Không nạp được đặc tả.";
-  });
-</script>
-
-</body>
+          window.ui = SwaggerUIBundle({
+            spec: kq.spec,
+            dom_id: "#swagger",
+            deepLinking: true,
+            docExpansion: "none",
+            filter: true,
+            tagsSorter: "alpha",
+            tryItOutEnabled: true,
+            persistAuthorization: true,
+            // Gui kem cookie phien, neu khong moi endpoint can quyen deu tra 401.
+            withCredentials: true,
+            requestInterceptor: function (req) {
+              req.credentials = "include";
+              return req;
+            },
+            presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+            layout: "BaseLayout",
+          });
+        })
+        .catch(function (e) {
+          var el = document.getElementById("loi");
+          el.style.display = "block";
+          el.innerHTML =
+            "<b>Không nạp được đặc tả API: " +
+            e.message +
+            "</b><br>" +
+            "Đã thử <code>/api/docs.json</code> rồi tới <code>./openapi.json</code>. " +
+            "Ở máy: chạy <code>npm run dev</code> trong thư mục <code>backend</code>. " +
+            "Nếu mở trang này bằng file:// thì phải mở qua máy chủ web, không mở trực tiếp từ ổ đĩa.";
+          document.getElementById("nguon").textContent = "Không nạp được đặc tả.";
+        });
+    </script>
+  </body>
 </html>
