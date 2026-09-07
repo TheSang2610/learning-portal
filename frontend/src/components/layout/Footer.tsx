@@ -46,7 +46,10 @@ export default function Footer({
 
   return (
     <footer className="border-t border-slate-200 bg-[#f2f5fa] text-[#52565c]">
-      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-10 px-6 py-14 md:grid-cols-5">
+      {/* Bo cot "Cac thanh vien nhom" nen luoi tu 5 xuong 4 cot. Giu nguyen
+          md:grid-cols-5 thi cot cuoi bo trong va bon cot con lai bi bop hep
+          lai mot cach vo co. */}
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-10 px-6 py-14 md:grid-cols-4">
         {/* CỘT 1: THƯƠNG HIỆU PLATFORM */}
         <div className="col-span-2 flex flex-col gap-3 md:col-span-1">
           <Link
@@ -155,28 +158,6 @@ export default function Footer({
               )}
             </ul>
           )}
-        </div>
-
-        {/* CỘT 5: THÀNH VIÊN NHÓM */}
-        <div>
-          <h3 className="mb-4 font-sans text-sm font-bold tracking-wide text-[#1f2124]">
-            Các thành viên nhóm
-          </h3>
-          <ul className="space-y-2.5 text-sm text-[#40444d]">
-            <li className="flex items-center gap-1.5">
-              <span>Nguyễn Thế Sang</span>
-              <span className="rounded border border-emerald-100 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600">
-                FullStack
-              </span>
-              {/* <span className="text-[10px] text-red-600 bg-red-50 px-1.5 py-0.5 rounded font-medium border border-red-100">Leader</span> */}
-            </li>
-            <li className="flex items-center gap-1.5">
-              <span>Nguyễn Thanh Sang</span>
-              <span className="rounded border border-emerald-100 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600">
-                FullStack
-              </span>
-            </li>
-          </ul>
         </div>
       </div>
 
