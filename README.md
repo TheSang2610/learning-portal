@@ -14,6 +14,12 @@ backend/     Express 5 · Mongoose 9 · MongoDB Atlas · JWT trong cookie httpOn
 Mỗi thư mục có README riêng, đọc kỹ hơn ở đó:
 [frontend](frontend/README.md) · [backend](backend/README.md)
 
+**Tài liệu API (Swagger UI):** https://thesang2610.github.io/learning-portal/
+Bản gọi thử được ngay trên trình duyệt: https://learning-portal-s.vercel.app/api-docs.html
+
+`docs/` phải nằm ở gốc kho chứ không nằm trong `frontend/` — GitHub Pages chỉ
+đọc được `/` hoặc `/docs` ở gốc, để nó ở thư mục con là trang tài liệu chết.
+
 ---
 
 ## Chạy tại máy
