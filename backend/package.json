@@ -1,0 +1,48 @@
+{
+  "name": "learning-portal-backend",
+  "version": "1.0.0",
+  "description": "API cho cong hoc truc tuyen aLMS: khoa hoc, bai hoc, bai kiem tra, chung chi, bai viet va tai lieu chia se.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "build": "echo 'No build step required'",
+    "test": "node --test \"src/**/*.test.js\"",
+    "test:filter": "node src/utils/contentFilter.test.js",
+    "check:cloudinary": "node src/utils/checkCloudinary.js",
+    "check:db": "node src/utils/checkDb.js",
+    "check:mail": "node src/utils/checkMail.js"
+  },
+  "keywords": [
+    "lms",
+    "express",
+    "mongoose",
+    "api"
+  ],
+  "author": "",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.10.0",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "google-auth-library": "^10.6.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.6.1",
+    "morgan": "^1.10.1",
+    "multer": "^2.1.1",
+    "nodemailer": "^10.0.0",
+    "sanitize-html": "2.17.0",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
