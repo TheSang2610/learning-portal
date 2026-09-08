@@ -120,11 +120,13 @@ export default function InstructorPanelLayout({
     if (nguoiDung?.role !== "instructor" && nguoiDung?.role !== "admin") router.push("/");
   }, [dangTaiNguoiDung, nguoiDung, router]);
 
-  const logoutHandler = () => {
+  const logoutHandler = async () => {
     // Truoc day cho nay chi xoa userInfo, KHONG xoa authToken - da "dang xuat"
     // ma getHeaders van gan token cu vao moi request, nguoi ke tiep dung may
     // van con la giang vien voi backend. xoaPhien() lam du bon viec, xem apiHelper.
-    xoaPhien();
+    // PHAI await, neu khong dieu huong se huy request dang xuat giua chung va
+    // cookie con nguyen - xem ghi chu o apiHelper.
+    await xoaPhien();
     router.push("/");
   };
 

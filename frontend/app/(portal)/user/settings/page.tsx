@@ -724,7 +724,7 @@ function SecurityTab({
     setMsg(null);
     try {
       await deactivateMyAccount(delPassword);
-      xoaPhien();
+      await xoaPhien();
       window.location.href = "/";
     } catch (e) {
       setMsg({

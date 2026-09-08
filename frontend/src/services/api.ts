@@ -161,10 +161,13 @@ export const googleLogin = async (credential: string): Promise<GoogleLoginRespon
   return data;
 };
 
-export const logout = () => {
+export const logout = (): Promise<void> => {
   // Dung xoaPhien: no goi ca /users/logout de may chu xoa cookie httpOnly,
   // don bo dem GET, va ban su kien cho cac header cap nhat lai.
-  xoaPhien();
+  //
+  // Tra ve Promise cua no: noi goi phai await truoc khi dieu huong, neu khong
+  // request bi huy giua chung va cookie con nguyen.
+  return xoaPhien();
 };
 
 export interface User {

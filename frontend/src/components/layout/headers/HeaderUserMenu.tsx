@@ -30,9 +30,12 @@ export default function HeaderUserMenu() {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  const logout = () => {
-    // xoaPhien() da goi datNguoiDung(null), khong con state cuc bo de don.
-    xoaPhien();
+  const logout = async () => {
+    // PHAI await: xoaPhien() cho may chu tra ve header xoa cookie. Dieu huong
+    // ngay se huy request va cookie con nguyen - xem ghi chu o apiHelper.
+    // Giao dien da chuyen sang trang thai dang xuat truoc do roi nen khong ai
+    // thay do tre nay.
+    await xoaPhien();
     window.location.href = "/";
   };
 

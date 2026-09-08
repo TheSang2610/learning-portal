@@ -41,16 +41,32 @@ export const getHeaders = () => ({
  *      useNguoiDungLuu deu nghe su kien nay. Su kien 'storage' cua trinh duyet
  *      KHONG ban cho chinh tab dang sua, nen phai tu ban.
  */
-export const xoaPhien = () => {
-  if (typeof window === "undefined") return;
+export const xoaPhien = (): Promise<void> => {
+  if (typeof window === "undefined") return Promise.resolve();
 
-  // Cookie httpOnly thi JavaScript KHONG xoa duoc - phai nho may chu xoa.
-  // Khong cho ket qua: dang xuat o phia giao dien phai xay ra ngay ca khi
-  // mang hong, va cookie du con lai thi token trong no cung het han sau 1 ngay.
-  void fetch(resolveApiUrl("/users/logout"), {
+  // Cookie httpOnly thi JavaScript KHONG xoa duoc - phai nho may chu xoa, va
+  // trinh duyet chi thuc su xoa khi NHAN DUOC phan hoi mang header
+  // `Set-Cookie: token=; Expires=1970`.
+  //
+  // Vi vay ham nay tra ve Promise va noi goi PHAI cho truoc khi dieu huong.
+  // Truoc day cho nay la `void fetch(...)` roi noi goi lam
+  // `window.location.href = "/"` ngay dong sau: dieu huong huy request giua
+  // chung, phan hoi khong bao gio ve, cookie con nguyen. Nguoi bam "Logout"
+  // van con phien tren may chu - tren may dung chung la nguoi ke tiep vao
+  // thang tai khoan do.
+  //
+  // Loi nay co tu truoc, chi bi che di: ban cu xoa userInfo trong localStorage
+  // nen giao dien HIEN ra da dang xuat trong khi phien van song. Gio danh tinh
+  // lay tu may chu nen no lo ra.
+  //
+  // keepalive: de request van di tiep neu noi goi quen cho.
+  const xong = fetch(resolveApiUrl("/users/logout"), {
     method: "POST",
     credentials: "include",
-  }).catch(() => {});
+    keepalive: true,
+  })
+    .then(() => undefined)
+    .catch(() => undefined);
 
   // Ban cu con xoa "authToken" trong localStorage. Gio khong luu o do nua,
   // nhung van xoa mot lan de don rac cua nhung nguoi dang mo trang tu truoc
@@ -62,6 +78,9 @@ export const xoaPhien = () => {
   clearApiCache();
   // datNguoiDung(null) da tu ban su kien "userInfoChanged".
   datNguoiDung(null);
+
+  // Giao dien da doi ngay o tren; cai cho o day chi la cho MAY CHU xoa cookie.
+  return xong;
 };
 
 export const handleResponse = async (res: Response) => {
@@ -81,10 +100,11 @@ export const handleResponse = async (res: Response) => {
       res.status === 403 && /bị khóa/i.test(String(data?.message || ""));
 
     if ((res.status === 401 || accountLocked) && typeof window !== "undefined") {
-      xoaPhien();
-      setTimeout(() => {
+      // Doi may chu xoa cookie xong moi dieu huong, thay cho mot moc 100ms
+      // doan chung. Khong await o day de con nem loi ve cho noi goi ngay.
+      void xoaPhien().finally(() => {
         window.location.href = "/";
-      }, 100);
+      });
     }
     throw new Error(data.message || `Request failed with status ${res.status}`);
   }
