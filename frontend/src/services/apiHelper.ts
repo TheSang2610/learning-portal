@@ -1,4 +1,5 @@
 import { GOC_API_TRINH_DUYET as API_ORIGIN } from "./diaChiApi";
+import { datNguoiDung } from "@/src/hooks/nguoiDungLuu";
 
 const resolveApiUrl = (path: string) => {
   if (/^https?:\/\//i.test(path)) {
@@ -55,9 +56,12 @@ export const xoaPhien = () => {
   // nhung van xoa mot lan de don rac cua nhung nguoi dang mo trang tu truoc
   // khi doi sang cookie.
   localStorage.removeItem("authToken");
+  // userInfo khong con nam trong localStorage; van xoa mot lan de don rac cua
+  // nhung nguoi dang mo trang tu truoc khi doi sang kho trong RAM.
   localStorage.removeItem("userInfo");
   clearApiCache();
-  window.dispatchEvent(new Event("userInfoChanged"));
+  // datNguoiDung(null) da tu ban su kien "userInfoChanged".
+  datNguoiDung(null);
 };
 
 export const handleResponse = async (res: Response) => {

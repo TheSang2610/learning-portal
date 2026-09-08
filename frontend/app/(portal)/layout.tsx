@@ -3,6 +3,7 @@ import { Be_Vietnam_Pro, Lexend } from "next/font/google";
 import "../globals.css";
 import Header from "@/src/components/layout/Header";
 import Footer from "@/src/components/layout/Footer";
+import NapNguoiDung from "@/src/components/common/NapNguoiDung";
 import { layTuMayChu, hoacNull } from "@/src/services/serverFetch";
 import type { Category } from "@/src/services/categoryService";
 import type { Course } from "@/src/services/course";
@@ -59,6 +60,9 @@ export default async function PortalRootLayout({
       suppressHydrationWarning
     >
       <body className="antialiased">
+        {/* Hoi may chu "toi la ai" mot lan. Danh tinh nam trong RAM, khong
+            con ghi xuong localStorage - xem src/hooks/nguoiDungLuu.ts. */}
+        <NapNguoiDung />
         {/* Header goi useSearchParams(). Khong boc Suspense thi TOAN BO trang portal
             khong prerender tinh duoc -> moi luot xem deu ton mot lan chay serverless. */}
         <Suspense fallback={<div className="h-[104px]" />}>

@@ -1,5 +1,6 @@
 "use client";
 
+import { datNguoiDung, yeuCauNapLai } from "@/src/hooks/nguoiDungLuu";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { googleLogin } from "@/src/services/api";
@@ -56,7 +57,8 @@ export default function GoogleCallbackInner() {
           return;
         }
 
-        window.dispatchEvent(new Event("userInfoChanged"));
+        datNguoiDung(user);
+        yeuCauNapLai();
         setStatus("Login successful! Redirecting...");
 
         setTimeout(() => {

@@ -31,7 +31,7 @@ import {
   Coins,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useNguoiDungLuu } from "@/src/hooks/nguoiDungLuu";
+import { useNguoiDungLuu, useDangTaiNguoiDung } from "@/src/hooks/nguoiDungLuu";
 
 interface SubMenuItem {
   label: string;
@@ -200,11 +200,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
 
-  const [loading, setLoading] = useState(true);
-
   // Doc localStorage bang useSyncExternalStore thay vi useEffect + setState,
   // xem src/hooks/nguoiDungLuu.ts. Effect ben duoi chi con lo viec chuyen huong.
-  const adminName = useNguoiDungLuu()?.name ?? "";
+  const nguoiDung = useNguoiDungLuu();
+  const dangTaiNguoiDung = useDangTaiNguoiDung();
+  const adminName = nguoiDung?.name ?? "";
+
+  // `loading` SUY RA duoc, khong can state rieng: con dang hoi may chu, hoac
+  // sai vai tro va dang bi day ra. Giu state rieng thi phai setLoading() ngay
+  // trong effect - React canh bao vi no de sinh vong ve lai day chuyen, va
+  // eslint o day chay voi --max-warnings 0.
+  const loading = dangTaiNguoiDung || nguoiDung?.role !== "admin";
 
   // null = "chua bam gi, cu theo duong dan"; true/false = nguoi dung da tu bam.
   //
@@ -235,27 +241,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isCourseMenuOpen = menuKhoaTuBam ?? oKhuKhoaHoc;
   const isHomeMenuOpen = menuTrangChuTuBam ?? oKhuTrangChu;
 
+  // Gac cong khu quan tri bang cau tra loi cua MAY CHU.
+  //
+  // Ban cu doc localStorage.userInfo roi so user.role. Bat ky ai mo DevTools
+  // cung sua duoc dong do thanh "admin": khong lay them duoc du lieu nao - moi
+  // API van di qua middleware ben backend va van tra 403 - nhung TOAN BO khung
+  // quan tri hien ra: menu, ten tung trang, breadcrumb. Do la ro ri be mat he
+  // thong, va man hinh thi day loi 403 lon xon.
+  //
+  // Cung khong the sua bang cach doi sang luu token trong localStorage: trinh
+  // duyet khong co JWT_SECRET nen KHONG kiem duoc chu ky, van phai tin phan
+  // payload nguoi dung tu go ra - y het van de cu, lai them nguy co XSS doc
+  // trom token (xem ghi chu dau utils/cookieToken.js ben backend).
+  //
+  // Duong dung la HOI MAY CHU. <NapNguoiDung /> o root layout da goi
+  // GET /users/profile mot lan va cat ket qua vao kho trong RAM; vai tro trong
+  // do lay thang tu CSDL nen khong sua duoc tu trinh duyet.
+  //
+  // Doc lai tu kho chu khong tu goi getMyProfile() o day: goi rieng la them
+  // mot luot mang trung lap, va apiHelper gap 401 se tu day ve trang chu -
+  // hai duong chuyen huong chay dua nhau thi rat kho lan ra khi co su co.
   useEffect(() => {
-    const userInfo = localStorage.getItem("userInfo");
+    if (dangTaiNguoiDung) return;
 
-    if (!userInfo) {
-      router.push("/");
-      return;
-    }
-
-    try {
-      const user = JSON.parse(userInfo);
-      if (user.role !== "admin") {
-        router.push("/");
-        return;
-      }
-    } catch (e) {
-      console.error(e);
-      router.push("/");
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
+    if (nguoiDung?.role !== "admin") router.push("/");
+  }, [dangTaiNguoiDung, nguoiDung, router]);
 
   const logoutHandler = () => {
     // Truoc day cho nay chi xoa userInfo, KHONG xoa authToken - da "dang xuat"

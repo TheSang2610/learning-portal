@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { datNguoiDung } from "@/src/hooks/nguoiDungLuu";
 import { xoaPhien } from "@/src/services/apiHelper";
 import Link from "next/link";
 import {
@@ -124,17 +125,15 @@ export default function SettingsPage() {
     })();
   }, []);
 
-  // Header doc user tu localStorage va lang nghe su kien "userInfoChanged",
-  // nen phai dong bo lai thi ten/anh tren thanh dieu huong moi doi theo.
+  // Header doc danh tinh tu kho chung trong RAM, nen phai cap nhat lai thi
+  // ten/anh tren thanh dieu huong moi doi theo.
+  //
+  // Ban cu gop tay vao localStorage roi tu ban su kien. Gio datNguoiDung() lo
+  // ca hai. Cung khong con phai gop voi gia tri cu nua: `u` la ban ghi DAY DU
+  // may chu vua tra ve sau khi luu, con ban cu buoc phai gop vi trong
+  // localStorage chi co bon truong tu luc dang nhap.
   const syncLocal = useCallback((u: User) => {
-    try {
-      const raw = localStorage.getItem("userInfo");
-      const prev = raw && raw !== "undefined" ? JSON.parse(raw) : {};
-      localStorage.setItem("userInfo", JSON.stringify({ ...prev, ...u }));
-      window.dispatchEvent(new Event("userInfoChanged"));
-    } catch {
-      /* localStorage bi chan (che do rieng tu) - khong anh huong viec luu tren server */
-    }
+    datNguoiDung(u);
   }, []);
 
   const save = useCallback(

@@ -6,57 +6,21 @@ import { ChevronDown, User, Settings, LogOut } from "lucide-react";
 import AnhDaiDien from "@/src/components/ui/AnhDaiDien";
 import SoDuCoin from "@/src/components/common/SoDuCoin";
 import { useEffect, useRef, useState } from "react";
+import { useNguoiDungLuu, useDangTaiNguoiDung } from "@/src/hooks/nguoiDungLuu";
 
 // Tach rieng khoi IndividualsHeader de moi header trang deu co menu tai khoan.
 // Neu de nguyen trong IndividualsHeader thi cac trang dung header rieng se mat
 // duong vao ho so, cai dat va nut dang xuat.
 
-interface UserInfo {
-  _id: string;
-  name: string;
-  email: string;
-  role: string;
-  picture?: string;
-  googlePicture?: string;
-  avatar?: string;
-}
-
 export default function HeaderUserMenu() {
-  const [user, setUser] = useState<UserInfo | null>(null);
+  // Truoc day component nay tu doc localStorage.userInfo va tu nghe ba su
+  // kien (storage / userInfoChanged / pageshow). Gio danh tinh nam trong kho
+  // chung o RAM, <NapNguoiDung /> lo viec nap va dong bo - xem
+  // src/hooks/nguoiDungLuu.ts.
+  const user = useNguoiDungLuu();
+  const dangTai = useDangTaiNguoiDung();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const loadUser = () => {
-      const raw = localStorage.getItem("userInfo");
-      if (raw && raw !== "undefined") {
-        try {
-          setUser(JSON.parse(raw));
-        } catch {
-          setUser(null);
-        }
-      } else {
-        setUser(null);
-      }
-    };
-
-    loadUser();
-
-    // Quay lai bang nut Back: trang lay tu bo nho dem nen phai doc lai
-    const handlePageShow = (e: PageTransitionEvent) => {
-      if (e.persisted) loadUser();
-    };
-
-    window.addEventListener("storage", loadUser);
-    window.addEventListener("userInfoChanged", loadUser);
-    window.addEventListener("pageshow", handlePageShow);
-
-    return () => {
-      window.removeEventListener("storage", loadUser);
-      window.removeEventListener("userInfoChanged", loadUser);
-      window.removeEventListener("pageshow", handlePageShow);
-    };
-  }, []);
 
   useEffect(() => {
     const onClickOutside = (e: MouseEvent) => {
@@ -67,10 +31,19 @@ export default function HeaderUserMenu() {
   }, []);
 
   const logout = () => {
+    // xoaPhien() da goi datNguoiDung(null), khong con state cuc bo de don.
     xoaPhien();
-    setUser(null);
     window.location.href = "/";
   };
+
+  // Chua biet minh la ai thi ve o trong dung kich thuoc.
+  //
+  // Bo buoc nay la nguoi DANG dang nhap cung thay nut "Log In" loe len mot cai
+  // roi bien mat, vi luot goi /users/profile chua ve kip. Giu nguyen chieu cao
+  // de header khong giat.
+  if (dangTai) {
+    return <div className="h-[56px] w-[120px]" aria-hidden="true" />;
+  }
 
   if (!user) {
     return (

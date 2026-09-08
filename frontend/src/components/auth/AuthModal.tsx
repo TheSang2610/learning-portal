@@ -1,5 +1,6 @@
 "use client";
 
+import { datNguoiDung, yeuCauNapLai } from "@/src/hooks/nguoiDungLuu";
 import { useState, ChangeEvent, FormEvent } from "react";
 import { getErrorMessage } from "@/src/services/apiHelper";
 import Image from "next/image";
@@ -100,9 +101,10 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
 
       // Token nam trong cookie httpOnly do may chu dat, khong con trong than
       // phan hoi. localStorage chi giu phan thong tin de hien thi.
-      localStorage.setItem("userInfo", JSON.stringify(data));
-
-      window.dispatchEvent(new Event("userInfoChanged"));
+      // Danh tinh giu trong RAM (xem src/hooks/nguoiDungLuu.ts).
+      // datNguoiDung() da tu ban su kien "userInfoChanged".
+      datNguoiDung(data);
+      yeuCauNapLai();
       onClose();
       vaoThang(data?.role);
     } catch (error) {
@@ -142,9 +144,10 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
 
       const data = await registerUser({ ...registerData, name, email });
 
-      localStorage.setItem("userInfo", JSON.stringify(data));
-
-      window.dispatchEvent(new Event("userInfoChanged"));
+      // Danh tinh giu trong RAM (xem src/hooks/nguoiDungLuu.ts).
+      // datNguoiDung() da tu ban su kien "userInfoChanged".
+      datNguoiDung(data);
+      yeuCauNapLai();
       onClose();
       vaoThang(data?.role);
     } catch (error) {
@@ -190,9 +193,9 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
           // Khong con nhan token qua postMessage: cua so bat len da dang nhap
           // voi may chu roi, va cookie httpOnly duoc dat cho ca mien nay nen
           // tab chinh dung duoc ngay.
-          localStorage.setItem("userInfo", JSON.stringify(user));
-
-          window.dispatchEvent(new Event("userInfoChanged"));
+          // Danh tinh giu trong RAM (xem src/hooks/nguoiDungLuu.ts).
+          datNguoiDung(user);
+          yeuCauNapLai();
           window.removeEventListener("message", messageHandler);
           onClose();
           vaoThang(user?.role);

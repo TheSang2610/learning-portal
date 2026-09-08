@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import {
   Download,
@@ -21,16 +21,11 @@ import {
   type DocumentListResponse,
   type SharedDocument,
 } from "@/src/services/document";
+import { useNguoiDungLuu } from "@/src/hooks/nguoiDungLuu";
 import { getErrorMessage } from "@/src/services/apiHelper";
 
 const MAX_MB = 20;
 const DUOI_CHO_PHEP = ["pdf", "doc", "docx"];
-
-interface UserInfo {
-  _id?: string;
-  name?: string;
-  role?: string;
-}
 
 interface Props {
   /** Trang dau lay san tu server - xem ghi chu trong page.tsx */
@@ -61,7 +56,9 @@ export default function ShareDocumentClient({ initialData }: Props) {
   const [tuKhoa, setTuKhoa] = useState("");
   const [tuKhoaDangDung, setTuKhoaDangDung] = useState("");
 
-  const [user, setUser] = useState<UserInfo | null>(null);
+  // Danh tinh lay tu kho chung o RAM; <NapNguoiDung /> lo nap va dong bo giua
+  // cac tab - xem src/hooks/nguoiDungLuu.ts.
+  const user = useNguoiDungLuu();
   const [moForm, setMoForm] = useState(false);
 
   const [tieuDe, setTieuDe] = useState("");
@@ -70,32 +67,6 @@ export default function ShareDocumentClient({ initialData }: Props) {
   const [dangGui, setDangGui] = useState(false);
   const [loiForm, setLoiForm] = useState("");
   const [thanhCong, setThanhCong] = useState("");
-
-  // Doc thong tin dang nhap. Dung dung bo su kien nhu HeaderUserMenu de khi
-  // dang nhap o cua so khac / bang nut Back thi form o day cung doi theo.
-  useEffect(() => {
-    const doc = () => {
-      const raw = localStorage.getItem("userInfo");
-      if (!raw || raw === "undefined") return setUser(null);
-      try {
-        setUser(JSON.parse(raw));
-      } catch {
-        setUser(null);
-      }
-    };
-    doc();
-    const khiQuayLai = (e: PageTransitionEvent) => {
-      if (e.persisted) doc();
-    };
-    window.addEventListener("storage", doc);
-    window.addEventListener("userInfoChanged", doc);
-    window.addEventListener("pageshow", khiQuayLai);
-    return () => {
-      window.removeEventListener("storage", doc);
-      window.removeEventListener("userInfoChanged", doc);
-      window.removeEventListener("pageshow", khiQuayLai);
-    };
-  }, []);
 
   // Chi goi lai khi nguoi dung bam tim / doi trang / vua dang xong.
   // Danh sach lan dau da co san tu server nen khong fetch luc mount.

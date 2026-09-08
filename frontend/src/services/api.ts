@@ -1,3 +1,4 @@
+import { datNguoiDung, yeuCauNapLai } from "@/src/hooks/nguoiDungLuu";
 import { GOC_API_TRINH_DUYET as GOC_API } from "./diaChiApi";
 import { clearApiCache, xoaPhien } from "./apiHelper";
 
@@ -81,7 +82,11 @@ export const registerUser = async (
   // Token KHONG con di trong than phan hoi - no nam trong cookie httpOnly do
   // may chu dat. O day chi luu phan thong tin hien thi.
   if (data && data._id) {
-    localStorage.setItem("userInfo", JSON.stringify(data));
+    // Danh tinh giu trong RAM, khong ghi xuong localStorage nua (xem
+    // src/hooks/nguoiDungLuu.ts). Dat tam bon truong tu than phan hoi cho
+    // giao dien hien ngay, roi nho nap lai ho so day du.
+    datNguoiDung(data);
+    yeuCauNapLai();
     // Bo dem GET trong apiHelper song 30 giay va chi khoa theo dia chi, khong
     // theo nguoi dung. Dang nhap khong di qua apiRequest nen khong tu xoa - phai
     // xoa tay o day, neu khong nguoi vua dang nhap co the nhan lai du lieu cua
@@ -109,7 +114,11 @@ export const loginUser = async (userData: LoginUserData): Promise<LoginResponse>
   // Token KHONG con di trong than phan hoi - no nam trong cookie httpOnly do
   // may chu dat. O day chi luu phan thong tin hien thi.
   if (data && data._id) {
-    localStorage.setItem("userInfo", JSON.stringify(data));
+    // Danh tinh giu trong RAM, khong ghi xuong localStorage nua (xem
+    // src/hooks/nguoiDungLuu.ts). Dat tam bon truong tu than phan hoi cho
+    // giao dien hien ngay, roi nho nap lai ho so day du.
+    datNguoiDung(data);
+    yeuCauNapLai();
     // Bo dem GET trong apiHelper song 30 giay va chi khoa theo dia chi, khong
     // theo nguoi dung. Dang nhap khong di qua apiRequest nen khong tu xoa - phai
     // xoa tay o day, neu khong nguoi vua dang nhap co the nhan lai du lieu cua
@@ -137,7 +146,11 @@ export const googleLogin = async (credential: string): Promise<GoogleLoginRespon
   // Token KHONG con di trong than phan hoi - no nam trong cookie httpOnly do
   // may chu dat. O day chi luu phan thong tin hien thi.
   if (data && data._id) {
-    localStorage.setItem("userInfo", JSON.stringify(data));
+    // Danh tinh giu trong RAM, khong ghi xuong localStorage nua (xem
+    // src/hooks/nguoiDungLuu.ts). Dat tam bon truong tu than phan hoi cho
+    // giao dien hien ngay, roi nho nap lai ho so day du.
+    datNguoiDung(data);
+    yeuCauNapLai();
     // Bo dem GET trong apiHelper song 30 giay va chi khoa theo dia chi, khong
     // theo nguoi dung. Dang nhap khong di qua apiRequest nen khong tu xoa - phai
     // xoa tay o day, neu khong nguoi vua dang nhap co the nhan lai du lieu cua

@@ -5,6 +5,7 @@
    nen dung the <img> o day moi dung. */
 
 import { useEffect, useState } from "react";
+import { useNguoiDungLuu } from "@/src/hooks/nguoiDungLuu";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -51,6 +52,9 @@ export default function InstructorCreateCoursePage() {
     level: "beginner",
   });
 
+  const nguoiDung = useNguoiDungLuu();
+  const [daDien, setDaDien] = useState<string | null>(null);
+
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState("");
 
@@ -64,19 +68,6 @@ export default function InstructorCreateCoursePage() {
         ]);
         setCategories(categoriesData || []);
         setProviders(providersData || []);
-
-        // 💡 AUTO-FILL: Nếu Instructor đã cấu hình đối tác sẵn trong hồ sơ cá nhân, tự động điền providerId
-        const userInfo = localStorage.getItem("userInfo");
-        if (userInfo) {
-          const parsedUser = JSON.parse(userInfo);
-          if (parsedUser.provider) {
-            const pId =
-              typeof parsedUser.provider === "object"
-                ? parsedUser.provider._id
-                : parsedUser.provider;
-            setFormData((prev) => ({ ...prev, providerId: pId || "" }));
-          }
-        }
       } catch (error) {
         console.error("Lỗi đồng bộ metadata cấu hình:", error);
       } finally {
@@ -85,6 +76,28 @@ export default function InstructorCreateCoursePage() {
     };
     fetchMetadata();
   }, []);
+
+  // Tu dien doi tac neu giang vien da cau hinh san trong ho so.
+  //
+  // Chinh NGAY TRONG LUC VE, khong dung useEffect. Danh tinh den tu may chu
+  // (<NapNguoiDung />) nen luc fetchMetadata chay no con la null; con nhet vao
+  // effect thi eslint chan vi setState dong bo trong effect (--max-warnings 0).
+  // Day la mau "dieu chinh state khi du lieu ngoai doi" ma React huong dan:
+  // co `daDien` chan lai nen chi chay dung mot lan cho moi doi tac, khong lap
+  // vo tan, va nguoi dung tu doi o vao doi tac khac thi khong bi ghi de.
+  //
+  // Bu them: truong `provider` nay lay tu ho so DAY DU, con ban cu doc
+  // localStorage thi than phan hoi luc dang nhap khong he co no - tuc la o
+  // nay truoc gio chua bao gio duoc dien tu dong.
+  const doiTacHoSo =
+    typeof nguoiDung?.provider === "object"
+      ? nguoiDung.provider._id
+      : nguoiDung?.provider;
+
+  if (doiTacHoSo && daDien !== doiTacHoSo) {
+    setDaDien(doiTacHoSo);
+    setFormData((prev) => ({ ...prev, providerId: doiTacHoSo }));
+  }
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
