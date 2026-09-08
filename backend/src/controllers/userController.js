@@ -414,7 +414,7 @@ const updateUserProfile = async (req, res) => {
             // Tai khoan dang nhap bang Google chua tung dat mat khau -> cho dat lan dau
             // ma khong can mat khau cu. Con lai BAT BUOC xac minh mat khau hien tai:
             // khong co buoc nay thi bat ky ai muon duoc token (may dung chung, XSS,
-            // token con han 30 ngay) deu doi duoc mat khau va chiem han tai khoan.
+            // token chua het han) deu doi duoc mat khau va chiem han tai khoan.
             if (user.password) {
                 const currentPassword = req.body.currentPassword;
                 if (!currentPassword) {

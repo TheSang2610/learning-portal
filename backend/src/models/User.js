@@ -47,7 +47,7 @@ const userSchema = new mongoose.Schema({
 
     // Moc thoi gian doi mat khau gan nhat.
     //
-    // JWT khong the thu hoi: da cap ra la con hieu luc du 30 ngay. Nen khi
+    // JWT khong the thu hoi: da cap ra la con hieu luc het han cua no. Nen khi
     // nguoi dung doi mat khau vi nghi bi lo, cac token cu VAN dung duoc neu
     // khong co truong nay. protect() so sanh moc do voi thoi diem cap token
     // (iat) va tu choi moi token cap TRUOC luc doi.

@@ -25,15 +25,16 @@ const timNguoiDungTuToken = async (req) => {
     const nguoiDung = await User.findById(decoded.id).select('-password');
     if (!nguoiDung) return { loi: 'khong_co_user' };
 
-    // Token cap truoc khi bi khoa van con han 30 ngay, nen phai kiem tra trang
-    // thai o day chu khong chi luc dang nhap.
+    // Token cap truoc khi bi khoa van song het han cua no (HAN_TOKEN trong
+    // utils/matKhau.js, hien la 1 ngay), nen phai kiem tra trang thai o day
+    // chu khong chi luc dang nhap.
     if (nguoiDung.status === false) return { loi: 'bi_khoa' };
 
     // Token cap TRUOC lan doi mat khau gan nhat thi khong con gia tri.
     //
     // Khong co buoc nay thi doi mat khau gan nhu vo tac dung ve mat bao mat: ke
-    // da lay duoc token cu van dung tiep duoc toi 30 ngay, du nan nhan da doi
-    // mat khau ngay sau khi phat hien.
+    // da lay duoc token cu van dung tiep duoc cho toi khi token het han, du
+    // nan nhan da doi mat khau ngay sau khi phat hien.
     //
     // decoded.iat tinh bang GIAY, passwordChangedAt tinh bang mili giay.
     if (nguoiDung.passwordChangedAt && decoded.iat) {
