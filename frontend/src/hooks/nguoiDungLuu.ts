@@ -57,14 +57,35 @@ const bao = () => nguoiNghe.forEach((goi) => goi());
  */
 export const KHOA_HIEU = "phien-doi";
 
-/** Cap nhat danh tinh. Truyen null khi dang xuat. */
-export function datNguoiDung(u: NguoiDungLuu | null) {
+/**
+ * Cap nhat danh tinh. Truyen null khi dang xuat.
+ *
+ * `lanTruyen` = co bao cho cac TAB KHAC biet hay khong.
+ *
+ * PHAI truyen false khi dang ghi lai ket qua cua mot luot goi /users/profile
+ * ma chinh no do mot tab khac danh thuc. Neu khong thi thanh vong lap vinh
+ * vien giua hai cua so cung mien:
+ *
+ *   tab A ghi phien-doi  ->  tab B nghe 'storage', goi /users/profile
+ *   tab B ghi phien-doi  ->  tab A nghe 'storage', goi /users/profile
+ *   tab A ghi phien-doi  ->  ... khong bao gio dung
+ *
+ * Chi can hai tab cung mo la dinh, ke ca khi chua dang nhap. Dang nhap bang
+ * Google luon dinh vi no mo them mot cua so bat len cung mien.
+ *
+ * Su kien 'userInfoChanged' thi van ban trong MOI truong hop: no chi chay
+ * trong tab nay nen khong the gay vong lap.
+ */
+export function datNguoiDung(u: NguoiDungLuu | null, lanTruyen = true) {
   nguoiDung = u;
   dangTai = false;
   bao();
 
   if (typeof window === "undefined") return;
   window.dispatchEvent(new Event("userInfoChanged"));
+
+  if (!lanTruyen) return;
+
   try {
     localStorage.setItem(KHOA_HIEU, String(Date.now()));
   } catch {

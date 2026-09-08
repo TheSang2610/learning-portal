@@ -37,13 +37,13 @@ export default function NapNguoiDung() {
           // 401 = khach vang lai. Cac ma khac (500, mat mang) cung coi nhu
           // chua dang nhap: tha ve nut "Dang nhap" con hon treo mai o trang
           // thai dang tai.
-          datNguoiDung(null);
+          datNguoiDung(null, false);
           return;
         }
 
-        datNguoiDung(await res.json());
+        datNguoiDung(await res.json(), false);
       } catch {
-        if (conSong) datNguoiDung(null);
+        if (conSong) datNguoiDung(null, false);
       }
     };
 
@@ -51,6 +51,11 @@ export default function NapNguoiDung() {
 
     // Dang nhap o tab ben canh thi tab nay phai biet. Su kien 'storage' chi
     // ban cho cac tab KHAC, dung y ta can.
+    //
+    // CAN THAN: nap() ket thuc bang datNguoiDung(..., false). Chu `false` do
+    // la thu duy nhat chan vong lap - bo di thi tra loi mot thong bao lai
+    // phat ra mot thong bao moi, va hai tab se goi /users/profile qua lai
+    // khong bao gio dung. Xem ghi chu dai o datNguoiDung().
     const khiTabKhacDoi = (e: StorageEvent) => {
       if (e.key !== KHOA_HIEU) return;
       datDangTai(true);
