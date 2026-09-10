@@ -1,8 +1,0 @@
-# Truoc day dong nay la `cd frontend && npx lint-staged`.
-#
-# Hoi do ma nguon nam trong thu muc con frontend/ cua mot kho gop, ma hook thi
-# luon chay tu GOC kho - khong `cd` thi eslint bao "khong tim thay
-# eslint.config" va chan mat commit. Nay backend da tach ra kho rieng va ma
-# nguon da len goc, nen `cd` do tro toi mot thu muc khong con ton tai: giu lai
-# la moi commit deu chet ngay tu hook.
-npx lint-staged

@@ -1,59 +1,28 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Thu muc goc cua kho gop. Moi du an con VAN giu .gitignore rieng cua no -
+# file nay chi bat nhung thu co the sinh ra ngay tai goc.
+node_modules/
+.next/
+.vercel/
+*.tsbuildinfo
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-# ...tru file mau. ".env*" o tren chan luon ca no, ma file mau thi PHAI duoc
-# commit - khong thi nguoi moi clone ve khong biet du an can nhung bien nao.
+# Bien moi truong: khong bao gio commit. Chi .env.example duoc len kho.
+.env
+.env.*
 !.env.example
 
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
+# Next sinh ra file nay canh next.config. Sau khi don frontend xuong
+# thu muc con, ban o goc chi la rac do trinh soan thao con coi goc la du an Next.
 next-env.d.ts
 
-# bao cao lint sinh tu may (1.5MB, chua duong dan tuyet doi tren may)
-lint-report.json
-
-.vercel
-.env*
-
-# vercel CLI tu them hai dong duoi khi chay `vercel link`.
-.vercel
-.env*
-# ...nhung `.env*` nuot luon ca file mau. File do la TAI LIEU - no liet ke
-# moi bien can dat kem ly do, va khong chua gia tri nao. Hien no dang duoc git
-# theo doi nen luat tren khong dong toi, nhung ai lo `git rm --cached` mot lan
-# la no bien mat khong dau vet. Mien tru ro rang cho chac.
-!.env.example
+# Ke tu khi goc kho chuyen len D:\aLMS_Project, thu muc lam viec rieng cua chu
+# du an nam NGAY TRONG kho. Truoc day chung o ngoai nen khong can luat nao.
+#
+# vc.txt va gg2.txt chua token Vercel va bi mat OAuth Google dang chu ro - lo
+# commit mot lan la phai thu hoi toan bo. CV la giay to ca nhan, khong phai ma
+# nguon. luu-tru chua ban sao git (bundle) nang hang MB, dua len la kho phinh
+# gap doi ma khong them mot dong ma nao.
+vc.txt
+gg2.txt
+CV-*.html
+luu-tru/
+.claude/

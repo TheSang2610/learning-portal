@@ -1,0 +1,59 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+# ...tru file mau. ".env*" o tren chan luon ca no, ma file mau thi PHAI duoc
+# commit - khong thi nguoi moi clone ve khong biet du an can nhung bien nao.
+!.env.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# bao cao lint sinh tu may (1.5MB, chua duong dan tuyet doi tren may)
+lint-report.json
+
+.vercel
+.env*
+
+# vercel CLI tu them hai dong duoi khi chay `vercel link`.
+.vercel
+.env*
+# ...nhung `.env*` nuot luon ca file mau. File do la TAI LIEU - no liet ke
+# moi bien can dat kem ly do, va khong chua gia tri nao. Hien no dang duoc git
+# theo doi nen luat tren khong dong toi, nhung ai lo `git rm --cached` mot lan
+# la no bien mat khong dau vet. Mien tru ro rang cho chac.
+!.env.example

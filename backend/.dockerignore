@@ -1,0 +1,25 @@
+# .env dung dau danh sach co chu y.
+#
+# Truoc day thu muc nay khong co .dockerignore, ma Dockerfile lai `COPY . .`,
+# nen mat khau Mongo va khoa Cloudinary bi nhet thang vao trong anh Docker.
+# Ai keo duoc anh ve la doc duoc, va xoa o lop sau cung khong cuu duoc vi moi
+# lop deu con nguyen trong `docker history`.
+#
+# Bien moi truong phai truyen luc CHAY: `docker run --env-file .env ...`
+# hoac khai o bang dieu khien cua nha cung cap.
+.env
+.env.*
+!.env.example
+
+node_modules
+npm-debug.log*
+*.log
+
+.git
+.gitignore
+.github
+
+Dockerfile
+.dockerignore
+.vscode
+.idea
