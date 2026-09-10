@@ -90,6 +90,36 @@ const userSchema = new mongoose.Schema({
     },
 
     /**
+     * Da chung minh duoc quyen so huu dia chi email chua.
+     *
+     * CHU Y - truong nay CO Y khong co `default`:
+     *   undefined  tai khoan tao TRUOC khi co luong xac minh. Van dang nhap
+     *              binh thuong.
+     *   false      vua dang ky, dang cho bam lien ket trong email.
+     *   true       da bam lien ket, hoac dang nhap bang Google (Google da xac
+     *              minh ho roi).
+     *
+     * Dat `default: false` o day nhin thi vo hai nhung la KHOA TOAN BO NGUOI
+     * DUNG CU RA NGOAI ngay trong lan deploy dau tien: Mongoose ap gia tri mac
+     * dinh ca luc NAP mot ban ghi cu thieu truong, chu khong chi luc tao moi.
+     * Vi vay loginUser chi chan khi truong nay dung bang false, chu khong dung
+     * phep phu dinh.
+     */
+    emailVerified: {
+        type: Boolean
+    },
+
+    // Ban bam SHA-256 cua token xac minh email - xem utils/tokenXacMinh.js.
+    // Chi luu ban bam, khong bao gio luu token goc: ly do ghi o dau file do.
+    verifyTokenHash: {
+        type: String,
+        index: true,
+        sparse: true
+    },
+
+    verifyTokenExp: Date,
+
+    /**
      * So coin dang co trong vi.
      *
      * Chi duoc doi qua utils/viCoin.js - dung $inc co dieu kien, khong bao gio

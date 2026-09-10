@@ -421,7 +421,7 @@
       "post": {
         "tags": ["Người dùng"],
         "summary": "Đăng ký tài khoản",
-        "description": "**Quyền:** Công khai",
+        "description": "**Quyền:** Công khai\n\nTrả 202 và KHÔNG cấp phiên: máy chủ gửi một email xác minh, tài khoản chỉ hoạt động sau khi bấm liên kết trong thư. Phản hồi giống hệt nhau dù địa chỉ đã có tài khoản hay chưa — cố ý, để endpoint này không trả lời được câu hỏi \"email nào đã đăng ký\". Chỉ khi máy chủ chưa cấu hình hòm thư (MAIL_USER/MAIL_APP_PASSWORD) nó mới quay về hành vi cũ: tạo tài khoản và cấp phiên ngay.",
         "requestBody": {
           "required": true,
           "content": {
@@ -433,6 +433,29 @@
                   "email": { "type": "string" },
                   "password": { "type": "string" }
                 }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Thành công" },
+          "201": { "description": "Thành công" }
+        },
+        "security": []
+      }
+    },
+    "/api/users/verify-email": {
+      "post": {
+        "tags": ["Người dùng"],
+        "summary": "Kích hoạt tài khoản bằng token trong email",
+        "description": "**Quyền:** Công khai\n\nToken là 32 byte ngẫu nhiên, cơ sở dữ liệu chỉ giữ bản băm SHA-256 của nó. Hạn 24 giờ và chỉ dùng được một lần. Đúng token thì đánh dấu đã xác minh rồi cấp phiên luôn.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "token": { "type": "string" } }
               }
             }
           }
@@ -462,7 +485,7 @@
       "post": {
         "tags": ["Người dùng"],
         "summary": "Đăng nhập",
-        "description": "**Quyền:** Công khai\n\nĐặt token vào cookie httpOnly. Trình duyệt tự gửi kèm ở các lần gọi sau, JavaScript không đọc được. Có giới hạn số lần thử.",
+        "description": "**Quyền:** Công khai\n\nĐặt token vào cookie httpOnly. Trình duyệt tự gửi kèm ở các lần gọi sau, JavaScript không đọc được. Có giới hạn số lần thử. Tài khoản đăng ký bằng mật khẩu mà chưa bấm liên kết xác minh sẽ nhận 403 kèm cờ canXacMinh.",
         "requestBody": {
           "required": true,
           "content": {

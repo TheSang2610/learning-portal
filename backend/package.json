@@ -11,7 +11,10 @@
     "test:filter": "node src/utils/contentFilter.test.js",
     "check:cloudinary": "node src/utils/checkCloudinary.js",
     "check:db": "node src/utils/checkDb.js",
-    "check:mail": "node src/utils/checkMail.js"
+    "check:mail": "node src/utils/checkMail.js",
+    "check:gioihan": "node src/utils/checkGioiHan.js",
+    "check:dangky": "node src/utils/checkDangKy.js",
+    "seed:truong": "node src/utils/donViTruong.js"
   },
   "keywords": [
     "lms",

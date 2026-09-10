@@ -247,145 +247,283 @@ body {
 }
 
 /* ===========================================================================
-   Thap 5 tang o phan mo dau trang chu (HeroSection)
+   Bon canh thay nhau hien ra o phan mo dau trang chu (HeroSection)
    ---------------------------------------------------------------------------
-   Hieu ung o day KHONG phai trang tri: tieu de viet "Đi lên từng tầng, không
-   nhảy cóc", nen thap phai tu xep len tung tang mot theo dung thu tu, tang
-   chung nhan dap xuong sau cung. Nguoi chua doc chu cung hieu duoc y.
+   Ban mau dat o cho nay mot the <video> tu chay lap, va da thu di dung duong
+   do: tai ca doan phim cua ho ve. Bo, vi toan bo chu trong doan phim nam trong
+   pixel - no mang ten LadiPage / LadiWork / Automation va mot man hinh ban
+   hang nha hang, ma khong dong CSS nao sua duoc. Bon canh nay cho ra dung cai
+   can co (hinh doi lien tuc) voi tong 812 KB, va moi dong chu deu nam trong
+   HTML nen sua duoc bat cu luc nao.
 
-   Viet o day chu khong dat thang trong JSX vi Tailwind khong ta duoc keyframes,
-   va vi ca ba lop chuyen dong (xep tang / thap troi / the bay) phai an khop
-   thoi gian voi nhau - de trong mot file thi con doc ra duoc trinh tu.
+   Viet o day chu khong dat trong JSX vi Tailwind khong ta duoc keyframes, va
+   vi de o mot cho thi con doc ra duoc trinh tu bon canh noi nhau.
 
-   Ba lop chuyen dong, moi lop mot the rieng de KHONG dam nhau:
-     .thap-troi   the ngoai  - troi len xuong cham, chay mai
-     .thap        the giua   - do nghieng, doi khi ro chuot
-     .tang        tung tang  - xep len luc vao trang, tach ra khi ro chuot
-   Neu don ca ba vao mot the thi cai sau de len cai truoc, vi chung cung sua
-   thuoc tinh transform.
-
-   Moi tang la mot cai NUT (role="tab"): bam vao thi o ben duoi thap doi sang
-   noi dung cua tang do.
+   Khoi nay THAY CHO doan CSS cua cai thap 5 tang truoc day. Thap da duoc go
+   khoi HeroSection nen toan bo .thap / .tang / .o-tang thanh ma chet - de lai
+   thi nguoi doc sau tuong con cho nao dang dung. Lay lai duoc trong git.
    =========================================================================== */
 
-/* Vi tri cuoi cung cua moi tang. --z va --s do JSX dat vao, tinh theo so tang.
-   De o day chu khong de trong style inline la co chu dich: nho vay :hover va
-   trang thai dang chon ben duoi moi viet de len duoc no. */
-.tang {
-  /* Hai bien dieu khien do cao, mot nhan mot cong - va phai tach roi:
-       --gian  nhan  : ro chuot vao ca thap thi ca chong gian deu ra
-       --nhoi  cong  : day rieng nhung tang NAM TREN tang dang chon len, mo ra
-                       mot khe ho ngay tren no de no lo ra du chieu cao ma bam
-     Neu chi dung phep nhan thi tang day (--z: 0) nhan bao nhieu cung bang 0,
-     tuc la tang duoi cung khong bao gio bao duoc rang no dang duoc chon. */
-  transform: translateZ(calc(var(--z) * var(--gian, 1) + var(--nhoi, 0px)))
-    scale(var(--s));
-  /* Quang sang doc tu bien chu khong dat thang o style inline: dat inline thi
-     vong vien luc chon va luc lay tieu diem khong ghi de duoc. */
-  box-shadow: var(--hao);
+/* Phai co ty le co dinh: bon canh xep chong bang position absolute nen khong
+   con canh nao "do" chieu cao cho khung nay nua.
+
+   DA THU lay ty le 973.65/701.373 (= 1.388) tu CSS cua ban mau va cho khoi
+   tran ra tan mep phai man hinh cho giong ho. Bo, chu du an thay dai qua. 10/9
+   giu khoi gon trong dung cot luoi cua no. */
+.khung-canh-hero {
+  position: relative;
+  width: 100%;
+  /* Man hinh hep: hai cot xep chong nhau, dai ten don vi dao tao khong the nam
+     trong khung hinh dau duoc nen cu de ty le co dinh cho de nhin. */
+  aspect-ratio: 10 / 9;
 }
 
-/* Tang dang chon: vien trang dac vong quanh, tach han khoi bon tang con lai. */
-.tang[aria-selected="true"] {
-  border-color: #fff;
-  box-shadow:
-    var(--hao),
-    0 0 0 3px rgb(255 255 255 / 0.92);
-}
+/* ---------------------------------------------------------------------------
+   Man hinh rong: chieu cao tinh THEO KHUNG NHIN chu khong theo ty le.
 
-/* Vong tieu diem trang ke den. Mot mau don khong du: mep tang khi thi nam
-   tren nen trang cua trang, khi thi nam de len mot tang tim - mau nao cung co
-   luc chim mat. Dat SAU luat aria-selected de tang dang chon van thay duoc
-   tieu diem ban phim. */
-.tang:focus-visible {
-  outline: none;
-  box-shadow:
-    var(--hao),
-    0 0 0 3px #fff,
-    0 0 0 6px #0b0c1e;
-}
+   Day la thu quyet dinh chieu cao ca phan mo dau - cot chu ben trai chi cao
+   khoang 390px, thap hon han - nen no cung quyet dinh dai ten don vi dao tao co
+   nam trong khung hinh dau hay khong.
 
-@keyframes thap-xep-tang {
-  from {
-    opacity: 0;
-    /* Bat dau tu day thap: moi tang deu nam chong khit len tang mong. */
-    transform: translateZ(0) scale(1);
-  }
-  55% {
-    opacity: 1;
-  }
-  to {
-    opacity: 1;
-    transform: translateZ(calc(var(--z) * var(--gian, 1) + var(--nhoi, 0px)))
-      scale(var(--s));
+   Cong thuc: lay het cho con lai sau khi tru phan bat buoc phai chua.
+   24rem = 384px la tong cua: thanh dieu huong 104 + dem tren 32 + le tren dong
+   so lieu 24 + dong so lieu 23 + dem duoi 56 + dai ten don vi 107, cong khoang
+   38px du. Doi bat ky so nao trong so do thi phai do lai con 24rem nay.
+
+   DA THU hai cach truoc, deu bo:
+     - aspect-ratio 6/5 co dinh: dep o man 900px, nhung o man 780px thi dai ten
+       don vi chi lo ra 28px tren 107px, chu bi cat ngang.
+     - 6/5 kem mot media query rieng cho man duoi 880px: chay dung nhung thanh
+       hai duong doi nhau o mot nguong, va vuot qua nguong do thi khoi hinh nhay
+       mot cai.
+   Cong thuc vh nay lo ca hai viec bang mot dong, va tu no to ra tren man cao
+   thay vi dung yen o mot con so.
+
+   Tran 38rem de tren man rat cao khoi hinh khong phinh to hon be rong cot.
+   --------------------------------------------------------------------------- */
+@media (min-width: 1024px) {
+  .khung-canh-hero {
+    aspect-ratio: auto;
+    height: min(38rem, calc(100vh - 24rem));
+    min-height: 18rem;
   }
 }
 
-@keyframes o-tang-hien {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+/* Bon canh chong khit len nhau; moi canh sang len mot luot roi mo di.
+   Canh dau de opacity 1 san: truoc khi vong lap chay toi no, day la canh duoc
+   nhin thay - va cung la canh duy nhat con lai khi nguoi dung tat chuyen dong. */
+.canh-hero {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
 }
 
-@keyframes thap-troi {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-14px);
-  }
+/* Canh dau luon nhin thay duoc KE CA khi khong co hieu ung nao chay.
+   Thieu dong nay thi nguoi dat may o che do tat chuyen dong se thay mot o
+   TRONG TRON - bon canh deu opacity 0 va khong co gi bat chung sang len.
+
+   Luat nay chi dung khi bon canh la NHUNG DUA CON DUY NHAT cua
+   .khung-canh-hero. Chen them bat ky the nao vao truoc chung la canh dau khong
+   con la con thu nhat nua, va canh thu tu tuot khoi danh sach buoc tre ben
+   duoi. Da dinh dung loi do mot lan. */
+.canh-hero:first-child {
+  opacity: 1;
 }
 
-/* Toan bo chuyen dong nam trong khoi nay.
-   Dat dieu kien la "no-preference" chu khong phai chan rieng "reduce": may nao
-   khong noi duoc y muon cua nguoi dung thi mac dinh la ĐỨNG YÊN, khong phai
-   chay roi cho nguoi ta tat. Luc do cac the van o dung vi tri cuoi vi .tang o
-   tren da ta san transform. */
+/* ===========================================================================
+   Dieu kien la "no-preference" chu khong phai chan rieng "reduce": may nao
+   khong noi duoc y muon cua nguoi dung thi mac dinh la DUNG YEN. Mot khung
+   hinh tu doi mai khong tat duoc la thu gay kho chiu that voi nguoi nhay cam
+   voi chuyen dong.
+   =========================================================================== */
 @media (prefers-reduced-motion: no-preference) {
-  .tang {
-    /* backwards chu khong phai forwards: het hieu ung thi the tra ve chinh
-       transform cua .tang - trung y het khung hinh cuoi, nen khong giat. Va
-       nho tra ve nhu vay, :hover ben duoi moi gianh lai duoc quyen dieu khien;
-       neu de forwards thi hieu ung se giu transform mai mai va ro chuot khong
-       con tac dung gi. */
-    animation: thap-xep-tang 0.75s cubic-bezier(0.22, 1, 0.36, 1) backwards;
-    animation-delay: var(--tre);
-    transition:
-      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 0.25s ease-out,
-      border-color 0.25s ease-out;
+  /* NHIP KHONG DEU: canh dau (vong quy dao) o lai 5 giay, ba canh sau moi canh
+     3 giay. Tong mot vong = 5 + 3 + 3 + 3 = 14 giay.
+     Vi khong deu nen phai co HAI bo keyframes: mot canh o lai 5 giay va mot
+     canh o lai 3 giay khong dung chung duoc mot bo moc phan tram, du cung chay
+     tren vong 14 giay.
+
+     Buoc tre am 0,7 giay - dung bang doan mo dan o dau keyframes (5% cua 14s).
+     Khong co no thi ngay giay thu 0, canh dau dang o moc opacity 0 va dang mo
+     dan len: nguoi vua mo trang thay mot o TRONG TRON gan mot giay, dung o cho
+     anh chinh. Day ca lich trinh nhanh 0,7 giay thi canh dau da ro san tu khung
+     hinh dau tien.
+
+     CHI hoa hinh, khong them chuyen dong nao khac giua cac canh. Da thu cho huy
+     hieu, khoi hinh va the noi truot len lech nhau cho giong ban mau - chu du an
+     xem roi va bao xau, bo di. */
+  .canh-hero {
+    animation: doi-canh-hero 14s ease-in-out infinite;
+    animation-delay: -0.7s;
   }
 
-  /* Ro chuot hoac di ban phim vao thap: cac tang gian ra 1.45 lan, thay ro
-     day la mot chong nhieu lop chu khong phai mot khoi dac. Ke ca
-     :focus-within vi nguoi dung ban phim cung can thay khe ho de biet minh
-     dang o tang nao. */
-  .thap:hover .tang,
-  .thap:focus-within .tang {
-    --gian: 1.45;
+  /* Canh dau dung bo keyframes rieng: no o lai lau hon ba canh kia. */
+  .canh-hero:first-child {
+    animation-name: doi-canh-hero-dai;
   }
 
-  .thap-troi {
-    animation: thap-troi 7s ease-in-out infinite;
+  /* Moc bat dau cua tung canh: 5s, 8s, 11s - deu tru di 0,7 giay noi tren.
+     Doi do dai canh nao thi phai sua BA cho: cac buoc tre duoi day, do dai vong
+     lap o tren, va cac moc phan tram trong keyframes. */
+  .canh-hero:nth-child(2) {
+    animation-delay: 4.3s;
+  }
+  .canh-hero:nth-child(3) {
+    animation-delay: 7.3s;
+  }
+  .canh-hero:nth-child(4) {
+    animation-delay: 10.3s;
+  }
+}
+
+/* Hai bo keyframes duoi day cung chay tren vong 14 giay, chi khac doan giu ro.
+   0,7 giay hoa hinh o moi dau = 5% cua 14s.
+   ---------------------------------------------------------------------------
+   LOI DA SUA - loe trang o giua moi lan chuyen canh:
+   Ban dau canh dang hien mo dan tu truoc khi canh ke tiep bat dau, tuc la co
+   mot quang KHONG canh nao du ro, va nen trang lo ra - nhin nhu khung hinh
+   nhap nhay.
+   Nay canh moi hien len DUNG luc canh cu mo di, hai duong doi nhau nen tong do
+   phu luon gan nhu day. Muon giu dieu do khi doi nhip: moc bat dau mo di cua
+   canh nay phai roi dung vao moc 0% cua canh ke tiep. */
+
+/* Canh dau: ro tu 5% (0,7s) den 35,71% (5s), mo di het o 40,71% (5,7s). */
+@keyframes doi-canh-hero-dai {
+  0% {
+    opacity: 0;
+  }
+  5%,
+  35.71% {
+    opacity: 1;
+  }
+  40.71%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Ba canh sau: ro tu 5% (0,7s) den 21,43% (3s), mo di het o 26,43% (3,7s). */
+@keyframes doi-canh-hero {
+  0% {
+    opacity: 0;
+  }
+  5%,
+  21.43% {
+    opacity: 1;
+  }
+  26.43%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ===========================================================================
+   Vong quy dao o canh dau cua phan mo dau trang chu
+   ---------------------------------------------------------------------------
+   Bon the quay quanh tam nhu hanh tinh quanh mat troi. Dung ba lop long nhau,
+   moi lop mot viec - gop lai la hong:
+
+     .quy-dao-tay   o vuong phu kin khung, quay quanh tam cua chinh no
+     .quy-dao-neo   ghim the len vanh, o vi tri 12 gio cua canh tay
+     .quy-dao-the   quay NGUOC lai dung bang canh tay
+
+   Lop trong cung moi nghe thua nhung bo di la hong ngay: canh tay quay keo theo
+   ca the, nen khi the di qua nua duoi vong tron thi chu tren no LAT NGUOC DAU.
+   Quay nguoc lai dung bang goc thi the luon dung thang, giong mat trang luon
+   huong mot mat ve trai dat.
+
+   Ba tri so --goc / --ban-kinh / --chu-ky dat trong JSX (QUY_DAO), khong dat o
+   day: bien CSS truyen xuong con, nen ca ba lop deu doc duoc cung bo gia tri ma
+   chi phai viet mot lan tren the ngoai cung.
+   =========================================================================== */
+
+.quy-dao-tay {
+  position: absolute;
+  inset: 0;
+  /* Goc xuat phat. Van phai dat KE CA khi khong co hieu ung nao chay: nguoi tat
+     chuyen dong van can bon the nam dung bon phia chu khong chong het len nhau
+     o vi tri 12 gio. */
+  transform: rotate(var(--goc));
+}
+
+/* top tinh tu tam ra: 50% la tam, tru di ban kinh thi len dung vanh can bam. */
+.quy-dao-neo {
+  position: absolute;
+  top: calc(50% - var(--ban-kinh));
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.quy-dao-the {
+  display: inline-flex;
+  transform: rotate(calc(-1 * var(--goc)));
+}
+
+.vanh-sang,
+.cham-quay {
+  /* Mac dinh cua SVG lay goc trai tren cua ca the <svg> lam tam quay, khong
+     phai tam hinh. Hai dong nay keo tam quay ve giua khung nhin - thieu chung
+     thi cung sang va ba cham van quay, nhung quay quanh mot diem nam ngoai
+     vong tron va bay han ra khoi khung. */
+  transform-box: view-box;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .quy-dao-tay {
+    animation: quy-dao-quay var(--chu-ky) linear infinite;
   }
 
-  /* Dung troi khi co nguoi dinh bam. Cac tang gio la nut bam, ma bam vao mot
-     cai dich dang chay cham cham la kho - nhat la tren dien thoai. */
-  .thap-troi:hover,
-  .thap-troi:focus-within {
-    animation-play-state: paused;
+  .quy-dao-the {
+    /* CUNG chu ky voi canh tay - phai bang dung, lech mot chut la the tu xoay
+       cham cham suot ca vong. */
+    animation: quy-dao-dung-thang var(--chu-ky) linear infinite;
   }
 
-  /* Doi tang thi o noi dung ben duoi thay chu. Khong co hieu ung nay thi chu
-     nhay cai mot, mat khong kip nhan ra la no vua doi. JSX doi key theo tang
-     dang chon nen hieu ung chay lai moi lan bam. */
-  .o-tang {
-    animation: o-tang-hien 0.3s ease-out;
+  /* Hai chuyen dong nen. Cham hon han bon the va nguoc chieu nhau, de mat
+     nhan ra chieu sau chu khong thay tat ca troi cung mot khoi. */
+  .vanh-sang {
+    animation: quy-dao-quay-nguoc 70s linear infinite;
+  }
+  .cham-quay {
+    animation: quy-dao-quay-tron 90s linear infinite;
+  }
+}
+
+/* Ca hai bo keyframes deu bat dau tu chinh --goc cua the chu khong tu 0: nho
+   vay luc hieu ung khoi chay khong co cu giat dua the ve mot cho khac. */
+@keyframes quy-dao-quay {
+  from {
+    transform: rotate(var(--goc));
+  }
+  to {
+    transform: rotate(calc(var(--goc) + 360deg));
+  }
+}
+
+@keyframes quy-dao-dung-thang {
+  from {
+    transform: rotate(calc(-1 * var(--goc)));
+  }
+  to {
+    transform: rotate(calc(-1 * var(--goc) - 360deg));
+  }
+}
+
+@keyframes quy-dao-quay-tron {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes quy-dao-quay-nguoc {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
   }
 }

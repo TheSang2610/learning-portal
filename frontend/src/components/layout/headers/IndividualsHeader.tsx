@@ -215,7 +215,7 @@ export default function IndividualsHeader() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="What do you want to learn?"
+              placeholder="Bạn muốn học gì?"
               className="w-full rounded-full border border-gray-300 py-3 pr-14 pl-5 text-sm outline-none focus:border-blue-600"
             />
             <button

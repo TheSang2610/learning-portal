@@ -1,9 +1,9 @@
 /**
- * Bang ke 129 endpoint cua API, viet o dang gon roi banh ra thanh OpenAPI.
+ * Bang ke 130 endpoint cua API, viet o dang gon roi banh ra thanh OpenAPI.
  *
  * Vi sao khong dung swagger-jsdoc: no bat rai chu thich JSDoc vao 15 file
  * route, moi endpoint mot khoi YAML muoi may dong. File route dang doc duoc,
- * nhet vao la thanh 1500 dong chu thich lan giua 129 dong ma that.
+ * nhet vao la thanh 1500 dong chu thich lan giua 130 dong ma that.
  *
  * O day moi endpoint la MOT dong. Them route moi thi them mot dong, va ham
  * banhRa() lo phan lap lai: doi ":id" thanh "{id}", khai tham so duong dan,
@@ -37,14 +37,27 @@ const BANG = [
   ["post", "/api/users", "", "Đăng ký tài khoản", {
     tag: "Người dùng",
     than: { name: "string", email: "string", password: "string" },
+    ghiChu:
+      "Trả 202 và KHÔNG cấp phiên: máy chủ gửi một email xác minh, tài khoản chỉ hoạt động sau khi bấm liên kết trong thư. "
+      + "Phản hồi giống hệt nhau dù địa chỉ đã có tài khoản hay chưa — cố ý, để endpoint này không trả lời được câu hỏi "
+      + "\"email nào đã đăng ký\". Chỉ khi máy chủ chưa cấu hình hòm thư (MAIL_USER/MAIL_APP_PASSWORD) nó mới quay về "
+      + "hành vi cũ: tạo tài khoản và cấp phiên ngay.",
+  }],
+  ["post", "/api/users/verify-email", "", "Kích hoạt tài khoản bằng token trong email", {
+    tag: "Người dùng",
+    than: { token: "string" },
     tra: "NguoiDung",
+    ghiChu:
+      "Token là 32 byte ngẫu nhiên, cơ sở dữ liệu chỉ giữ bản băm SHA-256 của nó. Hạn 24 giờ và chỉ dùng được một lần. "
+      + "Đúng token thì đánh dấu đã xác minh rồi cấp phiên luôn.",
   }],
   ["post", "/api/users/login", "", "Đăng nhập", {
     tag: "Người dùng",
     than: { email: "string", password: "string" },
     tra: "NguoiDung",
     ghiChu:
-      "Đặt token vào cookie httpOnly. Trình duyệt tự gửi kèm ở các lần gọi sau, JavaScript không đọc được. Có giới hạn số lần thử.",
+      "Đặt token vào cookie httpOnly. Trình duyệt tự gửi kèm ở các lần gọi sau, JavaScript không đọc được. Có giới hạn số lần thử. "
+      + "Tài khoản đăng ký bằng mật khẩu mà chưa bấm liên kết xác minh sẽ nhận 403 kèm cờ canXacMinh.",
   }],
   ["post", "/api/users/logout", "", "Đăng xuất", { tag: "Người dùng", ghiChu: "Xóa cookie phiên." }],
   ["post", "/api/users/google", "", "Đăng nhập bằng Google", {

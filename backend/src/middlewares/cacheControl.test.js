@@ -6,7 +6,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 
-const { datCache } = require('./cacheControl');
+const { datCache, khongLuuCache } = require('./cacheControl');
 
 // res gia: ghi lai nhung header duoc dat.
 const gia = (method) => {
@@ -66,4 +66,31 @@ test('luon goi next() du phuong thuc la gi', () => {
         datCache(60)(m.req, m.res, m.next);
         assert.ok(m.xong(), `${method} phai goi next()`);
     }
+});
+
+// ---------------------------------------------------------------------------
+// khongLuuCache - dung cho cac duong tra du lieu rieng cua tung nguoi
+// ---------------------------------------------------------------------------
+
+test('khongLuuCache: co no-store', () => {
+    const m = gia('POST');
+    khongLuuCache(m.req, m.res, m.next);
+    assert.match(m.headers['Cache-Control'], /(^|, )no-store(,|$)/);
+});
+
+// Dat cho MOI phuong thuc, khong chi GET: phan hoi cua POST /login vua mang
+// email va vai tro cua nguoi dung vua kem Set-Cookie.
+test('khongLuuCache: dat header voi moi phuong thuc', () => {
+    for (const method of ['GET', 'POST', 'PUT', 'DELETE']) {
+        const m = gia(method);
+        khongLuuCache(m.req, m.res, m.next);
+        assert.ok(m.headers['Cache-Control'], `${method} phai duoc dat Cache-Control`);
+        assert.ok(m.xong(), `${method} phai goi next()`);
+    }
+});
+
+test('khongLuuCache: co Pragma cho bo dem cu chi hieu HTTP/1.0', () => {
+    const m = gia('GET');
+    khongLuuCache(m.req, m.res, m.next);
+    assert.strictEqual(m.headers.Pragma, 'no-cache');
 });

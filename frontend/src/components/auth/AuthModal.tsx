@@ -5,15 +5,19 @@ import { useState, ChangeEvent, FormEvent } from "react";
 import { getErrorMessage } from "@/src/services/apiHelper";
 import Image from "next/image";
 import { loginUser, registerUser } from "@/src/services/api";
-import { DAI_MAT_KHAU_TOI_THIEU } from "@/src/services/quyDinh";
+import {
+  DAI_EMAIL_TOI_DA,
+  DAI_MAT_KHAU_TOI_THIEU,
+  DAI_TEN_TOI_DA,
+  emailHopLe,
+  kiemTen,
+  loiMatKhauMoi,
+} from "@/src/services/quyDinh";
 
 interface AuthModalProps {
   open: boolean;
   onClose: () => void;
 }
-
-// Kiem tra dinh dang co ban, khop voi validate phia backend
-const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
 
 /**
  * Vao thang khu vuc cua nguoi vua dang nhap.
@@ -48,6 +52,14 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // Hien cau nhac "neu ban dang ky bang Google..." sau khi dang nhap that bai.
+  // May chu tra cung mot cau cho moi truong hop that bai (co y - xem
+  // backend/src/controllers/userController.js), nen phia giao dien phai tu
+  // nhac de nguoi dung Google khong ket o day.
+  const [goiYGoogle, setGoiYGoogle] = useState(false);
+  // Cau bao thanh cong nhung KHONG dong hop lai: sau khi dang ky, nguoi dung
+  // chua dang nhap ma phai mo hom thu, nen ho can doc duoc cau nay.
+  const [thongBao, setThongBao] = useState("");
 
   const [loginData, setLoginData] = useState({
     email: "",
@@ -79,6 +91,8 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setThongBao("");
+    setGoiYGoogle(false);
 
     try {
       // ✅ Validate trước khi gửi
@@ -90,7 +104,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
         return;
       }
 
-      if (!isValidEmail(email)) {
+      if (!emailHopLe(email)) {
         setError("Email không hợp lệ");
         setLoading(false);
         return;
@@ -109,6 +123,12 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
       vaoThang(data?.role);
     } catch (error) {
       setError(getErrorMessage(error, "Đăng nhập thất bại"));
+      // May chu CO Y tra cung mot cau cho ca ba truong hop: email khong ton
+      // tai, sai mat khau, va tai khoan chi dang nhap bang Google. Tra khac
+      // nhau la bien duong dang nhap thanh cai may tra loi "email nay co trong
+      // he thong khong". Nhac nut Google o day de nguoi dung Google khong bi
+      // ket - cau nhac nay hien cho MOI nguoi nen no khong to them gi.
+      setGoiYGoogle(true);
     } finally {
       setLoading(false);
     }
@@ -118,6 +138,8 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setThongBao("");
+    setGoiYGoogle(false);
 
     try {
       // ✅ Validate trước khi gửi
@@ -130,19 +152,48 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
         return;
       }
 
-      if (!isValidEmail(email)) {
+      if (!emailHopLe(email)) {
         setError("Email không hợp lệ");
         setLoading(false);
         return;
       }
 
-      if (registerData.password.length < DAI_MAT_KHAU_TOI_THIEU) {
-        setError(`Mật khẩu phải có ít nhất ${DAI_MAT_KHAU_TOI_THIEU} ký tự`);
+      const loiTen = kiemTen(name);
+      if (loiTen) {
+        setError(loiTen);
+        setLoading(false);
+        return;
+      }
+
+      // Dung chung ham voi backend (xem services/quyDinh.ts). Truoc day cho
+      // nay chi kiem do dai TOI THIEU, khong kiem toi da - ma bcrypt bo lang
+      // moi byte tu 73 tro di, nen nguoi dung dat mat khau that dai roi tin
+      // rang ca chuoi deu duoc tinh.
+      const loiMk = loiMatKhauMoi(registerData.password);
+      if (loiMk) {
+        setError(loiMk);
         setLoading(false);
         return;
       }
 
       const data = await registerUser({ ...registerData, name, email });
+
+      // May chu KHONG con dang nhap thang sau khi dang ky. No gui mot la thu
+      // xac minh roi tra ve 202 khong kem danh tinh nao - do la cach duy nhat
+      // de duong dang ky thoi tra loi duoc cau hoi "dia chi nay da co tai
+      // khoan chua". Xem backend/src/controllers/userController.js.
+      //
+      // Van giu nhanh cu ben duoi: khi may chu chua cau hinh hom thu (thuong
+      // la may dev), no tao tai khoan va dang nhap luon nhu truoc, tuc la co
+      // tra ve _id.
+      if (!data?._id) {
+        setThongBao(
+          data?.message ||
+            "Chúng tôi đã gửi một email tới địa chỉ này. Vui lòng mở thư để hoàn tất đăng ký.",
+        );
+        setRegisterData({ ...registerData, password: "" });
+        return;
+      }
 
       // Danh tinh giu trong RAM (xem src/hooks/nguoiDungLuu.ts).
       // datNguoiDung() da tu ban su kien "userInfoChanged".
@@ -249,6 +300,8 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
             onClick={() => {
               setIsLogin(true);
               setError("");
+              setThongBao("");
+              setGoiYGoogle(false);
             }}
             className={`flex-1 rounded-2xl py-2 text-sm font-semibold transition ${
               isLogin ? "bg-blue-600 text-white" : "text-slate-600 hover:text-slate-900"
@@ -262,6 +315,8 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
             onClick={() => {
               setIsLogin(false);
               setError("");
+              setThongBao("");
+              setGoiYGoogle(false);
             }}
             className={`flex-1 rounded-2xl py-2 text-sm font-semibold transition ${
               !isLogin ? "bg-blue-600 text-white" : "text-slate-600 hover:text-slate-900"
@@ -274,6 +329,17 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
         {error && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-600">
             {error}
+            {goiYGoogle && (
+              <p className="mt-1 text-slate-600">
+                Nếu bạn đã đăng ký bằng Google, hãy dùng nút “Tiếp tục với Google” ở trên.
+              </p>
+            )}
+          </div>
+        )}
+
+        {thongBao && (
+          <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-700">
+            {thongBao}
           </div>
         )}
 
@@ -306,6 +372,8 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               value={loginData.email}
               onChange={handleLoginChange}
               required
+              autoComplete="email"
+              maxLength={DAI_EMAIL_TOI_DA}
               className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
             />
             <input
@@ -315,6 +383,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               value={loginData.password}
               onChange={handleLoginChange}
               required
+              autoComplete="current-password"
               className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
             />
             <button
@@ -338,6 +407,8 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               value={registerData.name}
               onChange={handleRegisterChange}
               required
+              autoComplete="name"
+              maxLength={DAI_TEN_TOI_DA}
               className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
             />
             <input
@@ -347,15 +418,18 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               value={registerData.email}
               onChange={handleRegisterChange}
               required
+              autoComplete="email"
+              maxLength={DAI_EMAIL_TOI_DA}
               className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
             />
             <input
               type="password"
               name="password"
-              placeholder="Mật khẩu (tối thiểu 6 ký tự)"
+              placeholder={`Mật khẩu (tối thiểu ${DAI_MAT_KHAU_TOI_THIEU} ký tự)`}
               value={registerData.password}
               onChange={handleRegisterChange}
               required
+              autoComplete="new-password"
               minLength={DAI_MAT_KHAU_TOI_THIEU}
               className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
             />

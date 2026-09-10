@@ -52,9 +52,23 @@ const parseResponse = async (res: Response) => {
   return json;
 };
 
+// Dang ky co HAI hinh dang phan hoi, va noi goi phai phan biet duoc:
+//
+//   202 { message, canXacMinh }  binh thuong - may chu vua gui thu xac minh,
+//                                CHUA co phien dang nhap nao.
+//   201 { _id, name, ... }       chi khi may chu chua cau hinh hom thu (may
+//                                dev): tao tai khoan va dang nhap luon.
+//
+// Vi sao khong con dang nhap thang: xem registerUser trong
+// backend/src/controllers/userController.js.
+export interface RegisterResponse extends Partial<LoginResponse> {
+  message?: string;
+  canXacMinh?: boolean;
+}
+
 export const registerUser = async (
   userData: RegisterUserData,
-): Promise<LoginResponse> => {
+): Promise<RegisterResponse> => {
   let res = await fetch(API_URL, {
     method: "POST",
     headers: {
@@ -123,6 +137,35 @@ export const loginUser = async (userData: LoginUserData): Promise<LoginResponse>
     // theo nguoi dung. Dang nhap khong di qua apiRequest nen khong tu xoa - phai
     // xoa tay o day, neu khong nguoi vua dang nhap co the nhan lai du lieu cua
     // nguoi dung truoc do tren cung trinh duyet.
+    clearApiCache();
+  }
+
+  return data;
+};
+
+// Kich hoat tai khoan bang token trong email dang ky.
+//
+// May chu tra ve dung hinh dang cua dang nhap (kem cookie phien), vi bam duoc
+// vao lien ket trong hom thu la da chung minh so huu dia chi - bat go lai mat
+// khau mot lan nua chi lam phien chu khong them an toan.
+export const verifyEmail = async (token: string): Promise<LoginResponse> => {
+  const res = await fetch(`${API_URL}/verify-email`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    // Can thiet de trinh duyet NHAN cookie token may chu dat trong phan hoi.
+    credentials: "include",
+    body: JSON.stringify({ token }),
+  });
+
+  const data = await parseResponse(res);
+
+  if (data && data._id) {
+    datNguoiDung(data);
+    yeuCauNapLai();
+    // Cung ly do voi loginUser: bo dem GET khoa theo dia chi chu khong theo
+    // nguoi dung, khong xoa thi nguoi vua vao co the nhan du lieu cua nguoi truoc.
     clearApiCache();
   }
 

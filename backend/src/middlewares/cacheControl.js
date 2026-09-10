@@ -23,4 +23,21 @@ const datCache = (giay = 60) => (req, res, next) => {
     next();
 };
 
-module.exports = { datCache };
+// Nguoc lai voi datCache: cam luu, cho MOI duong tra ve du lieu rieng cua mot
+// nguoi hoac dat cookie phien.
+//
+// Phan hoi cua /login, /google va /profile mang ten, email, vai tro cua chinh
+// nguoi dang goi, va di kem Set-Cookie chua token. Khong noi ro "dung luu" thi
+// moi bo dem tren duong di - CDN, proxy cua co quan, bo dem cua trinh duyet -
+// deu duoc quyen tu quyet dinh, va mot ban sao con nam lai o do la du de nguoi
+// dung tiep theo tren cung may thay du lieu cua nguoi truoc.
+//
+// no-store la manh nhat: khong duoc ghi ra dia, khong duoc giu trong RAM.
+// Kem no-cache + max-age=0 cho cac bo dem cu chi hieu HTTP/1.0.
+const khongLuuCache = (req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, max-age=0, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    next();
+};
+
+module.exports = { datCache, khongLuuCache };

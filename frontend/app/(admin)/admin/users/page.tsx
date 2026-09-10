@@ -33,7 +33,7 @@ import type { User } from "@/src/services/userApi";
 import { useNguoiDungLuu } from "@/src/hooks/nguoiDungLuu";
 import AnhDaiDien from "@/src/components/ui/AnhDaiDien";
 import SafeImage from "@/src/components/ui/SafeImage";
-import { DAI_MAT_KHAU_TOI_THIEU } from "@/src/services/quyDinh";
+import { DAI_MAT_KHAU_TOI_THIEU, loiMatKhauMoi } from "@/src/services/quyDinh";
 
 // Truoc day cho nay khai lai mot ban AdminUser rieng, gan trung voi User cua
 // tang service nhung khai status la bat buoc. Dung chung mot kieu de khi backend
@@ -200,13 +200,15 @@ export default function AdminUsersPage() {
       setFormError("Tên và email là bắt buộc");
       return;
     }
-    if (!editingId && form.password.length < DAI_MAT_KHAU_TOI_THIEU) {
-      setFormError(`Mật khẩu phải có ít nhất ${DAI_MAT_KHAU_TOI_THIEU} ký tự`);
-      return;
-    }
-    if (editingId && form.password && form.password.length < DAI_MAT_KHAU_TOI_THIEU) {
-      setFormError(`Mật khẩu mới phải có ít nhất ${DAI_MAT_KHAU_TOI_THIEU} ký tự`);
-      return;
+    // Tao moi thi bat buoc co mat khau; sua thi de trong nghia la khong doi.
+    // Ca hai truong hop, khi CO mat khau thi phai qua dung bo quy tac ma backend
+    // dung (services/quyDinh.ts) - truoc day cho nay chi kiem do dai toi thieu.
+    if (!editingId || form.password) {
+      const loiMk = loiMatKhauMoi(form.password);
+      if (loiMk) {
+        setFormError(editingId ? loiMk.replace("Mật khẩu", "Mật khẩu mới") : loiMk);
+        return;
+      }
     }
 
     try {

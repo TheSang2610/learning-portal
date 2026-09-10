@@ -81,7 +81,7 @@ export default function GradeProfileGuide() {
               còn nhiều tính năng khác nữa.
             </p>
             {/* Du an nay khong co route /login rieng - dang nhap mo bang tham so
-                ?auth=login tren trang chu, giong nut Log In tren thanh dieu huong. */}
+                ?auth=login tren trang chu, giong nut Dang nhap tren thanh dieu huong. */}
             <Link
               href="/?auth=login"
               className="mt-3 inline-block rounded-lg bg-blue-600 px-5 py-2 text-sm font-bold text-white transition hover:bg-blue-700"

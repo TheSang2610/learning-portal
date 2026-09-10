@@ -231,7 +231,7 @@ backend/
     │   ├── Post · Document · Review · Faq · Banner/
     │   └── categoryModel · providerModel/
     │
-    ├── routes/                      # 16 tệp, 135 endpoint
+    ├── routes/                      # 16 tệp, 136 endpoint
     │   ├── userRoutes · adminRoutes/
     │   ├── courseRoutes · lessonRoutes · enrollmentRoutes/
     │   ├── quizRoutes · certificateRoutes · reviewRoutes/
@@ -290,10 +290,12 @@ Biến môi trường trong `backend/.env`:
 | --- | --- | --- |
 | `MONGO_URI` | có | Chuỗi kết nối MongoDB |
 | `JWT_SECRET` | có | Khoá ký token phiên |
-| `FRONTEND_ORIGINS` | có | Origin được phép gọi CORS, cách nhau dấu phẩy |
+| `FRONTEND_ORIGINS` | có | Origin được phép gọi CORS, cách nhau dấu phẩy. Cái **đầu tiên** cũng là gốc để ghép link trong thư xác minh |
+| `FRONTEND_URL` | không | Ghi đè gốc dùng cho link xác minh, khi nó khác cái đầu của `FRONTEND_ORIGINS` |
 | `CLOUDINARY_URL` | có | Dạng gộp `cloudinary://key:secret@cloud` |
 | `GOOGLE_CLIENT_ID` | không | Bật đăng nhập Google |
-| `MAIL_USER` · `MAIL_APP_PASSWORD` · `MAIL_ADMIN` | không | Mail báo đơn chuyển khoản |
+| `MAIL_USER` · `MAIL_APP_PASSWORD` | **có trên bản chạy thật** | Mail báo đơn chuyển khoản, **và thư xác minh khi đăng ký**. Thiếu thì đăng ký quay về hành vi cũ và lộ email nào đã tồn tại |
+| `MAIL_ADMIN` | không | Địa chỉ nhận thông báo quản trị. Trống thì gửi về `MAIL_USER` |
 | `SO_TAI_KHOAN` · `TEN_TAI_KHOAN` · `NGAN_HANG` | không | Hiển thị ở màn hình chuyển khoản |
 
 Kiểm tra kết nối bên ngoài:
@@ -302,6 +304,8 @@ Kiểm tra kết nối bên ngoài:
 npm run check:db          # thử kết nối MongoDB
 npm run check:cloudinary  # thử tải ảnh lên
 npm run check:mail        # gửi thử một mail thật
+npm run check:gioihan     # kiểm bộ đếm chống dò mật khẩu trên CSDL thật
+npm run check:dangky      # kiểm đầu-cuối luồng đăng ký có xác minh email
 ```
 
 ### 3. Chạy Frontend
@@ -321,14 +325,14 @@ giá trị trên Vercel xong phải deploy lại mới có tác dụng.
 
 ## API Endpoints
 
-**135 endpoint / 16 nhóm.** Tài liệu đầy đủ, bấm thử được:
+**136 endpoint / 16 nhóm.** Tài liệu đầy đủ, bấm thử được:
 [Swagger UI](https://thesang2610.github.io/learning-portal/)
 
 | Nhóm | Số lượng | Ví dụ |
 | --- | --- | --- |
 | Quản trị | 23 | `GET /api/admin/dashboard/statistics` |
 | Khoá học | 14 | `PUT /api/courses/:id/publish` |
-| Người dùng | 12 | `POST /api/users/login` · `POST /api/users/google` |
+| Người dùng | 13 | `POST /api/users/login` · `POST /api/users/verify-email` |
 | Trắc nghiệm | 11 | `POST /api/quizzes/:id/submit` |
 | Ghi danh | 10 | `PUT /api/enrollments/:id/progress` |
 | Chứng chỉ | 9 | `GET /api/certificates/verify/:code` |

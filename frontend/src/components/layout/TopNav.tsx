@@ -8,7 +8,10 @@ export default function TopNav() {
 
   const menus = [
     {
-      title: "Individuals",
+      // Truoc day ghi "Individuals" - chu tieng Anh duy nhat nam giua ba muc
+      // tieng Viet, va cung khong dung nghia: duong dan la "/" nen day la tab
+      // trang chu chu khong phai muc phan loai nguoi dung.
+      title: "Trang chủ",
       href: "/",
     },
     {

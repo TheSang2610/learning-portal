@@ -1,297 +1,542 @@
-"use client";
-
+import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { GraduationCap, FileText, PenLine, BadgeCheck } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import type { CSSProperties } from "react";
 
 /**
  * Phan mo dau trang chu.
  *
- * Truoc day day la bang bang khuyen mai do admin dat, tu doi anh sau vai
- * giay. Bo di vi ba ly do:
+ * LICH SU DOI, ghi lai de nguoi doc sau khong lam nguoc lai:
  *
- *   1. Anh banner do admin tai len, moi tam vai tram KB, nam ngay cho de
- *      nhat trang - do la thu Google do khi cham diem toc do.
- *   2. Noi dung kieu "Giam 30% den het thang" phai co nguoi nho vao sua,
- *      khong sua thi thang sau van con nam do va thanh loi hua sai.
- *   3. No khong noi trang nay LA GI. Nguoi la vao lan dau doc xong van
- *      khong biet day la noi ban khoa hoc hay noi hoc mien phi.
+ * 1. Ban dau day la bang bang khuyen mai do admin dat, tu doi anh sau vai
+ *    giay. Bo di vi anh banner nam ngay cho de nhat trang (Google do toc do
+ *    dung o do), vi noi dung kieu "Giam 30% den het thang" khong ai nho sua
+ *    nen thang sau thanh loi hua sai, va vi no khong noi trang nay LA GI.
  *
- * Thay bang mot cau noi ro san pham, va mot vat the 3D dung bang CSS - do
- * day cua thap chinh la so bai trong mot khoa.
+ * 2. Sau do la mot cai thap 5 tang dung bang CSS, bam duoc tung tang. Bo not,
+ *    va lan nay KHONG phai vi no sai - no chay tot. Chu du an chon bo cuc
+ *    khac: chu ben trai, hinh san pham ben phai. Ma nguon cua thap con nguyen
+ *    trong lich su git neu can lay lai.
+ *
+ * 3. Roi mot khung may tinh dung yen, chi rieng anh ben trong doi. Sai y ban
+ *    mau: o ban mau moi canh la mot tam hoan chinh khac nhau.
+ *
+ * 4. DA THU dung dung the <video> cua ban mau, tai ca doan phim cua ho ve. BO,
+ *    vi mot ly do khong sua duoc bang code: toan bo chu trong doan phim nam
+ *    trong pixel. No mang ten LadiPage / LadiWork / Automation, mot the bao
+ *    "LadiPage - Ban co mot thong bao moi", va trong man hinh laptop la mot
+ *    trang ban hang nha hang. Cat bo dai chu o tren roi de chu minh len cung
+ *    khong cuu duoc, vi ten do con nam giua hinh minh hoa. File video da xoa.
+ *
+ * 5. Nay quay ve bon canh hoa hinh vao nhau: MOI DONG CHU deu nam trong HTML
+ *    nen sua duoc bat cu luc nao, va ruot man hinh la anh chup that cua chinh
+ *    du an nay.
+ *
+ * Phan chu ben trai giu y nguyen qua ca nam lan - no khong lien quan gi den
+ * viec doi hinh minh hoa.
  */
 
-// So tang = so bai hoc cua mot khoa tieu bieu. Tang tren cung la chung nhan.
-//
-// Bon cai the trang truoc day bay lo lung quanh thap ("Video bài giảng",
-// "Trắc nghiệm chấm ngay", "Tiến độ tự lưu", "Chứng nhận có mã") gio nam han
-// vao trong tang cua no. Chung von la bon dac diem cua bon buoc hoc, ma lai
-// treo o bon goc man hinh khong dinh gi den tang nao - doc xong khong biet
-// cai nao thuoc ve cai nao. Dua vao trong roi thi bam tang nao ra dac diem
-// tang do, va cung khong con bon mon do noi lo lung che mat thap nua.
-const TANG = [
+/**
+ * Bon canh thay nhau hien ra, moi canh la mot tam doc lap.
+ *
+ * Ban mau dat o cho nay mot the <video> tu chay lap - xem muc 4 o tren de biet
+ * vi sao khong di theo. Bon canh nay cho ra dung cai can co (hinh doi lien
+ * tuc) voi tong dung luong 812 KB, nho hon mot doan phim ngan rat nhieu.
+ *
+ * `anh` de trong = canh do khong co may tinh, ve vong quy dao thay vao - dung
+ * nhu tam thu ba trong ban mau.
+ *
+ * Ba tam anh deu chup o CUNG kich thuoc 1240x640. Lech kich thuoc la luc
+ * chuyen canh anh bi nhay mot cai, rat lo.
+ *
+ * THEM/BOT canh thi phai sua ba cho trong globals.css: do dai vong lap, buoc
+ * tre cua tung canh, va cac moc phan tram trong keyframes.
+ */
+type Canh = {
+  mau: string;
+  Icon: LucideIcon;
+  nhan: string;
+  dan: string;
+  tua: string;
+  anh?: { src: string; alt: string };
+  the?: { tieu: string; phu: string };
+};
+
+const CANH: Canh[] = [
+  // Canh quy dao dat DAU TIEN theo y chu du an. No thuan CSS/SVG, khong tai
+  // anh nao - nen canh dau tien nguoi dung thay cung la canh nhe nhat.
   {
-    ten: "Bài 1 · Nhập môn",
-    a: "#2A0F9E",
-    b: "#4F2BFF",
-    bieu: "▶",
-    nen: "#EFEAFF",
-    muc: "#4F2BFF",
-    nhan: "Video bài giảng",
-    mo: "Bài giảng quay sẵn, tua tới tua lui bao nhiêu lần cũng được.",
+    mau: "from-[#ffc63f] to-pha shadow-[0_10px_20px_-10px_rgb(255_176_0/.9)]",
+    Icon: BadgeCheck,
+    nhan: "Chứng nhận",
+    dan: "Bốn phần nối vào một chỗ",
+    tua: "Gọn trong một nền tảng",
   },
   {
-    ten: "Bài 2 · Thực hành",
-    a: "#4F2BFF",
-    b: "#8B6BFF",
-    bieu: "⌁",
-    nen: "#FFE6F1",
-    muc: "#FF3E9D",
-    nhan: "Tiến độ tự lưu",
-    mo: "Làm tới đâu lưu tới đó. Đóng máy giữa chừng, mở lại vẫn đúng chỗ cũ.",
+    mau: "from-tim-2 to-tim shadow-[0_10px_20px_-10px_rgb(79_43_255/.9)]",
+    Icon: GraduationCap,
+    nhan: "Khóa học",
+    // KHONG dat lai cau "Di len tung tang, khong nhay coc" o day: no la dung
+    // chu cua the <h1> ngay ben trai, doc len thanh mot cau lap lai.
+    dan: "Xem bài giảng rồi làm bài tập",
+    tua: "Khóa học có lộ trình",
+    anh: {
+      src: "/anh/man-khoa-hoc.png",
+      alt: "Danh sách khóa học kèm đơn vị đào tạo, số bài và học phí",
+    },
+    // Ban truoc ghi "Bai mo dan / Qua bai truoc moi len bai sau" - sai het,
+    // xem ghi chu o the <h1>. Doi sang thu he thong lam that: Enrollment co
+    // mang lessonProgress, moi bai mang trang thai not_started / in_progress /
+    // completed.
+    the: { tieu: "Nhớ tiến độ", phu: "Bài nào xong hệ thống ghi lại" },
   },
   {
-    ten: "Bài 3 · Dự án nhỏ",
-    a: "#7B4BFF",
-    b: "#B98BFF",
-    bieu: "◆",
-    nen: "#F1EAFF",
-    muc: "#7B4BFF",
-    nhan: "Làm thật một lần",
-    mo: "Gộp phần đã học ở hai bài trước thành một bài làm hoàn chỉnh.",
+    mau: "from-ngoc to-[#009d93] shadow-[0_10px_20px_-10px_rgb(0_191_179/.9)]",
+    Icon: FileText,
+    nhan: "Tài liệu",
+    dan: "Người học góp, người học dùng",
+    tua: "Kho tài liệu chia sẻ",
+    anh: {
+      src: "/anh/man-tai-lieu.png",
+      alt: "Trang tài liệu do người học chia sẻ, kèm định dạng và lượt tải",
+    },
+    the: { tieu: "Tải về miễn phí", phu: "PDF, slide, đề ôn tập" },
   },
   {
-    ten: "Bài 4 · Kiểm tra",
-    a: "#009A90",
-    b: "#00BFB3",
-    bieu: "✓",
-    nen: "#D6F7F4",
-    muc: "#00857B",
-    nhan: "Trắc nghiệm chấm ngay",
-    mo: "Nộp xong biết điểm luôn, không phải chờ ai chấm.",
-  },
-  {
-    ten: "Chứng nhận",
-    a: "#E89400",
-    b: "#FFC93C",
-    bieu: "★",
-    nen: "#FFF1D4",
-    muc: "#B37400",
-    nhan: "Chứng nhận có mã",
-    mo: "Mỗi chứng nhận mang một mã riêng, ai cũng tra lại được là thật.",
+    mau: "from-[#ff6fb5] to-hong shadow-[0_10px_20px_-10px_rgb(255_62_157/.9)]",
+    Icon: PenLine,
+    nhan: "Bài viết",
+    dan: "Kinh nghiệm của người đi trước",
+    tua: "Học cách tự học",
+    anh: {
+      src: "/anh/man-bai-viet.png",
+      alt: "Trang bài viết chia sẻ kinh nghiệm tự học, lọc theo chủ đề",
+    },
+    the: { tieu: "Lọc theo chủ đề", phu: "Đọc đúng thứ đang cần" },
   },
 ];
 
-interface Props {
-  /** So khoa dang mo, do trang chu dem duoc tu API. */
-  soKhoa?: number;
-  /** So khoa gia 0. */
-  soMienPhi?: number;
+// Bon the quay quanh tam o canh dau, moi the la mot "hanh tinh".
+//
+// HAI VANH, MOI VANH HAI THE, DAT DOI DIEN NHAU (0/180 va 90/270 do). Cach chia
+// nay khong phai cho dep ma de KHONG BAO GIO chong nhau, va do la rang buoc hinh
+// hoc chu khong phai may man:
+//
+//   - Cung mot vanh: hai the cung chu ky nen goc lech giu nguyen 180 do mai mai.
+//   - Khac vanh: hai vanh cach nhau 17% cua canh o vuong = 65px o kich thuoc
+//     that, trong khi the chi cao ~52px. Luc hai the thang hang goc nhau - truong
+//     hop xau nhat - chung van cach 13px.
+//
+// Da THU bon vanh moi vanh mot the cho giong he mat troi hon. Khong duoc: ban
+// kinh dung duoc chi tu 16% (mep dia tam) toi 50% (mep o), chia bon thanh moi
+// vanh cach nhau 8,5% = 33px, nho hon chieu cao mot the - hai the o vanh ke nhau
+// se long vao nhau moi khi thang hang.
+//
+// Vanh trong quay nhanh hon vanh ngoai, dung nhu he mat troi that.
+const QUY_DAO = [
+  {
+    nhan: "Khóa học",
+    Icon: GraduationCap,
+    mau: "from-tim-2 to-tim",
+    goc: "0deg",
+    banKinh: "46%",
+    chuKy: "44s",
+  },
+  {
+    nhan: "Bài viết",
+    Icon: PenLine,
+    mau: "from-[#ff6fb5] to-hong",
+    goc: "180deg",
+    banKinh: "46%",
+    chuKy: "44s",
+  },
+  {
+    nhan: "Chứng nhận",
+    Icon: BadgeCheck,
+    mau: "from-[#ffc63f] to-pha",
+    goc: "90deg",
+    banKinh: "29%",
+    chuKy: "30s",
+  },
+  {
+    nhan: "Tài liệu",
+    Icon: FileText,
+    mau: "from-ngoc to-[#009d93]",
+    goc: "270deg",
+    banKinh: "29%",
+    chuKy: "30s",
+  },
+];
+
+interface HeroSectionProps {
+  soKhoa: number;
+  soMienPhi: number;
 }
 
-export default function HeroSection({ soKhoa, soMienPhi }: Props) {
-  // Mac dinh chon tang 1: trang luc dung yen phai dang o dau lo trinh, dung
-  // nhu cau "đi lên từng tầng" - khong phai dang o dich.
-  const [dangChon, setDangChon] = useState(0);
-  const nut = useRef<(HTMLButtonElement | null)[]>([]);
-  const tang = TANG[dangChon];
-
-  // Mui ten LEN di len tang tren, tuc la tang chi so LON hon: chi so 0 la
-  // tang day thap. Neu lam nguoc lai thi ban phim chay nguoc voi cai mat
-  // dang nhin.
-  function bamPhim(e: React.KeyboardEvent<HTMLDivElement>) {
-    let toi = -1;
-    if (e.key === "ArrowUp") toi = (dangChon + 1) % TANG.length;
-    else if (e.key === "ArrowDown") toi = (dangChon - 1 + TANG.length) % TANG.length;
-    else if (e.key === "Home") toi = 0;
-    else if (e.key === "End") toi = TANG.length - 1;
-    if (toi < 0) return;
-
-    e.preventDefault();
-    setDangChon(toi);
-    nut.current[toi]?.focus();
-  }
-
+export default function HeroSection({ soKhoa, soMienPhi }: HeroSectionProps) {
+  // KHOANG TREN/DUOI DA BOP LAI MOT LAN: pt-20/pb-20 -> pt-10/pb-10, dong so
+  // lieu tu mt-20 -> mt-10, va ty le khung hinh tu 10/9 -> 6/5 (ben
+  // globals.css). Ly do: chu du an muon thay duoc dai ten don vi dao tao NGAY
+  // khi mo trang, khong phai cuon. Do luc do: dai do ket thuc o 1020px trong
+  // khi khung nhin cao 900 - hut 120px. Them chu vao phan mo dau thi phai do
+  // lai, dung them khoang trong.
   return (
-    <header className="relative overflow-hidden bg-white pt-12 pb-10 md:pt-20 md:pb-16">
-      {/* Luoi ke mo dan + hai quang sang. Thuan CSS, khong tai anh nao. */}
+    <header className="relative overflow-hidden bg-white pt-8 pb-12 md:pt-8 md:pb-14">
+      {/* Hai quang sang mo, thuan CSS - khong tai anh nao.
+          Ban mau goc dung hai file PNG da lam mo san dat o hai goc; ve bang
+          radial-gradient thi duoc dung ket qua do ma khong ton them mot luot
+          tai anh nao o cho de nhat trang. */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{
           backgroundImage: `
-            radial-gradient(46% 46% at 74% 34%, rgb(79 43 255 / .13), transparent 70%),
-            radial-gradient(34% 34% at 88% 66%, rgb(0 191 179 / .12), transparent 70%),
-            linear-gradient(#E9E9F2 1px, transparent 1px),
-            linear-gradient(90deg, #E9E9F2 1px, transparent 1px)`,
-          backgroundSize: "auto, auto, 52px 52px, 52px 52px",
-          maskImage: "radial-gradient(72% 68% at 62% 42%, #000 30%, transparent 100%)",
-          WebkitMaskImage:
-            "radial-gradient(72% 68% at 62% 42%, #000 30%, transparent 100%)",
+            radial-gradient(38% 42% at 12% 26%, rgb(79 43 255 / .13), transparent 72%),
+            radial-gradient(44% 48% at 78% 30%, rgb(99 130 255 / .16), transparent 72%),
+            radial-gradient(32% 36% at 62% 88%, rgb(0 191 179 / .10), transparent 72%)`,
         }}
       />
 
-      <div className="relative z-2 mx-auto grid w-[min(76rem,100%-2.5rem)] items-center gap-10 lg:grid-cols-2 lg:gap-16">
-        <div>
-          {soMienPhi ? (
-            <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1.5 pr-4 pl-1.5 text-sm font-medium shadow-sm">
-              <b className="bg-ngoc rounded-full px-2 py-0.5 font-mono text-[.66rem] font-semibold text-[#04231F]">
-                MỚI
-              </b>
-              {soMienPhi} khóa đang mở miễn phí
-            </span>
-          ) : null}
-
-          <h1 className="font-hien text-muc text-[clamp(2.4rem,5.4vw,4rem)] leading-[1.1] font-extrabold tracking-[-.035em] text-balance">
-            Đi lên từng tầng,
-            <br />
-            <span className="text-tim relative inline-block">
-              không nhảy cóc
-              {/* Net gach chan ve tay - khong phai border-bottom thang tap */}
-              <svg
-                viewBox="0 0 300 20"
-                preserveAspectRatio="none"
-                aria-hidden="true"
-                className="absolute -bottom-[.32em] left-[-2%] h-[.4em] w-[104%] overflow-visible"
-              >
-                <path
-                  d="M4 13 C 60 4, 110 18, 168 9 S 262 6, 296 12"
-                  fill="none"
-                  stroke="#00BFB3"
-                  strokeWidth="7"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </span>
-          </h1>
-
-          <p className="mt-6 max-w-[56ch] text-[1.06rem] text-slate-500">
-            Mỗi khóa là một chồng bài có thứ tự: xem bài giảng, làm bài tập, qua được mới
-            lên tầng kế. Tới tầng cuối thì có chứng nhận tra cứu được.
-          </p>
-
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/courses"
-              className="from-tim-2 to-tim font-hien inline-flex items-center gap-2.5 rounded-full bg-linear-to-br px-7 py-3.5 text-base font-bold text-white shadow-[0_16px_30px_-16px_rgb(79_43_255/.85)] transition hover:-translate-y-0.5"
-            >
-              Học thử miễn phí
-              <span className="grid size-6.5 place-items-center rounded-full bg-white/20">
-                →
+      <div className="relative z-2 mx-auto w-[min(76rem,100%-2.5rem)]">
+        <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-8">
+          {/* ------------------------------ Chu ------------------------------ */}
+          <div>
+            {soMienPhi ? (
+              <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1.5 pr-4 pl-1.5 text-sm font-medium shadow-sm">
+                <b className="bg-ngoc rounded-full px-2 py-0.5 font-mono text-[.66rem] font-semibold text-[#04231F]">
+                  MỚI
+                </b>
+                {soMienPhi} khóa đang mở miễn phí
               </span>
-            </Link>
-            <Link
-              href="/courses"
-              className="font-hien text-muc hover:border-tim hover:text-tim rounded-full border border-slate-200 bg-white px-7 py-3.5 text-base font-bold transition"
-            >
-              {soKhoa ? `Xem ${soKhoa} khóa học` : "Xem tất cả khóa học"}
-            </Link>
-          </div>
-        </div>
+            ) : null}
 
-        {/* Thap 5 tang, bam duoc tung tang.
-            Truoc day ca khoi nay la aria-hidden vi no chi la hinh trang tri.
-            Gio khong duoc nua: ben trong co nut bam that, ma de mot phan tu
-            bam duoc nam trong vung aria-hidden thi nguoi dung trinh doc man
-            hinh van tab toi duoc no nhung khong nghe thay gi ca. */}
-        <div className="relative flex min-h-[28rem] flex-col items-center justify-end gap-6 pt-[7.5rem] [perspective:1200px] md:min-h-[30rem]">
-          {/* Ba the long nhau, moi the mot viec - xem ghi chu ".thap" trong
-              globals.css. Don ca ba vao mot the thi chung dam transform nhau. */}
-          <div className="thap-troi relative size-60">
-            <div
-              role="tablist"
-              aria-orientation="vertical"
-              aria-label="Các tầng của một khoá học"
-              onKeyDown={bamPhim}
-              className="thap size-full [transform:rotateX(58deg)_rotateZ(-38deg)] transition-transform duration-600 [transform-style:preserve-3d] hover:[transform:rotateX(48deg)_rotateZ(-28deg)]"
-            >
-              {TANG.map((t, i) => (
-                <button
-                  key={t.ten}
-                  type="button"
-                  role="tab"
-                  id={`tang-${i}`}
-                  ref={(el) => {
-                    nut.current[i] = el;
-                  }}
-                  aria-selected={i === dangChon}
-                  aria-controls="o-tang"
-                  // Ca nhom nut chi chiem MOT diem dung Tab. Vao roi thi di
-                  // giua cac tang bang mui ten - dung chuan tablist, va cung
-                  // de nguoi dung ban phim khong phai bam Tab nam lan moi qua
-                  // duoc cai thap.
-                  tabIndex={i === dangChon ? 0 : -1}
-                  onClick={() => setDangChon(i)}
-                  className="tang absolute inset-0 grid cursor-pointer place-items-center rounded-[18px] border border-white/45"
-                  style={
-                    {
-                      background: `linear-gradient(135deg, ${t.a}, ${t.b})`,
-                      // Quang sang di qua bien de CSS con ghep them duoc vong
-                      // vien luc chon / luc lay tieu diem (xem globals.css).
-                      "--hao": `0 0 40px -8px ${t.a}`,
-                      // Vi tri cuoi cua tang, CSS doc lai o ca hieu ung xep
-                      // len lan luc ro chuot.
-                      "--z": `${i * 48}px`,
-                      "--s": `${1 - i * 0.07}`,
-                      // Tang duoi len truoc, cach nhau 150ms. Tang chung nhan
-                      // dap xuong sau cung, dung nhu thu tu hoc that.
-                      "--tre": `${120 + i * 150}ms`,
-                      // Nhung tang NAM TREN tang dang chon bi day cao them,
-                      // mo ra mot khe ho ngay tren no. Nho khe ho do ma tang
-                      // dang chon lo ra du chieu cao de doc duoc chu va de
-                      // bam trung bang ngon tay.
-                      "--nhoi": i > dangChon ? "32px" : "0px",
-                    } as React.CSSProperties
-                  }
+            {/* KHONG dung lai an du "len tung tang / khong nhay coc" cua ban cu:
+                no hua rang bai sau bi khoa den khi qua duoc bai truoc, ma
+                lessonController KHONG he kiem dieu do - duong doc bai chi goi
+                duocXemNoiDung (da ghi danh / da tra tien chua). Mo thang bai
+                so 8 truoc bai so 1 van duoc. Cau do viet cho hinh cai thap 5
+                tang ngay truoc, thap go roi ma cau o lai.
+                Muon cau do thanh that thi phai them chan tuan tu o tang doc
+                bai, khong phai sua chu o day.
+
+                GIU MOI DONG DUOI ~17 KY TU. Co chu o day len toi 4rem, cot chu
+                rong khoang 577px: dai hon la dong tu gay lam doi, tieu de thanh
+                bon dong va day tut ca khoi ben duoi xuong. Da thu
+                "Tu bai hoc dau tien / toi tam chung nhan" (19/18 ky tu) va bi
+                dung loi do. */}
+            <h1 className="font-hien text-muc text-[clamp(2.4rem,5.4vw,4rem)] leading-[1.1] font-extrabold tracking-[-.035em] text-balance">
+              Học có lộ trình,
+              <br />
+              <span className="text-tim relative inline-block">
+                lấy chứng nhận
+                {/* Net gach chan ve tay - khong phai border-bottom thang tap */}
+                <svg
+                  viewBox="0 0 300 20"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                  className="absolute -bottom-[.32em] left-[-2%] h-[.4em] w-[104%] overflow-visible"
                 >
-                  <b
-                    className="font-mono text-[.7rem] font-semibold tracking-[.1em] whitespace-nowrap text-white uppercase [text-shadow:0_1px_6px_rgb(0_0_0/.4)]"
-                    style={{ transform: "rotateZ(38deg) rotateX(-58deg)" }}
-                  >
-                    {t.ten}
-                  </b>
-                </button>
-              ))}
-            </div>
-          </div>
+                  <path
+                    d="M4 13 C 60 4, 110 18, 168 9 S 262 6, 296 12"
+                    fill="none"
+                    stroke="#00BFB3"
+                    strokeWidth="7"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
+            </h1>
 
-          {/* O noi dung cua tang dang chon.
-              min-h co dinh de doi tang khong lam ca trang nhay len nhay xuong
-              theo do dai cau chu. */}
-          <div
-            id="o-tang"
-            role="tabpanel"
-            aria-labelledby={`tang-${dangChon}`}
-            tabIndex={0}
-            className="w-[min(23rem,100%)] rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_20px_34px_-24px_rgb(11_12_30/.45)]"
-          >
-            {/* key doi theo tang nen React thay the han khoi nay -> hieu ung
-                hien ra chay lai moi lan bam, chu khong chi doi chu am tham. */}
-            <div key={dangChon} className="o-tang flex items-start gap-3">
-              <i
-                aria-hidden="true"
-                className="grid size-9 shrink-0 place-items-center rounded-xl text-[.95rem] not-italic"
-                style={{ background: tang.nen, color: tang.muc }}
+            <p className="mt-6 max-w-[56ch] text-[1.06rem] text-slate-500">
+              Mỗi khóa là một chuỗi bài xếp sẵn theo thứ tự: xem bài giảng, làm bài kiểm
+              tra, hệ thống ghi lại bài nào bạn đã xong. Hết khóa thì có chứng nhận kèm
+              mã, ai cũng tra cứu lại được.
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="/courses"
+                className="from-tim-2 to-tim font-hien inline-flex items-center gap-2.5 rounded-full bg-linear-to-br px-7 py-3.5 text-base font-bold text-white shadow-[0_16px_30px_-16px_rgb(79_43_255/.85)] transition hover:-translate-y-0.5"
               >
-                {tang.bieu}
-              </i>
-              <div className="min-w-0">
-                <p className="font-mono text-[.62rem] font-semibold tracking-[.14em] text-slate-400 uppercase">
-                  Tầng {dangChon + 1} / {TANG.length}
-                </p>
-                <p className="font-hien text-muc mt-0.5 text-[.95rem] font-bold">
-                  {tang.nhan}
-                </p>
-                <p className="mt-1 text-[.85rem] leading-relaxed text-slate-500">
-                  {tang.mo}
-                </p>
-              </div>
+                Học thử miễn phí
+                <span className="grid size-6.5 place-items-center rounded-full bg-white/20">
+                  →
+                </span>
+              </Link>
+              <Link
+                href="/courses"
+                className="font-hien text-muc hover:border-tim hover:text-tim rounded-full border border-slate-200 bg-white px-7 py-3.5 text-base font-bold transition"
+              >
+                {soKhoa ? `Xem ${soKhoa} khóa học` : "Xem tất cả khóa học"}
+              </Link>
             </div>
           </div>
 
-          <p className="text-[.8rem] text-slate-500">
-            Bấm vào từng tầng để xem tầng đó có gì
-          </p>
+          {/* --------------------------- Khoi hinh doi ---------------------------
+              KHONG bam vao duoc: ca khoi la hinh minh hoa, dung nhu ban mau.
+              Mot ban truoc boc ca khung trong the <Link> - vua sai y ban mau,
+              vua sinh mot loi that: bon canh chong len nhau, canh dang o
+              opacity 0 VAN an chuot, nen nguoi bam vao canh dang nhin thay co
+              the bi day sang trang cua mot canh khac. Hai loi CTA that da nam
+              san o cot chu ben trai.
+
+              Ty le khung va nhip chuyen canh nam trong globals.css
+              (.khung-canh-hero / .canh-hero).
+
+              BON CANH PHAI LA NHUNG DUA CON DUY NHAT cua the nay: nhip chuyen
+              canh nham vao :first-child va :nth-child(2..4). Chen them bat ky
+              the nao vao day - mot tam nen chang han - la canh dau mat luat
+              first-child (nguoi tat chuyen dong thay o TRONG TRON) va canh thu
+              tu tuot khoi danh sach buoc tre. Da dinh dung loi do mot lan. */}
+          <div className="khung-canh-hero">
+            {CANH.map(({ mau, Icon, nhan, dan, tua, anh, the }) => (
+              <div key={nhan} className="canh-hero flex flex-col px-1 pt-2 pb-4 sm:px-3">
+                {/* Dau canh: huy hieu + hai dong chu. Ca cum nay DOI theo canh.
+                    CAN GIUA o CA BON canh. Da thu chi can giua rieng canh quy
+                    dao (vi vong tron hep hon cot, de canh trai thi chu treo lo
+                    lung ben ngoai no) va de ba canh con lai canh trai - hong:
+                    luc hoa hinh, hai dong chu cua hai canh nam o hai vi tri
+                    khac nhau va chong len nhau, doc ra mot dam chu lem. Can
+                    giua het thi tam chu, tam anh va tam vong tron trung nhau,
+                    khong con cho nao nhay. */}
+                <div className="flex items-center justify-center gap-3">
+                  <span
+                    className={`grid size-11 shrink-0 place-items-center rounded-[.9rem] bg-linear-to-br text-white ${mau}`}
+                  >
+                    <Icon size={21} strokeWidth={2.2} aria-hidden="true" />
+                  </span>
+                  <span className="leading-tight">
+                    <span className="block text-[.78rem] text-slate-500">{dan}</span>
+                    <b className="font-hien text-muc block text-[1.02rem] font-bold">
+                      {tua}
+                    </b>
+                  </span>
+                </div>
+
+                {/* Phan hinh - chiem het cho con lai va tu can giua */}
+                <div className="mt-5 grid min-h-0 flex-1 place-items-center">
+                  {anh ? (
+                    /* Anh tran, KHONG long trong khung may tinh nao.
+                       Ban truoc ve mot cai vien may mau muc kem de may ben duoi;
+                       chu du an khong thich, bo.
+                       Con lai vien mo mot pixel + bong do: thieu hai thu do thi
+                       anh chup (nen trang) dat tren trang (cung nen trang) khong
+                       con duong bien nao, nhin ra mot mang lem chu khong ra mot
+                       tam anh. */
+                    <div
+                      // max-h-full la de danh cho man hinh thap: khi khung
+                      // canh co lai theo vh, tam anh (cao suy ra tu be rong)
+                      // se cao hon cho con lai va tran ra ngoai. Chan lai thi
+                      // anh bi cat bot tren duoi - object-cover lo phan do -
+                      // van hon la de no day vo bo cuc.
+                      className="relative aspect-[31/16] max-h-full w-full overflow-hidden rounded-2xl bg-white ring-1 ring-slate-900/8"
+                      style={{ boxShadow: "0 26px 50px -28px rgb(15 23 42 / .45)" }}
+                    >
+                      {/* Ty le 31/16 = dung 1240x640 cua anh goc */}
+                      <Image
+                        src={anh.src}
+                        alt={anh.alt}
+                        fill
+                        // KHONG dat priority cho tam nao.
+                        // Truoc day tam dau duoc priority vi no la thu nguoi
+                        // dung thay ngay. Nay canh dau la vong quy dao thuan
+                        // SVG, khong con anh nao can gap ca: tam anh som nhat
+                        // cung phai 3 giay nua moi toi luot.
+                        // Ba tam van tai ve gan nhu ngay lap tuc du mang
+                        // loading="lazy", vi chung NAM TRONG khung nhin (chi la
+                        // opacity 0) nen trinh duyet coi nhu da lo ra. Khac
+                        // biet duy nhat: chung khong con tranh bang thong voi
+                        // thu ve dau tien nua.
+                        sizes="(min-width: 1024px) 46vw, 92vw"
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : (
+                    /* Canh cuoi: khong co may tinh, ve vong quy dao - dung nhu
+                       tam thu ba cua ban mau. Hinh vuong an theo CHIEU CAO con
+                       lai (h-full + aspect-square) chu khong theo be rong: o
+                       man hinh hep, an theo be rong thi no cao vuot ra ngoai
+                       khung va bi cat mat mot khuc. */
+                    <div className="relative aspect-square h-full">
+                      {/* He vanh ve bang SVG chu khong phai border cua CSS.
+                          Ly do: ban mau co MOT doan vanh dam chuyen sac (ngoc
+                          sang tim). border cua CSS chi nhan mot mau dac - muon
+                          chuyen sac phai chong hai lop rieng roi cat bot, vua
+                          roi vua kho sua. SVG thi mot the <path> voi stroke la
+                          gradient la xong.
+
+                          Khung toa do 400x400, tam o (200,200). Ban thân o
+                          chua la hinh vuông nen SVG co gian theo, khong can
+                          tinh lai gi khi doi kich thuoc. */}
+                      <svg
+                        viewBox="0 0 400 400"
+                        className="absolute inset-0 size-full overflow-visible"
+                        aria-hidden="true"
+                      >
+                        <defs>
+                          <linearGradient id="vanh-hero" x1="0" y1="1" x2="1" y2="0">
+                            <stop offset="0%" stopColor="#00BFB3" />
+                            <stop offset="55%" stopColor="#4F8BFF" />
+                            <stop offset="100%" stopColor="#4F2BFF" />
+                          </linearGradient>
+                        </defs>
+
+                        {/* Nam vanh dong tam, mo dan tu trong ra ngoai.
+                            HAI vanh 184 va 116 la duong DI THAT cua bon the:
+                            46% va 29% cua 400. Doi ban kinh o QUY_DAO thi phai
+                            doi hai so nay, khong thi the chay lo lung khong bam
+                            vao vanh nao. Hai vanh con lai chi de trang tri. */}
+                        <circle
+                          cx="200"
+                          cy="200"
+                          r="184"
+                          fill="none"
+                          stroke="#4F2BFF"
+                          strokeOpacity=".16"
+                        />
+                        <circle
+                          cx="200"
+                          cy="200"
+                          r="150"
+                          fill="none"
+                          stroke="#4F2BFF"
+                          strokeOpacity=".1"
+                        />
+                        <circle
+                          cx="200"
+                          cy="200"
+                          r="116"
+                          fill="none"
+                          stroke="#4F2BFF"
+                          strokeOpacity=".2"
+                        />
+                        <circle
+                          cx="200"
+                          cy="200"
+                          r="74"
+                          fill="none"
+                          stroke="#4F2BFF"
+                          strokeOpacity=".12"
+                        />
+
+                        {/* Doan vanh dam: cung tron ban kinh 150, chay tu goc
+                            130 do (duoi ben trai) len 250 do (tren, hoi lech
+                            trai). Dau tron de hai dau khong bi cat vuong.
+                            Quay cham 70 giay mot vong va NGUOC chieu bon the -
+                            chuyen dong nen, khong tranh voi cai chinh. */}
+                        <path
+                          className="vanh-sang"
+                          d="M 103.6 314.9 A 150 150 0 0 1 148.7 59"
+                          fill="none"
+                          stroke="url(#vanh-hero)"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                        />
+
+                        {/* Ba cham nho tren vanh, quay cung chieu voi bon the
+                            nhung cham hon nhieu (90 giay). */}
+                        <g className="cham-quay">
+                          <circle cx="12.9" cy="233" r="5.5" fill="#4F8BFF" />
+                          <circle cx="378.5" cy="135" r="5" fill="#4F8BFF" />
+                          <circle
+                            cx="301.5"
+                            cy="247.3"
+                            r="4.5"
+                            fill="#4F2BFF"
+                            fillOpacity=".55"
+                          />
+                        </g>
+                      </svg>
+
+                      {/* Tam: dia trang co quang sang, ben trong la dau LP.
+                          Ban mau dat logo tren nen TRANG chu khong phai tren
+                          nen mau - de vay thi cai dia noi han len khoi cac vanh
+                          mo phia sau. */}
+                      <span className="absolute top-1/2 left-1/2 grid size-[27%] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white shadow-[0_0_0_10px_rgb(255_255_255/.75),0_18px_38px_-14px_rgb(79_43_255/.45)]">
+                        <span className="from-tim-2 to-ngoc grid size-[76%] place-items-center rounded-full bg-linear-to-br text-[1.05rem] font-black text-white">
+                          LP
+                        </span>
+                      </span>
+
+                      {/* Bon the quay quanh tam.
+                          BA LOP, moi lop mot viec, khong gop lai duoc:
+                            quy-dao-tay  o vuong phu kin, quay quanh tam
+                            quy-dao-neo  ghim the len vanh, o vi tri 12 gio
+                            quy-dao-the  quay NGUOC lai dung bang canh tay
+                          Thieu lop trong cung thi chu tren the lat nguoc dau moi
+                          khi the di qua nua duoi vong tron. */}
+                      {QUY_DAO.map((m) => (
+                        <span
+                          key={m.nhan}
+                          className="quy-dao-tay"
+                          style={
+                            {
+                              "--goc": m.goc,
+                              "--ban-kinh": m.banKinh,
+                              "--chu-ky": m.chuKy,
+                            } as CSSProperties
+                          }
+                        >
+                          <span className="quy-dao-neo">
+                            <span className="quy-dao-the w-[4.6rem] flex-col items-center gap-1 rounded-xl bg-white px-1.5 py-2 text-center text-[.62rem] leading-tight font-semibold text-slate-700 shadow-[0_12px_26px_-14px_rgb(15_23_42/.5)] ring-1 ring-slate-900/6">
+                              <span
+                                className={`grid size-6 place-items-center rounded-lg bg-linear-to-br text-white ${m.mau}`}
+                              >
+                                <m.Icon size={13} strokeWidth={2.4} aria-hidden="true" />
+                              </span>
+                              {m.nhan}
+                            </span>
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* The noi - ban mau cung dat vai the nho chong len hinh, va noi
+                    dung the DOI theo canh. An o man hinh hep: cho do vua du cho
+                    cai may tinh, them the nua la che mat thu can nhin. */}
+                {the ? (
+                  <div className="absolute right-6 bottom-5 hidden max-w-[15rem] rounded-xl bg-white/95 px-4 py-3 shadow-[0_18px_36px_-20px_rgb(15_23_42/.5)] ring-1 ring-slate-900/8 backdrop-blur-sm sm:block">
+                    <div className="flex items-center gap-2.5">
+                      <span className="bg-ngoc/15 text-ngoc grid size-8 shrink-0 place-items-center rounded-lg text-sm font-bold">
+                        ✓
+                      </span>
+                      <span className="leading-snug">
+                        <b className="text-muc block text-[.82rem] font-semibold">
+                          {the.tieu}
+                        </b>
+                        <span className="block text-[.72rem] text-slate-500">
+                          {the.phu}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
         </div>
+
+        {/* --------------------------- Dai so lieu ---------------------------
+            Ban mau goc de o day mot con so kieu "770,000+ khach hang tin
+            tuong". Khong bia mot con so nhu vay: ba muc duoi day deu dem
+            duoc tu du lieu that dang co, va neu khoa bi go bot thi chung tu
+            giam theo.
+
+            KHONG ghi cung bat ky con so nao vao day. Ca hai con so deu do
+            trang chu dem tu danh sach khoa hoc that (page.tsx) va lam moi moi
+            60 giay, nen admin them/xoa/go xuat ban mot KHOA HOC la cho nay tu
+            tang giam theo. Thay mot con so bang chu la lan sau no thanh loi
+            noi sai. */}
+        <p className="mt-6 text-center text-[.95rem] text-slate-500 md:mt-6">
+          <b className="text-tim font-semibold">{soKhoa}</b> khóa học
+          <span className="mx-2.5 text-slate-300">·</span>
+          <b className="text-tim font-semibold">{soMienPhi}</b> khóa mở miễn phí
+          <span className="mx-2.5 text-slate-300">·</span>
+          chứng nhận tra cứu được bằng mã
+        </p>
       </div>
     </header>
   );

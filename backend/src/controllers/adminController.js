@@ -1,10 +1,21 @@
 const bcrypt = require('bcryptjs');
-const { BCRYPT_ROUNDS, DAI_MAT_KHAU_TOI_THIEU } = require('../utils/matKhau');
+const { BCRYPT_ROUNDS } = require('../utils/matKhau');
 const User = require('../models/User');
 
-// Giu dong nhat voi userController: email luon luu dang chu thuong da trim
-const normalizeEmail = (v) => String(v || '').trim().toLowerCase();
-const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+// Dung CHUNG bo kiem cua userController, khong chep lai.
+//
+// Truoc day file nay giu ban sao thu ba cua normalizeEmail/isValidEmail, va ban
+// sao thu ba cua buoc kiem do dai mat khau. Ba ban sao thi khong bao gio khop
+// nhau lau: ban o day khong ep kieu password, nen than request
+// {"password":{"$ne":null}} qua duoc `password.length < 8` - vi `undefined < 8`
+// la FALSE - roi di thang toi bcrypt.hash. Va khong ban nao co tran do dai,
+// trong khi bcrypt bo lang moi byte tu 73 tro di.
+const {
+    chuanHoaEmail,
+    emailHopLe,
+    loiMatKhauMoi,
+    kiemTen,
+} = require('../utils/xacThucDauVao');
 const Course = require('../models/Course');
 const Lesson = require('../models/Lesson');
 const Enrollment = require('../models/Enrollment');
@@ -221,18 +232,24 @@ const deleteUserAdmin = async (req, res) => {
 // @route   POST /api/admin/users
 const createUserAdmin = async (req, res) => {
     try {
-        const { name, password, role = 'student', status = true, phone, fullname, bio } = req.body;
-        const email = normalizeEmail(req.body?.email);
+        const { password, role = 'student', status = true, phone, fullname, bio } = req.body;
+        const email = chuanHoaEmail(req.body?.email);
 
-        if (!name || !email || !password) {
+        if (req.body?.name === undefined || !email || password === undefined) {
             return res.status(400).json({ message: 'Name, email và password là bắt buộc' });
         }
-        if (!isValidEmail(email)) {
+        if (!emailHopLe(email)) {
             return res.status(400).json({ message: 'Email không hợp lệ' });
         }
-        if (password.length < DAI_MAT_KHAU_TOI_THIEU) {
-            return res.status(400).json({ message: `Password phải có ít nhất ${DAI_MAT_KHAU_TOI_THIEU} ký tự` });
+        const loiMk = loiMatKhauMoi(password);
+        if (loiMk) {
+            return res.status(400).json({ message: loiMk });
         }
+        const kqTen = kiemTen(req.body.name);
+        if (kqTen.loi) {
+            return res.status(400).json({ message: kqTen.loi });
+        }
+        const name = kqTen.ten;
         if (!['student', 'instructor', 'admin'].includes(role)) {
             return res.status(400).json({ message: 'Role không hợp lệ' });
         }
@@ -245,6 +262,11 @@ const createUserAdmin = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, await bcrypt.genSalt(BCRYPT_ROUNDS));
 
         const user = await User.create({
+            // Admin tu tay tao tai khoan thi khong phai qua buoc xac minh email:
+            // nguoi tao da chiu trach nhiem cho dia chi do roi. Ghi ro `true`
+            // chu khong de trong - de trong thi tai khoan chi vao duoc nho luat
+            // "undefined la tai khoan cu", ma luat do co the bi sua sau nay.
+            emailVerified: true,
             name, email, password: hashedPassword, role, status,
             ...(phone ? { phone } : {}),
             ...(fullname ? { fullname } : {}),
@@ -266,9 +288,9 @@ const createUserAdmin = async (req, res) => {
 const updateUserAdmin = async (req, res) => {
     try {
         const { name, role, status, password, phone, fullname, bio } = req.body;
-        const email = req.body?.email === undefined ? undefined : normalizeEmail(req.body.email);
+        const email = req.body?.email === undefined ? undefined : chuanHoaEmail(req.body.email);
 
-        if (email !== undefined && !isValidEmail(email)) {
+        if (email !== undefined && !emailHopLe(email)) {
             return res.status(400).json({ message: 'Email không hợp lệ' });
         }
 
@@ -301,8 +323,9 @@ const updateUserAdmin = async (req, res) => {
         }
 
         if (password) {
-            if (password.length < DAI_MAT_KHAU_TOI_THIEU) {
-                return res.status(400).json({ message: `Password phải có ít nhất ${DAI_MAT_KHAU_TOI_THIEU} ký tự` });
+            const loiMk = loiMatKhauMoi(password);
+            if (loiMk) {
+                return res.status(400).json({ message: loiMk });
             }
             user.password = await bcrypt.hash(password, await bcrypt.genSalt(BCRYPT_ROUNDS));
             // Admin dat lai mat khau cho nguoi khac thuong la vi tai khoan do
@@ -311,7 +334,13 @@ const updateUserAdmin = async (req, res) => {
             user.passwordChangedAt = new Date(Date.now() - 1000);
         }
 
-        if (name !== undefined) user.name = name;
+        if (name !== undefined) {
+            const kqTen = kiemTen(name);
+            if (kqTen.loi) {
+                return res.status(400).json({ message: kqTen.loi });
+            }
+            user.name = kqTen.ten;
+        }
         if (status !== undefined) user.status = status;
         if (phone !== undefined) user.phone = phone || undefined;
         if (fullname !== undefined) user.fullname = fullname;

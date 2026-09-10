@@ -1,9 +1,22 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
-const { BCRYPT_ROUNDS, DAI_MAT_KHAU_TOI_THIEU, HAN_TOKEN } = require('../utils/matKhau');
+const { BCRYPT_ROUNDS, HAN_TOKEN } = require('../utils/matKhau');
 const { datCookieToken, xoaCookieToken } = require('../utils/cookieToken');
 const jwt = require('jsonwebtoken');
 const { recordLoginFailure, clearLoginAttempts } = require('../middlewares/loginRateLimit');
+const { conBiKhoa, ghiNhanSai, xoaKhoa } = require('../utils/khoGioiHan');
+const { daCauHinh: mailDaCauHinh, guiMail } = require('../config/mail');
+const { soanMailXacMinh, soanMailDaCoTaiKhoan } = require('../utils/mailXacMinh');
+const { taoToken, bamToken, HAN_MS: HAN_TOKEN_XAC_MINH } = require('../utils/tokenXacMinh');
+const { lienKetXacMinh, lienKetDangNhap } = require('../utils/diaChiGiaoDien');
+const {
+    chuanHoaEmail,
+    emailHopLe,
+    matKhauNhanDuoc,
+    loiMatKhauMoi,
+    kiemTen,
+    kiemPayloadGoogle,
+} = require('../utils/xacThucDauVao');
 const layCloudinary = require('../config/cloudinary');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
 
@@ -19,35 +32,62 @@ const layGoogleClient = () => {
   return googleClient;
 };
 
-// Email luon luu/tra cuu o dang chu thuong da trim -> tranh tao trung tai khoan
-// va tranh truong hop go hoa mot chu la khong dang nhap duoc.
-const normalizeEmail = (v) => String(v || '').trim().toLowerCase();
+// Chuan hoa va kiem dau vao: xem utils/xacThucDauVao.js. Truoc day moi ham o
+// file nay tu kiem lay va da lech nhau that - ly do ghi ro o dau file do.
 
-// Kiem tra dinh dang co ban, khong dung regex phuc tap de tranh ReDoS
-const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+// Hash gia de doi chieu khi KHONG co tai khoan nao khop.
+//
+// LO HONG DA VA - do thoi gian phan hoi de biet email nao co that:
+//
+// Ban cu, email khong ton tai thi tra ve ngay, khong cham toi bcrypt (~5ms).
+// Email co that thi phai doi bcrypt 12 vong (~245ms). Chenh gan 50 lan - do
+// bang dong ho treo tuong cung thay, khong can cong cu gi. Ke tan cong quet
+// mot danh sach email la biet chinh xac ai la nguoi dung cua he thong, roi do
+// mat khau vao dung nhung nguoi do. Bo dem sai o loginRateLimit khong chan
+// duoc kieu nay: moi lan thu deu la mot email khac nhau.
+//
+// Chuoi duoi la hash bcrypt 12 vong cua mot chuoi ngau nhien 32 byte khong ai
+// biet. Doi chieu voi no ton dung bang thoi gian doi chieu that, nen hai truong
+// hop khong con phan biet duoc qua thoi gian nua.
+const HASH_GIA = '$2b$12$nqNzZcPVRmshfJKx.9XA7.EEeUeY96tTd6ikBm/CddhQrPfG/XsD2';
+
+// Tran cho viec do mat khau HIEN TAI o duong doi mat khau - xem ghi chu tai
+// cho dung, trong updateUserProfile.
+const MAX_SAI_MAT_KHAU_CU = 5;
+const CUA_SO_DOI_MK = 15 * 60 * 1000;
 
 // Tạo Token JWT (hàm tiện ích nội bộ)
+//
+// Ghim algorithm: khong ghim thi thuat toan nam trong header cua chinh cai
+// token duoc gui len - tuc la do BEN GUI chon. Day la ho nha lo hong "alg:
+// none" / doi HS-RS. jsonwebtoken v9 da tu chan phan lon, nhung ghim ro rang
+// thi khong phu thuoc vao mac dinh cua mot ban thu vien nao ca.
 const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: HAN_TOKEN });
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: HAN_TOKEN,
+        algorithm: 'HS256',
+    });
 };
 
 // @desc    Auth user & get token (Login)
 // @route   POST /api/users/login
 const loginUser = async (req, res) => {
     try {
-        const email = normalizeEmail(req.body?.email);
+        const email = chuanHoaEmail(req.body?.email);
         const password = req.body?.password;
 
         // 1. Thieu tham so -> 400. Truoc day password thieu se lam bcrypt.compare
         //    nem loi va tra ve 500 kem thong bao noi bo cua thu vien.
-        if (!email || typeof password !== 'string' || password === '') {
+        if (!email || !matKhauNhanDuoc(password)) {
             return res.status(400).json({
                 message: 'Vui lòng nhập email và mật khẩu'
             });
         }
 
-        // 2. Sai dinh dang thi khong can truy van DB
-        if (!isValidEmail(email)) {
+        // 2. Sai dinh dang hoac qua dai thi khong can truy van DB.
+        //    Tran do dai email cung chan luon duong bom phinh bo dem cua
+        //    loginRateLimit - khoa cua no la `ip|email`.
+        if (!emailHopLe(email)) {
             return res.status(400).json({
                 message: 'Email không hợp lệ'
             });
@@ -55,32 +95,31 @@ const loginUser = async (req, res) => {
 
         const user = await User.findOne({ email });
 
-        // 3. Khong ro email hay mat khau sai -> cung mot thong bao,
-        //    tranh de lo email nao da ton tai trong he thong.
-        if (!user) {
-            recordLoginFailure(req.loginAttemptKey);
+        // 3. LUON doi chieu bcrypt mot lan, ke ca khi khong tim thay tai khoan
+        //    hoac tai khoan do dang nhap bang Google (password rong). Xem
+        //    HASH_GIA o dau file: khong lam vay thi thoi gian phan hoi to cao
+        //    email nao co that trong he thong.
+        const isMatch = await bcrypt.compare(password, user?.password || HASH_GIA);
+
+        // 4. Khong ro email, mat khau sai, hay tai khoan chi dang nhap bang
+        //    Google - CUNG mot cau tra loi, va deu tinh la mot lan sai.
+        //
+        //    LO HONG DA VA: ban cu tra rieng "Vui lòng đăng nhập bằng Google"
+        //    cho nhanh thu ba. Cau do la mot cai may tra loi cau hoi "email nay
+        //    co trong he thong khong" - go bat ky dia chi nao vao la biet ngay,
+        //    dung cai ma buoc 3 vua bo cong bit lai. Te hon: nhanh do KHONG goi
+        //    recordLoginFailure, nen no khong bi gioi han so lan, do thoai mai.
+        //
+        //    Nguoi dung Google khong bi ket: nut "Tiếp tục với Google" nam ngay
+        //    tren cung form, va giao dien nhac lai loi do sau moi lan sai.
+        if (!user || !user.password || !isMatch) {
+            await recordLoginFailure(req.loginAttemptKey);
             return res.status(401).json({
                 message: 'Email hoặc mật khẩu không đúng'
             });
         }
 
-        // Account Google chưa có password
-        if (!user.password) {
-            return res.status(401).json({
-                message: 'Vui lòng đăng nhập bằng Google'
-            });
-        }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-
-        if (!isMatch) {
-            recordLoginFailure(req.loginAttemptKey);
-            return res.status(401).json({
-                message: 'Email hoặc mật khẩu không đúng'
-            });
-        }
-
-        // 4. Tai khoan bi admin khoa thi khong duoc cap token.
+        // 5. Tai khoan bi admin khoa thi khong duoc cap token.
         //    Kiem tra SAU khi doi chieu mat khau de nguoi la khong do duoc
         //    email nao dang bi khoa.
         if (user.status === false) {
@@ -89,7 +128,23 @@ const loginUser = async (req, res) => {
             });
         }
 
-        clearLoginAttempts(req.loginAttemptKey);
+        // 6. Tai khoan dang ky bang mat khau nhung chua bam lien ket trong thu.
+        //
+        //    So sanh voi `=== false` chu KHONG phai `!user.emailVerified`: moi
+        //    tai khoan tao truoc khi co luong xac minh deu khong co truong nay
+        //    (undefined), va phep phu dinh se khoa sach ho ra ngoai ngay trong
+        //    lan deploy dau. Xem ghi chu tai truong emailVerified o model User.
+        //
+        //    Buoc nay dat SAU khi da doi chieu mat khau nen no khong lo them
+        //    gi: muon nhin thay cau nay thi phai go dung mat khau da roi.
+        if (user.emailVerified === false) {
+            return res.status(403).json({
+                message: 'Tài khoản chưa được kích hoạt. Vui lòng mở email đăng ký và bấm liên kết xác minh.',
+                canXacMinh: true,
+            });
+        }
+
+        await clearLoginAttempts(req.loginAttemptKey);
 
         // Token di bang cookie httpOnly, KHONG nam trong than phan hoi.
         // De no trong than thi JavaScript cua trang doc duoc, va the la mat
@@ -150,12 +205,21 @@ const googleLogin = async (req, res) => {
       return res.status(401).json({ message: 'Google credential không hợp lệ' });
     }
 
-    if (!payload || !payload.email) {
-      return res.status(401).json({ message: 'Google credential không hợp lệ' });
+    // Kiem noi dung payload: xem kiemPayloadGoogle trong utils/xacThucDauVao.js.
+    //
+    // LO HONG DA VA - THIEU email_verified: ban cu chi hoi "payload co email
+    // khong" roi lay email do di tim tai khoan va cap token. Google KHONG bao
+    // dam moi id_token deu mang email da xac minh - tai khoan Google Workspace
+    // do quan tri vien tu tao co the mang email_verified = false. Ai dung duoc
+    // mot mien Workspace la tao duoc tai khoan mang dia chi cua nguoi khac,
+    // bam "Dang nhap bang Google", va roi thang vao tai khoan cua nan nhan o
+    // day - khong can mat khau, khong cham vao bat ky lop bao ve nao khac.
+    const kiem = kiemPayloadGoogle(payload);
+    if (kiem.loi) {
+      return res.status(401).json({ message: kiem.loi });
     }
 
-    const { sub, name, picture } = payload;
-    const email = normalizeEmail(payload.email);
+    const { email, sub, ten: name, anh: picture } = kiem;
 
     const googleUserExists = await User.findOne({
         googleId: sub
@@ -174,21 +238,51 @@ const googleLogin = async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user) {
-      // Create user WITHOUT persisting google picture into `avatar`
+      // Khong luu anh cua Google vao `avatar` - do la duong dan toi may chu cua
+      // ho, khong phai anh cua minh.
+      //
+      // KHONG dat password: mac dinh cua model la chuoi rong, va chuoi rong la
+      // dau hieu "tai khoan nay chua tung dat mat khau" ma loginUser va
+      // updateUserProfile deu doc. Dat mot chuoi bat ky vao day la pha dau hieu do.
+      //
+      // googleId: `sub` chu khong phai `sub || ''`. Index cua truong nay la
+      // { unique, sparse }, ma sparse CHI bo qua null/undefined - khong bo qua
+      // chuoi rong. Voi `|| ''` thi tai khoan Google thu hai roi vao nhanh do se
+      // dung khoa trung, va te hon, `User.findOne({ googleId: '' })` sau do se
+      // khop nham dung nhung tai khoan do voi nhau. Nay kiemPayloadGoogle da bat
+      // buoc co `sub` nen nhanh do khong con ton tai.
       user = await User.create({
         name,
         email,
-        password: '', // placeholder; you may want to randomize or mark differently
-        avatar: '',               // keep empty so DB does not store the external link
-        googleId: sub || '',
-        role: 'student'
+        avatar: '',
+        googleId: sub,
+        role: 'student',
+        // Google da tu kiem dia chi nay (kiemPayloadGoogle bat buoc
+        // email_verified), nen khong phai gui them thu xac minh nao.
+        emailVerified: true
       });
     } else {
       // if user exists but doesn't have googleId, attach it (but do not overwrite avatar)
+      let phaiLuu = false;
+
       if ((!user.googleId || user.googleId === '') && sub) {
         user.googleId = sub;
-        await user.save();
+        phaiLuu = true;
       }
+
+      // Dang nhap Google thanh cong LA mot bang chung so huu dia chi email -
+      // manh khong kem gi viec bam vao lien ket trong thu. Nen no cung go luon
+      // trang thai "chua xac minh": ai dang ky bang mat khau roi khong nhan
+      // duoc thu (Gmail bo vao Spam, go nham dia chi hien thi...) van con mot
+      // duong vao thay vi ket cung.
+      if (user.emailVerified !== true) {
+        user.emailVerified = true;
+        user.verifyTokenHash = undefined;
+        user.verifyTokenExp = undefined;
+        phaiLuu = true;
+      }
+
+      if (phaiLuu) await user.save();
     }
 
     // Tai khoan bi admin khoa thi khong cap token, ke ca dang nhap qua Google
@@ -235,54 +329,237 @@ const logoutUser = (req, res) => {
 // @route   POST /api/users
 const registerUser = async (req, res) => {
     try {
-        const { name, password } = req.body;
+        const password = req.body?.password;
         // Luu email dang chu thuong cho khop voi luc dang nhap
-        const email = normalizeEmail(req.body?.email);
+        const email = chuanHoaEmail(req.body?.email);
 
-        if (!name || !email || !password) {
+        if (!email || password === undefined || req.body?.name === undefined) {
             return res.status(400).json({ message: 'Vui lòng cung cấp name, email và password' });
         }
 
-        if (!isValidEmail(email)) {
+        if (!emailHopLe(email)) {
             return res.status(400).json({ message: 'Email không hợp lệ' });
         }
 
-        if (password.length < DAI_MAT_KHAU_TOI_THIEU) {
-            return res.status(400).json({ message: `Password phải có ít nhất ${DAI_MAT_KHAU_TOI_THIEU} ký tự` });
+        // LO HONG DA VA: ban cu lam thang `password.length < 8` tren gia tri
+        // nguoi goi gui len, khong kiem kieu. Voi than request
+        // {"password":{"$ne":null}} thi `.length` la `undefined`, va
+        // `undefined < 8` la FALSE - qua duoc buoc nay roi di thang toi
+        // bcrypt.hash, noi no nem loi va thanh mot 500. loginUser da ep kieu
+        // tu truoc, registerUser thi khong: dung kieu lech nhau ma khong ai
+        // nhin thay. Nay ca hai dung chung utils/xacThucDauVao.js.
+        const loiMk = loiMatKhauMoi(password);
+        if (loiMk) {
+            return res.status(400).json({ message: loiMk });
         }
 
-        const userExists = await User.findOne({ email });
-        if (userExists) {
-            return res.status(400).json({ message: 'User đã tồn tại' });
+        // Ten cung phai kiem kieu va do dai. Truoc day chi kiem "co gia tri
+        // khong", nen mot doi tuong hay mot chuoi 1MB deu di thang vao CSDL -
+        // trong khi updateUserProfile lai chan o 2..50 ky tu, tuc la dang ky
+        // duoc cai ten ma sau do khong bao gio sua lai duoc.
+        const kqTen = kiemTen(req.body.name);
+        if (kqTen.loi) {
+            return res.status(400).json({ message: kqTen.loi });
         }
+        const name = kqTen.ten;
 
-        // Mã hóa mật khẩu
+        // Bam mat khau TRUOC khi tra cuu, va bam trong MOI truong hop - ke ca
+        // khi biet chac se khong dung den.
+        //
+        // Day la cung mot bai hoc voi HASH_GIA o loginUser: bcrypt 12 vong ton
+        // ~245ms, con mot lan tra cuu email ton vai mili giay. Neu chi bam khi
+        // email con trong thi hai truong hop lech nhau gan 50 lan ve thoi gian
+        // phan hoi, va thoi gian do to cao dia chi nao da co tai khoan - dung
+        // cai ma toan bo phan duoi day dang bo cong bit lai.
         const salt = await bcrypt.genSalt(BCRYPT_ROUNDS);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const user = await User.create({
-            name,
-            email,
-            password: hashedPassword,
-            role: 'student'
-        });
+        const userExists = await User.findOne({ email });
 
-        if (user) {
+        // -------------------------------------------------------------------
+        // Che do KHONG CO HOM THU (thuong la may dev): giu nguyen hanh vi cu.
+        //
+        // Khong co mail thi khong ai kich hoat duoc tai khoan, tuc la bat che
+        // do xac minh o day se lam khong ai dang ky duoc nua. Doi lay dieu do
+        // la duong dang ky lo lai chuyen "email nay da ton tai chua" - chap
+        // nhan duoc tren may dev, KHONG chap nhan duoc tren ban that, nen ghi
+        // console.error (khong phai warn) de no noi bat trong log production.
+        // -------------------------------------------------------------------
+        if (!mailDaCauHinh()) {
+            console.error(
+                'registerUser: chua dat MAIL_USER / MAIL_APP_PASSWORD nen phai bo qua buoc xac minh email. '
+                + 'Tren ban chay that, dat hai bien nay de dong kenh do email.',
+            );
+
+            if (userExists) {
+                return res.status(400).json({ message: 'User đã tồn tại' });
+            }
+
+            const user = await User.create({
+                name,
+                email,
+                password: hashedPassword,
+                role: 'student',
+                emailVerified: true,
+            });
+
             datCookieToken(res, generateToken(user._id));
 
-            res.status(201).json({
+            return res.status(201).json({
                 _id: user._id,
                 name: user.name,
                 email: user.email,
                 role: user.role,
             });
         }
+
+        // -------------------------------------------------------------------
+        // Che do co hom thu: BA nhanh, MOT cau tra loi.
+        //
+        // LO HONG DA VA - do xem dia chi nao da dang ky:
+        //
+        // Ban cu tra "User da ton tai" cho email da co va 201 kem cookie cho
+        // email con trong. Go bat ky dia chi nao vao la biet ngay no co trong
+        // he thong hay khong - dung cai may tra loi ma loginUser da bo cong
+        // bit lai o tren.
+        //
+        // Va khong the vua tra loi kin vua dang nhap thang: chi can "im lang
+        // bo qua khi email da ton tai" thoi la van do duoc, bang cach dang ky
+        // roi thu dang nhap ngay bang chinh mat khau vua dat - vao duoc nghia
+        // la dia chi con trong. Nen tai khoan moi BAT BUOC phai qua mot buoc
+        // ma chi chu hom thu lam duoc.
+        //
+        // Ba nhanh duoi day khac nhau o viec lam gi, nhung deu ket thuc bang
+        // mot la thu va DUNG MOT cau tra ve. Khac biet nam trong hom thu -
+        // noi ke do khong voi toi.
+        // -------------------------------------------------------------------
+        const { token, bam, hetHan } = taoToken();
+        let mail;
+
+        if (!userExists) {
+            // Nhanh 1: dia chi con trong -> tao tai khoan o trang thai cho.
+            const user = await User.create({
+                name,
+                email,
+                password: hashedPassword,
+                role: 'student',
+                emailVerified: false,
+                verifyTokenHash: bam,
+                verifyTokenExp: hetHan,
+            });
+
+            mail = soanMailXacMinh({
+                ten: user.name,
+                lienKet: lienKetXacMinh(token),
+                soGio: Math.round(HAN_TOKEN_XAC_MINH / 3600000),
+            });
+        } else if (userExists.emailVerified === false) {
+            // Nhanh 2: da co mot ban dang ky nhung CHUA AI kich hoat.
+            //
+            // Cho dat lai va gui lai lien ket. Nghe nhu de dai, nhung mot tai
+            // khoan chua xac minh thi chua ai chung minh duoc no la cua minh,
+            // nen khong co gi de bao ve. Nguoc lai, KHONG cho dang ky lai moi
+            // la lo: ke tan cong chi can dang ky truoc bang dia chi cua nguoi
+            // khac la chiem cho vinh vien, chu that khong bao gio vao duoc nua.
+            userExists.name = name;
+            userExists.password = hashedPassword;
+            userExists.verifyTokenHash = bam;
+            userExists.verifyTokenExp = hetHan;
+            await userExists.save();
+
+            mail = soanMailXacMinh({
+                ten: userExists.name,
+                lienKet: lienKetXacMinh(token),
+                soGio: Math.round(HAN_TOKEN_XAC_MINH / 3600000),
+            });
+        } else {
+            // Nhanh 3: dia chi DA co tai khoan that.
+            //
+            // Khong dung toi ban ghi, khong gui lien ket kich hoat nao - nguoi
+            // gui yeu cau nay chua chac la chu tai khoan. Chi bao cho chu dia
+            // chi biet co nguoi vua thu dang ky bang email cua ho.
+            mail = soanMailDaCoTaiKhoan({ lienKetDangNhap: lienKetDangNhap() });
+        }
+
+        // Cho gui xong roi moi tra ve, o CA BA nhanh.
+        //
+        // Hai ly do. Mot: tren serverless, container co the bi dong bang ngay
+        // sau khi phan hoi di - viec chua await xong la viec khong bao gio
+        // chay. Hai: gui mail la phan ton thoi gian nhat cua ca ham, nen ba
+        // nhanh cung cho no thi thoi gian phan hoi cua chung khong con phan
+        // biet duoc.
+        //
+        // guiMail khong bao gio nem loi (xem config/mail.js). Gui hong thi
+        // van tra ve cung cau do - bao "khong gui duoc" cung la mot cach tra
+        // loi cau hoi dia chi nay co ton tai khong.
+        await guiMail({ ...mail, nguoiNhan: email });
+
+        return res.status(202).json({
+            message: 'Chúng tôi đã gửi một email tới địa chỉ này. Vui lòng mở thư để hoàn tất đăng ký (nhớ xem cả mục Spam).',
+            canXacMinh: true,
+        });
     } catch (error) {
         console.error('registerUser error:', error);
         if (error.code === 11000) {
             return res.status(400).json({ message: 'Email đã tồn tại' });
         }
         res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Kich hoat tai khoan bang token trong email
+// @route   POST /api/users/verify-email
+//
+// Token la 32 byte ngau nhien nen khong do duoc; trong CSDL chi co ban bam cua
+// no. Xem utils/tokenXacMinh.js.
+const verifyEmail = async (req, res) => {
+    try {
+        const token = String(req.body?.token || '').trim();
+        if (!token) {
+            return res.status(400).json({ message: 'Thiếu mã xác minh' });
+        }
+
+        // Tra cuu theo ban bam, va bat buoc con han ngay trong cau truy van -
+        // de quen dieu kien thoi han o day la mot lien ket cu van dung mai.
+        const user = await User.findOne({
+            verifyTokenHash: bamToken(token),
+            verifyTokenExp: { $gt: new Date() },
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                message: 'Liên kết xác minh không hợp lệ hoặc đã hết hạn. Hãy đăng ký lại để nhận liên kết mới.',
+            });
+        }
+
+        // Tai khoan bi admin khoa thi khong cap token, y het loginUser.
+        if (user.status === false) {
+            return res.status(403).json({
+                message: 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.',
+            });
+        }
+
+        user.emailVerified = true;
+        // Xoa token: mot lien ket chi dung duoc dung mot lan. Con de lai thi
+        // ai doc duoc la thu do sau nay - hom thu bi chiem, may dung chung -
+        // van vao duoc tai khoan.
+        user.verifyTokenHash = undefined;
+        user.verifyTokenExp = undefined;
+        await user.save();
+
+        // Bam vao lien ket la da chung minh so huu hom thu, nen dang nhap luon
+        // cho nguoi dung do phai go lai mat khau.
+        datCookieToken(res, generateToken(user._id));
+
+        return res.json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+        });
+    } catch (error) {
+        console.error('verifyEmail error:', error);
+        res.status(500).json({ message: 'Đã có lỗi xảy ra, vui lòng thử lại' });
     }
 };
 
@@ -405,10 +682,19 @@ const updateUserProfile = async (req, res) => {
 
         // --- Doi mat khau ---
         if (req.body.password) {
-            const newPassword = String(req.body.password);
+            const newPassword = req.body.password;
 
-            if (newPassword.length < 6) {
-                return res.status(400).json({ message: `Mật khẩu mới phải có ít nhất ${DAI_MAT_KHAU_TOI_THIEU} ký tự` });
+            // Truoc day cho nay chan o 6 ky tu nhung cau bao loi lai chen
+            // DAI_MAT_KHAU_TOI_THIEU (8) vao: mat khau 6-7 ky tu duoc nhan, con
+            // nguoi doc code thi tin la 8. Dang ky chan 8, doi mat khau chan 6 -
+            // tuc la duong doi mat khau la mot cach hop le de ha do manh cua mat
+            // khau xuong duoi nguong cua chinh he thong nay.
+            //
+            // Nay ca ba duong (dang ky, doi mat khau, va bat cu duong nao them
+            // sau) dung chung mot ham: xem utils/xacThucDauVao.js.
+            const loiMk = loiMatKhauMoi(newPassword);
+            if (loiMk) {
+                return res.status(400).json({ message: loiMk.replace('Mật khẩu', 'Mật khẩu mới') });
             }
 
             // Tai khoan dang nhap bang Google chua tung dat mat khau -> cho dat lan dau
@@ -417,13 +703,43 @@ const updateUserProfile = async (req, res) => {
             // token chua het han) deu doi duoc mat khau va chiem han tai khoan.
             if (user.password) {
                 const currentPassword = req.body.currentPassword;
-                if (!currentPassword) {
+                if (!matKhauNhanDuoc(currentPassword)) {
                     return res.status(400).json({ message: 'Vui lòng nhập mật khẩu hiện tại' });
                 }
-                const ok = await bcrypt.compare(String(currentPassword), user.password);
+
+                // Do mat khau cu o day cung phai bi dem, y het duong dang nhap.
+                //
+                // LO HONG DA VA: duong nay chi co protect() chan, khong co lop
+                // dem nao - ai cam duoc mot phien hop le (may dung chung, may
+                // khong khoa man hinh, token muon duoc) la do `currentPassword`
+                // khong gioi han so lan. Khac biet quan trong: doi duoc mat khau
+                // la chiem VINH VIEN, vi buoc luu ben duoi day passwordChangedAt
+                // len va da chu that mat quyen vao; con muon mot phien thi chi
+                // dung duoc toi luc token het han.
+                //
+                // Dem theo _id chu khong theo IP: nan nhan la mot tai khoan cu
+                // the, va ke tan cong o ngay tren may cua ho thi IP trung nhau
+                // khong noi len dieu gi.
+                const khoaDoiMk = `doimk:${user._id}`;
+                const giayCon = await conBiKhoa([khoaDoiMk]);
+                if (giayCon > 0) {
+                    res.set('Retry-After', String(giayCon));
+                    return res.status(429).json({
+                        message: `Bạn đã nhập sai mật khẩu hiện tại quá nhiều lần. Vui lòng thử lại sau ${Math.ceil(giayCon / 60)} phút.`,
+                        retryAfter: giayCon,
+                    });
+                }
+
+                const ok = await bcrypt.compare(currentPassword, user.password);
                 if (!ok) {
+                    await ghiNhanSai(khoaDoiMk, MAX_SAI_MAT_KHAU_CU, CUA_SO_DOI_MK);
                     return res.status(401).json({ message: 'Mật khẩu hiện tại không đúng' });
                 }
+
+                // Nhap dung thi xoa bo dem: nguoi that go nham vai lan roi nho
+                // ra khong bi keo theo han muc cu.
+                await xoaKhoa(khoaDoiMk);
+
                 if (await bcrypt.compare(newPassword, user.password)) {
                     return res.status(400).json({ message: 'Mật khẩu mới phải khác mật khẩu hiện tại' });
                 }
@@ -476,10 +792,10 @@ const deactivateMyAccount = async (req, res) => {
         // Yeu cau nhap lai mat khau: nut nay lam nguoi dung mat quyen truy cap
         // va chi admin moi mo lai duoc, nen phai chac chan la chinh chu.
         if (user.password) {
-            if (!req.body.password) {
+            if (!matKhauNhanDuoc(req.body.password)) {
                 return res.status(400).json({ message: 'Vui lòng nhập mật khẩu để xác nhận' });
             }
-            const ok = await bcrypt.compare(String(req.body.password), user.password);
+            const ok = await bcrypt.compare(req.body.password, user.password);
             if (!ok) {
                 return res.status(401).json({ message: 'Mật khẩu không đúng' });
             }
@@ -624,6 +940,7 @@ module.exports = {
     logoutUser,
     getUsers,
     registerUser,
+    verifyEmail,
     loginUser,
     googleLogin,
     updateUserProfile,

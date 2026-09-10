@@ -9,6 +9,7 @@ export default function GoogleCallbackInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const code = searchParams.get("code");
+  const state = searchParams.get("state");
   const error = searchParams.get("error");
   const [status, setStatus] = useState(() => {
     if (error) return "Google login failed. Please try again.";
@@ -25,14 +26,20 @@ export default function GoogleCallbackInner() {
       try {
         // Buoc 1: doi ma lay id_token. Buoc nay PHAI o may chu vi no can
         // GOOGLE_CLIENT_SECRET.
+        //
+        // `state` phai duoc chuyen tiep nguyen ven: may chu doi chieu no voi
+        // ban luu trong cookie httpOnly truoc khi chiu doi ma. Khong co buoc do
+        // thi trang nay nhan bat ky `code` nao ai dat vao dia chi cung duoc -
+        // xem ghi chu trong app/api/auth/google/route.ts.
         const response = await fetch(
-          `/api/auth/google/token?code=${encodeURIComponent(code)}`,
+          `/api/auth/google/token?code=${encodeURIComponent(code)}` +
+            `&state=${encodeURIComponent(state ?? "")}`,
         );
         const data = await response.json();
 
         if (!response.ok || !data.idToken) {
           console.error(data);
-          setStatus("Google login failed. Please try again.");
+          setStatus(data?.error || "Google login failed. Please try again.");
           return;
         }
 
@@ -71,7 +78,7 @@ export default function GoogleCallbackInner() {
     };
 
     exchangeCode();
-  }, [code, error, router]);
+  }, [code, state, error, router]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12">

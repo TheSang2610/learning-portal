@@ -41,24 +41,30 @@ export default function HeaderUserMenu() {
 
   // Chua biet minh la ai thi ve o trong dung kich thuoc.
   //
-  // Bo buoc nay la nguoi DANG dang nhap cung thay nut "Log In" loe len mot cai
-  // roi bien mat, vi luot goi /users/profile chua ve kip. Giu nguyen chieu cao
-  // de header khong giat.
+  // Bo buoc nay la nguoi DANG dang nhap cung thay nut "Dang nhap" loe len mot
+  // cai roi bien mat, vi luot goi /users/profile chua ve kip. Giu nguyen cho de
+  // header khong giat.
+  //
+  // 248px la be rong DO DUOC cua cum "Dang nhap" + "Dang ky mien phi" (75 + 20
+  // khoang cach + 153). Truoc day o day ghi 120px - hut mat 128px so voi noi
+  // dung that, nen cai o giu cho nay khong giu duoc gi: tai xong la ca dam ben
+  // trai no nhay mot phat. Sai san tu ban tieng Anh (cum do da rong ~175px).
+  // Doi chu tren hai nut thi phai do lai con so nay.
   if (dangTai) {
-    return <div className="h-[56px] w-[120px]" aria-hidden="true" />;
+    return <div className="h-[56px] w-[248px]" aria-hidden="true" />;
   }
 
   if (!user) {
     return (
       <div className="flex items-center gap-5">
         <Link href="/?auth=login" className="text-sm text-blue-600 hover:underline">
-          Log In
+          Đăng nhập
         </Link>
         <Link
           href="/?auth=register"
           className="rounded-md border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
         >
-          Join for Free
+          Đăng ký miễn phí
         </Link>
       </div>
     );

@@ -16,7 +16,7 @@ import {
   X,
 } from "lucide-react";
 import SettingRow, { SettingCard } from "@/src/components/settings/SettingRow";
-import { DAI_MAT_KHAU_TOI_THIEU } from "@/src/services/quyDinh";
+import { loiMatKhauMoi } from "@/src/services/quyDinh";
 import {
   getMyProfile,
   updateUserProfileApi,
@@ -699,11 +699,12 @@ function SecurityTab({
       setMsg({ ok: false, text: "Vui lòng nhập mật khẩu hiện tại." });
       return false;
     }
-    if (next.length < DAI_MAT_KHAU_TOI_THIEU) {
-      setMsg({
-        ok: false,
-        text: `Mật khẩu mới phải có ít nhất ${DAI_MAT_KHAU_TOI_THIEU} ký tự.`,
-      });
+    // Dung chung ham voi backend (services/quyDinh.ts). Truoc day cho nay chi
+    // kiem do dai toi thieu; bcrypt thi bo lang moi byte tu 73 tro di, nen mot
+    // mat khau dai hon the bi cat am tham ma khong ai duoc bao.
+    const loiMk = loiMatKhauMoi(next);
+    if (loiMk) {
+      setMsg({ ok: false, text: loiMk.replace("Mật khẩu", "Mật khẩu mới") + "." });
       return false;
     }
     if (next !== confirm) {

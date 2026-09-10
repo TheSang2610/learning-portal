@@ -16,7 +16,13 @@ const timNguoiDungTuToken = async (req) => {
 
     let decoded;
     try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET);
+        // Ghim algorithms: khong ghim thi thuat toan duoc doc tu header cua
+        // CHINH cai token duoc gui len - tuc la do ben gui chon. Do la ho nha
+        // lo hong "alg: none" va doi HS/RS. jsonwebtoken v9 da tu chan phan
+        // lon truong hop khi khoa la chuoi, nhung ghim ro rang thi khong con
+        // phu thuoc vao mac dinh cua mot ban thu vien nao ca - va ban thu vien
+        // thi doi duoc bang mot lan `npm update` ma khong ai doc lai cho nay.
+        decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
     } catch (error) {
         if (error.name === 'TokenExpiredError') return { loi: 'het_han' };
         return { loi: 'token_hong' };
