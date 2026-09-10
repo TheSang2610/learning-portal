@@ -48,3 +48,12 @@ lint-report.json
 
 .vercel
 .env*
+
+# vercel CLI tu them hai dong duoi khi chay `vercel link`.
+.vercel
+.env*
+# ...nhung `.env*` nuot luon ca file mau. File do la TAI LIEU - no liet ke
+# moi bien can dat kem ly do, va khong chua gia tri nao. Hien no dang duoc git
+# theo doi nen luat tren khong dong toi, nhung ai lo `git rm --cached` mot lan
+# la no bien mat khong dau vet. Mien tru ro rang cho chac.
+!.env.example
