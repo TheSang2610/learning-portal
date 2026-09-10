@@ -2,21 +2,23 @@ name: CI
 
 on:
   push:
-    branches: [main, dev, TheSang]
+    branches: [main]
   pull_request:
 
-# Hai job chay song song va doc lap: frontend hong thi van biet backend con
-# xanh hay khong. Gop lam mot job thi buoc dau do la ca job do, mat thong tin.
+# MOT job duy nhat ke tu khi backend tach ra kho rieng.
 #
-# GitHub CHI doc .github/workflows o goc kho ma nguon. Sau khi gop hai du an
-# vao mot kho, file ci.yml cu cua backend nam o backend/.github/ khong con
-# chay nua - noi dung cua no da chuyen thanh job "backend" ben duoi.
+# Truoc day file nay co hai job song song (frontend / backend) vi ca hai nua
+# nam chung mot kho, va "working-directory" tro vao tung thu muc con. Backend
+# gio o https://github.com/TheSang2610/learning-portal-backend va mang theo
+# workflow cua no, nen o day khong con gi de chay song song nua.
+#
+# Ma nguon da len GOC kho, nen KHONG con "working-directory" va
+# "cache-dependency-path" cung tro thang vao package-lock.json o goc. De lai
+# duong dan "frontend/..." cu la CI do ngay o buoc cai, voi loi kieu "khong tim
+# thay package-lock.json".
 jobs:
   frontend:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
 
     steps:
       - uses: actions/checkout@v4
@@ -27,7 +29,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - run: npm ci
 
@@ -45,34 +47,5 @@ jobs:
       - name: Build
         run: npm run build
 
-  backend:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
-
-    steps:
-      - uses: actions/checkout@v4
-
-      # Cung phien ban voi Dockerfile va voi job frontend.
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: backend/package-lock.json
-
-      - run: npm ci
-
-      # Bat loi cu phap o MOI file, ke ca file khong duoc test nao cham toi.
-      # Backend chua co linter nen day la luoi an toan re nhat.
-      - name: Kiem cu phap
-        run: |
-          find src index.js -name '*.js' -print0 | xargs -0 -n1 node --check
-          echo "Tat ca file .js deu phan tich duoc"
-
-      - name: Test
-        run: npm test
-
-# KHONG buoc nao can bi mat: test cua backend deu la ham thuan, khong mo ket
-# noi CSDL va khong goi Cloudinary. Muon test cham that vao dich vu ngoai thi
-# phai dat secrets trong repo va tach thanh workflow rieng.
+# KHONG buoc nao can bi mat. Build cua Next o day khong goi API that: moi loi
+# goi du lieu deu co gia tri du phong, xem src/services/serverFetch.ts.

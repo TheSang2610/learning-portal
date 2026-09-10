@@ -56,31 +56,31 @@ OAuth 2.0, phiên đăng nhập bằng cookie `httpOnly`.
 
 ### Frontend
 
-| | |
-| --- | --- |
-| Framework | Next.js 16 — App Router, Turbopack |
-| UI | React 19, TypeScript 5 |
-| Styling | Tailwind CSS v4 |
+|            |                                                       |
+| ---------- | ----------------------------------------------------- |
+| Framework  | Next.js 16 — App Router, Turbopack                    |
+| UI         | React 19, TypeScript 5                                |
+| Styling    | Tailwind CSS v4                                       |
 | Chất lượng | ESLint, Prettier, `tsc --noEmit`, husky + lint-staged |
 
 ### Backend
 
-| | |
-| --- | --- |
-| Máy chủ | Express 5 (CommonJS) |
-| CSDL | MongoDB Atlas qua Mongoose 9 |
+|          |                                               |
+| -------- | --------------------------------------------- |
+| Máy chủ  | Express 5 (CommonJS)                          |
+| CSDL     | MongoDB Atlas qua Mongoose 9                  |
 | Xác thực | JWT trong cookie `httpOnly`, Google OAuth 2.0 |
-| Lưu trữ | Cloudinary (ảnh, video, tài liệu) |
-| Mail | Nodemailer qua Gmail app password |
-| Kiểm thử | `node:test` — 158 test |
+| Lưu trữ  | Cloudinary (ảnh, video, tài liệu)             |
+| Mail     | Nodemailer qua Gmail app password             |
+| Kiểm thử | `node:test` — 158 test                        |
 
 ### Hạ tầng
 
-| | |
-| --- | --- |
-| Triển khai | Vercel (hai project riêng) |
-| CI | GitHub Actions — hai job song song |
-| Tài liệu API | Swagger UI trên GitHub Pages |
+|              |                                    |
+| ------------ | ---------------------------------- |
+| Triển khai   | Vercel (hai project riêng)         |
+| CI           | GitHub Actions — hai job song song |
+| Tài liệu API | Swagger UI trên GitHub Pages       |
 
 ---
 
@@ -116,22 +116,27 @@ nhất** — không có `sameSite` đỡ lưng.
 
 ## Cấu trúc dự án
 
+Kho này chứa **giao diện**. REST API nằm ở kho riêng — xem mục dưới.
+
 ```
 learning-portal/
-├── frontend/               # Next.js 16 — giao diện
-├── backend/                # Express 5 — REST API
+├── app/                    # App Router — 56 trang, 3 nhóm route
+├── src/                    # components · services · hooks
+├── public/                 # Ảnh tĩnh, favicon
 ├── docs/                   # Swagger UI + openapi.json (GitHub Pages)
-├── .github/workflows/      # CI hai job song song
+├── .github/workflows/      # CI một job
 └── README.md
 ```
 
 `docs/` **phải** ở gốc kho — GitHub Pages chỉ đọc thư mục gốc hoặc `/docs` ở
-gốc, để nó trong thư mục con là trang tài liệu chết.
+gốc, để nó trong thư mục con là trang tài liệu chết. Đó cũng là lý do tệp đặc
+tả API vẫn ở lại đây dù backend đã tách ra: kho backend để riêng tư nên
+GitHub Pages không phục vụ được từ đó.
 
 ### Frontend
 
 ```
-frontend/
+learning-portal/
 ├── public/                          # Ảnh tĩnh, favicon, api-docs.html
 ├── app/                             # App Router — 56 trang, 3 nhóm route
 │   ├── globals.css                  # CSS toàn cục + Tailwind v4
@@ -204,59 +209,16 @@ không có cookie của trình duyệt, phải chuyển tiếp header thủ côn
 
 ### Backend
 
-```
-backend/
-├── index.js                         # Điểm vào: CORS, CSRF, gắn route
-├── vercel.json                      # Cấu hình hàm serverless
-│
-└── src/
-    ├── config/
-    │   ├── db.js                    # Kết nối MongoDB, dùng lại giữa các lần gọi
-    │   ├── cloudinary.js            # Ưu tiên CLOUDINARY_URL, lùi về ba biến rời
-    │   ├── mail.js                  # Thiếu cấu hình thì bỏ qua, KHÔNG ném lỗi
-    │   └── thanhToan.js             # Sinh mã VietQR theo từng đơn
-    │
-    ├── middlewares/
-    │   ├── authMiddleware.js        # protect · instructor · admin
-    │   ├── chongCsrf.js             # Xét Origin, lùi về Referer
-    │   ├── loginRateLimit.js        # Đếm hai khoá: ip|email VÀ ip riêng
-    │   ├── rateLimit.js             # Giới hạn tần suất dùng chung
-    │   ├── cacheControl.js          # Đặt no-store cho dữ liệu riêng tư
-    │   └── idHopLe.js               # Chặn ObjectId sai dạng trước khi truy vấn
-    │
-    ├── models/                      # 17 lược đồ Mongoose
-    │   ├── User · Course · Lesson · Enrollment/
-    │   ├── Quiz · QuizAttempt · Certificate · Achievement/
-    │   ├── Order · GiaoDichCoin/    # Đơn hàng và sổ cái ví coin
-    │   ├── Post · Document · Review · Faq · Banner/
-    │   └── categoryModel · providerModel/
-    │
-    ├── routes/                      # 16 tệp, 136 endpoint
-    │   ├── userRoutes · adminRoutes/
-    │   ├── courseRoutes · lessonRoutes · enrollmentRoutes/
-    │   ├── quizRoutes · certificateRoutes · reviewRoutes/
-    │   ├── coinRoutes · orderRoutes/
-    │   └── postRoutes · documentRoutes · faqRoutes/
-    │       bannerRoutes · categoryRoutes · providerRoutes/
-    │
-    ├── controllers/                 # 18 tệp, logic nghiệp vụ
-    │   └── adminOrderController.js  # Xác nhận đơn, cộng coin, gửi mail
-    │
-    └── utils/                       # Công cụ dùng chung + tệp *.test.js
-        ├── quyenNoiDung.js          # CỬA DUY NHẤT gác nội dung có phí
-        ├── viCoin.js · coin.js      # Trừ/cộng coin bằng một lệnh ghi
-        ├── cookieToken.js           # NƠI DUY NHẤT đặt cookie phiên
-        ├── htmlBaiViet.js           # Lọc HTML chặn XSS lưu trữ
-        ├── matKhau.js               # Băm bcrypt, quy tắc độ mạnh
-        ├── contentFilter.js         # Lọc từ ngữ vi phạm
-        ├── truyVan.js               # Phân trang, sắp xếp dùng chung
-        ├── uploadCloud.js · vanBan.js · ghiDanh.js · mailDonHang.js/
-        └── checkDb · checkMail · checkCloudinary · doiMatKhauAdmin/
-                                     # Script chạy tay, không phải route
-```
+Nằm ở kho riêng: **[learning-portal-backend](https://github.com/TheSang2610/learning-portal-backend)**.
 
-Tệp test đặt **ngay cạnh** tệp được kiểm, tên `*.test.js` — sửa một hàm thì
-thấy ngay bài test của nó, không phải đi tìm ở cây thư mục khác.
+Express 5 · Mongoose · MongoDB Atlas. Mọi thứ về route, phân quyền, cổng nội
+dung có phí và ví coin đều mô tả trong README của kho đó.
+
+**Vì sao tách hẳn hai kho.** Đã có giai đoạn gộp chung một kho cho gọn, nhưng
+nó đẻ ra một bản backend thứ hai nằm song song với bản gốc: chỗ đem deploy và
+chỗ đem chạy kiểm thử là hai tệp khác nhau trên đĩa, giữ khớp nhau hoàn toàn
+bằng tay. Vá một bên mà quên bên kia thì bản đang chạy vẫn giữ nguyên lỗi
+trong khi CI vẫn xanh. Hai kho tách bạch thì mỗi nửa chỉ có đúng một bản.
 
 ---
 
@@ -270,48 +232,31 @@ thấy ngay bài test của nó, không phải đi tìm ở cây thư mục khá
 
 ### 1. Tải mã nguồn
 
+Hai nửa nằm ở hai kho:
+
 ```bash
-git clone https://github.com/TheSang2610/learning-portal.git
-cd learning-portal
+git clone https://github.com/TheSang2610/learning-portal.git          # giao diện
+git clone https://github.com/TheSang2610/learning-portal-backend.git  # REST API
 ```
 
 ### 2. Chạy Backend
 
 ```bash
-cd backend
+cd learning-portal-backend
 npm install
 cp .env.example .env      # rồi điền giá trị thật
 npm run dev               # http://localhost:5000
 ```
 
-Biến môi trường trong `backend/.env`:
-
-| Biến | Bắt buộc | Ý nghĩa |
-| --- | --- | --- |
-| `MONGO_URI` | có | Chuỗi kết nối MongoDB |
-| `JWT_SECRET` | có | Khoá ký token phiên |
-| `FRONTEND_ORIGINS` | có | Origin được phép gọi CORS, cách nhau dấu phẩy. Cái **đầu tiên** cũng là gốc để ghép link trong thư xác minh |
-| `FRONTEND_URL` | không | Ghi đè gốc dùng cho link xác minh, khi nó khác cái đầu của `FRONTEND_ORIGINS` |
-| `CLOUDINARY_URL` | có | Dạng gộp `cloudinary://key:secret@cloud` |
-| `GOOGLE_CLIENT_ID` | không | Bật đăng nhập Google |
-| `MAIL_USER` · `MAIL_APP_PASSWORD` | **có trên bản chạy thật** | Mail báo đơn chuyển khoản, **và thư xác minh khi đăng ký**. Thiếu thì đăng ký quay về hành vi cũ và lộ email nào đã tồn tại |
-| `MAIL_ADMIN` | không | Địa chỉ nhận thông báo quản trị. Trống thì gửi về `MAIL_USER` |
-| `SO_TAI_KHOAN` · `TEN_TAI_KHOAN` · `NGAN_HANG` | không | Hiển thị ở màn hình chuyển khoản |
-
-Kiểm tra kết nối bên ngoài:
-
-```bash
-npm run check:db          # thử kết nối MongoDB
-npm run check:cloudinary  # thử tải ảnh lên
-npm run check:mail        # gửi thử một mail thật
-npm run check:gioihan     # kiểm bộ đếm chống dò mật khẩu trên CSDL thật
-npm run check:dangky      # kiểm đầu-cuối luồng đăng ký có xác minh email
-```
+Danh sách biến môi trường, kèm biến nào bắt buộc và vì sao, nằm trong
+[`.env.example`](https://github.com/TheSang2610/learning-portal-backend/blob/main/.env.example) của kho đó — tệp ấy là tài liệu,
+không chỉ là khuôn mẫu. Kho backend cũng có sẵn các lệnh `npm run check:*` để
+thử kết nối CSDL, Cloudinary và hòm thư trước khi chạy thật.
 
 ### 3. Chạy Frontend
 
 ```bash
-cd frontend
+cd learning-portal
 npm install
 echo "NEXT_PUBLIC_API_URL=http://localhost:5000" > .env.local
 npm run dev               # http://localhost:3000
@@ -328,28 +273,28 @@ giá trị trên Vercel xong phải deploy lại mới có tác dụng.
 **136 endpoint / 16 nhóm.** Tài liệu đầy đủ, bấm thử được:
 [Swagger UI](https://thesang2610.github.io/learning-portal/)
 
-| Nhóm | Số lượng | Ví dụ |
-| --- | --- | --- |
-| Quản trị | 23 | `GET /api/admin/dashboard/statistics` |
-| Khoá học | 14 | `PUT /api/courses/:id/publish` |
-| Người dùng | 13 | `POST /api/users/login` · `POST /api/users/verify-email` |
-| Trắc nghiệm | 11 | `POST /api/quizzes/:id/submit` |
-| Ghi danh | 10 | `PUT /api/enrollments/:id/progress` |
-| Chứng chỉ | 9 | `GET /api/certificates/verify/:code` |
-| Đánh giá | 9 | `POST /api/reviews/:id/helpful` |
-| Bài viết | 8 | `GET /api/posts/:slug` |
-| Ví coin | 5 | `GET /api/coins/lich-su` |
-| Đơn hàng | 5 | `PUT /api/admin/orders/:code/confirm` |
-| Tài liệu · Bài học · FAQ · Nhà cung cấp | 20 | |
-| Banner · Danh mục | 8 | |
+| Nhóm                                    | Số lượng | Ví dụ                                                    |
+| --------------------------------------- | -------- | -------------------------------------------------------- |
+| Quản trị                                | 23       | `GET /api/admin/dashboard/statistics`                    |
+| Khoá học                                | 14       | `PUT /api/courses/:id/publish`                           |
+| Người dùng                              | 13       | `POST /api/users/login` · `POST /api/users/verify-email` |
+| Trắc nghiệm                             | 11       | `POST /api/quizzes/:id/submit`                           |
+| Ghi danh                                | 10       | `PUT /api/enrollments/:id/progress`                      |
+| Chứng chỉ                               | 9        | `GET /api/certificates/verify/:code`                     |
+| Đánh giá                                | 9        | `POST /api/reviews/:id/helpful`                          |
+| Bài viết                                | 8        | `GET /api/posts/:slug`                                   |
+| Ví coin                                 | 5        | `GET /api/coins/lich-su`                                 |
+| Đơn hàng                                | 5        | `PUT /api/admin/orders/:code/confirm`                    |
+| Tài liệu · Bài học · FAQ · Nhà cung cấp | 20       |                                                          |
+| Banner · Danh mục                       | 8        |                                                          |
 
 Ba lớp bảo vệ trong `middlewares/authMiddleware.js`:
 
-| | Cho qua ai |
-| --- | --- |
-| `protect` | đã đăng nhập (đọc token từ cookie `httpOnly`) |
-| `instructor` | **giảng viên và quản trị** |
-| `admin` | chỉ quản trị |
+|              | Cho qua ai                                    |
+| ------------ | --------------------------------------------- |
+| `protect`    | đã đăng nhập (đọc token từ cookie `httpOnly`) |
+| `instructor` | **giảng viên và quản trị**                    |
+| `admin`      | chỉ quản trị                                  |
 
 ---
 
@@ -387,32 +332,32 @@ giờ thu thiếu.
 ## Kiểm thử và CI
 
 ```bash
-cd frontend && npm run verify    # format + lint + typecheck + build
-cd backend  && npm test          # 158 test
+npm run verify    # format + lint + typecheck + build
 ```
 
-CI chạy đúng hai lệnh đó, tách thành **hai job song song** — frontend hỏng thì
-vẫn biết backend còn xanh hay không.
+CI chạy đúng bốn bước đó, tách rời chứ không gộp thành một, để log chỉ thẳng
+vào chỗ vỡ thay vì báo "verify hỏng".
 
-Test của backend là **hàm thuần**: không mở kết nối CSDL, không gọi Cloudinary.
-CI không có secret nào, và `MONGO_URI` trỏ tới cụm dữ liệu thật đang chạy. CI
-còn chạy `node --check` trên mọi tệp `.js` — backend chưa có linter nên đó là
-lưới an toàn duy nhất bắt lỗi cú pháp ở tệp không test nào chạm tới.
+Không bước nào cần secret: build của Next ở đây không gọi API thật — mọi lời
+gọi dữ liệu đều có giá trị dự phòng, xem `src/services/serverFetch.ts`.
+
+Kho backend có bộ kiểm thử và CI riêng của nó.
 
 ---
 
 ## Triển khai
 
-Hai project Vercel riêng, mỗi cái build một thư mục:
+Hai project Vercel riêng, mỗi cái build một kho:
 
-| Thư mục | Project | Địa chỉ |
-| --- | --- | --- |
-| `frontend/` | `learning-portal-s` | learning-portal-s.vercel.app |
-| `backend/` | `learning-portal-s-api` | learning-portal-backend-ten.vercel.app |
+| Kho                       | Project                 | Địa chỉ                                |
+| ------------------------- | ----------------------- | -------------------------------------- |
+| `learning-portal`         | `learning-portal-s`     | learning-portal-s.vercel.app           |
+| `learning-portal-backend` | `learning-portal-s-api` | learning-portal-backend-ten.vercel.app |
 
-Hiện deploy bằng tay, chạy `npx vercel --prod` **trong đúng thư mục con**. Khi
-nối Git integration thì mỗi project phải đặt **Root Directory** trỏ vào thư mục
-con của nó — bỏ bước đó thì Vercel build từ gốc và không thấy `package.json` nào.
+Hiện deploy bằng tay: `npx vercel --prod` ngay tại gốc mỗi kho. Từ khi hai nửa
+tách hẳn, **Root Directory của cả hai project đều là gốc kho** — không còn thư
+mục con nào phải trỏ tới, nên nối Git integration cũng không phải chỉnh gì
+thêm.
 
 > **Không bao giờ commit tệp `.env`.** Kho này chỉ chứa `.env.example` với giá
 > trị mẫu. Mật khẩu máy chủ, chuỗi kết nối CSDL, khoá SMTP không được đặt trong
@@ -425,4 +370,5 @@ con của nó — bỏ bước đó thì Vercel build từ gốc và không th�
 
 **Nguyễn Thế Sang** — [github.com/TheSang2610](https://github.com/TheSang2610)
 
-Toàn bộ frontend và backend.
+Toàn bộ frontend và backend — kho này là giao diện, API ở
+[learning-portal-backend](https://github.com/TheSang2610/learning-portal-backend).
