@@ -11,6 +11,16 @@ Frontend Next.js, backend Express + MongoDB, hai phần chạy độc lập.
 | Dòng mã frontend (ts/tsx)  | ~25.170, trong 121 file                     |
 | Dòng mã backend (js)       | ~8.840, trong 70 file                       |
 
+## Đề cương đề tài
+
+Thực tập cơ sở — Học viện Công nghệ Bưu chính Viễn thông, cơ sở TP.HCM.
+Nhóm 1: Nguyễn Thế Sang, Nguyễn Thanh Sang, Thái Thanh Vũ.
+
+| Bản | Xem |
+| --- | --- |
+| PDF (xem thẳng trên trình duyệt) | [De_cuong_Nhom1_LearningPortal.pdf](De_cuong_Nhom1_LearningPortal.pdf) |
+| Word (bản gốc, còn sửa được) | [De_cuong_Nhom1_LearningPortal.docx](De_cuong_Nhom1_LearningPortal.docx) |
+
 ---
 
 ## Mục lục
