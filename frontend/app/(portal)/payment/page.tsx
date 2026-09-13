@@ -14,6 +14,7 @@ import {
   taoDonHang,
 } from "@/src/services/order";
 import { getErrorMessage } from "@/src/services/apiHelper";
+import NutMuaBangCoin from "@/src/components/common/NutMuaBangCoin";
 
 // Bao lau hoi lai may chu mot lan xem don da duoc xac nhan chua.
 //
@@ -365,6 +366,33 @@ function NoiDungThanhToan() {
           </p>
         </div>
       </section>
+
+      {/* Tra bang coin, dat TRUOC khoi QR.
+          Truoc day trang nay chi co mot duong duy nhat la chuyen khoan: hoc vien
+          co san coin trong vi van phai mo app ngan hang roi ngoi cho quan tri
+          doi soat. Nut mua bang coin von chi nam o the ben phai trang khoa hoc,
+          ma nut to tren banner lai di thang sang day nen khong may ai thay no. */}
+      {don.status === "pending" && don.course?._id && (
+        <section
+          className="mb-8 rounded-2xl border border-amber-200 bg-amber-50/60 p-5"
+          aria-label="Thanh toán bằng coin"
+        >
+          <h2 className="mb-1 text-sm font-semibold text-slate-900">
+            Trả bằng coin — mở khóa ngay
+          </h2>
+          <p className="mb-3 text-xs text-slate-600">
+            Không phải chuyển khoản, không phải chờ ban quản trị đối soát.
+          </p>
+          <NutMuaBangCoin
+            courseId={don.course._id}
+            gia={don.amount}
+            khiMuaXong={() => {
+              const slug = don.course?.slug;
+              router.push(slug ? `/learn?slug=${slug}` : "/user/profile");
+            }}
+          />
+        </section>
+      )}
 
       {/* Chưa khai báo tài khoản nhận tiền */}
       {ck && !ck.daCauHinh && (

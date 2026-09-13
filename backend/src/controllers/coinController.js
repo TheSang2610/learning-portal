@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
+const Order = require('../models/Order');
 const CoinTransaction = require('../models/CoinTransaction');
 const { congCoin, truCoin } = require('../utils/viCoin');
 const { giaRaCoin, kiemSoCoinNap, coinRaDong } = require('../utils/coin');
@@ -201,6 +202,22 @@ const muaBangCoin = async (req, res) => {
             });
             console.error('muaBangCoin - ghi danh that bai, da hoan coin:', loiGhiDanh.message);
             return res.status(500).json({ message: 'Không mở được khóa học, coin đã được hoàn lại' });
+        }
+
+        // Hoc vien co the da bam "Mua" o banner truoc do, tuc la dang co mot don
+        // chuyen khoan cho duyet cho dung khoa nay. Tra bang coin xong ma de don
+        // do treo thi quan tri van thay no trong hang cho va co the xac nhan mot
+        // khoan tien chua bao gio ve. Ghi danh thi khong nhan doi (taoGhiDanh
+        // kiem truoc), nhung don van hien la da thu tien - nen huy o day.
+        try {
+            await Order.updateMany(
+                { student: req.user._id, course: khoa._id, status: 'pending' },
+                { $set: { status: 'cancelled', note: 'Đã thanh toán bằng coin' } }
+            );
+        } catch (loiHuyDon) {
+            // Khoa hoc DA mo va coin DA tru - khong duoc de mot loi don dep lam
+            // hong ca yeu cau. Ghi log de con doi soat.
+            console.error('muaBangCoin - khong huy duoc don cho:', loiHuyDon.message);
         }
 
         return res.json({

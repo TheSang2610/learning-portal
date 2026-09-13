@@ -491,7 +491,20 @@ function CourseDetailPageContent() {
                 </Link>
               ) : (
                 <button
-                  onClick={handleEnrollCourse}
+                  onClick={() => {
+                    // Khoa co phi: dua xuong the mua, KHONG tao don rồi nhay
+                    // thang sang man hinh QR nhu truoc. Nut nay la nut to nhat
+                    // trang nen hau het nguoi dung bam no - nhay thang sang QR
+                    // tuc la ai co san coin trong vi cung bi day sang chuyen
+                    // khoan, khong he biet la co duong khac.
+                    if ((course.price ?? 0) > 0) {
+                      document
+                        .getElementById("mua-khoa-hoc")
+                        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      return;
+                    }
+                    void handleEnrollCourse();
+                  }}
                   disabled={submitting}
                   className="flex items-center gap-3 rounded-lg bg-blue-700 px-10 py-4 text-center text-base font-bold tracking-wide text-white shadow-md transition hover:bg-blue-800 disabled:bg-blue-400"
                 >
@@ -501,7 +514,7 @@ function CourseDetailPageContent() {
                       ? `Mua khóa học - ${dinhDangTien(course.price ?? 0)}`
                       : "Đăng ký học miễn phí"}
                   <span className="text-xs font-normal opacity-80">
-                    {(course.price ?? 0) > 0 ? "Chuyển khoản QR" : "Bắt đầu ngay"}
+                    {(course.price ?? 0) > 0 ? "Coin hoặc chuyển khoản" : "Bắt đầu ngay"}
                   </span>
                 </button>
               )}
@@ -915,7 +928,10 @@ function CourseDetailPageContent() {
           </div>
 
           {/* CỘT PHẢI: BANNER BOX PHỤ (TRÁNH BỊ TRỐNG KHI CUỘN) */}
-          <div className="space-y-4 lg:sticky lg:top-24 lg:col-span-4">
+          <div
+            id="mua-khoa-hoc"
+            className="scroll-mt-24 space-y-4 lg:sticky lg:top-24 lg:col-span-4"
+          >
             <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-md">
               <div className="space-y-1">
                 <span className="block text-xs font-bold tracking-widest text-slate-500 uppercase">
