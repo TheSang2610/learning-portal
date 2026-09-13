@@ -528,12 +528,17 @@ function CourseLearnPageContent() {
                   />
                 ) : activeLesson.videoUrl ? (
                   <>
+                    {/* KHONG dat crossOrigin o day. Dat vao la trinh duyet doi
+                        may chu video phai gui header Access-Control-Allow-Origin;
+                        may chu nao khong gui thi video bi chan thang, nguoi hoc
+                        chi thay o den. 18 bai dung media.w3.org da dinh dung loi
+                        do. crossOrigin chi can khi muon ve khung hinh ra canvas
+                        hoac nap phu de tu ten mien khac - trang nay khong lam. */}
                     <video
                       ref={videoRef}
                       key={activeLesson._id}
                       controls
                       className="h-full w-full object-contain"
-                      crossOrigin="anonymous"
                       onEnded={handleVideoEnded}
                       onError={(e) => {
                         console.error("❌ Video element error:", e);
