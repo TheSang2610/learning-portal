@@ -36,6 +36,7 @@ import {
 } from "@/src/services/enrollment.api";
 
 import { getCourseQuizzes, type Quiz } from "@/src/services/quizService";
+import { layDuongDanNhung } from "@/src/services/nhungVideo";
 
 // Backend tra ve 200 kem isEnrolled: false khi chua dang ky chu khong tra 404,
 // nen phai thu hep kieu truoc thi moi doc duoc lessonProgress.
@@ -131,6 +132,12 @@ function CourseLearnPageContent() {
   const [showCertificate, setShowCertificate] = useState<boolean>(false);
   const [videoError, setVideoError] = useState<string>("");
 
+  // Khac null nghia la bai nay dung video cua YouTube/Vimeo: phai nhung bang
+  // iframe, the <video> khong doc duoc trang xem cua ho.
+  const nhungVideo = activeLesson?.videoUrl
+    ? layDuongDanNhung(activeLesson.videoUrl)
+    : null;
+
   useEffect(() => {
     if (!courseSlug) return;
 
@@ -218,6 +225,8 @@ function CourseLearnPageContent() {
     // nen o trong closure no lai thanh string | undefined.
     const videoUrl = activeLesson?.videoUrl;
     if (!videoUrl || !videoRef.current) return;
+    // Bai dung YouTube/Vimeo khong dung the <video> nen khong co gi de nap.
+    if (layDuongDanNhung(videoUrl)) return;
 
     const setupVideo = async () => {
       try {
@@ -507,7 +516,17 @@ function CourseLearnPageContent() {
             <div className="space-y-4">
               {/* Box Video bo góc thanh lịch */}
               <div className="relative aspect-video overflow-hidden rounded-2xl bg-black shadow-md">
-                {activeLesson.videoUrl ? (
+                {nhungVideo ? (
+                  <iframe
+                    key={activeLesson._id}
+                    src={nhungVideo}
+                    title={activeLesson.title}
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  />
+                ) : activeLesson.videoUrl ? (
                   <>
                     <video
                       ref={videoRef}
@@ -584,6 +603,19 @@ function CourseLearnPageContent() {
                 </div>
 
                 <div className="flex w-full flex-shrink-0 flex-col items-stretch gap-2 pt-2 md:w-auto md:flex-row md:pt-0">
+                  {/* Video nhung chay trong iframe cua ben thu ba nen trang nay
+                      khong nhan duoc su kien "het video" nhu the <video> - thieu
+                      nut nay thi bai dung YouTube khong bao gio duoc tinh la
+                      xong, keo theo khong bao gio cap duoc chung nhan. */}
+                  {nhungVideo && !checkLessonCompleted(activeLesson._id) && (
+                    <button
+                      onClick={handleVideoEnded}
+                      className="flex transform items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-xs font-bold text-white shadow-md transition-all hover:bg-emerald-700 active:scale-95"
+                    >
+                      <CheckCircle size={16} />
+                      Đánh dấu đã học xong
+                    </button>
+                  )}
                   {currentQuiz && (
                     <button
                       onClick={() => setIsDoingQuiz(true)}
