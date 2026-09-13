@@ -44,6 +44,12 @@ const dungChungChiPdf = (cc, tuyChon = {}) => {
         size: 'A4',
         layout: 'landscape',
         margin: 0,
+        // Phai chi ro phong ngay o day. Bo trong thi pdfkit tu nap Helvetica
+        // trong ham dung, ma tep Helvetica.cjs nam trong node_modules va duoc
+        // nap bang require DONG - bo dong goi cua Vercel khong lan ra duoc nen
+        // khong chep len may chu. Ket qua: chay o may thi ngon, len production
+        // moi lan goi deu 500 "Cannot find module .../Helvetica.cjs".
+        font: THUONG,
         info: {
             Title: `Chung nhan - ${cc.courseName || cc.title || ''}`,
             Author: 'Learning Portal'
