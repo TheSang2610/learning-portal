@@ -321,6 +321,22 @@ const BANG = [
     ghiChu: "Route chỉ gắn protect. Controller kiểm tiếp: chỉ tác giả hoặc admin xóa được, người khác nhận 403.",
   }],
 
+  // ------------------------------ Tro giang AI ------------------------------
+  // Ca ba deu `protect`. `hoi` con di qua duocXemNoiDung() vi loi nhac gui cho
+  // mo hinh co chua nguyen van noi dung bai hoc - xem troLyController.js.
+  ["post", "/api/tro-ly/hoi", "dn", "Hoi tro giang AI ve bai hoc", {
+    tag: "Trợ giảng AI",
+    than: { courseId: "string", lessonId: "string", cauHoi: "string" },
+    tra: { traLoi: "string" },
+    ghiChu: "403 nếu chưa ghi danh khóa. 429 khi vượt hạn mức 20 câu/giờ hoặc 100 câu/ngày. 503 khi máy chủ chưa cắm khóa API.",
+  }],
+  ["get", "/api/tro-ly/lich-su", "dn", "Doc doan tro chuyen cua chinh minh", {
+    tag: "Trợ giảng AI", q: ["courseId", "lessonId"],
+  }],
+  ["delete", "/api/tro-ly/lich-su", "dn", "Xoa doan tro chuyen", {
+    tag: "Trợ giảng AI", q: ["courseId", "lessonId"],
+  }],
+
   // ------------------------------- Quan tri -------------------------------
   // Ca nhom nay nam sau `router.use(protect, admin)` nen deu la chi Admin.
   ["get", "/api/admin/dashboard/statistics", "ad", "Số liệu tổng quan", { tag: "Quản trị" }],

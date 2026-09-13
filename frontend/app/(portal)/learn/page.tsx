@@ -16,6 +16,7 @@ import {
 
 import CertificateModal from "@/src/components/certificate/CertificateModal";
 import StudentQuizView from "@/src/components/quiz/StudentQuizView";
+import HopChatTroLy from "@/src/components/troly/HopChatTroLy";
 
 import type Hls from "hls.js";
 
@@ -687,6 +688,17 @@ function CourseLearnPageContent() {
           isOpen={showCertificate}
           onClose={() => setShowCertificate(false)}
           enrollmentId={enrollment._id}
+        />
+      )}
+
+      {/* Tro giang chi hien khi DA ghi danh. May chu van kiem quyen lai mot lan
+          nua (duocXemNoiDung trong troLyController) — day chi la de khong bay
+          ra mot cai nut bam vao chi de an 403. */}
+      {daDangKy(enrollment) && course?._id && (
+        <HopChatTroLy
+          courseId={course._id}
+          lessonId={activeLesson?._id}
+          tenBai={activeLesson?.title}
         />
       )}
     </div>

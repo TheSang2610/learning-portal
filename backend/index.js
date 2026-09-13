@@ -204,6 +204,7 @@ app.use('/api/faqs', require('./src/routes/faqRoutes'));
 app.use('/api/banners', require('./src/routes/bannerRoutes'));
 app.use('/api/documents', require('./src/routes/documentRoutes'));
 app.use('/api/posts', require('./src/routes/postRoutes'));
+app.use('/api/tro-ly', require('./src/routes/troLyRoutes'));
 
 // Tai lieu API. Dat SAU cac route that de khong bao gio che mat chung, va
 // TRUOC middleware 404.

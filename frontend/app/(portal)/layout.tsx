@@ -4,6 +4,7 @@ import "../globals.css";
 import Header from "@/src/components/layout/Header";
 import Footer from "@/src/components/layout/Footer";
 import NapNguoiDung from "@/src/components/common/NapNguoiDung";
+import TroLyToanTrang from "@/src/components/troly/TroLyToanTrang";
 import { layTuMayChu, hoacNull } from "@/src/services/serverFetch";
 import type { Category } from "@/src/services/categoryService";
 import type { Course } from "@/src/services/course";
@@ -75,6 +76,9 @@ export default async function PortalRootLayout({
           initialPopular={hoacNull(phoBien.slice(0, 5))}
           initialProviders={hoacNull(providers.slice(0, 5))}
         />
+        {/* Hop chat noi o goc phai. Dat o layout de hien tren moi trang portal;
+            no tu an di o /learn vi trang do da co ban co ngu canh bai hoc. */}
+        <TroLyToanTrang />
       </body>
     </html>
   );
