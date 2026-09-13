@@ -1,13 +1,21 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { getErrorMessage } from "@/src/services/apiHelper";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Video, Clock, AlignLeft, FileText } from "lucide-react";
+import {
+  ArrowLeft,
+  Video,
+  Clock,
+  AlignLeft,
+  FileText,
+  Paperclip,
+  ListOrdered,
+} from "lucide-react";
 
-// 1. Import đúng hàm addLesson đã chuẩn bị từ service của bạn
 import { addLesson } from "@/src/services/lesson.api";
+import { getCourseById } from "@/src/services/course";
 
 function AdminLessonCreatePageContent() {
   const params = useSearchParams();
@@ -17,11 +25,35 @@ function AdminLessonCreatePageContent() {
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
-    description: "", // Trên Backend trường này tương ứng với 'content'
+    description: "", // Tren backend truong nay la 'content'
     videoUrl: "",
+    documentUrl: "",
     duration: 0,
-    isFreePreview: false,
+    order: 1,
   });
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
+
+  // Thu tu mac dinh la bai ke tiep. Truoc day o day ghi cung "1" cho moi bai,
+  // nen ca khoa deu order = 1 va muc luc xep lung tung.
+  const layThuTuKeTiep = useCallback(async () => {
+    if (!courseId) return;
+    try {
+      const khoa = await getCourseById(courseId);
+      const soBai = Array.isArray(khoa?.lessons) ? khoa.lessons.length : 0;
+      setFormData((truoc) => ({ ...truoc, order: soBai + 1 }));
+    } catch {
+      // Khong lay duoc thi cu de 1, nguoi dung van sua tay duoc.
+    }
+  }, [courseId]);
+
+  useEffect(() => {
+    // Goi qua mot vong microtask thay vi goi thang: goi thang thi setState nam
+    // dong bo ngay trong than effect, React phai chay them mot vong ve lai
+    // (rule react-hooks/set-state-in-effect). Cung cach lam voi trang
+    // admin/lessons.
+    void Promise.resolve().then(layThuTuKeTiep);
+  }, [layThuTuKeTiep]);
 
   const changeHandler = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -29,34 +61,48 @@ function AdminLessonCreatePageContent() {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: name === "duration" ? Number(value) : value,
+      [name]: name === "duration" || name === "order" ? Number(value) : value,
     });
   };
 
   const submitHandler = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) return alert("Vui lòng nhập tiêu đề bài học!");
+    if (!courseId) return alert("Thiếu mã khóa học, hãy mở lại từ trang giáo trình.");
 
     try {
       setSubmitting(true);
 
-      // 2. Chuyển đổi Object State thành FormData đúng chuẩn Backend yêu cầu
       const dataToSend = new FormData();
       dataToSend.append("courseId", courseId);
       dataToSend.append("title", formData.title.trim());
-      dataToSend.append("content", formData.description.trim()); // Khớp 'content' của Backend
-      dataToSend.append("videoUrl", formData.videoUrl.trim());
-      dataToSend.append("order", "1"); // Bạn có thể bổ sung trường nhập 'order' nếu cần, tạm thời để mặc định là 1
+      dataToSend.append("content", formData.description.trim());
+      dataToSend.append("order", String(formData.order));
 
-      // Nếu sau này bạn có input loại file (<input type="file" />), bạn sẽ append như sau:
-      // dataToSend.append("video", videoFileObject);
+      // O nhap tinh bang PHUT cho de doc, nhung trang danh sach bai hoc chia
+      // cho 60 roi ghi "x phut" - tuc la kho dang luu bang GIAY. Doi ngay tai
+      // day de hai noi khong lech don vi.
+      if (formData.duration > 0) {
+        dataToSend.append("duration", String(Math.round(formData.duration * 60)));
+      }
 
-      // 3. Gọi API thực tế thông qua Service
+      // Co tep thi uu tien tep (backend day len Cloudinary roi lay duong dan);
+      // khong co tep moi dung duong dan da dan san.
+      if (videoFile) {
+        dataToSend.append("video", videoFile);
+      } else if (formData.videoUrl.trim()) {
+        dataToSend.append("videoUrl", formData.videoUrl.trim());
+      }
+
+      if (documentFile) {
+        dataToSend.append("document", documentFile);
+      } else if (formData.documentUrl.trim()) {
+        dataToSend.append("documentUrl", formData.documentUrl.trim());
+      }
+
       await addLesson(dataToSend);
 
       alert("Thêm bài học mới thành công!");
-
-      // 4. Điều hướng về trang danh sách giáo trình bài học
       router.push(`/admin/lessons?courseId=${courseId}`);
     } catch (error) {
       console.error("Lỗi tạo bài học:", error);
@@ -68,6 +114,10 @@ function AdminLessonCreatePageContent() {
       setSubmitting(false);
     }
   };
+
+  const oNhap =
+    "w-full rounded-xl border border-slate-200 p-3 text-sm transition outline-none focus:border-blue-500";
+  const oNhan = "mb-1.5 flex items-center gap-1 text-xs font-bold text-slate-600";
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-4">
@@ -92,7 +142,7 @@ function AdminLessonCreatePageContent() {
         <form onSubmit={submitHandler} className="space-y-5">
           {/* Tiêu đề bài học */}
           <div>
-            <label className="mb-1.5 block flex items-center gap-1 text-xs font-bold text-slate-600">
+            <label className={oNhan}>
               <FileText size={14} className="text-blue-500" /> Tên bài học / Tiêu đề
             </label>
             <input
@@ -101,29 +151,89 @@ function AdminLessonCreatePageContent() {
               value={formData.title}
               onChange={changeHandler}
               placeholder="Ví dụ: Bài 1: Tổng quan cấu trúc và cài đặt môi trường"
-              className="w-full rounded-xl border border-slate-200 p-3 text-sm transition outline-none focus:border-blue-500"
+              className={oNhap}
               required
             />
           </div>
 
-          {/* Video URL & Thời lượng học */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="md:col-span-2">
-              <label className="mb-1.5 block flex items-center gap-1 text-xs font-bold text-slate-600">
-                <Video size={14} className="text-blue-500" /> Link Video bài học (URL)
-              </label>
-              <input
-                type="text"
-                name="videoUrl"
-                value={formData.videoUrl}
-                onChange={changeHandler}
-                placeholder="Youtube, Vimeo, Cloudinary link..."
-                className="w-full rounded-xl border border-slate-200 p-3 text-sm transition outline-none focus:border-blue-500"
-              />
+          {/* Video: dán link hoặc tải tệp lên */}
+          <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+            <label className={oNhan}>
+              <Video size={14} className="text-blue-500" /> Video bài học
+            </label>
+            <input
+              type="text"
+              name="videoUrl"
+              value={formData.videoUrl}
+              onChange={changeHandler}
+              placeholder="Dán link: YouTube, Vimeo, Cloudinary..."
+              className={oNhap}
+              disabled={Boolean(videoFile)}
+            />
+            <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-400">
+              <span className="h-px flex-1 bg-slate-200" /> hoặc tải tệp lên
+              <span className="h-px flex-1 bg-slate-200" />
             </div>
+            <input
+              type="file"
+              accept="video/*"
+              onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
+              className="w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-600 file:px-3 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-blue-700"
+            />
+            {videoFile && (
+              <p className="text-[11px] text-slate-500">
+                Đã chọn <b>{videoFile.name}</b> — tệp này sẽ được dùng thay cho ô link ở
+                trên.{" "}
+                <button
+                  type="button"
+                  onClick={() => setVideoFile(null)}
+                  className="font-bold text-blue-600 underline"
+                >
+                  Bỏ chọn
+                </button>
+              </p>
+            )}
+          </div>
+
+          {/* Tài liệu đính kèm */}
+          <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+            <label className={oNhan}>
+              <Paperclip size={14} className="text-blue-500" /> Tài liệu đính kèm
+              <span className="font-normal text-slate-400">(không bắt buộc)</span>
+            </label>
+            <input
+              type="text"
+              name="documentUrl"
+              value={formData.documentUrl}
+              onChange={changeHandler}
+              placeholder="Dán link tài liệu (PDF, slide, Google Drive...)"
+              className={oNhap}
+              disabled={Boolean(documentFile)}
+            />
+            <input
+              type="file"
+              onChange={(e) => setDocumentFile(e.target.files?.[0] ?? null)}
+              className="w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-600 file:px-3 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-slate-700"
+            />
+            {documentFile && (
+              <p className="text-[11px] text-slate-500">
+                Đã chọn <b>{documentFile.name}</b>.{" "}
+                <button
+                  type="button"
+                  onClick={() => setDocumentFile(null)}
+                  className="font-bold text-blue-600 underline"
+                >
+                  Bỏ chọn
+                </button>
+              </p>
+            )}
+          </div>
+
+          {/* Thời lượng và thứ tự */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-1.5 block flex items-center gap-1 text-xs font-bold text-slate-600">
-                <Clock size={14} className="text-blue-500" /> Thời lượng (Phút)
+              <label className={oNhan}>
+                <Clock size={14} className="text-blue-500" /> Thời lượng (phút)
               </label>
               <input
                 type="number"
@@ -132,14 +242,27 @@ function AdminLessonCreatePageContent() {
                 onChange={changeHandler}
                 min={0}
                 placeholder="Ví dụ: 15"
-                className="w-full rounded-xl border border-slate-200 p-3 text-sm transition outline-none focus:border-blue-500"
+                className={oNhap}
+              />
+            </div>
+            <div>
+              <label className={oNhan}>
+                <ListOrdered size={14} className="text-blue-500" /> Thứ tự trong khóa
+              </label>
+              <input
+                type="number"
+                name="order"
+                value={formData.order || ""}
+                onChange={changeHandler}
+                min={1}
+                className={oNhap}
               />
             </div>
           </div>
 
           {/* Mô tả nội dung bài học */}
           <div>
-            <label className="mb-1.5 block flex items-center gap-1 text-xs font-bold text-slate-600">
+            <label className={oNhan}>
               <AlignLeft size={14} className="text-blue-500" /> Tóm tắt nội dung bài học
             </label>
             <textarea
@@ -148,31 +271,8 @@ function AdminLessonCreatePageContent() {
               onChange={changeHandler}
               rows={4}
               placeholder="Ghi chú những phần kiến thức cốt lõi học viên sẽ nhận được sau bài học này..."
-              className="w-full rounded-xl border border-slate-200 p-3 text-sm transition outline-none focus:border-blue-500"
+              className={oNhap}
             />
-          </div>
-
-          {/* Option xem trước miễn phí */}
-          <div className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700">
-                Chế độ xem trước bài học (Free Preview)
-              </label>
-              <span className="text-[11px] text-slate-500">
-                Cho phép người dùng chưa mua khóa học được xem video này miễn phí.
-              </span>
-            </div>
-            <label className="relative inline-flex cursor-pointer items-center">
-              <input
-                type="checkbox"
-                checked={formData.isFreePreview}
-                onChange={(e) =>
-                  setFormData({ ...formData, isFreePreview: e.target.checked })
-                }
-                className="peer sr-only"
-              />
-              <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-blue-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
-            </label>
           </div>
 
           {/* Nút bấm Submit */}

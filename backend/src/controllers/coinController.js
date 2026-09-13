@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
-const GiaoDichCoin = require('../models/GiaoDichCoin');
+const CoinTransaction = require('../models/CoinTransaction');
 const { congCoin, truCoin } = require('../utils/viCoin');
 const { giaRaCoin, kiemSoCoinNap, coinRaDong } = require('../utils/coin');
 const { taoGhiDanh } = require('../utils/ghiDanh');
@@ -89,7 +89,7 @@ const tangKhoaChoHocVien = async (req, res) => {
             return res.status(400).json({ message: `${hocVien.name} đã có khóa học này rồi` });
         }
 
-        await GiaoDichCoin.create({
+        await CoinTransaction.create({
             hocVien: hocVien._id,
             loai: 'tangKhoa',
             soCoin: 0,
@@ -226,14 +226,14 @@ const muaBangCoin = async (req, res) => {
  */
 const dungTraLoiVi = async (nguoiDung) => {
     const [nhatKy, tong, congDon] = await Promise.all([
-        GiaoDichCoin.find({ hocVien: nguoiDung._id })
+        CoinTransaction.find({ hocVien: nguoiDung._id })
             .sort({ createdAt: -1 })
             .limit(50)
             .populate('khoa', 'title slug')
             .populate('nguoiTao', 'name')
             .lean(),
-        GiaoDichCoin.countDocuments({ hocVien: nguoiDung._id }),
-        GiaoDichCoin.aggregate([
+        CoinTransaction.countDocuments({ hocVien: nguoiDung._id }),
+        CoinTransaction.aggregate([
             { $match: { hocVien: nguoiDung._id, loai: 'nap' } },
             { $group: { _id: null, tong: { $sum: '$soCoin' } } }
         ])

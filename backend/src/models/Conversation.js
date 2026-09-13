@@ -34,7 +34,7 @@ const tinNhanSchema = new mongoose.Schema(
     { _id: false, timestamps: { createdAt: true, updatedAt: false } },
 );
 
-const cuocTroChuyenSchema = new mongoose.Schema(
+const conversationSchema = new mongoose.Schema(
     {
         user: {
             type: mongoose.Schema.Types.ObjectId,
@@ -54,13 +54,14 @@ const cuocTroChuyenSchema = new mongoose.Schema(
         },
         tinNhan: [tinNhanSchema],
     },
-    { timestamps: true },
+    // Ghim ten collection de ten trong CSDL trung voi ten tren so do ERD.
+    { timestamps: true, collection: 'conversations' },
 );
 
 // Mot hoc vien chi co MOT cuoc tro chuyen cho moi bai. Dat unique o day thay vi
 // kiem trong controller: hai request gui gan nhu cung luc (bam gui hai lan) se
 // cung khong tim thay ban ghi nao va cung tao moi - chi rang buoc o CSDL moi
 // chan duoc, vi no la noi duy nhat biet ca hai.
-cuocTroChuyenSchema.index({ user: 1, course: 1, lesson: 1 }, { unique: true });
+conversationSchema.index({ user: 1, course: 1, lesson: 1 }, { unique: true });
 
-module.exports = mongoose.model('CuocTroChuyen', cuocTroChuyenSchema);
+module.exports = mongoose.model('Conversation', conversationSchema);

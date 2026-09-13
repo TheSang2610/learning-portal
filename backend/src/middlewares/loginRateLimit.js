@@ -23,7 +23,7 @@
 // thi mat han tai khoan. Nguong 20 dat cao hon han muc mot IP (5) de nguoi
 // dung that go nham vai lan khong the tu khoa minh.
 //
-// Bo dem KHONG con nam trong bo nho tien trinh nua - xem models/BoDemGioiHan.js
+// Bo dem KHONG con nam trong bo nho tien trinh nua - xem models/RateLimitCounter.js
 // de biet vi sao Map trong RAM gan nhu vo tac dung tren Vercel.
 
 const { conBiKhoa, ghiNhanSai, xoaKhoa } = require('../utils/khoGioiHan');

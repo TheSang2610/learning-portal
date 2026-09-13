@@ -5,7 +5,7 @@
 // viec goi nhieu da la van de - dang ky hang loat chang han.
 //
 // Bo dem nam trong kho dung chung utils/khoGioiHan.js, khong con la Map trong
-// bo nho tien trinh. Ly do o models/BoDemGioiHan.js: tren Vercel, Map trong
+// bo nho tien trinh. Ly do o models/RateLimitCounter.js: tren Vercel, Map trong
 // RAM la bo dem rieng cua tung lambda instance nen nguong gan nhu khong chan
 // duoc gi.
 

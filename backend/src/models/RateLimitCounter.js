@@ -25,7 +25,7 @@ const mongoose = require('mongoose');
 // rac. TTL chay moi ~60 giay nen khong chinh xac tuyet doi - vi vay moi phep
 // doc/ghi o utils/khoGioiHan.js van tu kiem han bang tay, ban ghi qua han chi
 // la rac cho xoa chu khong bao gio duoc tinh.
-const boDemGioiHanSchema = new mongoose.Schema(
+const rateLimitCounterSchema = new mongoose.Schema(
     {
         _id: { type: String },
 
@@ -42,10 +42,10 @@ const boDemGioiHanSchema = new mongoose.Schema(
         // Vua la moc TTL cho Mongo, vua la moc "mo cua so dem moi" cho ma nguon.
         expiresAt: { type: Date, required: true },
     },
-    { versionKey: false, collection: 'bo_dem_gioi_han' },
+    { versionKey: false, collection: 'rate_limit_counters' },
 );
 
-boDemGioiHanSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+rateLimitCounterSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-module.exports = mongoose.models.BoDemGioiHan
-    || mongoose.model('BoDemGioiHan', boDemGioiHanSchema);
+module.exports = mongoose.models.RateLimitCounter
+    || mongoose.model('RateLimitCounter', rateLimitCounterSchema);

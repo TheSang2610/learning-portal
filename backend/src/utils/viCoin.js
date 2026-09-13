@@ -1,5 +1,5 @@
 const User = require('../models/User');
-const GiaoDichCoin = require('../models/GiaoDichCoin');
+const CoinTransaction = require('../models/CoinTransaction');
 
 /**
  * Doi so du coin cua mot hoc vien, va ghi vao so nhat ky.
@@ -112,7 +112,7 @@ const truCoin = async (hocVienId, soCoin, { loai, khoa = null, ghiChu = '', nguo
  */
 const ghiSo = async (dong) => {
     try {
-        await GiaoDichCoin.create(dong);
+        await CoinTransaction.create(dong);
     } catch (loi) {
         console.error('ghiSo (coin) that bai, so du van dung:', loi.message, dong);
     }

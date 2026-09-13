@@ -2,7 +2,7 @@
 //
 // Truoc day moi lop tu giu mot `new Map()` rieng trong bo nho tien trinh. Ly
 // do phai bo cach do, va vi sao chon Mongo thay vi Redis, ghi day du o dau
-// file models/BoDemGioiHan.js - doc cho do truoc khi sua file nay.
+// file models/RateLimitCounter.js - doc cho do truoc khi sua file nay.
 //
 // File nay lam ba viec:
 //   1. Chon noi luu: CSDL khi co ket noi, Map trong bo nho khi khong.
@@ -17,7 +17,7 @@
 // try/catch va lui ve bo nho tien trinh khi that bai.
 
 const mongoose = require('mongoose');
-const BoDemGioiHan = require('../models/BoDemGioiHan');
+const RateLimitCounter = require('../models/RateLimitCounter');
 
 // Bo dem du phong, dung khi khong co CSDL (test, script roi le, hoac luc Atlas
 // tu choi). Cung chinh la hanh vi cu - khong tot hon, nhung khong te hon.
@@ -88,7 +88,7 @@ const tangBoNho = (khoa, cuaSoMs, now) => {
 // --------------------------------------------------------------------------
 
 const docNhieuCsdl = async (khoas, now) => {
-    const docs = await BoDemGioiHan.find({
+    const docs = await RateLimitCounter.find({
         _id: { $in: khoas },
         expiresAt: { $gt: new Date(now) },
     }).lean();
@@ -117,7 +117,7 @@ const tangCsdl = async (khoa, cuaSoMs, now) => {
         // expiresAt > now nam ngay trong bo loc nen phep doc-roi-ghi la mot
         // lenh nguyen tu cua Mongo: hai request song song khong the cung doc
         // ra 4 roi cung ghi 5.
-        const rec = await BoDemGioiHan.findOneAndUpdate(
+        const rec = await RateLimitCounter.findOneAndUpdate(
             { _id: khoa, expiresAt: { $gt: nowD } },
             { $inc: { count: 1 } },
             { returnDocument: 'after' },
@@ -147,7 +147,7 @@ const tangCsdl = async (khoa, cuaSoMs, now) => {
         const moi = cuaSoMoi();
 
         try {
-            await BoDemGioiHan.updateOne(
+            await RateLimitCounter.updateOne(
                 { _id: khoa, expiresAt: { $lte: nowD } },
                 { $set: moi },
                 { upsert: true },
@@ -194,7 +194,7 @@ const tang = async (khoa, cuaSoMs, now) => {
 const datKhoa = async (khoa, denKhiNao) => {
     if (coCsdl()) {
         try {
-            await BoDemGioiHan.updateOne(
+            await RateLimitCounter.updateOne(
                 { _id: khoa },
                 { $set: { blockedUntil: new Date(denKhiNao), expiresAt: new Date(denKhiNao) } },
             );
@@ -213,7 +213,7 @@ const datKhoa = async (khoa, denKhiNao) => {
 const xoaKhoa = async (khoa) => {
     if (coCsdl()) {
         try {
-            await BoDemGioiHan.deleteOne({ _id: khoa });
+            await RateLimitCounter.deleteOne({ _id: khoa });
             return;
         } catch (e) {
             console.error('khoGioiHan.xoaKhoa:', e.message);

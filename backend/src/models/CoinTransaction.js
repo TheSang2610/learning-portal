@@ -13,7 +13,7 @@ const mongoose = require('mongoose');
  * Va do la cach duy nhat phat hien nham lan: cong tat ca soCoin cua mot nguoi
  * phai bang dung so du hien tai cua ho. Lech nhau la biet co cho ghi thieu.
  */
-const giaoDichCoinSchema = new mongoose.Schema({
+const coinTransactionSchema = new mongoose.Schema({
 
     hocVien: {
         type: mongoose.Schema.Types.ObjectId,
@@ -83,9 +83,10 @@ const giaoDichCoinSchema = new mongoose.Schema({
         default: null
     }
 
-}, { timestamps: true });
+// Ghim ten collection de ten trong CSDL trung voi ten tren so do ERD.
+}, { timestamps: true, collection: 'coin_transactions' });
 
 // Mo so nhat ky cua mot nguoi, moi nhat truoc - truy van hay dung nhat.
-giaoDichCoinSchema.index({ hocVien: 1, createdAt: -1 });
+coinTransactionSchema.index({ hocVien: 1, createdAt: -1 });
 
-module.exports = mongoose.model('GiaoDichCoin', giaoDichCoinSchema);
+module.exports = mongoose.model('CoinTransaction', coinTransactionSchema);

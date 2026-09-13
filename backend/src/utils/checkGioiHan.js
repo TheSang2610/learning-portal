@@ -24,7 +24,7 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 
 const connectDB = require('../config/db');
-const BoDemGioiHan = require('../models/BoDemGioiHan');
+const RateLimitCounter = require('../models/RateLimitCounter');
 const { tang, docNhieu, ghiNhanSai, conBiKhoa, xoaKhoa } = require('./khoGioiHan');
 
 // Tien to rieng cho lan chay nay.
@@ -139,7 +139,7 @@ const chay = async () => {
 
     // -----------------------------------------------------------------
     console.log('8. Chi muc TTL da duoc tao');
-    const chiMuc = await BoDemGioiHan.collection.indexes();
+    const chiMuc = await RateLimitCounter.collection.indexes();
     const ttl = chiMuc.find((i) => i.expireAfterSeconds !== undefined);
     check(Boolean(ttl), 'co chi muc TTL de Mongo tu don ban ghi het han', chiMuc.map((i) => i.name));
     if (ttl) check(ttl.key?.expiresAt === 1, 'TTL dat tren truong expiresAt', ttl.key);
@@ -148,7 +148,7 @@ const chay = async () => {
 const don = async () => {
     if (daTao.size === 0) return;
     // Xoa DUNG nhung khoa script nay tao ra, liet ke tung cai mot.
-    const kq = await BoDemGioiHan.deleteMany({ _id: { $in: [...daTao] } });
+    const kq = await RateLimitCounter.deleteMany({ _id: { $in: [...daTao] } });
     // So xoa duoc thuong nho hon so tao ra: buoc 7 da tu xoa mot khoa, va cac
     // khoa het han co the da bi TTL cua Mongo don truoc.
     console.log(`\nDa don ${kq.deletedCount} khoa kiem thu con lai (tao ra ${daTao.size}).`);

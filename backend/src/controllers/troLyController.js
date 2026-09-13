@@ -18,7 +18,7 @@ const mongoose = require('mongoose');
 
 const Course = require('../models/Course');
 const Lesson = require('../models/Lesson');
-const CuocTroChuyen = require('../models/CuocTroChuyen');
+const Conversation = require('../models/Conversation');
 
 const { duocXemNoiDung } = require('../utils/quyenNoiDung');
 const { tang } = require('../utils/khoGioiHan');
@@ -172,7 +172,7 @@ const hoiTroLy = async (req, res) => {
         }
 
         const loc = { user: req.user._id, course: course._id, lesson: lesson?._id ?? null };
-        const cuoc = await CuocTroChuyen.findOne(loc).select('tinNhan');
+        const cuoc = await Conversation.findOne(loc).select('tinNhan');
 
         const heThong = dungNhacHeThong({
             tenKhoa: course.title,
@@ -186,7 +186,7 @@ const hoiTroLy = async (req, res) => {
         // Chi ghi lai khi da co cau tra loi. Ghi cau hoi truoc roi AI hong thi
         // lan sau lich su mo dau bang mot cau hoi khong co dap - mo hinh se
         // tuong do la cau no da bo qua.
-        await CuocTroChuyen.findOneAndUpdate(
+        await Conversation.findOneAndUpdate(
             loc,
             {
                 $push: {
@@ -224,7 +224,7 @@ const layLichSu = async (req, res) => {
 
         // Loc theo req.user._id nen khong the doc duoc cuoc tro chuyen cua nguoi
         // khac du co doan dung ma khoa hoc.
-        const cuoc = await CuocTroChuyen.findOne({
+        const cuoc = await Conversation.findOne({
             user: req.user._id,
             course: courseId,
             lesson: mongoose.Types.ObjectId.isValid(lessonId) ? lessonId : null,
@@ -244,7 +244,7 @@ const xoaLichSu = async (req, res) => {
             return res.status(400).json({ message: 'Thiếu mã khóa học hợp lệ.' });
         }
 
-        await CuocTroChuyen.deleteOne({
+        await Conversation.deleteOne({
             user: req.user._id,
             course: courseId,
             lesson: mongoose.Types.ObjectId.isValid(lessonId) ? lessonId : null,

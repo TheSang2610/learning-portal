@@ -1,6 +1,6 @@
 import { apiRequest } from "./apiHelper";
 
-// Chep theo backend/src/models/CuocTroChuyen.js. Ten vai tro la cua rieng du an
+// Chep theo backend/src/models/Conversation.js. Ten vai tro la cua rieng du an
 // chu khong phai cua hang API nao — backend doi sang 'user'/'model'/'assistant'
 // ngay truoc khi goi, xem backend/src/utils/nhaCungCapAi.js.
 export interface TinNhanTroLy {
