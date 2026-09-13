@@ -18,7 +18,8 @@ Nhóm 1: Nguyễn Thế Sang, Nguyễn Thanh Sang, Thái Thanh Vũ.
 
 | Bản | Xem |
 | --- | --- |
-| PDF (xem thẳng trên trình duyệt) | [De_cuong_Nhom1_LearningPortal.pdf](De_cuong_Nhom1_LearningPortal.pdf) |
+| PDF — mở thẳng, không cần tải | <https://thesang2610.github.io/learning-portal/De_cuong_Nhom1_LearningPortal.pdf> |
+| PDF trong kho | [De_cuong_Nhom1_LearningPortal.pdf](De_cuong_Nhom1_LearningPortal.pdf) |
 | Word (bản gốc, còn sửa được) | [De_cuong_Nhom1_LearningPortal.docx](De_cuong_Nhom1_LearningPortal.docx) |
 
 ---
