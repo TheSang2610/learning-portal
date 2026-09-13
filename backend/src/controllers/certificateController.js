@@ -5,6 +5,7 @@ const Course = require('../models/Course');
 const User = require('../models/User');
 const crypto = require('crypto');
 const { phanTrang } = require('../utils/truyVan');
+const { dungChungChiPdf } = require('../utils/chungChiPdf');
 
 // @desc    Tạo chứng chỉ khi hoàn thành khóa học
 // @route   POST /api/certificates
@@ -125,6 +126,52 @@ const getCertificateById = async (req, res) => {
         res.json(certificate);
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+/**
+ * GET /api/certificates/:id/pdf - tai ban chung nhan dang PDF.
+ *
+ * Tep duoc DUNG TAI MAY CHU chu khong phai window.print() o trinh duyet nhu
+ * truoc. Nho vay quan tri mo dung ban ma hoc vien cam, va moi may cho ra mot
+ * ket qua giong nhau.
+ *
+ * Ai xem duoc: chinh chu, quan tri, hoac bat ky ai neu chung nhan de cong khai
+ * - dung dung mot luat voi getCertificateById de khong co duong vong.
+ */
+const taiChungChiPdf = async (req, res) => {
+    try {
+        const cc = await Certificate.findById(req.params.id)
+            .populate('course', 'title')
+            .populate('student', 'name email');
+
+        if (!cc) {
+            return res.status(404).json({ message: 'Chứng chỉ không tồn tại' });
+        }
+
+        const laChu = req.user && String(cc.student?._id) === String(req.user._id);
+        const laQuanTri = req.user && req.user.role === 'admin';
+        if (!cc.isPublic && !laChu && !laQuanTri) {
+            return res.status(403).json({ message: 'Bạn không có quyền xem chứng chỉ này' });
+        }
+
+        const ten = `chung-nhan-${cc.certificateNumber || cc._id}.pdf`;
+        res.setHeader('Content-Type', 'application/pdf');
+        // inline: bam vao la MO RA XEM ngay trong trinh duyet, van bam tai ve
+        // duoc. attachment thi moi lan bam la mot tep roi xuong thu muc Downloads
+        // - quan tri duyet vai chuc chung nhan se ngap tep.
+        res.setHeader('Content-Disposition', `inline; filename="${ten}"`);
+
+        const goc = process.env.FRONTEND_URL || '';
+        dungChungChiPdf(cc, {
+            tenHocVien: cc.student?.name,
+            diaChiXacThuc: goc ? `${goc.replace(/\/+$/, '')}/certificates/verify` : ''
+        }).pipe(res);
+    } catch (error) {
+        console.error('taiChungChiPdf:', error.message);
+        // Da gui header roi thi khong the doi sang JSON - chi con cach ngat.
+        if (res.headersSent) return res.end();
+        return res.status(500).json({ message: 'Không tạo được tệp PDF' });
     }
 };
 
@@ -369,6 +416,7 @@ module.exports = {
     createCertificate,
     getMyCertificates,
     getCertificateById,
+    taiChungChiPdf,
     verifyCertificate,
     updateCertificate,
     getUserPublicCertificates,

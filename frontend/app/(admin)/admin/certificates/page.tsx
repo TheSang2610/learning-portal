@@ -11,12 +11,14 @@ import {
   ShieldCheck,
   Copy,
   Check,
+  FileText,
 } from "lucide-react";
 
 import {
   getAllCertificatesAdmin,
   revokeCertificateAdmin,
 } from "@/src/services/adminService";
+import { duongDanPdfChungChi } from "@/src/services/certificate";
 
 interface Certificate {
   _id: string;
@@ -149,20 +151,21 @@ export default function AdminCertificatesPage() {
                 <th className="px-4 py-3">Số hiệu / Mã xác thực</th>
                 <th className="px-4 py-3">Điểm</th>
                 <th className="px-4 py-3">Ngày cấp</th>
+                <th className="px-4 py-3">Bản PDF</th>
                 <th className="px-4 py-3 text-right">Trạng thái</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {fetching ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-16 text-center text-slate-500">
+                  <td colSpan={7} className="px-4 py-16 text-center text-slate-500">
                     <Loader2 size={20} className="mx-auto animate-spin" />
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-4 py-16 text-center text-sm text-slate-500"
                   >
                     Chưa có chứng chỉ nào được cấp.
@@ -225,6 +228,22 @@ export default function AdminCertificatesPage() {
                               (c.issuedAt || c.completionDate) as string,
                             ).toLocaleDateString("vi-VN")
                           : "--"}
+                      </td>
+                      {/* Ban PDF do may chu dung ra, mo thang trong the moi.
+                          Dung dung tep ma hoc vien tai ve - truoc day chung
+                          nhan chi ton tai duoi dang HTML in tu trinh duyet nen
+                          quan tri khong co gi de doi chieu khi co khieu nai. */}
+                      <td className="px-4 py-3">
+                        <a
+                          href={duongDanPdfChungChi(c._id)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Mở bản PDF của chứng nhận này"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
+                        >
+                          <FileText size={13} />
+                          Xem PDF
+                        </a>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-2">

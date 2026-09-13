@@ -1,4 +1,5 @@
 import { apiRequest } from "./apiHelper";
+import type { ThongTinChuyenKhoan } from "./order";
 
 // Vi coin cua hoc vien.
 //
@@ -71,4 +72,93 @@ export const tangKhoa = (
   apiRequest(`/coin/quan-tri/${userId}/tang-khoa`, {
     method: "POST",
     body: JSON.stringify({ courseId, ghiChu }),
+  });
+
+/* ------------------------------ Nap coin -------------------------------- */
+//
+// Hoc vien tu dat yeu cau nap -> chuyen khoan theo ma -> quan tri doi chieu sao
+// ke roi xac nhan -> coin moi vao vi. Bam "toi da chuyen khoan" KHONG cong coin,
+// do chi la loi khai.
+
+export type TrangThaiNap = "pending" | "paid" | "cancelled" | "expired";
+
+export interface YeuCauNap {
+  code: string;
+  status: TrangThaiNap;
+  soCoin: number;
+  /** Số tiền phải chuyển, theo ĐỒNG. */
+  amount: number;
+  expiresAt: string;
+  /** Số giây còn lại, do MÁY CHỦ tính — xem ghi chú ở `DonHang.secondsLeft`. */
+  secondsLeft: number;
+  paidAt: string | null;
+  daBaoChuyenKhoanLuc: string | null;
+  createdAt: string;
+  chuyenKhoan: ThongTinChuyenKhoan | null;
+}
+
+export interface YeuCauNapAdmin {
+  _id: string;
+  code: string;
+  status: TrangThaiNap;
+  soCoin: number;
+  amount: number;
+  expiresAt: string;
+  paidAt: string | null;
+  daBaoChuyenKhoanLuc: string | null;
+  createdAt: string;
+  note: string;
+  student: { _id: string; name: string; email: string; avatar?: string } | null;
+  confirmedBy: { _id: string; name: string } | null;
+}
+
+export const taoYeuCauNap = (soCoin: number): Promise<{ yeuCau: YeuCauNap }> =>
+  apiRequest("/coin/nap", { method: "POST", body: JSON.stringify({ soCoin }) });
+
+export const layYeuCauDangCho = (): Promise<{ yeuCau: YeuCauNap | null }> =>
+  apiRequest("/coin/nap/dang-cho");
+
+export const layYeuCauNap = (code: string): Promise<{ yeuCau: YeuCauNap }> =>
+  apiRequest(`/coin/nap/${code}`);
+
+export const huyYeuCauNap = (code: string): Promise<{ message: string }> =>
+  apiRequest(`/coin/nap/${code}/huy`, { method: "PUT" });
+
+export const baoDaChuyenNap = (code: string): Promise<{ message: string }> =>
+  apiRequest(`/coin/nap/${code}/da-chuyen`, { method: "PUT" });
+
+export const layDanhSachNapAdmin = (tuyChon?: {
+  status?: TrangThaiNap | "";
+  page?: number;
+  limit?: number;
+}): Promise<{
+  yeuCau: YeuCauNapAdmin[];
+  total: number;
+  page: number;
+  pages: number;
+}> => {
+  const t = new URLSearchParams();
+  if (tuyChon?.status) t.set("status", tuyChon.status);
+  if (tuyChon?.page) t.set("page", String(tuyChon.page));
+  if (tuyChon?.limit) t.set("limit", String(tuyChon.limit));
+  const q = t.toString();
+  return apiRequest(`/coin/quan-tri/nap${q ? `?${q}` : ""}`);
+};
+
+export const xacNhanNapAdmin = (
+  code: string,
+  note?: string,
+): Promise<{ message: string; soDuCoin: number }> =>
+  apiRequest(`/coin/quan-tri/nap/${code}/confirm`, {
+    method: "PUT",
+    body: JSON.stringify({ note }),
+  });
+
+export const tuChoiNapAdmin = (
+  code: string,
+  note?: string,
+): Promise<{ message: string }> =>
+  apiRequest(`/coin/quan-tri/nap/${code}/huy`, {
+    method: "PUT",
+    body: JSON.stringify({ note }),
   });

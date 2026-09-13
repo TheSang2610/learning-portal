@@ -164,6 +164,11 @@ const menuItems: MenuItem[] = [
     icon: Coins,
   },
   {
+    label: "Yêu cầu nạp coin",
+    href: "/admin/coin-topups",
+    icon: Coins,
+  },
+  {
     label: "Enrollments",
     href: "/admin/enrollments",
     icon: ClipboardList,

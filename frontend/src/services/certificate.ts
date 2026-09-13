@@ -73,6 +73,16 @@ export interface Achievement {
   updatedAt: string;
 }
 
+/**
+ * Địa chỉ tệp PDF của một chứng nhận.
+ *
+ * Trả về đường dẫn TƯƠNG ĐỐI để trình duyệt đi qua `rewrites()` của Next —
+ * cùng gốc nên cookie phiên là first-party, máy chủ mới nhận ra người đang mở
+ * là ai. Nối thẳng sang tên miền backend thì chứng nhận riêng tư sẽ trả 403 vì
+ * cookie không được gửi kèm.
+ */
+export const duongDanPdfChungChi = (id: string) => `/api/certificates/${id}/pdf`;
+
 export const certificateService = {
   createCertificate: async (enrollmentId: string): Promise<Certificate> => {
     return apiRequest("/certificates", {

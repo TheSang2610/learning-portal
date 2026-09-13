@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Coins } from "lucide-react";
+import Link from "next/link";
+import { Coins, Plus } from "lucide-react";
 import { layViCuaToi, type ThongTinVi } from "@/src/services/coin.api";
 import { SU_KIEN_DOI_COIN } from "./SoDuCoin";
 import DongGiaoDichCoin from "./DongGiaoDichCoin";
@@ -55,10 +56,20 @@ export default function ViCoinCuaToi() {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-100 p-6">
-        <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
-          <Coins size={18} className="text-amber-500" />
-          Ví coin
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
+            <Coins size={18} className="text-amber-500" />
+            Ví coin
+          </h2>
+          {/* Truoc day vi chi doc duoc, muon co coin phai nho quan tri bo vao
+              tay - hoc vien khong co cho nao tu nap. */}
+          <Link
+            href="/user/coin"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-white transition hover:bg-amber-600"
+          >
+            <Plus size={14} /> Nạp coin
+          </Link>
+        </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">

@@ -15,7 +15,11 @@ import {
   BookOpen,
   Trophy,
 } from "lucide-react";
-import { certificateService, Certificate } from "@/src/services/certificate";
+import {
+  certificateService,
+  duongDanPdfChungChi,
+  Certificate,
+} from "@/src/services/certificate";
 
 interface CertificateModalProps {
   isOpen: boolean;
@@ -88,228 +92,6 @@ export default function CertificateModal({
       certificate?.student?.name ||
       "Học Viên"
     );
-  };
-
-  // Sửa lỗi hiển thị tên & Lệch dấu khi in PDF
-  const handleDownloadPDF = () => {
-    if (!certificate) return;
-
-    // ĐỒNG BỘ: Sử dụng hàm helper lấy tên chuẩn cho bản in PDF
-    const studentName = getValidStudentName();
-
-    const formattedDate = new Date(certificate.completionDate).toLocaleDateString(
-      "vi-VN",
-      {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      },
-    );
-
-    const certificateHTML = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <title>Chứng chỉ - ${certificate.courseName}</title>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
-        <style>
-          @page {
-            size: A4 landscape;
-            margin: 0;
-          }
-          body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #ffffff;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-          .page-wrapper {
-            width: 297mm;
-            height: 210mm;
-            box-sizing: border-box;
-            padding: 20mm;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #ffffff;
-          }
-          .certificate {
-            width: 100%;
-            height: 100%;
-            border: 8px double #d4af37;
-            border-radius: 4px;
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-            box-sizing: border-box;
-            padding: 40px;
-            text-align: center;
-            color: #f8fafc;
-            position: relative;
-          }
-          .badge-icon {
-            font-size: 50px;
-            margin-bottom: 10px;
-          }
-          .header {
-            font-family: 'Playfair Display', serif;
-            font-size: 38px;
-            font-weight: 700;
-            color: #fbbf24;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin: 0 0 5px 0;
-          }
-          .subtitle {
-            font-family: 'Playfair Display', serif;
-            font-size: 16px;
-            font-style: italic;
-            color: #94a3b8;
-            margin-bottom: 30px;
-          }
-          .certify-text {
-            font-size: 16px;
-            color: #cbd5e1;
-            margin-bottom: 15px;
-          }
-          .student-name {
-            font-size: 32px;
-            font-weight: 800;
-            color: #ffffff;
-            margin: 15px 0;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            border-bottom: 2px solid rgba(251, 191, 36, 0.3);
-            display: inline-block;
-            padding-bottom: 5px;
-          }
-          .course-name {
-            font-family: 'Playfair Display', serif;
-            font-size: 24px;
-            font-weight: 700;
-            color: #38bdf8;
-            margin: 15px 0 35px 0;
-          }
-          .grid-details {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            max-width: 90%;
-            margin: 0 auto;
-            text-align: left;
-          }
-          .detail-card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-          }
-          .detail-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            color: #94a3b8;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-          }
-          .detail-value {
-            font-size: 13px;
-            color: #f1f5f9;
-            font-weight: 600;
-            margin-top: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-          }
-          .footer-section {
-            margin-top: 45px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            padding: 0 40px;
-          }
-          .verification-box {
-            text-align: left;
-            font-size: 11px;
-            color: #94a3b8;
-          }
-          .verification-code {
-            font-family: monospace;
-            color: #f1f5f9;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 3px 6px;
-            border-radius: 4px;
-          }
-          .signature-box {
-            text-align: center;
-            width: 200px;
-          }
-          .signature-line {
-            border-top: 1px solid #cbd5e1;
-            margin-top: 40px;
-            padding-top: 5px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #f1f5f9;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="page-wrapper">
-          <div class="certificate">
-            <h1 class="header">Chứng Chỉ Hoàn Thành</h1>
-            <div class="subtitle">Certificate of Completion</div>
-            
-            <p class="certify-text">Hệ thống đào tạo trực tuyến chứng nhận học viên</p>
-            <div class="student-name">${studentName}</div>
-            <p class="certify-text">đã hoàn thành xuất sắc khoá học</p>
-            
-            <div class="course-name">“${certificate.courseName}”</div>
-
-            <div class="grid-details">
-              <div class="detail-card">
-                <div class="detail-label">Ngày hoàn thành</div>
-                <div class="detail-value">${formattedDate}</div>
-              </div>
-              <div class="detail-card">
-                <div class="detail-label">Điểm đánh giá</div>
-                <div class="detail-value">${certificate.scorePercentage}%</div>
-              </div>
-              <div class="detail-card">
-                <div class="detail-label">Giảng viên</div>
-                <div class="detail-value">${certificate.instructorName}</div>
-              </div>
-              <div class="detail-card">
-                <div class="detail-label">Số hiệu</div>
-                <div class="detail-value">${certificate.certificateNumber}</div>
-              </div>
-            </div>
-
-            <div class="footer-section">
-              <div class="verification-box">
-                <div>Mã xác thực trực tuyến:</div>
-                <div style="margin-top: 4px;"><span class="verification-code">${certificate.verificationCode}</span></div>
-              </div>
-              <div class="signature-box">
-                <div class="signature-line">${certificate.signedBy || "Ban quản trị Đại học"}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <script>
-          window.onload = function() {
-            window.print();
-            setTimeout(function() { window.close(); }, 500);
-          };
-        </script>
-      </body>
-      </html>
-    `;
-
-    const printWindow = window.open("", "", "width=1100,height=750");
-    if (printWindow) {
-      printWindow.document.write(certificateHTML);
-      printWindow.document.close();
-    }
   };
 
   // Copy mã xác thực
@@ -504,13 +286,19 @@ export default function CertificateModal({
 
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-3 pt-4">
-              <button
-                onClick={handleDownloadPDF}
+              {/* Tep PDF do MAY CHU dung, khong con goi window.print() nua.
+                  Ban in cua trinh duyet phu thuoc vao tung may (le giay, co
+                  chu, co in mau nen hay khong) va quan tri thi khong co cach
+                  nao xem lai dung ban hoc vien cam. */}
+              <a
+                href={duongDanPdfChungChi(certificate._id)}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex transform items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 active:scale-95"
               >
                 <Download size={16} />
                 Tải PDF
-              </button>
+              </a>
               <button
                 onClick={handleShare}
                 className="flex transform items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-purple-700 active:scale-95"
