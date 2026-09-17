@@ -25,6 +25,19 @@ const voiMoiTruong = (gt, fn) => {
     }
 };
 
+// Dat NODE_ENV=production kem mot gia tri COOKIE_SAMESITE cu the.
+const voiSameSite = (gt, fn) => {
+    const cu = process.env.COOKIE_SAMESITE;
+    if (gt === undefined) delete process.env.COOKIE_SAMESITE;
+    else process.env.COOKIE_SAMESITE = gt;
+    try {
+        voiMoiTruong('production', fn);
+    } finally {
+        if (cu === undefined) delete process.env.COOKIE_SAMESITE;
+        else process.env.COOKIE_SAMESITE = cu;
+    }
+};
+
 // --- datCookieToken ---------------------------------------------------------
 
 // Day la ca ly do doi sang cookie: httpOnly thi document.cookie khong doc duoc,
@@ -56,15 +69,61 @@ test('luc dev: sameSite lax, khong bat secure', () => {
     });
 });
 
-test('luc that: sameSite none PHAI di kem secure', () => {
-    voiMoiTruong('production', () => {
+test('luc that MAC DINH la lax, khong phai none', () => {
+    // 'none' nghia la cookie duoc gui kem CA request do trang cua ke khac
+    // tao ra - do la be mat CSRF. Giao dien goi API qua rewrites() cua Next
+    // nen trinh duyet chi thay mot mien: cookie la ben thu nhat, khong can
+    // 'none'. Da kiem chung tren ban that - xem ghi chu o cookieToken.js.
+    voiSameSite(undefined, () => {
         const res = resGia();
         datCookieToken(res, 'abc');
-        const { sameSite, secure } = res.daDat[0].opt;
-        assert.strictEqual(sameSite, 'none');
-        // Trinh duyet tu choi cookie SameSite=None ma khong co Secure.
-        assert.strictEqual(secure, true);
+        assert.strictEqual(res.daDat[0].opt.sameSite, 'lax');
+        assert.strictEqual(res.daDat[0].opt.secure, true);
     });
+});
+
+test('van dat lai duoc none bang bien moi truong', () => {
+    // Duong lui cho truong hop trinh duyet phai goi THANG sang mien backend
+    // (NEXT_PUBLIC_GOI_THANG_BACKEND=1, hoac mot ung dung di dong). Luc do
+    // cookie tro lai la ben thu ba va 'lax' se lam dang nhap hong.
+    voiSameSite('none', () => {
+        const res = resGia();
+        datCookieToken(res, 'abc');
+        assert.strictEqual(res.daDat[0].opt.sameSite, 'none');
+        // Trinh duyet tu choi cookie SameSite=None ma khong co Secure.
+        assert.strictEqual(res.daDat[0].opt.secure, true);
+    });
+});
+
+test('gia tri la trong bien moi truong thi lui ve lax, khong lam hong dang nhap', () => {
+    // Go nham 'None ' hay 'lax;' thi khong duoc phep tra ra mot gia tri
+    // vo nghia - trinh duyet se tu choi ca cai cookie.
+    for (const rac of ['khong-phai-gia-tri', '', 'LAX ', 'none;']) {
+        voiSameSite(rac, () => {
+            const res = resGia();
+            datCookieToken(res, 'abc');
+            assert.strictEqual(res.daDat[0].opt.sameSite, 'lax', `voi gia tri ${JSON.stringify(rac)}`);
+        });
+    }
+});
+
+test('bien moi truong KHONG co tac dung luc dev', () => {
+    // Cookie Secure khong bao gio duoc dat tren http://localhost. Neu bien nay
+    // an duoc vao moi truong dev thi mot lan dat nham la ca may khong dang
+    // nhap duoc, va rat kho doan ra.
+    const cu = process.env.COOKIE_SAMESITE;
+    process.env.COOKIE_SAMESITE = 'none';
+    try {
+        voiMoiTruong('development', () => {
+            const res = resGia();
+            datCookieToken(res, 'abc');
+            assert.strictEqual(res.daDat[0].opt.sameSite, 'lax');
+            assert.strictEqual(res.daDat[0].opt.secure, false);
+        });
+    } finally {
+        if (cu === undefined) delete process.env.COOKIE_SAMESITE;
+        else process.env.COOKIE_SAMESITE = cu;
+    }
 });
 
 // --- xoaCookieToken ---------------------------------------------------------
