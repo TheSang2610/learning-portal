@@ -11,7 +11,6 @@ const {
 } = require('../controllers/coinController');
 const {
     taoYeuCauNap,
-    yeuCauDangCho,
     layYeuCauTheoMa,
     huyYeuCauNap,
     baoDaChuyenNap,
@@ -19,6 +18,22 @@ const {
     xacNhanYeuCauNap,
     tuChoiYeuCauNap
 } = require('../controllers/coinNapController');
+const {
+    nhanBaoCoNganHang,
+    danhSachBaoCo
+} = require('../controllers/webhookNganHangController');
+
+// --------------------------------------------------------------------------
+// Webhook ngan hang - KHONG co protect.
+//
+// Ngan hang khong cam duoc cookie phien cua ai, nen khong the di qua protect.
+// Danh tinh dua vao khoa bi mat trong header, kiem trong chinh controller
+// (config/webhookNganHang.js). Chua dat khoa thi controller tu choi tat ca -
+// khong bao gio "chua cau hinh thi cho qua".
+//
+// Dat TRUOC moi duong khac de khoi bi cac mau ':code' ben duoi nuot mat.
+// --------------------------------------------------------------------------
+router.post('/webhook/ngan-hang', nhanBaoCoNganHang);
 
 // --------------------------------------------------------------------------
 // Hoc vien - chi cham vao vi CUA CHINH MINH.
@@ -30,10 +45,8 @@ const {
 router.get('/cua-toi', protect, xemViCuaToi);
 router.post('/mua/:courseId', protect, muaBangCoin);
 
-// Nap coin. `dang-cho` phai dat TRUOC `:code`, khong thi Express coi chuoi
-// "dang-cho" la mot ma yeu cau va luon tra 404.
+// Nap coin.
 router.post('/nap', protect, taoYeuCauNap);
-router.get('/nap/dang-cho', protect, yeuCauDangCho);
 router.get('/nap/:code', protect, layYeuCauTheoMa);
 router.put('/nap/:code/huy', protect, huyYeuCauNap);
 router.put('/nap/:code/da-chuyen', protect, baoDaChuyenNap);
@@ -47,6 +60,7 @@ router.put('/nap/:code/da-chuyen', protect, baoDaChuyenNap);
 // --------------------------------------------------------------------------
 // Ba duong nap nay phai dat TRUOC '/quan-tri/:id': dat sau thi Express khop
 // '/quan-tri/nap' vao ':id' va di goi xemViHocVien voi id = "nap".
+router.get('/quan-tri/bao-co', protect, admin, danhSachBaoCo);
 router.get('/quan-tri/nap', protect, admin, danhSachYeuCauNap);
 router.put('/quan-tri/nap/:code/confirm', protect, admin, xacNhanYeuCauNap);
 router.put('/quan-tri/nap/:code/huy', protect, admin, tuChoiYeuCauNap);
