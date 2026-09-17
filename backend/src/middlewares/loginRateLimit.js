@@ -37,6 +37,23 @@ const MAX_FAILS_TAI_KHOAN = 20;   // sai qua 20 lan tren CUNG mot email, moi IP
 // Thieu dong do thi day la IP cua proxy, va moi khach chung mot o dem.
 const ipOf = (req) => req.ip || req.socket?.remoteAddress || 'unknown';
 
+/**
+ * Khoa dem theo RIENG mot tai khoan.
+ *
+ * Tach ra thanh ham xuat khau vi tu khi dang nhap nhan CA ten tai khoan ngan
+ * (xem utils/dinhDanhDangNhap.js), middleware nay khong con biet chac nguoi
+ * dung dang noi den tai khoan nao: no chi thay chuoi ho go.
+ *
+ * LO HONG NEU KHONG CO HAM NAY: "thesang" va "thesang@gmail.com" la hai chuoi
+ * khac nhau, nen chung sinh ra hai bo dem RIENG. Ke do mat khau chi viec doi
+ * qua lai giua hai cach go la co gap doi han muc tren cung mot nan nhan -
+ * dung kieu di vong ma khoa `dangnhap:email:` duoc dat ra de chan (doc ghi
+ * chu dau file). Controller giai ma xong dia chi that thi ghi nhan them mot
+ * lan vao khoa nay.
+ */
+const khoaTaiKhoan = (email) =>
+    `dangnhap:email:${String(email || '').trim().toLowerCase()}`;
+
 // Tien to 'dangnhap:' vi kho dem la kho DUNG CHUNG: dang ky va doi mat khau
 // cung ghi vao do. Thieu tien to thi mot IP bi khoa o duong dang ky se keo
 // theo khoa luon duong dang nhap.
@@ -111,6 +128,7 @@ module.exports = {
     loginRateLimit,
     recordLoginFailure,
     clearLoginAttempts,
+    khoaTaiKhoan,
     WINDOW_MS,
     MAX_FAILS_EMAIL,
     MAX_FAILS_IP,

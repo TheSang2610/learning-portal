@@ -3,7 +3,13 @@ const bcrypt = require('bcryptjs');
 const { BCRYPT_ROUNDS, HAN_TOKEN } = require('../utils/matKhau');
 const { datCookieToken, xoaCookieToken } = require('../utils/cookieToken');
 const jwt = require('jsonwebtoken');
-const { recordLoginFailure, clearLoginAttempts } = require('../middlewares/loginRateLimit');
+const {
+    recordLoginFailure,
+    clearLoginAttempts,
+    khoaTaiKhoan,
+    MAX_FAILS_TAI_KHOAN,
+    WINDOW_MS: CUA_SO_DANG_NHAP,
+} = require('../middlewares/loginRateLimit');
 const { conBiKhoa, ghiNhanSai, xoaKhoa } = require('../utils/khoGioiHan');
 const { daCauHinh: mailDaCauHinh, guiMail } = require('../config/mail');
 const { soanMailXacMinh, soanMailDaCoTaiKhoan } = require('../utils/mailXacMinh');
@@ -17,6 +23,7 @@ const {
     kiemTen,
     kiemPayloadGoogle,
 } = require('../utils/xacThucDauVao');
+const { chuanHoaDinhDanh, boLocTaiKhoan } = require('../utils/dinhDanhDangNhap');
 const layCloudinary = require('../config/cloudinary');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
 
@@ -73,27 +80,70 @@ const generateToken = (id) => {
 // @route   POST /api/users/login
 const loginUser = async (req, res) => {
     try {
-        const email = chuanHoaEmail(req.body?.email);
+        // O dang nhap nhan CA dia chi email lan TEN TAI KHOAN ngan
+        // ("thesang" thay cho "thesang@gmail.com"). Quy tac tra cuu, va ba
+        // cai bay cua no, ghi day du o utils/dinhDanhDangNhap.js.
+        //
+        // Truong van ten la `email` de khong pha cac ban giao dien cu dang
+        // chay - chi y nghia cua no rong ra.
+        const dinhDanh = chuanHoaDinhDanh(req.body?.email);
         const password = req.body?.password;
 
         // 1. Thieu tham so -> 400. Truoc day password thieu se lam bcrypt.compare
         //    nem loi va tra ve 500 kem thong bao noi bo cua thu vien.
-        if (!email || !matKhauNhanDuoc(password)) {
+        if (!dinhDanh || !matKhauNhanDuoc(password)) {
             return res.status(400).json({
-                message: 'Vui lòng nhập email và mật khẩu'
+                message: 'Vui lòng nhập email (hoặc tên tài khoản) và mật khẩu'
             });
         }
 
-        // 2. Sai dinh dang hoac qua dai thi khong can truy van DB.
-        //    Tran do dai email cung chan luon duong bom phinh bo dem cua
+        // 2. Sai hinh dang thi khong can truy van DB.
+        //    Tran do dai cung chan luon duong bom phinh bo dem cua
         //    loginRateLimit - khoa cua no la `ip|email`.
-        if (!emailHopLe(email)) {
+        const boLoc = boLocTaiKhoan(dinhDanh, emailHopLe);
+        if (!boLoc) {
             return res.status(400).json({
-                message: 'Email không hợp lệ'
+                message: 'Email hoặc tên tài khoản không hợp lệ'
             });
         }
 
-        const user = await User.findOne({ email });
+        // Lay toi HAI ban ghi chu khong phai mot.
+        //
+        // Tra cuu bang ten ngan co the khop nhieu tai khoan - "sang" ung voi
+        // ca sang@gmail.com lan sang@yahoo.com. Chon dai mot cai la mot ngay
+        // nao do co nguoi dang ky trung phan dau va chu tai khoan cu khong
+        // vao duoc nua ma khong ai hieu vi sao. Trung tu hai tro len thi coi
+        // nhu khong tim thay - ho van dang nhap duoc bang dia chi day du.
+        //
+        // Tra cuu bang dia chi day du thi `email` la khoa duy nhat, luon ra
+        // toi da mot ban ghi, nen buoc nay khong doi gi.
+        const khop = await User.find(boLoc).limit(2);
+        const user = khop.length === 1 ? khop[0] : null;
+
+        // 2b. Bo dem theo RIENG tai khoan, tinh tren dia chi THAT.
+        //
+        //     loginRateLimit chay truoc controller nen no chi thay chuoi
+        //     nguoi dung go. Tu khi nhan ca ten ngan, "thesang" va
+        //     "thesang@gmail.com" sinh ra hai bo dem rieng - ke do mat khau
+        //     doi qua lai giua hai cach go la co gap doi han muc tren cung
+        //     mot nan nhan. Den day moi biet dia chi that, nen kiem them mot
+        //     lan tren khoa cua chinh no.
+        //
+        //     Chi lam khi hai chuoi khac nhau: go nguyen dia chi thi khoa nay
+        //     TRUNG khoa middleware da kiem, doc lai la thua mot luot CSDL.
+        const khoaThatSu =
+            user && user.email !== dinhDanh ? khoaTaiKhoan(user.email) : null;
+
+        if (khoaThatSu) {
+            const giayCon = await conBiKhoa([khoaThatSu]);
+            if (giayCon > 0) {
+                res.set('Retry-After', String(giayCon));
+                return res.status(429).json({
+                    message: `Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau ${Math.ceil(giayCon / 60)} phút.`,
+                    retryAfter: giayCon,
+                });
+            }
+        }
 
         // 3. LUON doi chieu bcrypt mot lan, ke ca khi khong tim thay tai khoan
         //    hoac tai khoan do dang nhap bang Google (password rong). Xem
@@ -113,7 +163,13 @@ const loginUser = async (req, res) => {
         //    Nguoi dung Google khong bi ket: nut "Tiếp tục với Google" nam ngay
         //    tren cung form, va giao dien nhac lai loi do sau moi lan sai.
         if (!user || !user.password || !isMatch) {
-            await recordLoginFailure(req.loginAttemptKey);
+            // Ghi vao ca khoa cua dia chi that (neu ho go ten ngan) - xem 2b.
+            await Promise.all([
+                recordLoginFailure(req.loginAttemptKey),
+                khoaThatSu
+                    ? ghiNhanSai(khoaThatSu, MAX_FAILS_TAI_KHOAN, CUA_SO_DANG_NHAP)
+                    : Promise.resolve(),
+            ]);
             return res.status(401).json({
                 message: 'Email hoặc mật khẩu không đúng'
             });
@@ -144,7 +200,12 @@ const loginUser = async (req, res) => {
             });
         }
 
-        await clearLoginAttempts(req.loginAttemptKey);
+        // Xoa ca khoa cua dia chi that (neu ho go ten ngan) - xem 2b. An toan
+        // vi muon toi day phai go dung mat khau cua chinh tai khoan do.
+        await Promise.all([
+            clearLoginAttempts(req.loginAttemptKey),
+            khoaThatSu ? xoaKhoa(khoaThatSu) : Promise.resolve(),
+        ]);
 
         // Token di bang cookie httpOnly, KHONG nam trong than phan hoi.
         // De no trong than thi JavaScript cua trang doc duoc, va the la mat
