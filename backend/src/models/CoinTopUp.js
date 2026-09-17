@@ -8,10 +8,16 @@ const mongoose = require('mongoose');
  * rang buoc do de dung chung mot bang se lam moi cho doc Order phai tu hoi
  * "don nay co khoa hoc khong" - dat mot bang rieng re hon nhieu.
  *
- * Luong giong het mua khoa hoc: hoc vien dat yeu cau -> chuyen khoan theo ma
- * -> quan tri doi chieu sao ke roi xac nhan -> coin duoc cong. Khong tu dong
- * cong khi hoc vien bam "toi da chuyen roi": do moi la loi khai, tin vao no
- * thi ai cung nap duoc coin mien phi.
+ * Luong: hoc vien dat yeu cau -> chuyen khoan theo ma -> NGAN HANG bao co ve
+ * webhook -> he thong khop ma va cong coin ngay. Xem
+ * controllers/webhookNganHangController.js.
+ *
+ * Duong xac nhan tay cua quan tri VAN GIU, cho cac khoan webhook khong khop
+ * duoc: go sai ma, chuyen thieu tien, chuyen sau khi da huy.
+ *
+ * Deu KHONG tu dong cong khi hoc vien bam "toi da chuyen roi": do moi la loi
+ * khai, tin vao no thi ai cung nap duoc coin mien phi. Chi tien that ve tai
+ * khoan that moi sinh ra coin.
  */
 
 // Bo 0/O va 1/I/L nhu ma don hang: nguoi dung phai GO LAI ma nay vao noi dung
@@ -55,9 +61,15 @@ const coinTopUpSchema = new mongoose.Schema({
         min: 0
     },
 
+    // 'abandoned': hoc vien roi khoi trang (reload, bam back) nen ma cu khong
+    // con hien ra nua va he thong da cap ma moi. KHONG dung 'cancelled' cho
+    // truong hop nay: 'cancelled' la hoc vien CHU DONG bam huy, con bo roi la
+    // vo tinh. Phan biet duoc thi webhook con cong duoc tien ve theo ma cu -
+    // nguoi ta chuyen xong roi moi lo tay F5 la chuyen rat thuong gap, xoa
+    // thang ma di la an tien cua ho.
     status: {
         type: String,
-        enum: ['pending', 'paid', 'cancelled', 'expired'],
+        enum: ['pending', 'paid', 'cancelled', 'expired', 'abandoned'],
         default: 'pending'
     },
 
