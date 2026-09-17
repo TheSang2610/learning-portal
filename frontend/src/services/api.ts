@@ -204,6 +204,67 @@ export const googleLogin = async (credential: string): Promise<GoogleLoginRespon
   return data;
 };
 
+/* --------------------------- Quen mat khau ------------------------------ */
+//
+// Ba buoc: xin ma -> nhap ma lay "phieu" -> dung phieu dat mat khau moi.
+// Toan bo chinh sach (ma song bao lau, sai may lan thi khoa) nam o may chu -
+// xem backend/src/controllers/quenMatKhauController.js.
+//
+// HAI DIEU GIAO DIEN PHAI TON TRONG, dung "sua lai cho than thien":
+//
+//   1. May chu tra ve CUNG MOT CAU cho moi ket cuc cua buoc xin ma - ke ca
+//      khi dia chi do khong co tai khoan nao. Do la co y: tra loi khac nhau
+//      la bien duong nay thanh cai may tra loi "ai la nguoi dung cua he
+//      thong". Giao dien cu hien nguyen cau do ra, dung tu suy dien them.
+//
+//   2. Khi bi khoa vi nhap sai qua nhieu, may chu van tra ve dung cau "ma
+//      khong dung" va KHONG noi con bao lau nua thi mo lai. Nguoi dung duoc
+//      bao bang mot la thu gui ve hom thu. Dung co bay ra cho nay mot bo dem
+//      dem nguoc - lam vay la pha dung cai dinh giu kin.
+
+/** Buoc 1: xin ma. Luon "thanh cong", ke ca voi dia chi khong co tai khoan. */
+export const xinMaDatLai = async (email: string): Promise<{ message: string }> => {
+  const res = await fetch(`${API_URL}/quen-mat-khau`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  return parseResponse(res);
+};
+
+/** Buoc 2: nhap ma. Dung thi nhan ve phieu - thu mang quyen dat mat khau moi. */
+export const kiemMaDatLai = async (
+  email: string,
+  ma: string,
+): Promise<{ message: string; phieu: string }> => {
+  const res = await fetch(`${API_URL}/quen-mat-khau/kiem-ma`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, ma }),
+  });
+  return parseResponse(res);
+};
+
+/**
+ * Buoc 3: dat mat khau moi.
+ *
+ * KHONG dang nhap luon sau buoc nay - may chu co y tra ve phien trang. Bat
+ * nguoi dung go lai mat khau vua dat mot lan nua tren man hinh dang nhap la
+ * cach re nhat de ho nho no, va de ho phat hien ngay neu vua go nham.
+ */
+export const datLaiMatKhau = async (
+  phieu: string,
+  matKhauMoi: string,
+  xacNhan: string,
+): Promise<{ message: string }> => {
+  const res = await fetch(`${API_URL}/quen-mat-khau/dat-lai`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phieu, matKhauMoi, xacNhan }),
+  });
+  return parseResponse(res);
+};
+
 export const logout = (): Promise<void> => {
   // Dung xoaPhien: no goi ca /users/logout de may chu xoa cookie httpOnly,
   // don bo dem GET, va ban su kien cho cac header cap nhat lai.
