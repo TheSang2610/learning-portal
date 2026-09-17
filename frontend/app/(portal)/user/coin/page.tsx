@@ -10,7 +10,7 @@ import {
   baoDaChuyenNap,
   huyYeuCauNap,
   layViCuaToi,
-  layYeuCauDangCho,
+  layYeuCauNap,
   taoYeuCauNap,
   type YeuCauNap,
 } from "@/src/services/coin.api";
@@ -62,18 +62,22 @@ export default function TrangNapCoin() {
   const [dangTao, setDangTao] = useState(false);
   const [dangBao, setDangBao] = useState(false);
   const [daBao, setDaBao] = useState(false);
+  const [mailHong, setMailHong] = useState(false);
   const [loi, setLoi] = useState("");
 
+  // CHI doc so du, KHONG khoi phuc ma dang cho.
+  //
+  // Truoc day cho nay goi layYeuCauDangCho() nen reload hay bam back xong van
+  // thay lai ma cu. Chu du an muon nguoc lai: roi khoi trang la mat ma, phai
+  // bam tao lai. Ma chi song trong state cua trang nay.
+  //
+  // Ban ghi cu o may chu thi KHONG bi huy - no chuyen sang 'abandoned' va van
+  // nhan tien toi het han 15 phut, nen ai lo tay F5 sau khi da chuyen khoan
+  // van duoc cong dung. Xem coinNapController.taoYeuCauNap.
   const dongBo = useCallback(async () => {
     try {
-      const [vi, dang] = await Promise.all([
-        layViCuaToi().catch(() => null),
-        layYeuCauDangCho(),
-      ]);
+      const vi = await layViCuaToi().catch(() => null);
       if (vi) setSoDu(vi.soDuCoin);
-      setYeuCau(dang.yeuCau);
-      setConLai(dang.yeuCau?.secondsLeft ?? 0);
-      setDaBao(Boolean(dang.yeuCau?.daBaoChuyenKhoanLuc));
     } catch (e) {
       setLoi(getErrorMessage(e, "Không đọc được thông tin ví"));
     } finally {
@@ -93,6 +97,48 @@ export default function TrangNapCoin() {
     if (!yeuCau || yeuCau.status !== "pending") return;
     const id = setInterval(() => setConLai((n) => Math.max(0, n - 1)), 1000);
     return () => clearInterval(id);
+  }, [yeuCau]);
+
+  // Do ket qua tu may chu.
+  //
+  // Coin gio duoc cong TU DONG khi ngan hang bao co, khong ai bam nut nao ca.
+  // Khong do thi nguoi dung chuyen tien xong ngoi nhin man hinh "dang cho" mai
+  // du coin da vao vi - phai tu F5 moi thay, ma F5 thi mat ma.
+  //
+  // 5 giay mot lan: tien ve thuong mat 5-30 giay, do thua thi ton request ma
+  // khong nhanh hon duoc, do thua thi nguoi dung tuong hong.
+  useEffect(() => {
+    if (!yeuCau || yeuCau.status !== "pending") return;
+
+    let dungLai = false;
+    const id = setInterval(async () => {
+      try {
+        const { yeuCau: moi } = await layYeuCauNap(yeuCau.code);
+        if (dungLai) return;
+
+        setYeuCau(moi);
+        setConLai(moi.secondsLeft);
+
+        if (moi.status === "paid") {
+          const vi = await layViCuaToi().catch(() => null);
+          if (vi && !dungLai) {
+            setSoDu(vi.soDuCoin);
+            // Bao cho o so du tren thanh dieu huong doc lai, khong thi hai cho
+            // tren cung mot man hinh hien hai con so khac nhau.
+            baoCoinDaDoi();
+          }
+        }
+      } catch {
+        // Mat mang mot nhip thi bo qua, lan do sau se bat lai. Khong hien loi
+        // o day: nguoi dung dang cho tien, mot dong bao loi mang lam ho tuong
+        // chuyen khoan that bai.
+      }
+    }, 5000);
+
+    return () => {
+      dungLai = true;
+      clearInterval(id);
+    };
   }, [yeuCau]);
 
   const tao = async () => {
@@ -129,10 +175,15 @@ export default function TrangNapCoin() {
     if (!yeuCau) return;
     setDangBao(true);
     try {
-      await baoDaChuyenNap(yeuCau.code);
+      const r = await baoDaChuyenNap(yeuCau.code);
       setDaBao(true);
+      // Chua cau hinh mail hoac gui hong -> phai noi that. De hoc vien ngoi cho
+      // mot cai mail khong bao gio den la cach chac chan nhat de mat khach: ho
+      // tuong da bao roi, con quan tri thi khong biet gi.
+      setMailHong(!r.daGuiMail);
     } catch (e) {
       setLoi(getErrorMessage(e, "Không gửi được thông báo"));
+      setMailHong(true);
     } finally {
       setDangBao(false);
     }
@@ -255,9 +306,24 @@ export default function TrangNapCoin() {
           </p>
 
           {daBao ? (
-            <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
-              Đã báo cho ban quản trị. Coin sẽ vào ví sau khi đối chiếu sao kê — bạn tải
-              lại trang này để xem.
+            // KHONG bao "tai lai trang de xem" nhu truoc nua: tai lai la mat ma.
+            // Trang tu do may chu 5 giay mot lan, coin vao la no tu doi.
+            <p
+              className={`rounded-xl px-4 py-3 text-sm font-medium ${
+                mailHong
+                  ? "border border-amber-200 bg-amber-50 text-amber-900"
+                  : "bg-emerald-50 text-emerald-800"
+              }`}
+            >
+              Đã báo cho ban quản trị. Coin sẽ vào ví sau khi đối chiếu sao kê — bạn cứ để
+              yên trang này, có coin là nó tự hiện.
+              {mailHong && (
+                <>
+                  {" "}
+                  Tuy nhiên mail báo chưa gửi được, nên bạn nhắn thêm cho ban quản trị kèm
+                  mã <strong className="font-mono">{yeuCau.code}</strong> cho chắc.
+                </>
+              )}
             </p>
           ) : (
             <div className="flex flex-wrap gap-3">

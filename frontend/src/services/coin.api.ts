@@ -115,8 +115,9 @@ export interface YeuCauNapAdmin {
 export const taoYeuCauNap = (soCoin: number): Promise<{ yeuCau: YeuCauNap }> =>
   apiRequest("/coin/nap", { method: "POST", body: JSON.stringify({ soCoin }) });
 
-export const layYeuCauDangCho = (): Promise<{ yeuCau: YeuCauNap | null }> =>
-  apiRequest("/coin/nap/dang-cho");
+// Truoc day co them layYeuCauDangCho() doc yeu cau dang cho cua chinh minh.
+// Da bo: trang nap coin khong khoi phuc ma cu khi reload nua (roi khoi trang la
+// mat ma, phai tao lai), nen khong con cho nao goi toi.
 
 export const layYeuCauNap = (code: string): Promise<{ yeuCau: YeuCauNap }> =>
   apiRequest(`/coin/nap/${code}`);
@@ -124,7 +125,12 @@ export const layYeuCauNap = (code: string): Promise<{ yeuCau: YeuCauNap }> =>
 export const huyYeuCauNap = (code: string): Promise<{ message: string }> =>
   apiRequest(`/coin/nap/${code}/huy`, { method: "PUT" });
 
-export const baoDaChuyenNap = (code: string): Promise<{ message: string }> =>
+// daGuiMail: may chu co gui duoc mail bao quan tri khong. Sai thi giao dien
+// phai nhac hoc vien lien he bang duong khac - ngoi cho mot cai mail khong bao
+// gio den la cach chac chan nhat de mat khach.
+export const baoDaChuyenNap = (
+  code: string,
+): Promise<{ message: string; daGuiMail: boolean; mailDaCauHinh: boolean }> =>
   apiRequest(`/coin/nap/${code}/da-chuyen`, { method: "PUT" });
 
 export const layDanhSachNapAdmin = (tuyChon?: {
