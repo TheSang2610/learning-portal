@@ -5,6 +5,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const { chongCsrf } = require('./src/middlewares/chongCsrf');
+const { taoTranChung } = require('./src/middlewares/tranChung');
 const connectDB = require('./src/config/db');
 
 
@@ -135,6 +136,21 @@ app.use(cors({
 // tra 400 truoc khi kip kiem origin - vua sai ma trang thai, vua ton cong doc
 // than cua mot request dang le phai vut di ngay. Xem middlewares/chongCsrf.js.
 app.use(chongCsrf(originDuocPhep));
+
+// Tran chung cho toan bo API.
+//
+// Dat TRUOC express.json co chu dich: mot request bi tu choi thi khong co ly
+// do gi phai doc va phan tich toi 1MB than cua no truoc da.
+//
+// Truoc day chi 1 trong 17 nhom duong co tran (userRoutes: dang nhap, dang ky,
+// quen mat khau). Moi duong con lai - /api/courses, /api/lessons,
+// /api/documents, /api/reviews... - goi bao nhieu lan cung duoc. Mot vong lap
+// `while(true) fetch('/api/courses')` la moi luot mot truy van Atlas, va Atlas
+// co tran so ket noi: cham tran thi CA WEB ngung phuc vu, khong rieng ke quet.
+//
+// Doc dau middlewares/tranChung.js de biet ro cai nay chan duoc gi va KHONG
+// chan duoc gi - dung tuong co no roi la an toan truoc DDoS.
+app.use(taoTranChung());
 
 // Middleware
 // 50mb la con so cu, thua 1000 lan so voi nhu cau that: JSON lon nhat ma may
