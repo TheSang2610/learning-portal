@@ -5,7 +5,8 @@ import { getErrorMessage } from "@/src/services/apiHelper";
 import { taoDonHang, dinhDangTien } from "@/src/services/order";
 import AnhDaiDien from "@/src/components/ui/AnhDaiDien";
 import SafeImage from "@/src/components/ui/SafeImage";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { duongDanDangNhap } from "@/src/components/auth/duongDanDangNhap";
 import {
   ArrowLeft,
   BookOpen,
@@ -164,6 +165,13 @@ function CourseDetailPageContent() {
   const isMounted = useDaGanVaoTrinhDuyet();
   const nguoiDung = useNguoiDungLuu();
   const dangTaiNguoiDung = useDangTaiNguoiDung();
+  const duongDan = usePathname();
+
+  // Mo hop dang nhap NGAY TREN trang nay, giu nguyen ?slug dang xem. Truoc day
+  // cho nay day nguoi dung ve "/?auth=login" - dang nhap xong ho dung o trang
+  // chu va phai tu tim lai khoa hoc.
+  const moDangNhap = (lyDo: "hoc" | "ghidanh") =>
+    router.push(duongDanDangNhap(duongDan, searchParams, lyDo));
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [stats, setStats] = useState<ReviewStats | null>(null);
@@ -360,6 +368,21 @@ function CourseDetailPageContent() {
       return;
     }
 
+    // Khach vang lai: hien hop dang nhap NGAY, khong goi may chu truoc.
+    //
+    // Truoc day cho nay cu goi ghi danh, an 401, roi moi mo dang nhap - tuc la
+    // nguoi dung bam nut, ngoi cho mot luot mang, roi moi thay hop dang nhap.
+    // Nhanh bat 401 ben duoi VAN giu: phien co the het han giua chung, va luc
+    // do chi may chu moi biet.
+    //
+    // dangTaiNguoiDung: chua hoi xong may chu \"toi la ai\". Khong kiem co nay
+    // thi nguoi DANG dang nhap bam nut trong mot phan giay dau se bi day vao
+    // hop dang nhap oan.
+    if (!dangTaiNguoiDung && !nguoiDung) {
+      moDangNhap((course.price ?? 0) > 0 ? "ghidanh" : "hoc");
+      return;
+    }
+
     try {
       setSubmitting(true);
       setError("");
@@ -393,9 +416,11 @@ function CourseDetailPageContent() {
       const errorMsg = getErrorMessage(error, "");
 
       if (errorMsg.includes("401")) {
+        // Phien vua het han giua chung. Mo hop dang nhap ngay tren trang nay,
+        // KHONG day ve trang chu: dang nhap xong ho van o dung khoa hoc dang
+        // xem va bam tiep duoc.
         setError("Vui lòng đăng nhập để tiếp tục chương trình học");
-        // Khong co route /login - dang nhap la modal tren trang chu
-        router.push("/?auth=login");
+        moDangNhap("hoc");
       } else if (errorMsg.includes("đã đăng ký") || errorMsg.includes("400")) {
         setIsEnrolled(true);
         router.push(`/learn?slug=${courseSlug}`);

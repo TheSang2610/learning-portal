@@ -6,7 +6,9 @@ import { ChevronDown, User, Settings, LogOut } from "lucide-react";
 import AnhDaiDien from "@/src/components/ui/AnhDaiDien";
 import SoDuCoin from "@/src/components/common/SoDuCoin";
 import { useEffect, useRef, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useNguoiDungLuu, useDangTaiNguoiDung } from "@/src/hooks/nguoiDungLuu";
+import { duongDanDangNhap } from "@/src/components/auth/duongDanDangNhap";
 
 // Tach rieng khoi IndividualsHeader de moi header trang deu co menu tai khoan.
 // Neu de nguyen trong IndividualsHeader thi cac trang dung header rieng se mat
@@ -21,6 +23,17 @@ export default function HeaderUserMenu() {
   const dangTai = useDangTaiNguoiDung();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
+  // Mo hop dang nhap NGAY TREN trang dang xem, giu nguyen moi tham so.
+  //
+  // Truoc day hai nut nay tro cung vao "/?auth=login". Khach dang doc mot khoa
+  // hoc ma bam Dang nhap la bi nem ve trang chu, dang nhap xong dung o do va
+  // phai tu tim lai khoa hoc luc nay. Hop dang nhap gio nam o layout cua ca
+  // khu hoc vien nen ?auth co tac dung o moi trang - xem AuthModalGate.
+  const duongDan = usePathname();
+  const thamSo = useSearchParams();
+  const duongDangNhap = duongDanDangNhap(duongDan, thamSo, undefined, "login");
+  const duongDangKy = duongDanDangNhap(duongDan, thamSo, undefined, "register");
 
   useEffect(() => {
     const onClickOutside = (e: MouseEvent) => {
@@ -57,11 +70,11 @@ export default function HeaderUserMenu() {
   if (!user) {
     return (
       <div className="flex items-center gap-5">
-        <Link href="/?auth=login" className="text-sm text-blue-600 hover:underline">
+        <Link href={duongDangNhap} className="text-sm text-blue-600 hover:underline">
           Đăng nhập
         </Link>
         <Link
-          href="/?auth=register"
+          href={duongDangKy}
           className="rounded-md border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
         >
           Đăng ký miễn phí

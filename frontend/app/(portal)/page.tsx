@@ -1,5 +1,3 @@
-import { Suspense } from "react";
-import AuthModalGate from "@/src/components/home/AuthModalGate";
 import HeroSection from "@/src/components/home/HeroSection";
 import DaiDonVi from "@/src/components/home/DaiDonVi";
 import TrinhBay from "@/src/components/home/TrinhBay";
@@ -73,12 +71,8 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* AuthModalGate goi useSearchParams() -> phai boc Suspense, neu khong
-          ca trang chu mat kha nang prerender tinh. */}
-      <Suspense fallback={null}>
-        <AuthModalGate />
-      </Suspense>
-
+      {/* AuthModalGate da chuyen len app/(portal)/layout.tsx: moi trang trong
+          khu hoc vien deu can mo duoc hop dang nhap, khong rieng trang chu. */}
       <div>
         <HeroSection soKhoa={khoaDaDang.length} soMienPhi={soMienPhi} />
         {/* Dai nay thay cho PartnersSection cu - cung mot noi dung (don vi

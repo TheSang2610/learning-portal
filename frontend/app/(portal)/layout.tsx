@@ -4,8 +4,10 @@ import "../globals.css";
 import Header from "@/src/components/layout/Header";
 import Footer from "@/src/components/layout/Footer";
 import NapNguoiDung from "@/src/components/common/NapNguoiDung";
+import AuthModalGate from "@/src/components/home/AuthModalGate";
 import TroLyToanTrang from "@/src/components/troly/TroLyToanTrang";
 import { layTuMayChu, hoacNull } from "@/src/services/serverFetch";
+import { DUONG_HO_SO } from "@/src/services/diaChiApi";
 import type { Category } from "@/src/services/categoryService";
 import type { Course } from "@/src/services/course";
 import type { ProviderData } from "@/src/services/provider";
@@ -61,9 +63,43 @@ export default async function PortalRootLayout({
       suppressHydrationWarning
     >
       <body className="antialiased">
+        {/* Ban luot goi "toi la ai" di NGAY, truoc ca khi React gan vao trang.
+
+            Van de: <NapNguoiDung /> goi trong useEffect, ma useEffect chi chay
+            SAU khi toan bo goi JavaScript da tai ve, phan tich xong va hydrate
+            xong. Tuc la luot goi mang chi bat dau o cuoi hang doi, roi con
+            phai cho may chu tra loi - trong suot thoi gian do goc phai thanh
+            dieu huong la mot o TRONG.
+
+            The nay thi luot goi khoi hanh ngay khi trinh duyet doc toi dong
+            nay, chay SONG SONG voi viec tai JavaScript thay vi noi duoi no.
+            <NapNguoiDung /> chi viec nhan lai loi hua da bay san.
+
+            Trong the nay khong co mot chut du lieu nguoi dung nao - no chi mo
+            mot ket noi. An toan de dat thang vao HTML tinh.
+
+            `.catch` gan ngay tai cho: khong co no thi mot loi hua bi tu choi
+            ma chua ai bat se thanh "unhandled rejection" do do trong console
+            truoc khi NapNguoiDung kip nhan. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              `try{window.__hoSoDangBay=fetch(${JSON.stringify(DUONG_HO_SO)},` +
+              `{credentials:"include",cache:"no-store"})` +
+              `.then(function(r){return r.ok?r.json():null})` +
+              `.catch(function(){return null})}catch(e){}`,
+          }}
+        />
         {/* Hoi may chu "toi la ai" mot lan. Danh tinh nam trong RAM, khong
             con ghi xuong localStorage - xem src/hooks/nguoiDungLuu.ts. */}
         <NapNguoiDung />
+        {/* Hop dang nhap, mo bang ?auth tren dia chi. Dat o layout chu khong
+            phai rieng trang chu: moi trang trong khu hoc vien deu co the can
+            dang nhap, va khach dang xem mot khoa hoc thi phai dang nhap NGAY
+            TAI DO chu khong bi nem ve trang chu. Xem AuthModalGate. */}
+        <Suspense fallback={null}>
+          <AuthModalGate />
+        </Suspense>
         {/* Header goi useSearchParams(). Khong boc Suspense thi TOAN BO trang portal
             khong prerender tinh duoc -> moi luot xem deu ton mot lan chay serverless. */}
         <Suspense fallback={<div className="h-[104px]" />}>
