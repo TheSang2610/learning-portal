@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { GOC_API_TRINH_DUYET } from "@/src/services/diaChiApi";
+import { DUONG_HO_SO } from "@/src/services/diaChiApi";
 import { datNguoiDung, datDangTai, KHOA_HIEU } from "@/src/hooks/nguoiDungLuu";
 
 // Hoi may chu "toi la ai" mot lan moi lan tai trang, roi nhet ket qua vao kho
@@ -17,7 +17,30 @@ import { datNguoiDung, datDangTai, KHOA_HIEU } from "@/src/hooks/nguoiDungLuu";
 // Nen o day goi fetch tho: 401 la cau tra loi HOP LE ("ban la khach"), khong
 // phai loi.
 
-const DUONG = `${GOC_API_TRINH_DUYET}/api/users/profile`;
+// The <script> noi tuyen trong app/(portal)/layout.tsx da ban luot goi nay di
+// tu luc trinh duyet con dang doc HTML, va de lai loi hua o day. Nhan lay no
+// thay vi goi lai tu dau.
+//
+// VI SAO PHAI LAM VAY: useEffect chi chay sau khi ca goi JavaScript da tai,
+// phan tich va hydrate xong. Neu doi den luc do moi goi thi luot mang nam NOI
+// DUOI toan bo viec do, va goc phai thanh dieu huong trong suot ca quang thoi
+// gian ay. Ban truoc thi hai viec chay song song.
+//
+// CHI dung duoc MOT lan: cac lan nap lai sau (doi tab, bam Back, vua dang
+// nhap xong) deu phai hoi lai may chu that. Xoa ngay sau khi lay.
+declare global {
+  interface Window {
+    __hoSoDangBay?: Promise<unknown> | null;
+  }
+}
+
+const layLoiHuaDaBay = (): Promise<unknown> | null => {
+  if (typeof window === "undefined") return null;
+  const dangBay = window.__hoSoDangBay;
+  if (!dangBay) return null;
+  window.__hoSoDangBay = null;
+  return dangBay;
+};
 
 export default function NapNguoiDung() {
   useEffect(() => {
@@ -25,7 +48,18 @@ export default function NapNguoiDung() {
 
     const nap = async () => {
       try {
-        const res = await fetch(DUONG, {
+        // Lan dau: dung ket qua cua luot goi da bay san tu the <script>.
+        const daBay = layLoiHuaDaBay();
+        if (daBay) {
+          const duLieu = await daBay;
+          if (!conSong) return;
+          // The <script> tra ve null cho ca 401 (khach vang lai) lan loi mang.
+          // Hai truong hop deu coi nhu chua dang nhap - giong het nhanh duoi.
+          datNguoiDung((duLieu as Parameters<typeof datNguoiDung>[0]) ?? null, false);
+          return;
+        }
+
+        const res = await fetch(DUONG_HO_SO, {
           credentials: "include",
           // Danh tinh khong duoc lay tu bo dem cua trinh duyet: vua doi tai
           // khoan ma an ban cu la hien nham ten nguoi truoc.

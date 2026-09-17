@@ -48,3 +48,15 @@ export const GOC_API = THO.replace(/\/+$/, "").replace(/\/api$/, "");
  */
 export const GOC_API_TRINH_DUYET =
   process.env.NEXT_PUBLIC_GOI_THANG_BACKEND === "1" ? GOC_API : "";
+
+/**
+ * Đường "tôi là ai" mà trình duyệt gọi sau mỗi lần tải trang.
+ *
+ * Để ở đây vì có HAI nơi cần đúng một chuỗi này: `<NapNguoiDung />` gọi nó
+ * trong `useEffect`, và thẻ `<script>` nội tuyến trong `app/(portal)/layout.tsx`
+ * bắn nó đi sớm hơn một nhịp để khỏi phải chờ hydrate. Hai nơi tự ghép chuỗi
+ * riêng thì một ngày nào đó đổi `NEXT_PUBLIC_GOI_THANG_BACKEND` là chúng trỏ
+ * hai chỗ khác nhau — và triệu chứng sẽ là "header thỉnh thoảng chậm", gần như
+ * không đoán ra được.
+ */
+export const DUONG_HO_SO = `${GOC_API_TRINH_DUYET}/api/users/profile`;
