@@ -2,7 +2,9 @@
 
 import { Suspense, useEffect, useState, useRef } from "react";
 import { getErrorMessage } from "@/src/services/apiHelper";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { duongDanDangNhap } from "@/src/components/auth/duongDanDangNhap";
+import { useNguoiDungLuu, useDangTaiNguoiDung } from "@/src/hooks/nguoiDungLuu";
 import {
   ArrowLeft,
   Play,
@@ -117,6 +119,10 @@ function CourseLearnPageContent() {
 
   // Lay slug tu query string: ?slug=ten-khoa-hoc
   const courseSlug = searchParams.get("slug") || "";
+  const duongDan = usePathname();
+  const nguoiDung = useNguoiDungLuu();
+  const dangTaiNguoiDung = useDangTaiNguoiDung();
+  const laKhach = !dangTaiNguoiDung && !nguoiDung;
   const videoRef = useRef<HTMLVideoElement>(null);
   // import type nen hls.js khong bi keo vao goi JavaScript - no van duoc nap
   // dong o duoi bang await import("hls.js").
@@ -127,16 +133,62 @@ function CourseLearnPageContent() {
   const [progress, setProgress] = useState<ProgressStats | null>(null);
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentQuiz, setCurrentQuiz] = useState<Quiz | null>(null);
+  // Bo cau hoi cua CA khoa hoc, tra cuu theo id bai hoc.
+  //
+  // Truoc day moi lan doi bai la mot loi goi
+  // GET /quizzes/course/:id?lessonId=... - bam qua lai giua hai bai la goi lai
+  // tu dau, khong he nho. Ca khoa hoc thuong chi co vai bai kiem tra, nen nap
+  // mot lan cung voi trang roi tra cuu tai cho thi re hon han, va doi bai
+  // khong con phai cho mang nua.
+  const [quizTheoBai, setQuizTheoBai] = useState<Record<string, Quiz>>({});
   const [isDoingQuiz, setIsDoingQuiz] = useState<boolean>(false);
   const [showCertificate, setShowCertificate] = useState<boolean>(false);
   const [videoError, setVideoError] = useState<string>("");
+
+  const currentQuiz = activeLesson ? (quizTheoBai[activeLesson._id] ?? null) : null;
 
   // Khac null nghia la bai nay dung video cua YouTube/Vimeo: phai nhung bang
   // iframe, the <video> khong doc duoc trang xem cua ho.
   const nhungVideo = activeLesson?.videoUrl
     ? layDuongDanNhung(activeLesson.videoUrl)
     : null;
+
+  // Xep danh sach quiz tho thanh bang tra theo id bai hoc. Quiz khong gan bai
+  // nao (lesson rong) la bai kiem tra cuoi khoa - khong thuoc bai nao nen bo
+  // qua o day, dung voi cach cu la loc theo dung lessonId.
+  const xepQuizTheoBai = (ds: Quiz[]): Record<string, Quiz> => {
+    const bang: Record<string, Quiz> = {};
+    for (const q of ds) {
+      const idBai = typeof q.lesson === "string" ? q.lesson : q.lesson?._id;
+      // Giu cai DAU tien: may chu sap xep createdAt giam dan, ma cach cu lay
+      // res[0] - tuc la ban moi nhat. Phai giu dung thu tu do.
+      if (idBai && !bang[idBai]) bang[idBai] = q;
+    }
+    return bang;
+  };
+
+  // Khach vang lai mo thang /learn: hien hop dang nhap ngay.
+  //
+  // Trang VAN nap binh thuong o duoi - may chu tu cat video va bai viet cua
+  // nguoi chua ghi danh (xem backend/src/utils/quyenNoiDung.js), nen khong co
+  // gi de lo. Cho tai la de dang nhap xong ho o dung bai dang mo, khong phai
+  // di lai tu trang chu.
+  //
+  // CHI mo MOT lan cho moi lan tai trang.
+  //
+  // Khong co cai co nay thi hop dang nhap khong tat duoc: bam dong la
+  // AuthModalGate xoa tham so `auth` khoi dia chi, hieu ung nay thay tham so
+  // bien mat va khach van chua dang nhap, nen no dat lai ngay lap tuc. Nut
+  // dong tro thanh vo dung.
+  //
+  // useRef chu khong phai useState: doi gia tri nay khong duoc ve lai gi ca.
+  const daMoiDangNhap = useRef(false);
+
+  useEffect(() => {
+    if (!laKhach || daMoiDangNhap.current) return;
+    daMoiDangNhap.current = true;
+    router.replace(duongDanDangNhap(duongDan, searchParams, "hoc"));
+  }, [laKhach, searchParams, duongDan, router]);
 
   useEffect(() => {
     if (!courseSlug) return;
@@ -156,11 +208,23 @@ function CourseLearnPageContent() {
         setCourse(courseData);
 
         const realCourseId = courseData._id;
-        const enrollData = await getEnrollmentByCourse(realCourseId);
-        setEnrollment(enrollData);
 
-        const stats = await getProgressStats(realCourseId);
+        // Ba loi goi nay khong phu thuoc nhau, chi cung can courseId - nen goi
+        // song song. Truoc day chung xep hang cho nhau, cong them
+        // getCourseBySlug o tren va startLesson o duoi la NAM luot di-ve noi
+        // tiep truoc khi khung xuong tat. Gio con hai.
+        //
+        // getProgressStats tra 404 khi chua ghi danh (khoa co phi chua duyet),
+        // va quiz thi khong phai khoa nao cung co - bat rieng tung cai de mot
+        // loi binh thuong o hai nhanh phu khong keo do ca man hinh hoc.
+        const [enrollData, stats, dsQuiz] = await Promise.all([
+          getEnrollmentByCourse(realCourseId),
+          getProgressStats(realCourseId).catch(() => null),
+          getCourseQuizzes(realCourseId).catch(() => [] as Quiz[]),
+        ]);
+        setEnrollment(enrollData);
         setProgress(stats);
+        setQuizTheoBai(xepQuizTheoBai(dsQuiz));
 
         if (courseData?.lessons && courseData.lessons.length > 0) {
           // /courses/slug/:slug populate day du bai hoc, khac voi /courses chi
@@ -193,20 +257,18 @@ function CourseLearnPageContent() {
 
           // Bai bi khoa thi khong ghi tien do - xem ghi chu o handleSelectLesson.
           if (!defaultLesson.biKhoa) {
-            try {
-              await startLesson(realCourseId, defaultLesson._id);
-
-              const history = layTienDo(enrollData).find(
-                (lp) => layIdBaiHoc(lp.lesson) === defaultLesson._id,
-              );
-
-              if (history?.watchedDuration && videoRef.current) {
-                videoRef.current.currentTime = history.watchedDuration;
-              }
-            } catch (err) {
-              console.error("Lỗi kích hoạt bài học mặc định:", err);
-            }
+            // KHONG await: day la mot lenh GHI tien do, tren man hinh khong co
+            // gi cho no ca. Truoc day no nam trong duong chay chinh nen khung
+            // xuong phai doi them mot luot di-ve nua moi chiu tat.
+            startLesson(realCourseId, defaultLesson._id).catch((err) =>
+              console.error("Lỗi kích hoạt bài học mặc định:", err),
+            );
           }
+          // Cho nay truoc kia con gan videoRef.current.currentTime de hoc tiep
+          // tu cho dang do. No chua bao gio chay: luc nay loading van la true
+          // nen the <video> chua duoc dung, videoRef.current con null. Viec
+          // tua da chuyen xuong onLoadedMetadata cua the <video>, la cho duy
+          // nhat biet chac video da san sang de tua.
         }
       } catch (error) {
         console.error("Lỗi khi khởi tạo màn hình học tập:", error);
@@ -319,27 +381,6 @@ function CourseLearnPageContent() {
   }, [activeLesson?.videoUrl]);
 
   useEffect(() => {
-    if (!activeLesson || !course?._id) return;
-
-    const checkQuizForLesson = async () => {
-      try {
-        setIsDoingQuiz(false);
-        const res = await getCourseQuizzes(course._id, activeLesson._id);
-        if (Array.isArray(res) && res.length > 0) {
-          setCurrentQuiz(res[0]);
-        } else {
-          setCurrentQuiz(null);
-        }
-      } catch (err) {
-        console.error("Lỗi tìm kiếm Quiz đính kèm bài học:", err);
-        setCurrentQuiz(null);
-      }
-    };
-
-    checkQuizForLesson();
-  }, [activeLesson, course?._id]);
-
-  useEffect(() => {
     if (!activeLesson || !videoRef.current || !course?._id || isDoingQuiz) return;
 
     const interval = setInterval(async () => {
@@ -356,27 +397,42 @@ function CourseLearnPageContent() {
     return () => clearInterval(interval);
   }, [activeLesson, course?._id, isDoingQuiz]);
 
-  const handleSelectLesson = async (lesson: Lesson) => {
+  const handleSelectLesson = (lesson: Lesson) => {
     if (!course?._id) return;
     setActiveLesson(lesson);
     setVideoError("");
+    // Dong bai kiem tra cua bai truoc. Truoc day viec nay nam trong mot hieu
+    // ung chay moi lan doi bai, va hieu ung do keo theo mot loi goi mang di tim
+    // quiz cua bai moi. Gio bang quiz da nam san trong bo nho nen dat co ngay
+    // tai cho bam la du - doi bai khong cham mang nua.
+    setIsDoingQuiz(false);
 
     // Bai bi khoa thi khong ghi tien do: nguoi nay chua duoc mo khoa hoc, may
     // chu se tu choi, goi vao chi de lai mot dong loi do trong console.
     if (lesson.biKhoa) return;
 
-    try {
-      await startLesson(course._id, lesson._id);
+    // KHONG await: bai moi da hien ra o dong tren roi, khong co gi phai cho
+    // lenh ghi tien do nay ca.
+    //
+    // Truoc day sau await con gan videoRef.current.currentTime de tua ve cho
+    // dang do. Cung chua bao gio chay dung: the <video> mang key={_id} nen doi
+    // bai la React dung mot the MOI, roi hieu ung nap video goi load() - ca hai
+    // deu dua currentTime ve 0 sau khi cau lenh do chay xong. Viec tua da
+    // chuyen xuong onLoadedMetadata.
+    startLesson(course._id, lesson._id).catch((err) =>
+      console.error("Lỗi khi kích hoạt startLesson:", err),
+    );
+  };
 
-      const history = layTienDo(enrollment).find(
-        (lp) => layIdBaiHoc(lp.lesson) === lesson._id,
-      );
-
-      if (history?.watchedDuration && videoRef.current) {
-        videoRef.current.currentTime = history.watchedDuration;
-      }
-    } catch (err) {
-      console.error("Lỗi khi kích hoạt startLesson:", err);
+  // Tua ve dung cho da xem do. Chi o day moi chac chan the <video> da co va da
+  // biet thoi luong - gan currentTime truoc thoi diem nay thi bi load() xoa.
+  const handleLoadedMetadata = () => {
+    if (!activeLesson || !videoRef.current) return;
+    const history = layTienDo(enrollment).find(
+      (lp) => layIdBaiHoc(lp.lesson) === activeLesson._id,
+    );
+    if (history?.watchedDuration) {
+      videoRef.current.currentTime = history.watchedDuration;
     }
   };
 
@@ -386,10 +442,13 @@ function CourseLearnPageContent() {
       const duration = videoRef.current ? Math.floor(videoRef.current.duration) : 0;
       const response = await completeLesson(course._id, activeLesson._id, duration);
 
-      const updatedEnroll = await getEnrollmentByCourse(course._id);
+      // Hai lenh doc lai nay doc lap nhau - goi song song. Chung phai chay SAU
+      // completeLesson, neu khong se doc ra tien do cu.
+      const [updatedEnroll, newStats] = await Promise.all([
+        getEnrollmentByCourse(course._id),
+        getProgressStats(course._id),
+      ]);
       setEnrollment(updatedEnroll);
-
-      const newStats = await getProgressStats(course._id);
       setProgress(newStats);
 
       if (
@@ -418,10 +477,11 @@ function CourseLearnPageContent() {
       const duration = videoRef.current ? Math.floor(videoRef.current.duration) : 0;
       await completeLesson(course._id, activeLesson._id, duration);
 
-      const updatedEnroll = await getEnrollmentByCourse(course._id);
+      const [updatedEnroll, newStats] = await Promise.all([
+        getEnrollmentByCourse(course._id),
+        getProgressStats(course._id),
+      ]);
       setEnrollment(updatedEnroll);
-
-      const newStats = await getProgressStats(course._id);
       setProgress(newStats);
 
       if (newStats?.progressPercentage === 100) {
@@ -539,6 +599,7 @@ function CourseLearnPageContent() {
                       key={activeLesson._id}
                       controls
                       className="h-full w-full object-contain"
+                      onLoadedMetadata={handleLoadedMetadata}
                       onEnded={handleVideoEnded}
                       onError={(e) => {
                         console.error("❌ Video element error:", e);

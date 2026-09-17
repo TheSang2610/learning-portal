@@ -95,6 +95,15 @@ const quizSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
+// Khong co chi muc nay thi moi loi goi GET /quizzes/course/:courseId phai quet
+// TOAN BO collection quiz de loc ra vai ban ghi. Man hinh hoc goi duong nay moi
+// lan doi bai, nen cai quet do lap lai suot buoi hoc va cang cham khi so bai
+// kiem tra trong he thong tang len - dung luc khong ai nghi la no cham.
+//
+// Mot chi muc ghep phuc vu duoc ca hai kieu loc dang dung: chi theo `course`
+// (tien to trai cua chi muc) va theo ca `course` + `lesson`.
+quizSchema.index({ course: 1, lesson: 1 });
+
 // Tính totalPoints từ questions
 // Mongoose 9 da bo kieu callback `next`: hook chi can chay xong, hoac tra ve
 // mot promise. Khai bao tham so `next` o day la thua va gay hieu nham - nhin
