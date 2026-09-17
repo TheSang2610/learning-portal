@@ -120,6 +120,43 @@ const userSchema = new mongoose.Schema({
     verifyTokenExp: Date,
 
     /**
+     * Luong QUEN MAT KHAU - xem utils/maOtp.js va
+     * controllers/quenMatKhauController.js.
+     *
+     * Hai cap truong chu khong phai mot, vi luong co hai buoc va moi buoc
+     * mang mot loai bi mat khac han nhau:
+     *
+     *   resetOtpHash     ban bam BCRYPT cua ma 6 chu so gui trong thu.
+     *                    Bcrypt chu khong phai SHA-256 nhu verifyTokenHash o
+     *                    tren: ma 6 chu so chi co mot trieu kha nang nen ban
+     *                    bam SHA-256 do het trong chua mot giay. Ly do day du
+     *                    ghi o dau utils/maOtp.js.
+     *
+     *   resetTicketHash  ban bam SHA-256 cua "phieu" 32 byte ngau nhien, cap
+     *                    ra SAU khi nhap dung ma. Phieu moi la thu mang quyen
+     *                    dat mat khau moi; ma bi tieu ngay khi doi lay phieu
+     *                    nen khong dung lai duoc lan hai.
+     *
+     * Ca hai deu CHI luu ban bam. Ban ghi User la thu de bi doc nham nhat
+     * trong he thong - neu ma nam nguyen trong do thi ai doc duoc CSDL la dat
+     * lai duoc mat khau cua bat ky ai dang cho ma.
+     *
+     * Khong dat `default`: tai khoan chua bao gio quen mat khau thi khong co
+     * truong nao ca, va index sparse ben duoi bo qua chung.
+     */
+    resetOtpHash: String,
+    resetOtpExp: Date,
+
+    // index de doi phieu -> nguoi dung bang mot lan tra cuu, thay vi quet bang.
+    resetTicketHash: {
+        type: String,
+        index: true,
+        sparse: true
+    },
+
+    resetTicketExp: Date,
+
+    /**
      * So coin dang co trong vi.
      *
      * Chi duoc doi qua utils/viCoin.js - dung $inc co dieu kien, khong bao gio

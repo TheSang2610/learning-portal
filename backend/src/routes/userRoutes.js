@@ -63,6 +63,39 @@ const gioiHanXacMinh = gioiHan({
     thongBao: 'Quá nhiều lượt xác minh. Vui lòng thử lại sau ít phút.',
 });
 
+// Quen mat khau: ba duong, ba tran theo IP khac nhau.
+//
+// Bo dem CHINH cua luong nay dem theo EMAIL va nam trong controller (xem
+// quenMatKhauController.js) - do moi la cai chan do ma va chan bom thu. Ba
+// tran duoi day dem theo IP, chan mot thu khac han: mot may quet HANG NGHIN
+// dia chi email khac nhau. Tran theo email khong thay gi trong truong hop do
+// vi moi dia chi la mot bo dem moi tinh - dung bai hoc cua khoa `dangnhap:ip:`
+// trong middlewares/loginRateLimit.js.
+//
+// Nguong dat rong, vi ca mot truong hoc hay van phong co the ra ngoai chung
+// mot IP qua NAT.
+const gioiHanQuenMk = gioiHan({
+    ten: 'quenmk',
+    soLan: 20,
+    cuaSoMs: 60 * 60 * 1000, // 1 gio
+    thongBao: 'Quá nhiều yêu cầu từ địa chỉ này. Vui lòng thử lại sau.',
+});
+
+// Duong nhap ma cho nguong cao hon: nguoi dung that go nham vai lan la
+// chuyen binh thuong, va lop chan do ma that su nam o bo dem theo email.
+const gioiHanKiemMa = gioiHan({
+    ten: 'quenmk-kiemma',
+    soLan: 60,
+    cuaSoMs: 60 * 60 * 1000,
+    thongBao: 'Quá nhiều yêu cầu từ địa chỉ này. Vui lòng thử lại sau.',
+});
+
+const {
+    yeuCauMa,
+    kiemMa,
+    datLaiMatKhau,
+} = require('../controllers/quenMatKhauController');
+
 const { getMyProfile, getMyActivity } = require('../controllers/activityController');
 
 router.get('/instructors', protect, admin, getInstructorsByProvider);
@@ -70,6 +103,12 @@ router.get('/instructors', protect, admin, getInstructorsByProvider);
 router.route('/').get(protect, admin, getUsers).post(gioiHanDangKy, registerUser);
 router.post('/login', loginRateLimit, loginUser);
 router.post('/verify-email', gioiHanXacMinh, verifyEmail);
+
+// Quen mat khau. Ba duong nay deu KHONG can dang nhap - do la ca van de: xem
+// hai nguyen tac o dau controllers/quenMatKhauController.js.
+router.post('/quen-mat-khau', gioiHanQuenMk, yeuCauMa);
+router.post('/quen-mat-khau/kiem-ma', gioiHanKiemMa, kiemMa);
+router.post('/quen-mat-khau/dat-lai', gioiHanKiemMa, datLaiMatKhau);
 router.post('/logout', logoutUser);
 router.get('/profile', protect, getMyProfile);
 router.put('/profile', protect, updateUserProfile);
