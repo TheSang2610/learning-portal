@@ -1,5 +1,5 @@
 import { GOC_API_TRINH_DUYET as API_ORIGIN } from "./diaChiApi";
-import { datNguoiDung } from "@/src/hooks/nguoiDungLuu";
+import { datNguoiDung, dangCoPhien } from "@/src/hooks/nguoiDungLuu";
 
 const resolveApiUrl = (path: string) => {
   if (/^https?:\/\//i.test(path)) {
@@ -99,7 +99,33 @@ export const handleResponse = async (res: Response) => {
     const accountLocked =
       res.status === 403 && /bị khóa/i.test(String(data?.message || ""));
 
-    if ((res.status === 401 || accountLocked) && typeof window !== "undefined") {
+    // CHI dang xuat + dieu huong khi ta DANG tin la minh co phien.
+    //
+    // LO CU: moi 401 deu keo ca trang ve "/". Nhung 401 co HAI nghia khac han
+    // nhau, va gop chung lam mot la sai:
+    //
+    //   phien vua het han  -> dung, phai xoa phien va dua ve trang chu, neu
+    //                         khong nguoi dung cu bam mai vao mot giao dien
+    //                         da chet.
+    //
+    //   khach vang lai     -> 401 la cau tra loi BINH THUONG. Trang khoa hoc
+    //                         goi getEnrollmentByCourse de biet minh da ghi
+    //                         danh chua; khach chua dang nhap thi tat nhien
+    //                         nhan 401. Da ho ve trang chu vi chuyen do la vo
+    //                         ly - va no lam hong luon viec mo hop dang nhap
+    //                         NGAY TREN trang dang xem (xem AuthModalGate):
+    //                         trang bi cuon ve "/" truoc khi hop kip hien.
+    //
+    // dangCoPhien() con false trong luc dang hoi may chu "toi la ai". Do la
+    // huong that bai AN TOAN: cung lam la hien mot cau bao loi thay vi da nguoi
+    // ta di - con hon nguoc lai.
+    const phienChet = dangCoPhien();
+
+    if (
+      (res.status === 401 || accountLocked) &&
+      typeof window !== "undefined" &&
+      phienChet
+    ) {
       // Doi may chu xoa cookie xong moi dieu huong, thay cho mot moc 100ms
       // doan chung. Khong await o day de con nem loi ve cho noi goi ngay.
       void xoaPhien().finally(() => {

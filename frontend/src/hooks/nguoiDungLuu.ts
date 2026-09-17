@@ -129,6 +129,23 @@ const doc = () => nguoiDung;
 const docDangTai = () => dangTai;
 
 /**
+ * Trang này có đang tin là mình đã đăng nhập không.
+ *
+ * Đọc ngoài React (không phải hook), để `apiHelper` phân biệt được hai loại
+ * 401 hoàn toàn khác nhau:
+ *
+ *   - "phiên vừa hết hạn"  — ta ĐANG đăng nhập mà máy chủ từ chối. Phải xóa
+ *     phiên và đưa về trang chủ, nếu không người dùng cứ bấm mãi vào một giao
+ *     diện đã chết.
+ *
+ *   - "khách vãng lai"     — chưa bao giờ đăng nhập, và vừa mở một trang có
+ *     gọi tới đường cần quyền (trang khóa học gọi `getEnrollmentByCourse` để
+ *     biết mình đã ghi danh chưa). 401 ở đây là câu trả lời BÌNH THƯỜNG, không
+ *     phải lỗi — đá họ về trang chủ là sai.
+ */
+export const dangCoPhien = () => nguoiDung !== null;
+
+/**
  * Ban tay cho cac hook dang nghe, khi co cho sua danh tinh ma khong goi
  * datNguoiDung().
  */
