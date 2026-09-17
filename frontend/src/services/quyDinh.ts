@@ -41,6 +41,28 @@ export const soByte = (s: string) => new TextEncoder().encode(s).length;
 export const emailHopLe = (v: string) =>
   v.length > 0 && v.length <= DAI_EMAIL_TOI_DA && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
 
+/** Phần trước dấu @ của một địa chỉ thư dài nhất 64 ký tự (RFC 5321). */
+export const DAI_TEN_TAI_KHOAN_TOI_DA = 64;
+
+/**
+ * Kiểm thứ người dùng gõ ở ô "Email hoặc tên tài khoản" khi ĐĂNG NHẬP.
+ *
+ * Đăng nhập nhận cả địa chỉ đầy đủ lẫn tên tài khoản ngắn — "thesang" thay cho
+ * "thesang@gmail.com". Khớp với `boLocTaiKhoan` trong
+ * `backend/src/utils/dinhDanhDangNhap.js`; sửa ở đây thì phải sửa cả bên kia.
+ *
+ * Chỉ kiểm HÌNH DẠNG để người dùng biết ngay, không đoán hộ họ tài khoản nào:
+ * việc tra cứu là của máy chủ, và máy chủ kiểm lại toàn bộ.
+ */
+export const dinhDanhDangNhapHopLe = (v: string) => {
+  if (v.includes("@")) return emailHopLe(v);
+  return (
+    v.length > 0 &&
+    v.length <= DAI_TEN_TAI_KHOAN_TOI_DA &&
+    /^[a-z0-9._%+-]+$/.test(v.toLowerCase())
+  );
+};
+
 /** Trả về câu báo lỗi cho mật khẩu đặt MỚI, hoặc null nếu đạt. */
 export const loiMatKhauMoi = (v: string) => {
   if (v.length < DAI_MAT_KHAU_TOI_THIEU) {
