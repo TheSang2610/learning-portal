@@ -275,8 +275,12 @@ const getProgressStats = async (req, res) => {
         }
 
         // Tính toán thống kê từ mảng lessonProgress mới
-        const course = await Course.findById(courseId);
-        const totalLessons = course.lessons.length;
+        //
+        // Chi can DEM so bai hoc, nen chi lay truong `lessons` va lay ve doi
+        // tuong thuong. Truoc day cho nay keo ca ban ghi khoa hoc - mo ta,
+        // anh bia, danh sach review... - roi vut het di chi de doc mot con so.
+        const course = await Course.findById(courseId).select('lessons').lean();
+        const totalLessons = course?.lessons?.length || 0;
         
         // Đếm các bài học có trạng thái là completed trong mảng lessonProgress
         const completedLessonsCount = enrollment.lessonProgress.filter(
@@ -326,8 +330,16 @@ const completeCourse = async (req, res) => {
             return res.status(404).json({ message: 'Bạn chưa đăng ký khóa học này' });
         }
 
-        const course = await Course.findById(courseId);
-        const totalLessons = course.lessons.length;
+        // Chi dem bai hoc - khong can ca ban ghi khoa hoc. Xem ghi chu o
+        // getProgressStats.
+        const course = await Course.findById(courseId).select('lessons').lean();
+        // Khoa hoc da bi xoa: phai chan han. Neu de roi xuong duoi voi
+        // totalLessons = 0 thi dieu kien "da hoc het bai" thanh dung ngay ca
+        // khi hoc vien chua hoc bai nao - cap chung nhan khong.
+        if (!course) {
+            return res.status(404).json({ message: 'Khóa học không tồn tại' });
+        }
+        const totalLessons = course.lessons?.length || 0;
         const completedLessonsCount = enrollment.lessonProgress.filter(
             (lp) => lp.status === 'completed'
         ).length;
