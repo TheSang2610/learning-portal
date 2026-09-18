@@ -467,9 +467,12 @@ function CourseDetailPageContent() {
         <div className="mx-auto grid max-w-[1400px] grid-cols-1 items-center gap-12 px-6 md:px-12 lg:grid-cols-12">
           {/* Thông tin khóa học */}
           <div className="space-y-6 lg:col-span-7">
+            {/* -my-2 py-2: noi cao vung cham len 40px cho ngon tay ma khong
+                day chu xuong. Ban cu cao dung 16px - tren dien thoai bam
+                truot la chuyen binh thuong. */}
             <button
               onClick={() => router.back()}
-              className="inline-flex items-center gap-2 text-xs font-bold tracking-wider text-blue-600 transition hover:underline"
+              className="-my-2 inline-flex items-center gap-2 py-2 text-xs font-bold tracking-wider text-blue-600 transition hover:underline"
             >
               <ArrowLeft size={14} /> QUAY LẠI DANH MỤC
             </button>
