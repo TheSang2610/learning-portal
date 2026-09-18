@@ -6,7 +6,7 @@ import { taoDonHang, dinhDangTien } from "@/src/services/order";
 import AnhDaiDien from "@/src/components/ui/AnhDaiDien";
 import SafeImage from "@/src/components/ui/SafeImage";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { duongDanDangNhap } from "@/src/components/auth/duongDanDangNhap";
+import { duongDanDangNhap, doiDiaChi } from "@/src/components/auth/duongDanDangNhap";
 import {
   ArrowLeft,
   BookOpen,
@@ -171,7 +171,7 @@ function CourseDetailPageContent() {
   // cho nay day nguoi dung ve "/?auth=login" - dang nhap xong ho dung o trang
   // chu va phai tu tim lai khoa hoc.
   const moDangNhap = (lyDo: "hoc" | "ghidanh") =>
-    router.push(duongDanDangNhap(duongDan, searchParams, lyDo));
+    doiDiaChi(duongDanDangNhap(duongDan, searchParams, lyDo));
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [stats, setStats] = useState<ReviewStats | null>(null);

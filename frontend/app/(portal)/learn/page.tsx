@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState, useRef } from "react";
 import { getErrorMessage } from "@/src/services/apiHelper";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { duongDanDangNhap } from "@/src/components/auth/duongDanDangNhap";
+import { duongDanDangNhap, doiDiaChi } from "@/src/components/auth/duongDanDangNhap";
 import { useNguoiDungLuu, useDangTaiNguoiDung } from "@/src/hooks/nguoiDungLuu";
 import {
   ArrowLeft,
@@ -187,8 +187,8 @@ function CourseLearnPageContent() {
   useEffect(() => {
     if (!laKhach || daMoiDangNhap.current) return;
     daMoiDangNhap.current = true;
-    router.replace(duongDanDangNhap(duongDan, searchParams, "hoc"));
-  }, [laKhach, searchParams, duongDan, router]);
+    doiDiaChi(duongDanDangNhap(duongDan, searchParams, "hoc"), true);
+  }, [laKhach, searchParams, duongDan]);
 
   useEffect(() => {
     if (!courseSlug) return;

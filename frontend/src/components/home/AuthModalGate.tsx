@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import AuthModal from "@/src/components/auth/AuthModal";
 
 // Hop dang nhap, mo bang tham so ?auth tren dia chi.
@@ -30,7 +30,6 @@ const CAU_GIAI_THICH: Record<string, string> = {
 export default function AuthModalGate() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const router = useRouter();
 
   const dangMo = searchParams.get("auth") !== null;
   const loiNhan = CAU_GIAI_THICH[searchParams.get("vi") || ""] || undefined;
@@ -38,12 +37,23 @@ export default function AuthModalGate() {
   // Dong hop = bo hai tham so nay, GIU nguyen cac tham so khac. Truoc day cho
   // nay lam router.replace("/") - tuc la dong hop dang nhap tren trang khoa
   // hoc se nem nguoi dung ve trang chu, mat ca ?slug dang xem.
+  // Dung window.history.replaceState chu KHONG phai router.replace().
+  //
+  // router.replace() chay dung o dev nhung LA MOT LENH RONG tren ban build
+  // that: cac trang nhu /course duoc dung san tinh, va khi chi doi phan query
+  // thi Next coi nhu khong co gi de tai lai nen bo qua ca viec doi dia chi.
+  // Hau qua: bam dau X khong dong duoc hop, Escape cung khong - do tren
+  // production va tai hien lai duoc bang `next start` o may.
+  //
+  // Next co ho tro san history.pushState/replaceState: goi thang nhu duoi day
+  // thi usePathname va useSearchParams van cap nhat theo. Da do: dia chi doi,
+  // hop dong, khoa cuon duoc go.
   const dong = () => {
     const con = new URLSearchParams(searchParams.toString());
     con.delete("auth");
     con.delete("vi");
     const duoi = con.toString();
-    router.replace(duoi ? `${pathname}?${duoi}` : pathname);
+    window.history.replaceState(null, "", duoi ? `${pathname}?${duoi}` : pathname);
   };
 
   return <AuthModal open={dangMo} onClose={dong} loiNhan={loiNhan} />;
