@@ -17,12 +17,12 @@ export default function GpaHeader() {
 
   return (
     <div className="border-b bg-white">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:gap-6 sm:px-6">
         <div className="flex items-center gap-10">
           {/* Cung kieu chu voi logo o IndividualsHeader de dong bo toan trang */}
           <Link
             href="/"
-            className="shrink-0 text-[26px] font-bold tracking-tight whitespace-nowrap text-blue-600"
+            className="shrink-0 text-[20px] font-bold tracking-tight whitespace-nowrap text-blue-600 sm:text-[26px]"
           >
             Learning Portal
           </Link>

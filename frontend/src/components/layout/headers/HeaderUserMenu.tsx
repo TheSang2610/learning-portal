@@ -69,15 +69,25 @@ export default function HeaderUserMenu() {
 
   if (!user) {
     return (
-      <div className="flex items-center gap-5">
-        <Link href={duongDangNhap} className="text-sm text-blue-600 hover:underline">
+      // shrink-0 + whitespace-nowrap o ca hai nut: thieu chung thi tren man
+      // hinh 390px flex bop hai nut lai cho vua, "Dang nhap" xuong thanh hai
+      // dong chong len logo va "Dang ky mien phi" cao gap doi.
+      //
+      // Chu "mien phi" chi hien tu sm tro len. Tren dien thoai no la ba tu
+      // nua trong mot thanh vua du cho hai nut - bo di thi ca hang vua van,
+      // ma nguoi dung khong mat thong tin nao dang ke.
+      <div className="flex shrink-0 items-center gap-3 sm:gap-5">
+        <Link
+          href={duongDangNhap}
+          className="py-2 text-sm whitespace-nowrap text-blue-600 hover:underline"
+        >
           Đăng nhập
         </Link>
         <Link
           href={duongDangKy}
-          className="rounded-md border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+          className="rounded-md border border-blue-600 px-3 py-2 text-sm font-semibold whitespace-nowrap text-blue-600 transition hover:bg-blue-50 sm:px-4"
         >
-          Đăng ký miễn phí
+          Đăng ký<span className="hidden sm:inline"> miễn phí</span>
         </Link>
       </div>
     );

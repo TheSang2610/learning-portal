@@ -87,12 +87,15 @@ export default function IndividualsHeader() {
 
   return (
     <div className="sticky top-0 z-50 border-b bg-white">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-6">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:gap-6 sm:px-6">
         {/* LEFT */}
-        <div className="flex items-center gap-6">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-6">
+          {/* Co chu nho lai tren dien thoai. O 26px logo chiem 190px trong
+              tong 390px cua iPhone 12 Pro, khong con cho cho hai nut dang
+              nhap - do chinh la canh logo de len chu "Dang nhap". */}
           <Link
             href="/"
-            className="text-[26px] font-bold tracking-tight whitespace-nowrap text-blue-600"
+            className="text-[20px] font-bold tracking-tight whitespace-nowrap text-blue-600 sm:text-[26px]"
           >
             Learning Portal
           </Link>
