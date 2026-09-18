@@ -1,7 +1,7 @@
 "use client";
 
 import { datNguoiDung, yeuCauNapLai } from "@/src/hooks/nguoiDungLuu";
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { getErrorMessage } from "@/src/services/apiHelper";
 import Image from "next/image";
 import {
@@ -80,6 +80,30 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
   // Cau bao thanh cong nhung KHONG dong hop lai: sau khi dang ky, nguoi dung
   // chua dang nhap ma phai mo hom thu, nen ho can doc duoc cau nay.
   const [thongBao, setThongBao] = useState("");
+
+  // Escape de dong. Truoc day khong co, va do la loi that chu khong phai thieu
+  // tien nghi: tren dien thoai xoay ngang nut dong bi troi ra ngoai man hinh
+  // (xem ghi chu o lop phu ben duoi), luc do ban phim la loi thoat duy nhat
+  // con lai cho nguoi dung ban phim. Gio ca hai duong deu thong.
+  useEffect(() => {
+    if (!open) return;
+
+    const khiNhanPhim = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+
+    // Khoa cuon cua trang ben duoi. Khong khoa thi tren dien thoai, luot trong
+    // bang den cuoi se keo theo ca trang phia sau troi di - dong bang ra thi
+    // nguoi dung dung o mot cho hoan toan khac.
+    const cuonCu = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", khiNhanPhim);
+
+    return () => {
+      window.removeEventListener("keydown", khiNhanPhim);
+      document.body.style.overflow = cuonCu;
+    };
+  }, [open, onClose]);
 
   const [loginData, setLoginData] = useState({
     email: "",
@@ -426,14 +450,33 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8">
+    // overflow-y-auto tren lop phu, KHONG phai items-center don thuan.
+    //
+    // Ban cu dung "flex items-center" ma lop phu khong cuon duoc. Khi bang cao
+    // hon man hinh, items-center day phan thua ra ca TREN lan duoi - va nut
+    // dong nam o goc tren nen no troi han ra ngoai man hinh. Do duoc tren ban
+    // that o 844x390 (iPhone 12 Pro xoay ngang): nut dong o y = -22, tuc la
+    // khach mo bang ra roi thi khong con cach nao dong lai.
+    //
+    // my-auto giu bang nam giua khi con du cho, va tu bo can giua khi khong
+    // du - luc do bang bat dau tu mep tren va cuon xuong, nut dong luon cham
+    // toi duoc.
+    // z-[60] chu KHONG phai z-50: header la `fixed ... z-50`. Bang cung z-50
+    // thi hai ben ngang co, va header - dung sau trong cay - thang. Tren man
+    // hinh cao thi bang nam duoi dai header nen khong ai thay; tren dien thoai
+    // xoay ngang thi dinh bang chui vao dung dai do, va cu bam nut dong la
+    // trung link tren header. Do duoc: bam "dong" nhay sang /gpa-calculator.
+    <div className="fixed inset-0 z-[60] flex justify-center overflow-y-auto overscroll-contain bg-black/50 p-4">
       <div className="absolute inset-0" onClick={onClose} />
 
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white p-8 shadow-2xl ring-1 ring-slate-200">
+      <div className="relative my-auto w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl ring-1 ring-slate-200 sm:p-8">
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 rounded-full bg-slate-100 p-2 text-slate-600 transition hover:bg-slate-200"
+          // h-11 w-11: 44px la kich thuoc vung cham toi thieu Apple khuyen
+          // nghi. Ban cu la 25x40 - hut mot nut nho nhu vay tren dien thoai
+          // rat de truot tay.
+          className="absolute top-3 right-3 flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-xl leading-none text-slate-600 transition hover:bg-slate-200"
           aria-label="Close auth modal"
         >
           ×
