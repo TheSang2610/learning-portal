@@ -6,7 +6,15 @@ import { useNguoiDungLuu, useDangTaiNguoiDung } from "@/src/hooks/nguoiDungLuu";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { BookOpen, Video, ChevronDown, LogOut, GraduationCap, Menu } from "lucide-react";
+import {
+  BookOpen,
+  Video,
+  ChevronDown,
+  LogOut,
+  GraduationCap,
+  Menu,
+  MessageCircleQuestion,
+} from "lucide-react";
 
 // ===== NHOM ROUTE PHANG (URL khong con long nhau) =====
 const COURSE_ROUTES = [
@@ -52,6 +60,16 @@ const instructorMenuItems = [
         isIndicatorOnly: true,
       },
     ],
+  },
+  // Hang doi cau hoi cua hoc vien.
+  //
+  // Phai co duong vao tu day, neu khong thi giang vien khong bao gio biet co
+  // trang nay - va phan hoi dap trong bai hoc thanh noi hoc vien dat cau hoi
+  // roi khong ai tra loi.
+  {
+    label: "Student Q&A",
+    href: "/instructor/hoi-dap",
+    icon: MessageCircleQuestion,
   },
 ];
 
