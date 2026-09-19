@@ -19,6 +19,8 @@ import {
 import CertificateModal from "@/src/components/certificate/CertificateModal";
 import StudentQuizView from "@/src/components/quiz/StudentQuizView";
 import HopChatTroLy from "@/src/components/troly/HopChatTroLy";
+import HoiDapBaiHoc from "@/src/components/hoidap/HoiDapBaiHoc";
+import GhiChuBaiHoc from "@/src/components/ghichu/GhiChuBaiHoc";
 
 import type Hls from "hls.js";
 
@@ -701,6 +703,44 @@ function CourseLearnPageContent() {
                 Vui lòng chọn một bài giảng ở menu bên cạnh để bắt đầu học tập.
               </p>
             </div>
+          )}
+
+          {/* Hoi dap nam DUOI noi dung bai, trong cung cot cuon.
+              Ba dieu kien deu can:
+                - daDangKy: may chu kiem lai bang duocXemNoiDung() nen day chi
+                  de khong bay ra mot khu vuc bam vao chi de an 403.
+                - activeLesson: cau hoi gan theo BAI, chua chon bai thi khong co
+                  gi de hoi ve.
+                - !isDoingQuiz: dang lam bai kiem tra ma cuon xuong thay o hoi
+                  dap la moi nguoi ta di hoi bai - xem loi nhac cua tro ly, luat
+                  "khong lam ho bai danh gia" cung tu do ra. */}
+          {daDangKy(enrollment) && course?._id && activeLesson?._id && !isDoingQuiz && (
+            <>
+              {/* Ghi chu dat TREN hoi dap: ghi chu la viec lam trong luc xem,
+                  con hoi dap la viec lam khi da xem xong ma van khong hieu. */}
+              <GhiChuBaiHoc
+                courseId={course._id}
+                lessonId={activeLesson._id}
+                // Truyen HAM chu khong truyen con so: con so chup mot thoi
+                // diem, ma thoi diem can biet la luc bam nut Luu, khong phai
+                // luc ve lai component.
+                layViTriVideo={() =>
+                  videoRef.current ? Math.floor(videoRef.current.currentTime) : null
+                }
+                nhayToi={(giay: number) => {
+                  if (!videoRef.current) return;
+                  videoRef.current.currentTime = giay;
+                  // Cuon video vao tam nhin: ghi chu nam duoi man hinh nen bam
+                  // xong ma khong cuon thi nguoi dung khong thay gi xay ra.
+                  videoRef.current.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                  });
+                }}
+              />
+
+              <HoiDapBaiHoc courseId={course._id} lessonId={activeLesson._id} />
+            </>
           )}
         </div>
 
