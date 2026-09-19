@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { xoaPhien } from "@/src/services/apiHelper";
-import { ChevronDown, User, Settings, LogOut } from "lucide-react";
+import { ChevronDown, User, Settings, LogOut, BookOpen } from "lucide-react";
 import AnhDaiDien from "@/src/components/ui/AnhDaiDien";
 import SoDuCoin from "@/src/components/common/SoDuCoin";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useNguoiDungLuu, useDangTaiNguoiDung } from "@/src/hooks/nguoiDungLuu";
 import { duongDanDangNhap } from "@/src/components/auth/duongDanDangNhap";
+import ChuongThongBao from "@/src/components/thongbao/ChuongThongBao";
+import NutGioHang from "@/src/components/giohang/NutGioHang";
 
 // Tach rieng khoi IndividualsHeader de moi header trang deu co menu tai khoan.
 // Neu de nguyen trong IndividualsHeader thi cac trang dung header rieng se mat
@@ -76,7 +78,12 @@ export default function HeaderUserMenu() {
       // Chu "mien phi" chi hien tu sm tro len. Tren dien thoai no la ba tu
       // nua trong mot thanh vua du cho hai nut - bo di thi ca hang vua van,
       // ma nguoi dung khong mat thong tin nao dang ke.
-      <div className="flex shrink-0 items-center gap-3 sm:gap-5">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-3">
+        {/* Khach cung xem duoc gio hang: ho them khoa vao gio roi moi dang nhap
+            de thanh toan, khong phai nguoc lai. Gio nam o localStorage nen
+            khong mat khi dang nhap. */}
+        <NutGioHang />
+
         <Link
           href={duongDangNhap}
           className="py-2 text-sm whitespace-nowrap text-blue-600 hover:underline"
@@ -107,98 +114,118 @@ export default function HeaderUserMenu() {
   const tenHienThi = user.name?.trim() || user.email?.split("@")[0] || "Tài khoản";
 
   return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-3 rounded-xl px-3 py-2 transition hover:bg-gray-100"
-      >
-        <AnhDaiDien
-          src={src}
-          ten={tenHienThi}
-          size={40}
-          nenChuCai="bg-blue-600 text-white shadow"
-        />
+    // Chuong nam NGOAI cai ref cua menu tai khoan. Gop chung mot ref thi cu
+    // bam chuong se bi tinh la "bam ben trong menu" nen menu tai khoan dang mo
+    // se khong dong - hai bang chong len nhau.
+    <div className="flex shrink-0 items-center gap-1">
+      <NutGioHang />
+      <ChuongThongBao />
 
-        {/* So du coin thay cho ten vai tro o dong duoi.
+      <div className="relative" ref={ref}>
+        <button
+          onClick={() => setOpen(!open)}
+          className="flex items-center gap-3 rounded-xl px-3 py-2 transition hover:bg-gray-100"
+        >
+          <AnhDaiDien
+            src={src}
+            ten={tenHienThi}
+            size={40}
+            nenChuCai="bg-blue-600 text-white shadow"
+          />
+
+          {/* So du coin thay cho ten vai tro o dong duoi.
             "student" la thu nguoi dung da biet (ho tu dang ky ma), con so coin
             thi doi lien tuc va anh huong toi viec ho co mua duoc khoa hay
             khong - dang cho hon nhieu. Vai tro chi con hien voi admin va giang
             vien, la hai nhom that su can biet minh dang o quyen nao. */}
-        <div className="hidden max-w-[150px] flex-col items-start md:flex">
-          <span className="w-full truncate text-sm leading-none font-semibold text-slate-900">
-            {tenHienThi}
-          </span>
-          <span className="mt-1 flex items-center gap-1.5">
-            <SoDuCoin />
-            {user.role !== "student" && (
-              <span className="text-xs text-gray-500 capitalize">{user.role}</span>
-            )}
-          </span>
-        </div>
-        <ChevronDown size={16} />
-      </button>
+          <div className="hidden max-w-[150px] flex-col items-start md:flex">
+            <span className="w-full truncate text-sm leading-none font-semibold text-slate-900">
+              {tenHienThi}
+            </span>
+            <span className="mt-1 flex items-center gap-1.5">
+              <SoDuCoin />
+              {user.role !== "student" && (
+                <span className="text-xs text-gray-500 capitalize">{user.role}</span>
+              )}
+            </span>
+          </div>
+          <ChevronDown size={16} />
+        </button>
 
-      {open && (
-        <div className="absolute top-14 right-0 z-50 w-64 overflow-hidden rounded-2xl border bg-white py-2 shadow-xl">
-          <div className="border-b px-4 py-4">
-            <div className="flex items-center gap-3">
-              <AnhDaiDien
-                src={src}
-                ten={tenHienThi}
-                size={48}
-                nenChuCai="bg-blue-600 text-white"
-              />
-              <div className="overflow-hidden">
-                <p className="truncate font-semibold text-slate-900">{tenHienThi}</p>
-                <p className="truncate text-sm text-gray-500">{user.email}</p>
+        {open && (
+          <div className="absolute top-14 right-0 z-50 w-64 overflow-hidden rounded-2xl border bg-white py-2 shadow-xl">
+            <div className="border-b px-4 py-4">
+              <div className="flex items-center gap-3">
+                <AnhDaiDien
+                  src={src}
+                  ten={tenHienThi}
+                  size={48}
+                  nenChuCai="bg-blue-600 text-white"
+                />
+                <div className="overflow-hidden">
+                  <p className="truncate font-semibold text-slate-900">{tenHienThi}</p>
+                  <p className="truncate text-sm text-gray-500">{user.email}</p>
+                </div>
               </div>
             </div>
+
+            {/* Dat TREN Profile: day la thu hoc vien mo nhieu nhat, con ho so
+                thi ca thang moi vao mot lan. Truoc day danh sach khoa dang hoc
+                chi nam trong trang Cai dat - nguoi dung phai vao Settings de
+                tim khoa cua minh, va gan nhu khong ai nghi ra viec do. */}
+            <Link
+              href="/user/my-courses"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 text-slate-700 transition hover:bg-gray-100 hover:text-slate-900"
+            >
+              <BookOpen size={18} /> <span>Khóa học của tôi</span>
+            </Link>
+
+            <Link
+              href="/user/profile"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 text-slate-700 transition hover:bg-gray-100 hover:text-slate-900"
+            >
+              <User size={18} /> <span>Profile</span>
+            </Link>
+
+            <Link
+              href="/user/settings"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 text-slate-700 transition hover:bg-gray-100 hover:text-slate-900"
+            >
+              <Settings size={18} /> <span>Settings</span>
+            </Link>
+
+            {user.role === "admin" && (
+              <Link
+                href="/admin/dashboard"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 text-slate-700 transition hover:bg-gray-100 hover:text-slate-900"
+              >
+                <User size={18} /> <span>Admin Dashboard</span>
+              </Link>
+            )}
+
+            {user.role === "instructor" && (
+              <Link
+                href="/instructor/courses"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 text-slate-700 transition hover:bg-gray-100 hover:text-slate-900"
+              >
+                <User size={18} /> <span>Instructor Dashboard</span>
+              </Link>
+            )}
+
+            <button
+              onClick={logout}
+              className="flex w-full items-center gap-3 px-4 py-3 text-red-500 transition hover:bg-red-50"
+            >
+              <LogOut size={18} /> <span>Logout</span>
+            </button>
           </div>
-
-          <Link
-            href="/user/profile"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-3 px-4 py-3 text-slate-700 transition hover:bg-gray-100 hover:text-slate-900"
-          >
-            <User size={18} /> <span>Profile</span>
-          </Link>
-
-          <Link
-            href="/user/settings"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-3 px-4 py-3 text-slate-700 transition hover:bg-gray-100 hover:text-slate-900"
-          >
-            <Settings size={18} /> <span>Settings</span>
-          </Link>
-
-          {user.role === "admin" && (
-            <Link
-              href="/admin/dashboard"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 text-slate-700 transition hover:bg-gray-100 hover:text-slate-900"
-            >
-              <User size={18} /> <span>Admin Dashboard</span>
-            </Link>
-          )}
-
-          {user.role === "instructor" && (
-            <Link
-              href="/instructor/courses"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 text-slate-700 transition hover:bg-gray-100 hover:text-slate-900"
-            >
-              <User size={18} /> <span>Instructor Dashboard</span>
-            </Link>
-          )}
-
-          <button
-            onClick={logout}
-            className="flex w-full items-center gap-3 px-4 py-3 text-red-500 transition hover:bg-red-50"
-          >
-            <LogOut size={18} /> <span>Logout</span>
-          </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
