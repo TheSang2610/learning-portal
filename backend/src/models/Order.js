@@ -47,6 +47,37 @@ const orderSchema = new mongoose.Schema({
         min: 0
     },
 
+    // Gia truoc khi giam. Bang `amount` khi khong dung ma.
+    //
+    // Luu ca hai chu khong chi luu gia goc roi tru lai luc hien: ma QR sinh
+    // theo `amount`, va doi soat sao ke cung so khop voi `amount`. Con `giaGoc`
+    // chi de hien "500.000d -> 400.000d" cho nguoi dung thay ho duoc giam that.
+    giaGoc: {
+        type: Number,
+        default: null,
+        min: 0
+    },
+
+    // Chuoi ma da dung, chup lai tai thoi diem dat don.
+    //
+    // Luu chuoi chu khong phai tham chieu: ma co the bi sua hoac tat sau do,
+    // nhung don nay VAN da duoc giam theo dieu kien luc do. Tham chieu toi ban
+    // ghi dang song la doc ra dieu kien hien tai, tuc la viet lai lich su -
+    // cung ly do voi viec `amount` chup gia thay vi doc gia hien tai.
+    maGiamGia: {
+        type: String,
+        default: null,
+        uppercase: true,
+        trim: true,
+        maxlength: 32
+    },
+
+    soTienGiam: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+
     status: {
         type: String,
         enum: ['pending', 'paid', 'cancelled', 'expired'],

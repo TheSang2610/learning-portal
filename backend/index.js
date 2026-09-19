@@ -221,6 +221,10 @@ app.use('/api/banners', require('./src/routes/bannerRoutes'));
 app.use('/api/documents', require('./src/routes/documentRoutes'));
 app.use('/api/posts', require('./src/routes/postRoutes'));
 app.use('/api/tro-ly', require('./src/routes/troLyRoutes'));
+app.use('/api/thong-bao', require('./src/routes/thongBaoRoutes'));
+app.use('/api/hoi-dap', require('./src/routes/hoiDapRoutes'));
+app.use('/api/ghi-chu', require('./src/routes/ghiChuRoutes'));
+app.use('/api/ma-giam-gia', require('./src/routes/maGiamGiaRoutes'));
 
 // Tai lieu API. Dat SAU cac route that de khong bao gio che mat chung, va
 // TRUOC middleware 404.

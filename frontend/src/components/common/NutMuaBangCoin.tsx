@@ -17,14 +17,31 @@ interface Props {
   gia: number;
   /** Goi sau khi mua xong, de trang cha cap nhat trang thai ghi danh. */
   khiMuaXong: () => void;
+  /**
+   * Ma giam gia dang duoc ap, rong neu khong co.
+   *
+   * May chu TINH LAI so tien giam tu dau khi nhan ma nay - con so hien o giao
+   * dien chi de nguoi dung xem truoc. Khong bao gio gui so tien giam len.
+   */
+  maGiamGia?: string;
+  /** So coin duoc giam, chi de HIEN. May chu tu tinh lai. */
+  soCoinGiam?: number;
 }
 
-export default function NutMuaBangCoin({ courseId, gia, khiMuaXong }: Props) {
+export default function NutMuaBangCoin({
+  courseId,
+  gia,
+  khiMuaXong,
+  maGiamGia,
+  soCoinGiam = 0,
+}: Props) {
   const [soDu, setSoDu] = useState<number | null>(null);
   const [dangMua, setDangMua] = useState(false);
   const [loi, setLoi] = useState("");
 
-  const giaCoin = giaRaCoin(gia);
+  // Gia sau khi tru ma giam gia. Max(0) vi ma giam 100% la hop le - luc do
+  // khong tru coin nao nhung van phai hien nut de nguoi dung bam.
+  const giaCoin = Math.max(0, giaRaCoin(gia) - soCoinGiam);
 
   useEffect(() => {
     let conGan = true;
@@ -38,7 +55,10 @@ export default function NutMuaBangCoin({ courseId, gia, khiMuaXong }: Props) {
 
   // Chua doc duoc vi (chua dang nhap, hoac may chu loi) thi khong hien gi ca.
   // Hien mot nut mua ma bam vao chi ra loi thi te hon la khong hien.
-  if (soDu === null || giaCoin <= 0) return null;
+  // giaRaCoin(gia) chu khong phai giaCoin: khoa mien phi thi khong hien nut
+  // nay, nhung khoa co phi duoc ma giam ve 0 thi VAN phai hien - do moi la
+  // luc nguoi dung can bam nhat.
+  if (soDu === null || giaRaCoin(gia) <= 0) return null;
 
   const du = soDu >= giaCoin;
   const thieu = giaCoin - soDu;
@@ -47,7 +67,7 @@ export default function NutMuaBangCoin({ courseId, gia, khiMuaXong }: Props) {
     setDangMua(true);
     setLoi("");
     try {
-      await muaBangCoin(courseId);
+      await muaBangCoin(courseId, maGiamGia || undefined);
       baoCoinDaDoi();
       khiMuaXong();
     } catch (e) {

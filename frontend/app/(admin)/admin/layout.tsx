@@ -29,6 +29,8 @@ import {
   Award as AwardIcon,
   Receipt,
   Coins,
+  BadgePercent,
+  Bell,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useNguoiDungLuu, useDangTaiNguoiDung } from "@/src/hooks/nguoiDungLuu";
@@ -157,6 +159,18 @@ const menuItems: MenuItem[] = [
         icon: SlidersHorizontal,
       },
     ],
+  },
+  // Dat canh Orders va Coin vi ba cai cung mot mach viec: tien vao he thong
+  // bang duong nao, va duoc giam bao nhieu.
+  {
+    label: "Mã giảm giá",
+    href: "/admin/ma-giam-gia",
+    icon: BadgePercent,
+  },
+  {
+    label: "Thông báo hệ thống",
+    href: "/admin/thong-bao",
+    icon: Bell,
   },
   {
     label: "Coin & Quà tặng",

@@ -45,6 +45,11 @@ export interface DonHang {
   createdAt: string;
   course: KhoaHocTrongDon | null;
   chuyenKhoan: ThongTinChuyenKhoan | null;
+
+  /** Giá trước khi giảm. Bằng `amount` khi không dùng mã. */
+  giaGoc: number;
+  maGiamGia: string | null;
+  soTienGiam: number;
 }
 
 /**
@@ -54,10 +59,16 @@ export interface DonHang {
  * không sinh đơn mới — nếu không, người dùng bấm Mua hai lần sẽ có hai mã khác
  * nhau và chuyển tiền theo mã cũ thì đơn mới không bao giờ khớp.
  */
-export const taoDonHang = async (courseId: string): Promise<{ order: DonHang }> =>
+export const taoDonHang = async (
+  courseId: string,
+  maGiamGia?: string,
+): Promise<{ order: DonHang }> =>
   apiRequest("/orders", {
     method: "POST",
-    body: JSON.stringify({ courseId }),
+    // Chi gui `maGiamGia` khi that su co: gui chuoi rong thi may chu vao nhanh
+    // ap ma roi tra 400 "Bạn chưa nhập mã giảm giá" cho mot nguoi khong he
+    // dinh dung ma nao.
+    body: JSON.stringify(maGiamGia ? { courseId, maGiamGia } : { courseId }),
   });
 
 export const layDonTheoMa = async (code: string): Promise<{ order: DonHang }> =>

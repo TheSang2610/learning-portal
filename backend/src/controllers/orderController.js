@@ -7,6 +7,8 @@ const { thongTinChuyenKhoan } = require('../config/thanhToan');
 const { phanTrang } = require('../utils/truyVan');
 const { guiMail, daCauHinh: mailDaCauHinh } = require('../config/mail');
 const { soanMailBaoChuyenKhoan } = require('../utils/mailDonHang');
+const LuotDungMa = require('../models/LuotDungMa');
+const { datChoLuotDung, hoanLuotDungMa } = require('./maGiamGiaController');
 
 const { sinhMa, HAN_GIU_DON_MS } = Order;
 
@@ -35,6 +37,12 @@ const dangDon = (don, khoaHoc) => ({
     code: don.code,
     status: don.status,
     amount: don.amount,
+    // Ba truong nay de trang thanh toan hien duoc "500.000d -> 400.000d".
+    // giaGoc rong (don cu, truoc khi co ma giam gia) thi lay luon amount, de
+    // giao dien khong phai xu ly rieng truong hop null.
+    giaGoc: don.giaGoc ?? don.amount,
+    maGiamGia: don.maGiamGia || null,
+    soTienGiam: don.soTienGiam || 0,
     expiresAt: don.expiresAt,
     // Giay con lai, tinh o may chu. De giao dien tu tru theo dong ho may nguoi
     // dung thi lech mui gio hay dong ho sai la dem sai.
@@ -63,6 +71,11 @@ const capNhatNeuHetHan = async (don) => {
     if (don.daHetHan()) {
         don.status = 'expired';
         await don.save();
+
+        // Tra lai luot ma giam gia. Don het han la don khong bao gio duoc tra
+        // tien, nen giu luot lai la vua tieu mot luot cua chien dich vua khoa
+        // luon nguoi dung do khong dung lai duoc ma (vuong moiNguoiMotLan).
+        await hoanLuotDungMa(don._id);
     }
     return don;
 };
@@ -115,12 +128,55 @@ const createOrder = async (req, res) => {
             }
         }
 
+        // Ap ma giam gia neu co.
+        //
+        // datChoLuotDung() TRU LUOT NGAY o day chu khong doi toi luc xac nhan
+        // don, va do la co chu dich: neu doi, thi mot ma con dung mot luot se
+        // duoc mười nguoi dat don cung luc, ca mười deu thay gia da giam, roi
+        // chin nguoi bi tu choi luc quan tri xac nhan - tuc la sau khi ho da
+        // chuyen tien.
+        //
+        // Doi lai, luot bi tru phai duoc HOAN khi don huy hoac het han. Xem
+        // hoanLuotDungMa va noi goi no o cancelOrder / capNhatNeuHetHan.
+        let soTienGiam = 0;
+        let maDaDung = null;
+
+        if (req.body?.maGiamGia) {
+            const dat = await datChoLuotDung({
+                maTho: req.body.maGiamGia,
+                courseId,
+                nguoiDung: req.user
+            });
+
+            if (!dat.ok) {
+                return res.status(400).json({ message: dat.cau });
+            }
+
+            soTienGiam = dat.soTienGiam;
+            maDaDung = dat.ma;
+        }
+
+        // Gia da giam la gia THAT phai chuyen khoan: ma QR sinh theo `amount`,
+        // nen ghi gia goc vao day la nguoi dung chuyen thua tien.
+        const phaiTra = Math.max(0, khoaHoc.price - soTienGiam);
+
         const don = await taoDonVoiMaDuyNhat({
             course: courseId,
             student: req.user._id,
-            amount: khoaHoc.price,
+            amount: phaiTra,
+            giaGoc: khoaHoc.price,
+            maGiamGia: maDaDung,
+            soTienGiam,
             expiresAt: new Date(Date.now() + HAN_GIU_DON_MS)
         });
+
+        // Gan don vao luot dung de con hoan lai khi don bi huy.
+        if (maDaDung) {
+            await LuotDungMa.updateOne(
+                { user: req.user._id, course: courseId, donHang: null },
+                { $set: { donHang: don._id } }
+            ).catch(() => {});
+        }
 
         return res.status(201).json({ order: dangDon(don, khoaHoc) });
     } catch (error) {
@@ -206,6 +262,9 @@ const cancelOrder = async (req, res) => {
 
         don.status = 'cancelled';
         await don.save();
+
+        // Tra lai luot ma giam gia - xem ghi chu o capNhatNeuHetHan.
+        await hoanLuotDungMa(don._id);
 
         return res.status(200).json({ message: 'Đã hủy đơn hàng' });
     } catch (error) {

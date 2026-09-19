@@ -45,8 +45,18 @@ export const layViCuaToi = (): Promise<ThongTinVi> => apiRequest("/coin/cua-toi"
 
 export const muaBangCoin = (
   courseId: string,
-): Promise<{ message: string; daTru: number; soDuCoin: number }> =>
-  apiRequest(`/coin/mua/${courseId}`, { method: "POST" });
+  maGiamGia?: string,
+): Promise<{
+  message: string;
+  daTru: number;
+  soCoinGiam: number;
+  soDuCoin: number;
+}> =>
+  apiRequest(`/coin/mua/${courseId}`, {
+    method: "POST",
+    // Chi gui khi that su co ma - xem ghi chu cung kieu o taoDonHang.
+    body: JSON.stringify(maGiamGia ? { maGiamGia } : {}),
+  });
 
 /* -------------------------------- Quan tri ------------------------------- */
 

@@ -6,6 +6,8 @@ const CoinTransaction = require('../models/CoinTransaction');
 const { congCoin, truCoin } = require('../utils/viCoin');
 const { giaRaCoin, kiemSoCoinNap, coinRaDong } = require('../utils/coin');
 const { taoGhiDanh } = require('../utils/ghiDanh');
+const { guiThongBao } = require('./thongBaoController');
+const { datChoLuotDung } = require('./maGiamGiaController');
 
 /* ==========================================================================
    QUAN TRI
@@ -78,7 +80,7 @@ const tangKhoaChoHocVien = async (req, res) => {
 
         const [hocVien, khoa] = await Promise.all([
             User.findById(req.params.id).select('name soDuCoin'),
-            Course.findById(courseId).select('title price')
+            Course.findById(courseId).select('title price slug')
         ]);
 
         if (!hocVien) return res.status(404).json({ message: 'Không tìm thấy học viên' });
@@ -98,6 +100,18 @@ const tangKhoaChoHocVien = async (req, res) => {
             khoa: khoa._id,
             ghiChu: String(ghiChu || '').trim().slice(0, 300),
             nguoiTao: req.user._id
+        });
+
+        // Bao cho hoc vien. Day la truong hop bat buoc phai bao, khong phai tuy
+        // chon: hoc vien KHONG CO MAT luc quan tri bam tang. Khong bao thi ho
+        // chi tinh co phat hien ra minh co them mot khoa, va khong hieu vi sao
+        // - dung cai lo ma ghi chu dau ham nay da luu y.
+        //
+        // Doi lai, muaBangCoin() co y KHONG bao: luc do hoc vien dang dung ngay
+        // truoc man hinh va da thay dong "Da mo khoa". Bao them chi la nhieu.
+        await guiThongBao(hocVien._id, 'khoa_duoc_mo', {
+            tenKhoa: khoa.title,
+            slugKhoa: khoa.slug
         });
 
         return res.json({
@@ -167,21 +181,51 @@ const muaBangCoin = async (req, res) => {
             return res.status(400).json({ message: 'Bạn đã có khóa học này rồi' });
         }
 
-        const gia = giaRaCoin(khoa.price);
+        const giaGoc = giaRaCoin(khoa.price);
 
         // Khoa mien phi khong di duong nay - da co duong ghi danh thong thuong,
         // va tru 0 coin la mot giao dich rong lam ban so nhat ky.
-        if (gia <= 0) {
+        if (giaGoc <= 0) {
             return res.status(400).json({
                 message: 'Khóa học này miễn phí, bạn đăng ký trực tiếp được'
             });
         }
 
-        const tru = await truCoin(req.user._id, gia, {
-            loai: 'mua',
-            khoa: khoa._id,
-            ghiChu: khoa.title
-        });
+        // Ap ma giam gia neu co.
+        //
+        // Dat cho luot TRUOC khi tru coin: nguoc lai thi coin da tru xong moi
+        // phat hien ma het luot, va phai hoan coin - mot buoc thua co the hong.
+        //
+        // Ma giam gia tinh tren TIEN (khoa.price), con vi thi tinh bang coin.
+        // Quy doi qua giaRaCoin() dung mot lan cho ca hai de khong lech: tru
+        // truc tiep soTienGiam khoi so coin la tru dong vao coin.
+        let soCoinGiam = 0;
+        if (req.body?.maGiamGia) {
+            const dat = await datChoLuotDung({
+                maTho: req.body.maGiamGia,
+                courseId: khoa._id,
+                nguoiDung: req.user
+            });
+
+            if (!dat.ok) {
+                return res.status(400).json({ message: dat.cau });
+            }
+
+            soCoinGiam = Math.min(giaRaCoin(dat.soTienGiam), giaGoc);
+        }
+
+        const gia = Math.max(0, giaGoc - soCoinGiam);
+
+        // Ma giam 100% thi khong con gi de tru. Van phai ghi danh binh thuong,
+        // chi bo buoc truCoin - tru 0 coin lam ban so nhat ky va viCoin co the
+        // tu choi so 0.
+        const tru = gia > 0
+            ? await truCoin(req.user._id, gia, {
+                loai: 'mua',
+                khoa: khoa._id,
+                ghiChu: khoa.title
+            })
+            : { thanhCong: true, soDuSau: null };
 
         if (!tru.thanhCong) {
             return res.status(400).json({
@@ -220,10 +264,19 @@ const muaBangCoin = async (req, res) => {
             console.error('muaBangCoin - khong huy duoc don cho:', loiHuyDon.message);
         }
 
+        // tru.soDuSau la null khi gia = 0 (ma giam 100%): luc do khong co luot
+        // truCoin nao chay nen khong ai tra ve so du. Doc thang tu tai khoan,
+        // vi giao dien dung con so nay de cap nhat vi ngay tren man hinh - tra
+        // null la so du hien thanh trong.
+        const soDu = tru.soDuSau ?? (
+            await User.findById(req.user._id).select('soDuCoin').lean()
+        )?.soDuCoin ?? 0;
+
         return res.json({
             message: `Đã mở khóa "${khoa.title}"`,
             daTru: gia,
-            soDuCoin: tru.soDuSau
+            soCoinGiam,
+            soDuCoin: soDu
         });
     } catch (error) {
         console.error('muaBangCoin:', error.message);
