@@ -20,12 +20,13 @@ const {
     // 🎯 THÊM: Import 3 hàm xử lý hiển thị danh sách cho Admin
     getAdminPopularCourses,
     getAdminTrendingCourses,
-    getAdminNewReleasesCourses
+    getAdminNewReleasesCourses,
+    goiYKhoaHoc
 } = require('../controllers/courseController');
 
 const { protect, docNguoiDungNeuCo, instructor, admin } = require('../middlewares/authMiddleware');
 const { uploadCloud } = require('../utils/uploadCloud');
-const { datCache } = require('../middlewares/cacheControl');
+const { datCache, khongLuuCache } = require('../middlewares/cacheControl');
 
 /* ==========================================================================
    1. ROUTE TĨNH (STATIC ROUTES) - Bắt buộc nằm trên cùng để tránh xung đột :id
@@ -48,6 +49,24 @@ router.get('/instructor', protect, instructor, getInstructorCourses);
 
 // Tìm khóa học thông qua link slug định dạng chữ viết liền
 router.get('/slug/:slug', docNguoiDungNeuCo, getCourseBySlug);
+
+// Goi y khoa hoc tiep theo.
+//
+// PHAI nam trong khoi route tinh nay: de xuong duoi '/:id' thi Express coi
+// 'goi-y' la mot ma khoa hoc va tra ve 404.
+//
+// docNguoiDungNeuCo chu khong phai protect: khach vang lai van xem duoc muc goi
+// y (ho nhan danh sach khoa pho bien), chi la khong duoc ca nhan hoa. Dat
+// protect o day la mat mot muc noi dung o trang chu voi nguoi chua dang nhap -
+// dung nhom nguoi minh muon thuyet phuc nhat.
+//
+// TUYET DOI KHONG gan datCache() vao duong nay, du no la GET va du no cham.
+// Ghi chu dau middlewares/cacheControl.js da dat dieu kien: chi duoc dat cache
+// khi phan hoi KHONG phu thuoc req.user. Phan hoi o day phu thuoc hoan toan -
+// no loai bo khoa nguoi dung da mua va xep hang theo ghi danh cua ho. Voi
+// 'public, s-maxage=60' thi CDN giu goi y cua mot nguoi roi tra cho nguoi tiep
+// theo, tuc la lo ra nguoi truoc da mua nhung khoa nao.
+router.get('/goi-y', khongLuuCache, docNguoiDungNeuCo, goiYKhoaHoc);
 
 
 /* ==========================================================================

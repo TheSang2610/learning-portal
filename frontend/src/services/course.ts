@@ -93,6 +93,76 @@ export const getCourses = async (): Promise<Course[]> => {
   return apiRequest("/courses");
 };
 
+export interface TrangKhoaHoc {
+  danhSach: Course[];
+  trang: number;
+  soDong: number;
+  tong: number;
+  conNua: boolean;
+}
+
+/**
+ * Danh sach khoa hoc CO LOC VA PHAN TRANG o may chu.
+ *
+ * Khac getCourses() o tren: ham do goi /courses khong tham so va nhan ve toan
+ * bo khoa da xuat ban duoi dang mang. Ham nay luon gui it nhat mot tham so nen
+ * may chu tra ve hinh dang co phan trang - xem ghi chu trong courseController.
+ *
+ * Giu ca hai la co chu dich: trang chu va ban dung san o may chu van dung ban
+ * mang cu, doi tung cho mot thay vi doi het cung luc.
+ */
+export const layDanhSachKhoa = async (tham: {
+  trang?: number;
+  soDong?: number;
+  search?: string;
+  category?: string;
+}): Promise<TrangKhoaHoc> => {
+  const q = new URLSearchParams();
+
+  // Luon co `page` de may chu chac chan tra ve hinh dang co phan trang, ke ca
+  // khi khong loc gi.
+  q.set("page", String(tham.trang ?? 1));
+  q.set("limit", String(tham.soDong ?? 24));
+
+  if (tham.search?.trim()) q.set("search", tham.search.trim());
+  if (tham.category?.trim()) q.set("category", tham.category.trim());
+
+  return apiRequest(`/courses?${q.toString()}`);
+};
+
+// Khoa hoc kem ly do duoc goi y. `viSaoGoiY` do may chu sinh (xem
+// backend/src/utils/xepHangGoiY.js) chu khong phai chu co dinh o giao dien:
+// ly do doi theo tin hieu nao da lam khoa do len hang.
+export interface KhoaGoiY extends Course {
+  diemGoiY: number;
+  viSaoGoiY: string;
+}
+
+export interface KetQuaGoiY {
+  danhSach: KhoaGoiY[];
+  // false khi nguoi xem chua dang nhap hoac chua hoc khoa nao - luc do danh
+  // sach chi la khoa pho bien, va tieu de muc phai noi dung nhu vay.
+  caNhanHoa: boolean;
+}
+
+/**
+ * Goi y khoa hoc tiep theo.
+ *
+ * Khach vang lai goi duoc: ho nhan danh sach khoa pho bien. May chu KHONG dat
+ * cache cho duong nay vi phan hoi phu thuoc nguoi dang dang nhap.
+ */
+export const layGoiYKhoaHoc = async (
+  soLuong = 6,
+  courseId?: string,
+): Promise<KetQuaGoiY> => {
+  const q = new URLSearchParams({ soLuong: String(soLuong) });
+  // Co courseId -> che do "khoa lien quan" voi khoa dang xem. Khong co -> goi y
+  // theo lich su hoc cua nguoi dung (hoac khoa pho bien neu la khach).
+  if (courseId) q.set("courseId", courseId);
+
+  return apiRequest(`/courses/goi-y?${q.toString()}`);
+};
+
 export interface HomeSectionsResponse {
   success: boolean;
   data: {

@@ -1,8 +1,14 @@
+const mongoose = require('mongoose');
+
 const Course = require('../models/Course');
 const { taoGhiDanh } = require('../utils/ghiDanh');
 const User = require('../models/User');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
 const { duocXemNoiDung, catNoiDung } = require('../utils/quyenNoiDung');
+const Enrollment = require('../models/Enrollment');
+const Category = require('../models/categoryModel');
+const { xepHangGoiY } = require('../utils/xepHangGoiY');
+const { phanTrang, timGan } = require('../utils/truyVan');
 
 // Tra khoa hoc ve cho nguoi goi, cat video/bai viet neu ho chua co quyen.
 //
@@ -85,15 +91,80 @@ const createCourse = async (req, res) => {
     }
 };
 
-// @desc    Lấy toàn bộ danh sách khóa học public
+// @desc    Danh sach khoa hoc public, co the loc va phan trang
+// @route   GET /api/courses[?page=1&limit=24&search=...&category=slug]
+// @access  cong khai
+//
+// HAI HINH DANG PHAN HOI, va do la co chu dich:
+//
+//   - Khong co tham so nao  -> tra ve MANG, y het truoc day.
+//   - Co bat ky tham so nao -> tra ve { danhSach, trang, soDong, tong, conNua }.
+//
+// Vi sao khong doi thang sang hinh dang moi cho ca hai: duong nay dang chay
+// tren web that va co it nhat ba noi goi (trang chu, trang /courses, va ban
+// dung san o may chu). Doi hinh dang phan hoi la lam trang chu trong rong cho
+// toi khi moi noi goi deu duoc sua xong va deploy cung luc. Duong lui nay cho
+// phep chuyen tung cho mot.
+//
+// Truoc day ham nay tra ve TOAN BO khoa da xuat ban, khong gioi han, moi lan
+// goi - va viec loc thi lam o trinh duyet. Vai chuc khoa thi khong sao; vai
+// tram khoa la moi luot vao trang chu keo ve ca danh muc kem mo ta.
 const getCourses = async (req, res) => {
     try {
-        const courses = await Course.find({ isPublished: true })
-            .populate('instructor', 'name')
-            .populate('category', 'name')
-            .populate('provider' );
-        res.json(courses);
+        const { page, limit, search, category } = req.query || {};
+        const coLoc = [page, limit, search, category].some((t) => t !== undefined);
+
+        const dieuKien = { isPublished: true };
+
+        // Tim theo ten. timGan() thoat ky tu regex - khong co no thi mot dau '('
+        // trong o tim kiem la mot mau regex hong va ca truy van nem 500.
+        if (typeof search === 'string' && search.trim()) {
+            dieuKien.title = timGan(search.trim());
+        }
+
+        // Loc theo slug danh muc chu khong theo id: dia chi /courses?category=web
+        // la thu nguoi dung nhin thay va chia se duoc, con id thi khong.
+        if (typeof category === 'string' && category.trim()) {
+            const dm = await Category.findOne({ slug: category.trim() }).select('_id').lean();
+
+            // Slug khong ton tai -> danh sach rong, KHONG phai bo qua bo loc.
+            // Bo qua thi nguoi dung go sai mot chu se thay toan bo khoa hoc va
+            // tuong danh muc do chua het tung ay.
+            if (!dm) {
+                return res.json(
+                    coLoc ? { danhSach: [], trang: 1, soDong: 0, tong: 0, conNua: false } : [],
+                );
+            }
+
+            // `category` trong Course la MANG, nen phep so sanh nay khop khi
+            // mang co chua id do.
+            dieuKien.category = dm._id;
+        }
+
+        if (!coLoc) {
+            const courses = await Course.find(dieuKien)
+                .populate('instructor', 'name')
+                .populate('category', 'name')
+                .populate('provider');
+            return res.json(courses);
+        }
+
+        const { trang, soDong, boQua } = phanTrang(req.query, { macDinh: 24, toiDa: 100 });
+
+        const [danhSach, tong] = await Promise.all([
+            Course.find(dieuKien)
+                .sort({ createdAt: -1 })
+                .skip(boQua)
+                .limit(soDong)
+                .populate('instructor', 'name')
+                .populate('category', 'name')
+                .populate('provider'),
+            Course.countDocuments(dieuKien),
+        ]);
+
+        res.json({ danhSach, trang, soDong, tong, conNua: boQua + danhSach.length < tong });
     } catch (error) {
+        console.error('[courses]', error.message);
         res.status(500).json({ message: 'Lỗi lấy danh sách khóa học' });
     }
 };
@@ -469,9 +540,162 @@ const getAdminNewReleasesCourses = async (req, res) => {
 };
 
 // Export đầy đủ tất cả các hàm ra ngoài để routes sử dụng
-module.exports = { 
-    createCourse, 
-    getCourses, 
+// @desc    Goi y khoa hoc tiep theo
+// @route   GET /api/courses/goi-y?soLuong=6
+// @access  cong khai (dang nhap thi goi y ca nhan hoa, khong thi tra khoa pho bien)
+//
+// Phan cham diem nam o utils/xepHangGoiY.js - ham thuan, co test. O day chi lo
+// viec gom du lieu, va gom co GIOI HAN: moi truy van deu co .limit().
+//
+// Vi sao phai gioi han: ba buoc duoi day la mot phep lan theo do thi (nguoi ->
+// khoa -> nguoi khac -> khoa khac). Khong chan thi mot khoa co vai nghin hoc
+// vien se keo ca bang Enrollment ve RAM chi de goi y sau o khoa hoc.
+const goiYKhoaHoc = async (req, res) => {
+    try {
+        const soLuong = Math.min(Math.max(parseInt(req.query.soLuong, 10) || 6, 1), 24);
+
+        const daHoc = new Set();
+        const danhMucDangHoc = new Set();
+        const demHocCung = new Map();
+
+        // `courseId` = "goi y KHOA LIEN QUAN voi khoa dang xem", dung cho trang
+        // chi tiet khoa hoc. Khac han goi y o trang chu:
+        //
+        //   - Danh muc lay tu CHINH khoa dang xem, khong phai tu khoa da hoc.
+        //     Nguoi dang xem mot khoa tieng Nhat thi muon thay them khoa tieng
+        //     Nhat, du ho dang hoc lap trinh.
+        //   - Nguoi hoc cung dem tu hoc vien cua DUNG khoa do - day moi la
+        //     "nguoi mua khoa nay cung mua khoa kia" theo dung nghia.
+        //   - Chinh khoa dang xem bi loai khoi ket qua.
+        const khoaDangXem = req.query.courseId;
+        const coKhoaGoc = mongoose.Types.ObjectId.isValid(khoaDangXem);
+
+        if (coKhoaGoc) {
+            daHoc.add(String(khoaDangXem));
+
+            const goc = await Course.findById(khoaDangXem).select('category').lean();
+            if (goc?.category) {
+                const ds = Array.isArray(goc.category) ? goc.category : [goc.category];
+                for (const c of ds) danhMucDangHoc.add(String(c));
+            }
+
+            const cungKhoa = await Enrollment.find({ course: khoaDangXem })
+                .select('student')
+                .limit(500)
+                .lean();
+
+            const idHo = [...new Set(cungKhoa.map((g) => String(g.student)))];
+
+            if (idHo.length > 0) {
+                const khoaKhac = await Enrollment.find({
+                    student: { $in: idHo },
+                    course: { $ne: khoaDangXem },
+                })
+                    .select('course')
+                    .limit(1000)
+                    .lean();
+
+                for (const g of khoaKhac) {
+                    const id = String(g.course);
+                    demHocCung.set(id, (demHocCung.get(id) || 0) + 1);
+                }
+            }
+        }
+
+        if (req.user) {
+            // Van loai bo khoa da hoc du dang o che do "khoa lien quan": goi y
+            // dung thu nguoi ta da mua la loi de thay nhat cua ca muc nay.
+            const cuaToi = await Enrollment.find({ student: req.user._id })
+                .select('course')
+                .limit(50)
+                .lean();
+
+            for (const g of cuaToi) daHoc.add(String(g.course));
+
+            // Che do "khoa lien quan" da tu dung tin hieu cua rieng no o tren,
+            // khong tron them tin hieu tu lich su hoc vao nua.
+            if (!coKhoaGoc && daHoc.size > 0) {
+                const idCuaToi = [...daHoc];
+
+                const khoaCuaToi = await Course.find({ _id: { $in: idCuaToi } })
+                    .select('category')
+                    .lean();
+
+                for (const k of khoaCuaToi) {
+                    if (k.category) danhMucDangHoc.add(String(k.category));
+                }
+
+                // Nguoi khac cung hoc mot trong nhung khoa cua minh.
+                const banHoc = await Enrollment.find({
+                    course: { $in: idCuaToi },
+                    student: { $ne: req.user._id },
+                })
+                    .select('student')
+                    .limit(500)
+                    .lean();
+
+                const idBanHoc = [...new Set(banHoc.map((g) => String(g.student)))];
+
+                if (idBanHoc.length > 0) {
+                    const khoaCuaHo = await Enrollment.find({
+                        student: { $in: idBanHoc },
+                        course: { $nin: idCuaToi },
+                    })
+                        .select('course')
+                        .limit(1000)
+                        .lean();
+
+                    for (const g of khoaCuaHo) {
+                        const id = String(g.course);
+                        demHocCung.set(id, (demHocCung.get(id) || 0) + 1);
+                    }
+                }
+            }
+        }
+
+        const ungVien = await Course.find({
+            isPublished: true,
+            ...(daHoc.size ? { _id: { $nin: [...daHoc] } } : {}),
+        })
+            .select('title slug thumbnail price category instructor createdAt')
+            .populate('instructor', 'name')
+            .populate('category', 'name')
+            .limit(200)
+            .lean();
+
+        // So hoc vien cua tung khoa ung vien, dem mot luot bang aggregate thay
+        // vi mot truy van cho moi khoa.
+        const demHocVien = await Enrollment.aggregate([
+            { $match: { course: { $in: ungVien.map((k) => k._id) } } },
+            { $group: { _id: '$course', so: { $sum: 1 } } },
+        ]);
+
+        const bangHocVien = new Map(demHocVien.map((d) => [String(d._id), d.so]));
+
+        const keo = ungVien.map((k) => ({
+            ...k,
+            soHocVien: bangHocVien.get(String(k._id)) || 0,
+        }));
+
+        const ketQua = xepHangGoiY(keo, { daHoc, danhMucDangHoc, demHocCung }, soLuong);
+
+        res.status(200).json({
+            danhSach: ketQua,
+            // De giao dien biet nen ghi "Gợi ý cho bạn" hay "Đang được quan tâm".
+            // Che do khoa lien quan luon coi la da ca nhan hoa: goi y do dua
+            // tren chinh khoa nguoi dung dang xem.
+            caNhanHoa: coKhoaGoc || (!!req.user && daHoc.size > 0),
+        });
+    } catch (error) {
+        console.error('[goi-y]', error.message);
+        res.status(500).json({ message: 'Không lấy được gợi ý khóa học.' });
+    }
+};
+
+module.exports = {
+    createCourse,
+    getCourses,
+    goiYKhoaHoc,
     getCourseById, 
     getCourseBySlug, 
     getInstructorCourses, 

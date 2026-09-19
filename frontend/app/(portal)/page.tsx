@@ -6,6 +6,7 @@ import PopularCoursesSection from "@/src/components/home/PopularCoursesSection";
 import FaqSection from "@/src/components/home/FaqSection";
 import TestimonialsSection from "@/src/components/home/TestimonialsSection";
 import CourseSection from "@/src/components/home/CourseSection";
+import GoiYKhoaHoc from "@/src/components/courses/GoiYKhoaHoc";
 import { locKhoaDaDang } from "@/src/components/home/locKhoaHoc";
 import { layIdChuDe } from "@/src/services/course";
 
@@ -88,6 +89,14 @@ export default async function HomePage() {
           initialCourses={hoacNull(khoaDaDang)}
           initialCategories={hoacNull(categories)}
         />
+        {/* Goi y dat SAU cac muc co san va TRUOC phan danh gia/FAQ.
+            Dat tren cung thi no day muc "Khoa hoc pho bien" xuong, ma voi
+            nguoi chua dang nhap thi hai muc do noi dung gan trung nhau. Dat
+            duoi cung sau FAQ thi khong ai cuon toi.
+
+            Component tu an di khi khong co goi y nao, nen khong can boc dieu
+            kien o day. */}
+        <GoiYKhoaHoc soLuong={8} />
         <TestimonialsSection />
         <FaqSection initialData={hoacNull(faqs?.data ?? [])} />
       </div>

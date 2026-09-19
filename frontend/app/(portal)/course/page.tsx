@@ -38,6 +38,11 @@ import {
   getProgressStats,
 } from "@/src/services/enrollment.api";
 import NutMuaBangCoin from "@/src/components/common/NutMuaBangCoin";
+import ONhapMaGiamGia from "@/src/components/magiamgia/ONhapMaGiamGia";
+import { giaRaCoin } from "@/src/services/coin.api";
+import GoiYKhoaHoc from "@/src/components/courses/GoiYKhoaHoc";
+import { useGioHang } from "@/src/hooks/gioHang";
+import { ShoppingCart, Check } from "lucide-react";
 import { reviewService, Review, ReviewStats } from "@/src/services/review";
 import { faqService, FaqItem } from "@/src/services/faq";
 
@@ -160,6 +165,14 @@ function CourseDetailPageContent() {
   // cai roi bien mat.
   const [dangNhayVaoHoc, setDangNhayVaoHoc] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
+
+  // Ma giam gia dang duoc ap, va so tien giam TUONG UNG.
+  //
+  // `soTienGiam` chi de HIEN cho nguoi dung xem truoc. May chu luon tinh lai
+  // tu dau khi nhan `maGiamGia` - khong bao gio tin con so gui len tu day.
+  const { them: themVaoGio, bo: boKhoiGio, coTrongGio } = useGioHang();
+  const [maGiamGia, setMaGiamGia] = useState<string>("");
+  const [soTienGiam, setSoTienGiam] = useState<number>(0);
   const [error, setError] = useState<string>("");
   // false khi dung HTML o may chu, true sau khi React gan vao trinh duyet.
   const isMounted = useDaGanVaoTrinhDuyet();
@@ -391,7 +404,7 @@ function CourseDetailPageContent() {
       // May chu cung chan duong ghi danh cho khoa co phi (402), day chi la de
       // nguoi dung khong phai bam mot nut roi nhan loi.
       if ((course.price ?? 0) > 0) {
-        const { order } = await taoDonHang(course._id);
+        const { order } = await taoDonHang(course._id, maGiamGia || undefined);
         router.push(`/payment?code=${order.code}`);
         return;
       }
@@ -989,6 +1002,33 @@ function CourseDetailPageContent() {
                 </Link>
               ) : (
                 <div className="space-y-3">
+                  {/* O nhap ma dat TREN ca hai nut mua: nguoi dung phai ap ma
+                      xong roi moi bam mua, khong phai bam mua roi moi phat
+                      hien ra minh quen nhap ma. */}
+                  {(course.price ?? 0) > 0 && (
+                    <ONhapMaGiamGia
+                      courseId={course._id}
+                      onDoiMa={(ma, giam) => {
+                        setMaGiamGia(ma);
+                        setSoTienGiam(giam);
+                      }}
+                    />
+                  )}
+
+                  {soTienGiam > 0 && (
+                    <p className="text-sm text-slate-600">
+                      <span className="text-slate-400 line-through">
+                        {(course.price ?? 0).toLocaleString("vi-VN")}đ
+                      </span>{" "}
+                      <span className="font-bold text-emerald-700 tabular-nums">
+                        {Math.max(0, (course.price ?? 0) - soTienGiam).toLocaleString(
+                          "vi-VN",
+                        )}
+                        đ
+                      </span>
+                    </p>
+                  )}
+
                   {/* Coin di TRUOC chuyen khoan: ai co san coin thi mo khoa
                       ngay tai day, khong phai qua man hinh QR roi ngoi cho
                       quan tri doi chieu. Ai khong du coin thi component nay tu
@@ -998,12 +1038,47 @@ function CourseDetailPageContent() {
                     <NutMuaBangCoin
                       courseId={course._id}
                       gia={course.price ?? 0}
+                      maGiamGia={maGiamGia}
+                      soCoinGiam={giaRaCoin(soTienGiam)}
                       khiMuaXong={() => {
                         setIsEnrolled(true);
+                        // Mua thang o day thi khoa nay khong con viec gi trong
+                        // gio. De lai thi lan thanh toan gio sau bao "bạn đã
+                        // sở hữu khóa này" - mot loi do chinh minh tao ra.
+                        boKhoiGio(course._id);
                         router.push(`/learn?slug=${courseSlug}`);
                       }}
                     />
                   )}
+
+                  {/* Them vao gio chi co nghia voi khoa CO PHI: khoa mien phi
+                      thi bam mot cai la vao hoc duoc ngay, bo vao gio roi quay
+                      lai thanh toan la bat nguoi ta di duong vong. */}
+                  {(course.price ?? 0) > 0 &&
+                    (coTrongGio(course._id) ? (
+                      <Link
+                        href="/cart"
+                        className="flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-emerald-500 bg-emerald-50 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100"
+                      >
+                        <Check size={16} /> Đã có trong giỏ — Xem giỏ hàng
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          themVaoGio({
+                            courseId: course._id,
+                            title: course.title,
+                            slug: course.slug,
+                            thumbnail: course.thumbnail,
+                            gia: course.price ?? 0,
+                          })
+                        }
+                        className="flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white text-sm font-bold text-slate-700 transition hover:border-blue-500 hover:text-blue-600"
+                      >
+                        <ShoppingCart size={16} /> Thêm vào giỏ
+                      </button>
+                    ))}
 
                   <button
                     onClick={handleEnrollCourse}
@@ -1034,6 +1109,13 @@ function CourseDetailPageContent() {
           </div>
         </div>
       </div>
+
+      {/* Khoa lien quan, dat SAU phan danh gia - tuc la sau khi nguoi doc da
+          xem het thong tin ve khoa nay. Dat truoc do la moi ho di cho khac
+          trong khi chua quyet dinh gi ve khoa dang xem.
+
+          Component tu an di khi khong co goi y nao. */}
+      {course?._id && <GoiYKhoaHoc soLuong={4} courseId={course._id} />}
     </div>
   );
 }
