@@ -6,6 +6,7 @@ const User = require('../models/User');
 const crypto = require('crypto');
 const { phanTrang } = require('../utils/truyVan');
 const { dungChungChiPdf } = require('../utils/chungChiPdf');
+const { guiThongBao } = require('./thongBaoController');
 
 // @desc    Tạo chứng chỉ khi hoàn thành khóa học
 // @route   POST /api/certificates
@@ -81,6 +82,15 @@ const createCertificate = async (req, res) => {
                 courseName: enrollment.course.title
             });
         }
+
+        // Bao cho hoc vien biet ho vua co chung nhan.
+        //
+        // Truoc day chung nhan duoc sinh am tham: khong co dau hieu nao o giao
+        // dien, hoc vien phai tu vao ho so moi thay. Nguoi hoc xong roi khong
+        // quay lai trang ho so thi khong bao gio biet minh co no.
+        await guiThongBao(enrollment.student._id, 'chung_nhan', {
+            tenKhoa: enrollment.course.title
+        });
 
         res.status(201).json(savedCertificate);
     } catch (error) {

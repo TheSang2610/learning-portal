@@ -3,6 +3,7 @@ const CoinTopUp = require('../models/CoinTopUp');
 const { congCoin } = require('../utils/viCoin');
 const { hopLe, daCauHinh } = require('../config/webhookNganHang');
 const { rutMaNap, duTien, docBaoCo } = require('../utils/khopChuyenKhoan');
+const { guiThongBao } = require('./thongBaoController');
 
 /**
  * Nhan bao co tu ngan hang va cong coin ngay khi tien ve.
@@ -115,6 +116,17 @@ const xuLyMotBaoCo = async (bc) => {
             ghiChu: `Cộng coin thất bại: ${cong.loi || 'không rõ nguyên nhân'}`
         };
     }
+
+    // Bao cho hoc vien biet tien da ve va coin da cong.
+    //
+    // Duong nay chay HOAN TOAN TU DONG, khong co ai bam nut nao: hoc vien
+    // chuyen khoan roi dong app, va neu khong bao thi ho phai tu mo lai trang
+    // vi de kiem tra. Day dung la cho can thong bao nhat trong ca he thong.
+    //
+    // guiThongBao() khong bao gio nem - xem ghi chu o ham do. Quan trong o day
+    // vi ham nay chay trong webhook: nem la ngan hang nhan ma loi va phat lai
+    // bao co, trong khi coin DA duoc cong.
+    await guiThongBao(daKhoa.student, 'coin_duoc_cong', { soCoin: daKhoa.soCoin });
 
     return {
         maNap,

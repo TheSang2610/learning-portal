@@ -6,6 +6,7 @@ const Course = require('../models/Course');
 const User = require('../models/User');
 const { guiMail } = require('../config/mail');
 const { soanMailDonDaXacNhan } = require('../utils/mailDonHang');
+const { guiThongBao } = require('./thongBaoController');
 
 const TRANG_THAI_HOP_LE = new Set(['pending', 'paid', 'cancelled', 'expired']);
 
@@ -98,7 +99,7 @@ const confirmOrder = async (req, res) => {
         // ghi console - khong duoc de mot loi gui mail lam yeu cau nay tra ve
         // 500 trong khi don DA xac nhan va khoa DA mo.
         const [khoa, hocVien] = await Promise.all([
-            Course.findById(don.course).select('title'),
+            Course.findById(don.course).select('title slug'),
             User.findById(don.student).select('name email')
         ]);
 
@@ -114,6 +115,17 @@ const confirmOrder = async (req, res) => {
                 daCoKhoaTuTruoc: !moiTao
             })
         );
+
+        // Thong bao trong ung dung, SONG SONG voi mail chu khong thay the.
+        //
+        // Mail de vao thu rac hoac bi bo qua; cai chuong thi hoc vien thay ngay
+        // lan sau mo trang. Truoc day khong co ca hai duong nay o phia trong
+        // ung dung nen hoc vien chuyen khoan xong phai tu bam thu xem khoa da
+        // mo chua. guiThongBao() khong bao gio nem - xem ghi chu o ham do.
+        await guiThongBao(don.student, 'don_duoc_duyet', {
+            tenKhoa: khoa?.title,
+            slugKhoa: khoa?.slug
+        });
 
         return res.status(200).json({
             message: moiTao
@@ -151,6 +163,14 @@ const rejectOrder = async (req, res) => {
             don.note = req.body.note.slice(0, 500);
         }
         await don.save();
+
+        // Bao cho hoc vien biet don khong duoc duyet. Khong bao thi ho ngoi cho
+        // mot khoa hoc se khong bao gio mo.
+        //
+        // `note` la chu quan tri vien go tay nen dua nguyen van vao cho hoc vien
+        // doc: day la ly do that, con mot cau chung chung thi khong giup ho biet
+        // phai lam gi tiep. Do dai da bi cat con 500 o tren.
+        await guiThongBao(don.student, 'don_bi_tu_choi', { lyDo: don.note });
 
         return res.status(200).json({ message: 'Đã hủy đơn hàng', order: don });
     } catch (error) {
