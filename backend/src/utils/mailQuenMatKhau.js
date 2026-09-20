@@ -1,7 +1,7 @@
 // Soan hai la thu cua luong quen mat khau.
 //
 // Tach khoi cho gui de kiem thu duoc: CI khong co tai khoan mail nao, nen chi
-// phan soan chu moi chay test duoc (cung ly do voi mailXacMinh.js).
+// phan soan chu moi chay test duoc.
 //
 // VI SAO CO HAI LA THU:
 //

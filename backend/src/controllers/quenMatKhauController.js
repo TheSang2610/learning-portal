@@ -178,7 +178,19 @@ const yeuCauMa = async (req, res) => {
         // da chung minh so huu hom thu roi, dung bang chung ma buoc xac minh
         // dang doi. Buoc dat lai se bat luon emailVerified = true - giong het
         // cach googleLogin xu ly (xem userController.js).
-        if (!user || user.status === false) return await traLoiChung();
+        //
+        // TAI KHOAN KHONG CO EMAIL cung roi vao day, va do la mot han che
+        // that chu khong phai loi: dang ky gio chi bat buoc so dien thoai, ma
+        // du an CHUA gan nha cung cap SMS nao - khong co cho nao de gui ma.
+        //
+        // Van tra cau chung nhu moi nhanh khac, khong noi rieng "tai khoan
+        // nay khong co email": noi ra la bien duong nay thanh may tra loi cau
+        // hoi ai co email ai khong. Giao dien da bao truoc o ngay form rang
+        // muon lay lai mat khau thi phai co email trong tai khoan.
+        //
+        // Khi nao gan duoc SMS thi thay dieu kien nay bang: co email -> gui
+        // thu, khong co email nhung co phone -> gui tin nhan.
+        if (!user || user.status === false || !user.email) return await traLoiChung();
 
         const ma = taoMa();
 

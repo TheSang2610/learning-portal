@@ -8,7 +8,6 @@ capIdHopLe(router);
 const {
     getUsers,
     registerUser,
-    verifyEmail,
     loginUser,
     logoutUser,
     googleLogin,
@@ -53,16 +52,6 @@ const gioiHanGoogle = gioiHan({
     cuaSoMs: 15 * 60 * 1000,
     thongBao: 'Quá nhiều yêu cầu đăng nhập. Vui lòng thử lại sau ít phút.',
 });
-// Token xac minh la 32 byte ngau nhien nen khong do duoc bang cach thu - tran
-// nay khong phai de chan do token, ma de mot vong lap loi (hoac mot bot) khong
-// bien duong nay thanh hang nghin luot truy van CSDL.
-const gioiHanXacMinh = gioiHan({
-    ten: 'xacminh',
-    soLan: 20,
-    cuaSoMs: 15 * 60 * 1000,
-    thongBao: 'Quá nhiều lượt xác minh. Vui lòng thử lại sau ít phút.',
-});
-
 // Quen mat khau: ba duong, ba tran theo IP khac nhau.
 //
 // Bo dem CHINH cua luong nay dem theo EMAIL va nam trong controller (xem
@@ -102,7 +91,6 @@ router.get('/instructors', protect, admin, getInstructorsByProvider);
 
 router.route('/').get(protect, admin, getUsers).post(gioiHanDangKy, registerUser);
 router.post('/login', loginRateLimit, loginUser);
-router.post('/verify-email', gioiHanXacMinh, verifyEmail);
 
 // Quen mat khau. Ba duong nay deu KHONG can dang nhap - do la ca van de: xem
 // hai nguyen tac o dau controllers/quenMatKhauController.js.

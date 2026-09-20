@@ -11,10 +11,6 @@ const {
     WINDOW_MS: CUA_SO_DANG_NHAP,
 } = require('../middlewares/loginRateLimit');
 const { conBiKhoa, ghiNhanSai, xoaKhoa } = require('../utils/khoGioiHan');
-const { daCauHinh: mailDaCauHinh, guiMail } = require('../config/mail');
-const { soanMailXacMinh, soanMailDaCoTaiKhoan } = require('../utils/mailXacMinh');
-const { taoToken, bamToken, HAN_MS: HAN_TOKEN_XAC_MINH } = require('../utils/tokenXacMinh');
-const { lienKetXacMinh, lienKetDangNhap } = require('../utils/diaChiGiaoDien');
 const {
     chuanHoaEmail,
     emailHopLe,
@@ -24,6 +20,7 @@ const {
     kiemPayloadGoogle,
 } = require('../utils/xacThucDauVao');
 const { chuanHoaDinhDanh, boLocTaiKhoan } = require('../utils/dinhDanhDangNhap');
+const { chuanHoaSoDienThoai } = require('../utils/soDienThoai');
 const layCloudinary = require('../config/cloudinary');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
 
@@ -80,9 +77,9 @@ const generateToken = (id) => {
 // @route   POST /api/users/login
 const loginUser = async (req, res) => {
     try {
-        // O dang nhap nhan CA dia chi email lan TEN TAI KHOAN ngan
-        // ("thesang" thay cho "thesang@gmail.com"). Quy tac tra cuu, va ba
-        // cai bay cua no, ghi day du o utils/dinhDanhDangNhap.js.
+        // O dang nhap nhan BA cach go: so dien thoai, dia chi email, va ten
+        // tai khoan ngan ("thesang" thay cho "thesang@gmail.com"). Quy tac tra
+        // cuu, va cac cai bay cua no, ghi day du o utils/dinhDanhDangNhap.js.
         //
         // Truong van ten la `email` de khong pha cac ban giao dien cu dang
         // chay - chi y nghia cua no rong ra.
@@ -93,7 +90,7 @@ const loginUser = async (req, res) => {
         //    nem loi va tra ve 500 kem thong bao noi bo cua thu vien.
         if (!dinhDanh || !matKhauNhanDuoc(password)) {
             return res.status(400).json({
-                message: 'Vui lòng nhập email (hoặc tên tài khoản) và mật khẩu'
+                message: 'Vui lòng nhập số điện thoại (hoặc email) và mật khẩu'
             });
         }
 
@@ -103,7 +100,7 @@ const loginUser = async (req, res) => {
         const boLoc = boLocTaiKhoan(dinhDanh, emailHopLe);
         if (!boLoc) {
             return res.status(400).json({
-                message: 'Email hoặc tên tài khoản không hợp lệ'
+                message: 'Số điện thoại hoặc email không hợp lệ'
             });
         }
 
@@ -131,8 +128,15 @@ const loginUser = async (req, res) => {
         //
         //     Chi lam khi hai chuoi khac nhau: go nguyen dia chi thi khoa nay
         //     TRUNG khoa middleware da kiem, doc lai la thua mot luot CSDL.
+        //
+        //     LAY email HOAC phone lam danh tinh that. Truoc day chi doc
+        //     user.email, va tu khi co tai khoan CHI co so dien thoai thi do
+        //     la mot loi that: user.email la undefined, nen moi tai khoan
+        //     phone-only deu dung CHUNG mot khoa `ip|undefined` - mot nguoi
+        //     go sai nam lan la khoa ca dam.
+        const danhTinhThat = user ? (user.email || user.phone || '') : '';
         const khoaThatSu =
-            user && user.email !== dinhDanh ? khoaTaiKhoan(user.email) : null;
+            danhTinhThat && danhTinhThat !== dinhDanh ? khoaTaiKhoan(danhTinhThat) : null;
 
         if (khoaThatSu) {
             const giayCon = await conBiKhoa([khoaThatSu]);
@@ -184,21 +188,19 @@ const loginUser = async (req, res) => {
             });
         }
 
-        // 6. Tai khoan dang ky bang mat khau nhung chua bam lien ket trong thu.
+        // KHONG con buoc "tai khoan chua kich hoat" o day.
         //
-        //    So sanh voi `=== false` chu KHONG phai `!user.emailVerified`: moi
-        //    tai khoan tao truoc khi co luong xac minh deu khong co truong nay
-        //    (undefined), va phep phu dinh se khoa sach ho ra ngoai ngay trong
-        //    lan deploy dau. Xem ghi chu tai truong emailVerified o model User.
+        // Cho nay tung chan `user.emailVerified === false`. Bo cung luc voi
+        // buoc mo hom thu o registerUser, va PHAI bo - khong phai don dep cho
+        // gon.
         //
-        //    Buoc nay dat SAU khi da doi chieu mat khau nen no khong lo them
-        //    gi: muon nhin thay cau nay thi phai go dung mat khau da roi.
-        if (user.emailVerified === false) {
-            return res.status(403).json({
-                message: 'Tài khoản chưa được kích hoạt. Vui lòng mở email đăng ký và bấm liên kết xác minh.',
-                canXacMinh: true,
-            });
-        }
+        // Trong CSDL that dang co nhung tai khoan o trang thai cho: nguoi ta
+        // dang ky that, dat mat khau that, roi khong bam lien ket trong thu.
+        // Bo buoc gui thu ma giu lai buoc chan nay thi ho khong con duong nao
+        // kich hoat nua - khoa vinh vien. Sua hang loat tren CSDL that de don
+        // ho qua cung khong phai lua chon.
+        //
+        // Bo chan o day la ho dang nhap duoc ngay bang mat khau ho da dat.
 
         // Xoa ca khoa cua dia chi that (neu ho go ten ngan) - xem 2b. An toan
         // vi muon toi day phai go dung mat khau cua chinh tai khoan do.
@@ -331,15 +333,14 @@ const googleLogin = async (req, res) => {
         phaiLuu = true;
       }
 
-      // Dang nhap Google thanh cong LA mot bang chung so huu dia chi email -
-      // manh khong kem gi viec bam vao lien ket trong thu. Nen no cung go luon
-      // trang thai "chua xac minh": ai dang ky bang mat khau roi khong nhan
-      // duoc thu (Gmail bo vao Spam, go nham dia chi hien thi...) van con mot
-      // duong vao thay vi ket cung.
+      // Dang nhap Google thanh cong LA mot bang chung so huu dia chi email,
+      // nen danh dau luon vao ban ghi.
+      //
+      // Khong con cho nao CHAN theo truong nay (buoc xac minh khi dang ky da
+      // bo), nhung van ghi de cac ban ghi cu dan ve mot trang thai duy nhat
+      // thay vi khi true khi false khi thieu han.
       if (user.emailVerified !== true) {
         user.emailVerified = true;
-        user.verifyTokenHash = undefined;
-        user.verifyTokenExp = undefined;
         phaiLuu = true;
       }
 
@@ -391,14 +392,36 @@ const logoutUser = (req, res) => {
 const registerUser = async (req, res) => {
     try {
         const password = req.body?.password;
-        // Luu email dang chu thuong cho khop voi luc dang nhap
-        const email = chuanHoaEmail(req.body?.email);
 
-        if (!email || password === undefined || req.body?.name === undefined) {
-            return res.status(400).json({ message: 'Vui lòng cung cấp name, email và password' });
+        if (password === undefined || req.body?.name === undefined) {
+            return res.status(400).json({ message: 'Vui lòng cung cấp name, số điện thoại và password' });
         }
 
-        if (!emailHopLe(email)) {
+        // SO DIEN THOAI la thu bat buoc duy nhat de dinh danh.
+        //
+        // Luu dang chuan 0XXXXXXXXX - xem utils/soDienThoai.js. Khong chuan
+        // hoa thi '+84901234567' va '0901234567' thanh hai ban ghi khac nhau
+        // trong CSDL, va nguoi dang ky bang cach nay khong dang nhap duoc
+        // bang cach kia.
+        const phone = chuanHoaSoDienThoai(req.body?.phone);
+
+        if (!phone) {
+            return res.status(400).json({
+                message: 'Số điện thoại không hợp lệ. Nhập số di động 10 chữ số, ví dụ 0901234567.',
+            });
+        }
+
+        // EMAIL la tuy chon.
+        //
+        // Chuoi rong, thieu han, hay kieu du lieu sai deu ve undefined - va
+        // phai la undefined chu KHONG phai chuoi rong hay null: chi muc
+        // { unique, sparse } cua truong email chi bo qua ban ghi THIEU HAN
+        // truong do. Luu '' vao thi tai khoan thu hai khong co email se dam
+        // vao tai khoan thu nhat bang loi trung khoa.
+        const emailTho = chuanHoaEmail(req.body?.email);
+        const email = emailTho || undefined;
+
+        if (email && !emailHopLe(email)) {
             return res.status(400).json({ message: 'Email không hợp lệ' });
         }
 
@@ -424,203 +447,111 @@ const registerUser = async (req, res) => {
         }
         const name = kqTen.ten;
 
-        // Bam mat khau TRUOC khi tra cuu, va bam trong MOI truong hop - ke ca
-        // khi biet chac se khong dung den.
+        // Tra cuu TRUOC roi moi bam.
         //
-        // Day la cung mot bai hoc voi HASH_GIA o loginUser: bcrypt 12 vong ton
-        // ~245ms, con mot lan tra cuu email ton vai mili giay. Neu chi bam khi
-        // email con trong thi hai truong hop lech nhau gan 50 lan ve thoi gian
-        // phan hoi, va thoi gian do to cao dia chi nao da co tai khoan - dung
-        // cai ma toan bo phan duoi day dang bo cong bit lai.
+        // Ban truoc lam nguoc lai - bam trong MOI truong hop, ke ca khi biet
+        // chac se khong dung den - de hai truong hop "email con trong" va
+        // "email da co" ton thoi gian nhu nhau. Hoi do dang co nghia: ca hai
+        // truong hop deu tra ve DUNG MOT cau, nen thoi gian phan hoi la manh
+        // moi duy nhat con lai de do xem dia chi nao da dang ky.
+        //
+        // Gio buoc mo hom thu da bo, va phan hoi noi thang "Email da ton tai".
+        // Can bang thoi gian de giau mot thu ma cau tra loi da noi ra thi chi
+        // con la 245ms CPU dot khong cong gi - dat tien tren serverless. Xem
+        // ghi chu ben duoi ve danh doi nay.
+        //
+        // loginUser thi VAN giu HASH_GIA: ben do phan hoi khong noi gi ca, nen
+        // thoi gian van la manh moi that su.
+        //
+        // Hoi CA HAI truong trong MOT luot thay vi hai luot noi tiep - va chi
+        // hoi email khi nguoi dung co nhap. Khong loc ra thi dieu kien thanh
+        // { email: undefined }, ma Mongo hieu do la "email bang null" va se
+        // khop bat ky tai khoan nao khong co email.
+        const dieuKien = [{ phone }];
+        if (email) dieuKien.push({ email });
+
+        const daCo = await User.findOne({ $or: dieuKien }).select('phone email').lean();
+
+        // -------------------------------------------------------------------
+        // Dang ky xong la dung nhu tai khoan ngay, khong qua buoc mo hom thu.
+        //
+        // Truoc day duong nay gui mot la thu kich hoat va tra 202 khong kem
+        // danh tinh nao. Muc dich la de duong dang ky thoi tra loi cau hoi
+        // "dia chi nay da co tai khoan chua": ca ba nhanh (dia chi con trong /
+        // dang cho / da co that) deu tra ve dung mot cau, khac biet nam trong
+        // hom thu - noi ke do khong voi toi.
+        //
+        // DOI LAI DIEU DO, mo hom thu la mot buoc lam nguoi that bo cuoc, va
+        // chu du an quyet dinh bo. Email gio chi con dung cho hai viec: doi
+        // mat khau va quan tri gui thong bao.
+        //
+        // HE QUA PHAI BIET: duong dang ky nay lo lai chuyen so dien thoai hay
+        // dia chi nao da co tai khoan - go vao la phan biet duoc "da tồn tại"
+        // voi dang ky thanh cong. loginUser VAN bit kin phia no (xem HASH_GIA
+        // va cac ghi chu o do), nen chi ro ri o day. Day la danh doi da can
+        // nhac, khong phai sot.
+        // -------------------------------------------------------------------
+        if (daCo) {
+            // Noi ro TRUONG NAO trung. Bao chung chung "tài khoản đã tồn tại"
+            // thi nguoi dien ca hai o khong biet phai sua o nao, va se thu
+            // lai bang cach doi dai mot trong hai.
+            return res.status(400).json({
+                message:
+                    daCo.phone === phone
+                        ? 'Số điện thoại này đã có tài khoản'
+                        : 'Email này đã có tài khoản',
+            });
+        }
+
         const salt = await bcrypt.genSalt(BCRYPT_ROUNDS);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const userExists = await User.findOne({ email });
-
-        // -------------------------------------------------------------------
-        // Che do KHONG CO HOM THU (thuong la may dev): giu nguyen hanh vi cu.
-        //
-        // Khong co mail thi khong ai kich hoat duoc tai khoan, tuc la bat che
-        // do xac minh o day se lam khong ai dang ky duoc nua. Doi lay dieu do
-        // la duong dang ky lo lai chuyen "email nay da ton tai chua" - chap
-        // nhan duoc tren may dev, KHONG chap nhan duoc tren ban that, nen ghi
-        // console.error (khong phai warn) de no noi bat trong log production.
-        // -------------------------------------------------------------------
-        if (!mailDaCauHinh()) {
-            console.error(
-                'registerUser: chua dat MAIL_USER / MAIL_APP_PASSWORD nen phai bo qua buoc xac minh email. '
-                + 'Tren ban chay that, dat hai bien nay de dong kenh do email.',
-            );
-
-            if (userExists) {
-                return res.status(400).json({ message: 'User đã tồn tại' });
-            }
-
-            const user = await User.create({
-                name,
-                email,
-                password: hashedPassword,
-                role: 'student',
-                emailVerified: true,
-            });
-
-            datCookieToken(res, generateToken(user._id));
-
-            return res.status(201).json({
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-            });
-        }
-
-        // -------------------------------------------------------------------
-        // Che do co hom thu: BA nhanh, MOT cau tra loi.
-        //
-        // LO HONG DA VA - do xem dia chi nao da dang ky:
-        //
-        // Ban cu tra "User da ton tai" cho email da co va 201 kem cookie cho
-        // email con trong. Go bat ky dia chi nao vao la biet ngay no co trong
-        // he thong hay khong - dung cai may tra loi ma loginUser da bo cong
-        // bit lai o tren.
-        //
-        // Va khong the vua tra loi kin vua dang nhap thang: chi can "im lang
-        // bo qua khi email da ton tai" thoi la van do duoc, bang cach dang ky
-        // roi thu dang nhap ngay bang chinh mat khau vua dat - vao duoc nghia
-        // la dia chi con trong. Nen tai khoan moi BAT BUOC phai qua mot buoc
-        // ma chi chu hom thu lam duoc.
-        //
-        // Ba nhanh duoi day khac nhau o viec lam gi, nhung deu ket thuc bang
-        // mot la thu va DUNG MOT cau tra ve. Khac biet nam trong hom thu -
-        // noi ke do khong voi toi.
-        // -------------------------------------------------------------------
-        const { token, bam, hetHan } = taoToken();
-        let mail;
-
-        if (!userExists) {
-            // Nhanh 1: dia chi con trong -> tao tai khoan o trang thai cho.
-            const user = await User.create({
-                name,
-                email,
-                password: hashedPassword,
-                role: 'student',
-                emailVerified: false,
-                verifyTokenHash: bam,
-                verifyTokenExp: hetHan,
-            });
-
-            mail = soanMailXacMinh({
-                ten: user.name,
-                lienKet: lienKetXacMinh(token),
-                soGio: Math.round(HAN_TOKEN_XAC_MINH / 3600000),
-            });
-        } else if (userExists.emailVerified === false) {
-            // Nhanh 2: da co mot ban dang ky nhung CHUA AI kich hoat.
+        const user = await User.create({
+            name,
+            phone,
+            // undefined thi Mongoose bo han truong nay khoi ban ghi - dung
+            // dieu kien ma chi muc sparse can. Xem ghi chu o tren.
+            email,
+            password: hashedPassword,
+            role: 'student',
+            // CHI danh dau khi that su co dia chi.
             //
-            // Cho dat lai va gui lai lien ket. Nghe nhu de dai, nhung mot tai
-            // khoan chua xac minh thi chua ai chung minh duoc no la cua minh,
-            // nen khong co gi de bao ve. Nguoc lai, KHONG cho dang ky lai moi
-            // la lo: ke tan cong chi can dang ky truoc bang dia chi cua nguoi
-            // khac la chiem cho vinh vien, chu that khong bao gio vao duoc nua.
-            userExists.name = name;
-            userExists.password = hashedPassword;
-            userExists.verifyTokenHash = bam;
-            userExists.verifyTokenExp = hetHan;
-            await userExists.save();
-
-            mail = soanMailXacMinh({
-                ten: userExists.name,
-                lienKet: lienKetXacMinh(token),
-                soGio: Math.round(HAN_TOKEN_XAC_MINH / 3600000),
-            });
-        } else {
-            // Nhanh 3: dia chi DA co tai khoan that.
-            //
-            // Khong dung toi ban ghi, khong gui lien ket kich hoat nao - nguoi
-            // gui yeu cau nay chua chac la chu tai khoan. Chi bao cho chu dia
-            // chi biet co nguoi vua thu dang ky bang email cua ho.
-            mail = soanMailDaCoTaiKhoan({ lienKetDangNhap: lienKetDangNhap() });
-        }
-
-        // Cho gui xong roi moi tra ve, o CA BA nhanh.
-        //
-        // Hai ly do. Mot: tren serverless, container co the bi dong bang ngay
-        // sau khi phan hoi di - viec chua await xong la viec khong bao gio
-        // chay. Hai: gui mail la phan ton thoi gian nhat cua ca ham, nen ba
-        // nhanh cung cho no thi thoi gian phan hoi cua chung khong con phan
-        // biet duoc.
-        //
-        // guiMail khong bao gio nem loi (xem config/mail.js). Gui hong thi
-        // van tra ve cung cau do - bao "khong gui duoc" cung la mot cach tra
-        // loi cau hoi dia chi nay co ton tai khong.
-        await guiMail({ ...mail, nguoiNhan: email });
-
-        return res.status(202).json({
-            message: 'Chúng tôi đã gửi một email tới địa chỉ này. Vui lòng mở thư để hoàn tất đăng ký (nhớ xem cả mục Spam).',
-            canXacMinh: true,
-        });
-    } catch (error) {
-        console.error('registerUser error:', error);
-        if (error.code === 11000) {
-            return res.status(400).json({ message: 'Email đã tồn tại' });
-        }
-        res.status(500).json({ message: error.message });
-    }
-};
-
-// @desc    Kich hoat tai khoan bang token trong email
-// @route   POST /api/users/verify-email
-//
-// Token la 32 byte ngau nhien nen khong do duoc; trong CSDL chi co ban bam cua
-// no. Xem utils/tokenXacMinh.js.
-const verifyEmail = async (req, res) => {
-    try {
-        const token = String(req.body?.token || '').trim();
-        if (!token) {
-            return res.status(400).json({ message: 'Thiếu mã xác minh' });
-        }
-
-        // Tra cuu theo ban bam, va bat buoc con han ngay trong cau truy van -
-        // de quen dieu kien thoi han o day la mot lien ket cu van dung mai.
-        const user = await User.findOne({
-            verifyTokenHash: bamToken(token),
-            verifyTokenExp: { $gt: new Date() },
+            // Khong con cho nao CHAN theo truong nay (buoc xac minh da bo),
+            // nhung dat true cho mot tai khoan KHONG co email la ghi vao CSDL
+            // mot cau vo nghia: "dia chi khong ton tai nay da duoc xac minh".
+            // Ai doc sau se tuong da co gi do chung minh.
+            ...(email ? { emailVerified: true } : {}),
         });
 
-        if (!user) {
-            return res.status(400).json({
-                message: 'Liên kết xác minh không hợp lệ hoặc đã hết hạn. Hãy đăng ký lại để nhận liên kết mới.',
-            });
-        }
-
-        // Tai khoan bi admin khoa thi khong cap token, y het loginUser.
-        if (user.status === false) {
-            return res.status(403).json({
-                message: 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.',
-            });
-        }
-
-        user.emailVerified = true;
-        // Xoa token: mot lien ket chi dung duoc dung mot lan. Con de lai thi
-        // ai doc duoc la thu do sau nay - hom thu bi chiem, may dung chung -
-        // van vao duoc tai khoan.
-        user.verifyTokenHash = undefined;
-        user.verifyTokenExp = undefined;
-        await user.save();
-
-        // Bam vao lien ket la da chung minh so huu hom thu, nen dang nhap luon
-        // cho nguoi dung do phai go lai mat khau.
         datCookieToken(res, generateToken(user._id));
 
-        return res.json({
+        return res.status(201).json({
             _id: user._id,
             name: user.name,
+            phone: user.phone,
             email: user.email,
             role: user.role,
         });
     } catch (error) {
-        console.error('verifyEmail error:', error);
-        res.status(500).json({ message: 'Đã có lỗi xảy ra, vui lòng thử lại' });
+        console.error('registerUser error:', error);
+
+        // Luoi an toan cho truong hop hai nguoi dang ky cung mot so trong
+        // cung mot khoanh khac: ca hai cung qua duoc buoc findOne o tren roi
+        // moi den create, va chi muc duy nhat moi la thu chan that su.
+        //
+        // error.keyPattern cho biet chi muc nao bi dam, nen van noi dung
+        // truong cho nguoi dung thay vi mot cau chung chung.
+        if (error.code === 11000) {
+            const truong = Object.keys(error.keyPattern || {})[0];
+            return res.status(400).json({
+                message:
+                    truong === 'phone'
+                        ? 'Số điện thoại này đã có tài khoản'
+                        : 'Email này đã có tài khoản',
+            });
+        }
+
+        res.status(500).json({ message: error.message });
     }
 };
 
@@ -684,15 +615,82 @@ const updateUserProfile = async (req, res) => {
         // Index cua truong phone la { unique, sparse }. Sparse chi bo qua null/undefined,
         // KHONG bo qua chuoi rong: neu de '' thi nguoi thu hai xoa so se dinh loi trung khoa.
         // Vi vay xoa so = undefined chu khong phai ''.
-        if (has('phone')) {
-            const phone = String(req.body.phone || '').trim();
+        // THEM email cho tai khoan chua co - va CHI the, khong cho doi.
+        //
+        // Dang ky khong bat buoc email nua, nen co tai khoan chi co so dien
+        // thoai. Voi ho, email la cach DUY NHAT tu lay lai mat khau (chua gan
+        // duoc SMS), ma truoc day trang ca nhan de email o che do chi doc -
+        // tuc la ho khong bao gio bat duoc kha nang do len. Day la cho bit lai
+        // thieu sot do.
+        //
+        // VI SAO KHONG CHO DOI EMAIL DA CO: doi email la doi luon dia chi
+        // nhan ma dat lai mat khau. Ai muon cuop mot tai khoan dang mo san
+        // (may chung, quen dang xuat) chi can doi email sang cua minh roi bam
+        // "quen mat khau" - chu that mat tai khoan ma khong can biet mat khau
+        // cu. Muon mo duong doi email thi phai kem buoc nhap lai mat khau
+        // hien tai VA xac minh dia chi moi, la mot viec rieng.
+        if (has('email')) {
+            const emailMoi = chuanHoaEmail(req.body.email);
 
-            if (!phone) {
-                user.phone = undefined;
-            } else {
-                if (!/^[0-9+\s.-]{8,15}$/.test(phone)) {
-                    return res.status(400).json({ message: 'Số điện thoại không hợp lệ' });
+            if (user.email) {
+                return res.status(400).json({
+                    message: 'Email đã đặt thì không tự đổi được. Vui lòng liên hệ quản trị viên.',
+                });
+            }
+
+            if (!emailMoi || !emailHopLe(emailMoi)) {
+                return res.status(400).json({ message: 'Email không hợp lệ' });
+            }
+
+            const emailExists = await User.findOne({
+                email: emailMoi,
+                _id: { $ne: req.user._id },
+            });
+            if (emailExists) {
+                return res.status(400).json({ message: 'Email đã tồn tại' });
+            }
+
+            user.email = emailMoi;
+            // Dia chi TU NHAP, chua ai chung minh gi ca. Danh dau false chu
+            // khong phai true - khong con cho nao chan theo truong nay, nhung
+            // ghi true la ghi vao CSDL mot cau khong dung.
+            user.emailVerified = false;
+        }
+
+        if (has('phone')) {
+            const tho = typeof req.body.phone === 'string' ? req.body.phone.trim() : '';
+
+            if (!tho) {
+                // KHONG cho xoa trang so dien thoai nua.
+                //
+                // Tu khi so dien thoai la thu bat buoc khi dang ky, no cung la
+                // cach dang nhap chinh cua nguoi dung moi - va voi tai khoan
+                // khong co email thi no la cach dang nhap DUY NHAT. Cho xoa
+                // trang la cho nguoi dung tu khoa minh ra ngoai bang mot cu
+                // bam nham, khong the tu sua lai.
+                //
+                // Tai khoan cu chua co so thi van de trong duoc: nhanh nay chi
+                // chan viec XOA, khong bat ho phai dien.
+                if (user.phone) {
+                    return res.status(400).json({
+                        message: 'Không thể xóa số điện thoại. Bạn có thể đổi sang số khác.',
+                    });
                 }
+            } else {
+                // Chuan hoa TRUOC khi kiem trung va truoc khi luu - xem
+                // utils/soDienThoai.js. Ban cu chi kiem hinh dang bang
+                // /^[0-9+\s.-]{8,15}$/, nen '+84901234567' va '0901234567'
+                // luu thanh hai gia tri khac nhau: chi muc duy nhat khong
+                // thay trung, va nguoi dung doi so o day xong thi khong dang
+                // nhap duoc bang so nua vi dang luu khac dang tra cuu.
+                const phone = chuanHoaSoDienThoai(tho);
+
+                if (!phone) {
+                    return res.status(400).json({
+                        message: 'Số điện thoại không hợp lệ. Nhập số di động 10 chữ số, ví dụ 0901234567.',
+                    });
+                }
+
                 const phoneExists = await User.findOne({
                     phone,
                     _id: { $ne: req.user._id }
@@ -1001,7 +999,6 @@ module.exports = {
     logoutUser,
     getUsers,
     registerUser,
-    verifyEmail,
     loginUser,
     googleLogin,
     updateUserProfile,

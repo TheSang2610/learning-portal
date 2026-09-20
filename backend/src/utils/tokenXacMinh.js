@@ -25,7 +25,7 @@ const crypto = require('crypto');
 const HAN_MS = 24 * 60 * 60 * 1000;
 
 // 32 byte = 256 bit ngau nhien. Khong the do duoc trong bat ky khoang thoi
-// gian nao co nghia, nen duong /verify-email khong can chong do kieu mat khau.
+// gian nao co nghia, nen duong dung no khong can chong do kieu mat khau.
 const SO_BYTE = 32;
 
 const bamToken = (token) =>

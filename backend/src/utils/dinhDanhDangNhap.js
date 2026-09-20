@@ -1,8 +1,12 @@
-// Cho phep dang nhap bang TEN TAI KHOAN, khong bat go het dia chi email.
+// Nhan BA cach nhap o o dang nhap, theo dung thu tu nay:
 //
-// "thesang" thay cho "thesang@gmail.com". Ten tai khoan chinh la phan truoc
-// dau @ cua dia chi da dang ky - khong co truong rieng nao trong CSDL, nen
-// khong phai chuyen doi du lieu cu.
+//   1. So dien thoai   '0901234567', '+84901234567', '090 123 4567'
+//   2. Dia chi email    'thesang@gmail.com'
+//   3. Ten tai khoan    'thesang' - phan truoc dau @ cua dia chi da dang ky
+//
+// So dien thoai la thu bat buoc khi dang ky, nen voi nguoi dung moi no la
+// cach dang nhap chinh. Ten tai khoan khong co truong rieng trong CSDL (no
+// chi la phan dau cua email) nen khong phai chuyen doi du lieu cu.
 //
 // ===========================================================================
 // BA DIEU PHAI NAM TRUOC KHI SUA FILE NAY
@@ -44,6 +48,9 @@
 //    VAN thoat ky tu dac biet truoc khi ghep vao regex. Mot tang la du de
 //    chan, nhung tang kiem hinh dang la thu de bi noi long sau nay ("cho
 //    phep them dau + di"), con tang thoat thi khong.
+
+// Khong tao vong phu thuoc: soDienThoai.js khong require gi ca.
+const { chuanHoaSoDienThoai } = require('./soDienThoai');
 
 // Do dai toi da cua phan truoc dau @, theo RFC 5321.
 const DAI_TEN_TOI_DA = 64;
@@ -105,6 +112,32 @@ const boLocTaiKhoan = (dinhDanh, emailHopLe) => {
     if (laEmail(dinhDanh)) {
         return emailHopLe(dinhDanh) ? { email: dinhDanh } : null;
     }
+
+    // Tra cuu theo SO DIEN THOAI.
+    //
+    // Phai dat TRUOC nhanh ten ngan, vi MAU_TEN nhan ca chu so: '0901234567'
+    // lot qua tenHopLe() va se thanh regex /^0901234567@/ - tra cuu mot dia
+    // chi email khong ai co, roi bao sai mat khau.
+    const so = chuanHoaSoDienThoai(dinhDanh);
+
+    // Doc duoc thanh so di dong thi CHI tra cuu theo so, khong hoi them
+    // nhanh ten ngan nua.
+    //
+    // CAI BAY o day: mot chuoi toan chu so cung la ten ngan hop le (MAU_TEN
+    // nhan ca chu so), nen '0901234567' vua co the la so dien thoai, vua co
+    // the la phan dau cua dia chi '0901234567@gmail.com' ma ai do da dang ky
+    // tu truoc.
+    //
+    // DA THU hoi ca hai bang $or va bo di, vi no de ra mot kieu khoa cheo:
+    // neu nguoi A co so 0901234567 va nguoi B co email 0901234567@gmail.com
+    // thi truy van khop HAI ban ghi, va luat o diem 1 dau file se tu choi -
+    // ca hai cung khong dang nhap duoc, ma khong ai hieu vi sao.
+    //
+    // Uu tien so dien thoai la danh doi co y: dang nhap bang so la thu moi
+    // nguoi dung dung hang ngay, con ten ngan toan chu so la truong hop hiem.
+    // Ai roi vao truong hop do van dang nhap duoc bang DIA CHI DAY DU - dung
+    // duong lui ma diem 1 da dat san.
+    if (so) return { phone: so };
 
     if (!tenHopLe(dinhDanh)) return null;
 

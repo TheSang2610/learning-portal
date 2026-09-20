@@ -16,6 +16,7 @@ const {
     loiMatKhauMoi,
     kiemTen,
 } = require('../utils/xacThucDauVao');
+const { chuanHoaSoDienThoai } = require('../utils/soDienThoai');
 const Course = require('../models/Course');
 const Lesson = require('../models/Lesson');
 const Enrollment = require('../models/Enrollment');
@@ -254,9 +255,31 @@ const createUserAdmin = async (req, res) => {
             return res.status(400).json({ message: 'Role không hợp lệ' });
         }
 
-        const exists = await User.findOne({ email });
+        // So dien thoai la tuy chon o duong quan tri (khac duong dang ky cong
+        // khai, noi no bat buoc): quan tri co the tao tai khoan cho mot nguoi
+        // ma minh chua biet so.
+        //
+        // Nhung DA NHAP thi phai doc ra duoc, va phai luu dang chuan.
+        const soChuan = chuanHoaSoDienThoai(phone);
+
+        if (phone && !soChuan) {
+            return res.status(400).json({ message: 'Số điện thoại không hợp lệ' });
+        }
+
+        // Hoi ca hai truong trong mot luot. Chi hoi phone khi that su co -
+        // khong loc ra thi { phone: undefined } se khop moi tai khoan chua co
+        // so dien thoai.
+        const dieuKien = [{ email }];
+        if (soChuan) dieuKien.push({ phone: soChuan });
+
+        const exists = await User.findOne({ $or: dieuKien }).select('email phone').lean();
         if (exists) {
-            return res.status(400).json({ message: 'Email đã tồn tại' });
+            return res.status(400).json({
+                message:
+                    exists.email === email
+                        ? 'Email đã tồn tại'
+                        : 'Số điện thoại đã tồn tại',
+            });
         }
 
         const hashedPassword = await bcrypt.hash(password, await bcrypt.genSalt(BCRYPT_ROUNDS));
@@ -268,7 +291,10 @@ const createUserAdmin = async (req, res) => {
             // "undefined la tai khoan cu", ma luat do co the bi sua sau nay.
             emailVerified: true,
             name, email, password: hashedPassword, role, status,
-            ...(phone ? { phone } : {}),
+            // Chuan hoa TRUOC khi luu - xem utils/soDienThoai.js. Luu tho
+            // thi quan tri go '+84901234567' va nguoi do khong dang nhap duoc
+            // bang so, vi tra cuu luon quy ve dang 0XXXXXXXXX.
+            ...(soChuan ? { phone: soChuan } : {}),
             ...(fullname ? { fullname } : {}),
             ...(bio ? { bio } : {}),
         });
@@ -342,7 +368,18 @@ const updateUserAdmin = async (req, res) => {
             user.name = kqTen.ten;
         }
         if (status !== undefined) user.status = status;
-        if (phone !== undefined) user.phone = phone || undefined;
+        if (phone !== undefined) {
+            // Cung ly do voi luc tao: chuan hoa truoc khi luu. Chuoi rong hay
+            // doc khong ra so thi xoa han truong di (undefined chu KHONG phai
+            // '' hay null - chi muc sparse chi bo qua ban ghi THIEU truong).
+            const soChuan = chuanHoaSoDienThoai(phone);
+
+            if (phone && !soChuan) {
+                return res.status(400).json({ message: 'So dien thoai khong hop le' });
+            }
+
+            user.phone = soChuan || undefined;
+        }
         if (fullname !== undefined) user.fullname = fullname;
         if (bio !== undefined) user.bio = bio;
 

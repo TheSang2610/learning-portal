@@ -45,17 +45,61 @@ export const emailHopLe = (v: string) =>
 export const DAI_TEN_TAI_KHOAN_TOI_DA = 64;
 
 /**
- * Kiểm thứ người dùng gõ ở ô "Email hoặc tên tài khoản" khi ĐĂNG NHẬP.
+ * Đưa mọi cách gõ số điện thoại về dạng chuẩn `0XXXXXXXXX`, hoặc `""` nếu đọc
+ * không ra.
  *
- * Đăng nhập nhận cả địa chỉ đầy đủ lẫn tên tài khoản ngắn — "thesang" thay cho
- * "thesang@gmail.com". Khớp với `boLocTaiKhoan` trong
- * `backend/src/utils/dinhDanhDangNhap.js`; sửa ở đây thì phải sửa cả bên kia.
+ * Bản sao của `chuanHoaSoDienThoai` trong `backend/src/utils/soDienThoai.js` —
+ * sửa ở đây thì phải sửa cả bên kia. Lý do đầy đủ vì sao phải chuẩn hóa chứ
+ * không chỉ kiểm hình dạng nằm ở đầu file đó.
+ *
+ * Tóm tắt: `0901234567`, `+84901234567` và `090.123.4567` là cùng một số. Lưu
+ * nguyên như người dùng gõ thì chúng thành ba bản ghi khác nhau, và ai đăng ký
+ * bằng cách này sẽ không đăng nhập được bằng cách kia.
+ */
+export const chuanHoaSoDienThoai = (v: string): string => {
+  if (typeof v !== "string") return "";
+
+  const so = v.replace(/\D/g, "");
+  if (!so) return "";
+
+  let phan: string;
+
+  if (so.startsWith("84") && so.length === 11) {
+    // Dạng quốc tế: 84 + 9 chữ số. Độ dài là thứ phân biệt duy nhất —
+    // `0845123456` bỏ số 0 cũng bắt đầu bằng `84` nhưng chỉ có 10 chữ số.
+    phan = so.slice(2);
+  } else if (so.startsWith("0") && so.length === 10) {
+    phan = so.slice(1);
+  } else if (so.length === 9) {
+    // Gõ thiếu số 0 ở đầu — hay gặp khi chép từ bảng tính.
+    phan = so;
+  } else {
+    return "";
+  }
+
+  // Chỉ nhận đầu số di động. Số máy bàn (024, 028…) không nhận được tin nhắn.
+  if (!["3", "5", "7", "8", "9"].includes(phan[0])) return "";
+
+  return `0${phan}`;
+};
+
+/** Đọc được thành một số di động Việt Nam hợp lệ không. */
+export const soDienThoaiHopLe = (v: string) => chuanHoaSoDienThoai(v) !== "";
+
+/**
+ * Kiểm thứ người dùng gõ ở ô đăng nhập.
+ *
+ * Đăng nhập nhận ba cách gõ: số điện thoại, địa chỉ đầy đủ, và tên tài khoản
+ * ngắn ("thesang" thay cho "thesang@gmail.com"). Khớp với `boLocTaiKhoan`
+ * trong `backend/src/utils/dinhDanhDangNhap.js`; sửa ở đây thì phải sửa cả
+ * bên kia.
  *
  * Chỉ kiểm HÌNH DẠNG để người dùng biết ngay, không đoán hộ họ tài khoản nào:
  * việc tra cứu là của máy chủ, và máy chủ kiểm lại toàn bộ.
  */
 export const dinhDanhDangNhapHopLe = (v: string) => {
   if (v.includes("@")) return emailHopLe(v);
+  if (soDienThoaiHopLe(v)) return true;
   return (
     v.length > 0 &&
     v.length <= DAI_TEN_TAI_KHOAN_TOI_DA &&

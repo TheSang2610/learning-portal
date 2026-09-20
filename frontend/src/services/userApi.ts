@@ -36,6 +36,9 @@ export interface UpdateProfilePayload {
   avatar?: string;
   bio?: string;
   phone?: string;
+  /** Chi dat duoc MOT LAN, khi tai khoan chua co email. May chu tu choi
+   *  moi yeu cau doi mot dia chi da dat - xem updateUserProfile. */
+  email?: string;
   provider?: string | null;
   password?: string;
   currentPassword?: string;

@@ -144,3 +144,55 @@ test('bo loc cua ten ngan khong bao gio chua toan tu tu nguoi dung', () => {
     const kq = loc('admin');
     assert.deepStrictEqual(Object.keys(kq).sort(), ['email', 'password']);
 });
+
+/* ------------------------ Dang nhap bang so dien thoai ------------------ */
+
+test('go so dien thoai -> tra cuu bang truong phone, da chuan hoa', () => {
+    // Moi cach go deu phai ra CUNG mot bo loc. Khong the thi nguoi dang ky
+    // bang '+84...' se khong dang nhap duoc khi go '0...'.
+    for (const go of ['0987654321', '+84987654321', '84987654321', '098.765.4321']) {
+        const kq = loc(go);
+        assert.deepStrictEqual(kq, { phone: '0987654321' }, `hong o: ${go}`);
+    }
+});
+
+test('so dien thoai dat TRUOC nhanh ten ngan', () => {
+    // MAU_TEN nhan ca chu so, nen neu nhanh ten ngan chay truoc thi
+    // '0987654321' se thanh regex /^0987654321@/ - tra cuu mot dia chi khong
+    // ai co, roi bao sai mat khau.
+    const kq = loc('0987654321');
+    assert.ok(kq.phone, 'phai ra bo loc theo phone');
+    assert.ok(!kq.email, 'khong duoc ra bo loc theo email');
+});
+
+test('so dien thoai thang nhanh ten ngan, khong hoi ca hai', () => {
+    // Mot chuoi toan chu so cung la ten ngan hop le. DA THU hoi ca hai bang
+    // $or va bo di: no de ra khoa cheo giua nguoi co so 0901234567 va nguoi
+    // co email 0901234567@gmail.com - truy van khop hai ban ghi, luat "trung
+    // tu hai tro len thi tu choi" da lam ca hai khong vao duoc.
+    const kq = loc('0901234567');
+    assert.deepStrictEqual(kq, { phone: '0901234567' });
+    assert.ok(!kq.$or, 'khong duoc con nhanh $or');
+    assert.ok(!kq.email, 'khong duoc tra cuu theo email nua');
+});
+
+test('so may ban khong thanh bo loc phone', () => {
+    // 024/028 khong nhan duoc SMS. No roi xuong nhanh ten ngan (toan chu so
+    // van dung hinh dang), va do la hanh vi cu - khong phai loi moi.
+    const kq = loc('02438251234');
+    assert.ok(!kq || !kq.phone, 'khong duoc tra cuu nhu so di dong');
+});
+
+test('so dien thoai sai do dai khong thanh bo loc phone', () => {
+    for (const go of ['090123456', '09012345678']) {
+        const kq = loc(go);
+        assert.ok(!kq || !kq.phone, `hong o: ${go}`);
+    }
+});
+
+test('kieu du lieu sai khong bao gio thanh bo loc phone', () => {
+    for (const v of [{ $ne: null }, ['0901234567'], null, undefined, 901234567]) {
+        const kq = loc(v);
+        assert.ok(!kq || !kq.phone, `hong o kieu: ${typeof v}`);
+    }
+});

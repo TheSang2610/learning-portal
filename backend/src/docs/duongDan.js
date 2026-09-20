@@ -36,28 +36,19 @@ const BANG = [
   ["get", "/api/users", "ad", "Danh sách người dùng", { tag: "Người dùng", tra: ["NguoiDung"] }],
   ["post", "/api/users", "", "Đăng ký tài khoản", {
     tag: "Người dùng",
-    than: { name: "string", email: "string", password: "string" },
-    ghiChu:
-      "Trả 202 và KHÔNG cấp phiên: máy chủ gửi một email xác minh, tài khoản chỉ hoạt động sau khi bấm liên kết trong thư. "
-      + "Phản hồi giống hệt nhau dù địa chỉ đã có tài khoản hay chưa — cố ý, để endpoint này không trả lời được câu hỏi "
-      + "\"email nào đã đăng ký\". Chỉ khi máy chủ chưa cấu hình hòm thư (MAIL_USER/MAIL_APP_PASSWORD) nó mới quay về "
-      + "hành vi cũ: tạo tài khoản và cấp phiên ngay.",
-  }],
-  ["post", "/api/users/verify-email", "", "Kích hoạt tài khoản bằng token trong email", {
-    tag: "Người dùng",
-    than: { token: "string" },
+    than: { name: "string", phone: "string", email: "string?", password: "string" },
     tra: "NguoiDung",
     ghiChu:
-      "Token là 32 byte ngẫu nhiên, cơ sở dữ liệu chỉ giữ bản băm SHA-256 của nó. Hạn 24 giờ và chỉ dùng được một lần. "
-      + "Đúng token thì đánh dấu đã xác minh rồi cấp phiên luôn.",
+      "Trả 201 và cấp phiên ngay. BẮT BUỘC: name, phone, password. Email là TÙY CHỌN — để trống thì bản ghi không có trường đó. "
+      + "Số điện thoại được chuẩn hóa về dạng 0XXXXXXXXX trước khi lưu và trước khi tra cứu, nên mọi cách gõ đều ra một tài khoản. "
+      + "Không còn bước xác minh qua email. Số hoặc địa chỉ đã có tài khoản thì trả 400 — tức là đường này phân biệt được cái nào đã đăng ký, đánh đổi có chủ ý khi bỏ bước mở hòm thư.",
   }],
   ["post", "/api/users/login", "", "Đăng nhập", {
     tag: "Người dùng",
     than: { email: "string", password: "string" },
     tra: "NguoiDung",
     ghiChu:
-      "Đặt token vào cookie httpOnly. Trình duyệt tự gửi kèm ở các lần gọi sau, JavaScript không đọc được. Có giới hạn số lần thử. "
-      + "Tài khoản đăng ký bằng mật khẩu mà chưa bấm liên kết xác minh sẽ nhận 403 kèm cờ canXacMinh.",
+      "Đặt token vào cookie httpOnly. Trình duyệt tự gửi kèm ở các lần gọi sau, JavaScript không đọc được. Có giới hạn số lần thử.",
   }],
   ["post", "/api/users/logout", "", "Đăng xuất", { tag: "Người dùng", ghiChu: "Xóa cookie phiên." }],
   ["post", "/api/users/google", "", "Đăng nhập bằng Google", {

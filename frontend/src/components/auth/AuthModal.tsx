@@ -19,6 +19,7 @@ import {
   dinhDanhDangNhapHopLe,
   kiemTen,
   loiMatKhauMoi,
+  chuanHoaSoDienThoai,
 } from "@/src/services/quyDinh";
 
 interface AuthModalProps {
@@ -112,6 +113,7 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
 
   const [registerData, setRegisterData] = useState({
     name: "",
+    phone: "",
     email: "",
     password: "",
     role: "student",
@@ -317,15 +319,30 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
     try {
       // ✅ Validate trước khi gửi
       const name = registerData.name.trim();
+
+      // Số điện thoại là thứ bắt buộc duy nhất để định danh; email tùy chọn.
+      const phone = chuanHoaSoDienThoai(registerData.phone);
+
+      // Email để trống thì gửi chuỗi rỗng — máy chủ hiểu là "không nhập" và
+      // bỏ hẳn trường đó khỏi bản ghi. Xem registerUser bên backend: lưu null
+      // hay chuỗi rỗng đều làm hỏng chỉ mục sparse của cột email.
       const email = registerData.email.trim().toLowerCase();
 
-      if (!name || !email || !registerData.password) {
-        setError("Vui lòng điền đầy đủ thông tin");
+      if (!name || !registerData.phone.trim() || !registerData.password) {
+        setError("Vui lòng điền họ tên, số điện thoại và mật khẩu");
         setLoading(false);
         return;
       }
 
-      if (!emailHopLe(email)) {
+      if (!phone) {
+        setError(
+          "Số điện thoại không hợp lệ. Nhập số di động 10 chữ số, ví dụ 0901234567.",
+        );
+        setLoading(false);
+        return;
+      }
+
+      if (email && !emailHopLe(email)) {
         setError("Email không hợp lệ");
         setLoading(false);
         return;
@@ -349,24 +366,17 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
         return;
       }
 
-      const data = await registerUser({ ...registerData, name, email });
+      // Gửi số đã CHUẨN HÓA chứ không gửi nguyên thứ người dùng gõ. Máy chủ
+      // cũng chuẩn hóa lại, nhưng gửi dạng chuẩn thì hai bên chắc chắn thấy
+      // cùng một giá trị.
+      const data = await registerUser({ ...registerData, name, phone, email });
 
-      // May chu KHONG con dang nhap thang sau khi dang ky. No gui mot la thu
-      // xac minh roi tra ve 202 khong kem danh tinh nao - do la cach duy nhat
-      // de duong dang ky thoi tra loi duoc cau hoi "dia chi nay da co tai
-      // khoan chua". Xem backend/src/controllers/userController.js.
+      // Dang ky xong la vao thang, khong qua buoc mo hom thu.
       //
-      // Van giu nhanh cu ben duoi: khi may chu chua cau hinh hom thu (thuong
-      // la may dev), no tao tai khoan va dang nhap luon nhu truoc, tuc la co
-      // tra ve _id.
-      if (!data?._id) {
-        setThongBao(
-          data?.message ||
-            "Chúng tôi đã gửi một email tới địa chỉ này. Vui lòng mở thư để hoàn tất đăng ký.",
-        );
-        setRegisterData({ ...registerData, password: "" });
-        return;
-      }
+      // Truoc day cho nay con mot nhanh nua: may chu tra 202 khong kem danh
+      // tinh, giao dien hien "da gui thu, mo hom thu de hoan tat". Da bo cung
+      // luc voi buoc xac minh o may chu - email gio chi dung de doi mat khau
+      // va de quan tri gui thong bao.
 
       // Danh tinh giu trong RAM (xem src/hooks/nguoiDungLuu.ts).
       // datNguoiDung() da tu ban su kien "userInfoChanged".
@@ -564,9 +574,22 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
 
         {quenBuoc === "email" ? (
           <form onSubmit={guiMa} className="space-y-4">
+            {/* Nói rõ là phải có EMAIL, không nhận số điện thoại.
+                Đăng ký chỉ bắt buộc số điện thoại, nên có tài khoản không có
+                email — và chưa gắn nhà cung cấp SMS nào thì không có chỗ nào
+                gửi mã tới. Không nói trước thì người dùng gõ số vào, nhận câu
+                "đã gửi mã" rồi ngồi đợi một tin nhắn không bao giờ tới.
+
+                Máy chủ vẫn trả đúng một câu cho mọi trường hợp, kể cả tài
+                khoản không có email — nói riêng ra là biến đường này thành
+                máy trả lời câu hỏi ai có email ai không. */}
             <p className="text-xs leading-relaxed text-slate-600">
-              Nhập email hoặc tên tài khoản bạn dùng để đăng nhập. Chúng tôi sẽ gửi một mã
-              gồm {SO_CHU_SO_MA} chữ số tới hộp thư đó.
+              Nhập email của tài khoản. Chúng tôi sẽ gửi một mã gồm {SO_CHU_SO_MA} chữ số
+              tới hộp thư đó.
+            </p>
+            <p className="rounded-xl bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">
+              Tài khoản đăng ký bằng số điện thoại mà chưa thêm email thì chưa tự lấy lại
+              mật khẩu được — nhắn quản trị viên để được đặt lại.
             </p>
             {/* Xem ghi chu o o dang nhap: type="email" se chan ten ngan. */}
             <input
@@ -692,7 +715,7 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
             <input
               type="text"
               name="email"
-              placeholder="Email hoặc tên tài khoản"
+              placeholder="Số điện thoại hoặc email"
               value={loginData.email}
               onChange={handleLoginChange}
               required
@@ -748,17 +771,44 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
               maxLength={DAI_TEN_TOI_DA}
               className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
             />
+            {/* inputMode="tel" mở bàn phím số trên điện thoại. type vẫn là
+                "tel" chứ không phải "number": "number" cắt mất số 0 ở đầu ở
+                một số trình duyệt, và 0 đầu là thứ không được mất. */}
             <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={registerData.email}
+              type="tel"
+              name="phone"
+              inputMode="tel"
+              placeholder="Số điện thoại"
+              value={registerData.phone}
               onChange={handleRegisterChange}
               required
-              autoComplete="email"
-              maxLength={DAI_EMAIL_TOI_DA}
+              autoComplete="tel"
+              maxLength={15}
               className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
             />
+
+            <div>
+              <input
+                type="email"
+                name="email"
+                placeholder="Email (không bắt buộc)"
+                value={registerData.email}
+                onChange={handleRegisterChange}
+                autoComplete="email"
+                maxLength={DAI_EMAIL_TOI_DA}
+                className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
+              />
+
+              {/* Nói thẳng email dùng để làm gì, thay vì để ô trống không lời
+                  giải thích rồi người dùng bỏ qua và mất đường lấy lại mật
+                  khẩu. Chưa gắn được nhà cung cấp SMS nên email vẫn là cách
+                  duy nhất tự lấy lại mật khẩu. */}
+              <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                Điền email thì bạn tự lấy lại được mật khẩu khi quên. Bỏ trống cũng đăng
+                ký được, nhưng lúc đó phải nhờ quản trị viên đặt lại giúp.
+              </p>
+            </div>
+
             <input
               type="password"
               name="password"

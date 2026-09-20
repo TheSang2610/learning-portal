@@ -351,6 +351,7 @@ function PersonalTab({
   const [birthday, setBirthday] = useState(toDateInput(user.birthday));
   const [bio, setBio] = useState(user.bio ?? "");
   const [phone, setPhone] = useState(user.phone ?? "");
+  const [email, setEmail] = useState("");
   const [avatar, setAvatar] = useState(user.avatar ?? "");
   const [anhChon, setAnhChon] = useState<File | null>(null);
   const [xemTruoc, setXemTruoc] = useState("");
@@ -607,26 +608,58 @@ function PersonalTab({
             saving={saving}
             onSave={() => save({ phone })}
             onCancel={() => toggle("phone")}
-            hint="8-15 chữ số. Mỗi số điện thoại chỉ dùng cho một tài khoản. Để trống để xóa."
+            hint="Số di động 10 chữ số, ví dụ 0901234567. Mỗi số chỉ dùng cho một tài khoản, và đây là cách đăng nhập của bạn nên không xóa trắng được."
           >
             <input
               type="tel"
+              inputMode="tel"
               className={inputCls}
               value={phone}
-              placeholder="0912345678"
+              placeholder="0901234567"
               onChange={(e) => setPhone(e.target.value)}
               autoFocus
             />
           </FieldForm>
         </SettingRow>
 
-        <SettingRow
-          label="Email"
-          value={user.email}
-          mono
-          readOnly
-          hint="Email là định danh đăng nhập nên không thể tự đổi."
-        />
+        {/* Email THEM DUOC MOT LAN khi tai khoan chua co, sau do khoa lai.
+            Dang ky khong bat buoc email nua, nen ai bo trong luc do phai co
+            duong bat lai kha nang tu lay lai mat khau. Con doi mot dia chi DA
+            dat thi khong cho: doi email la doi luon cho nhan ma dat lai mat
+            khau - xem ghi chu day du o updateUserProfile ben may chu. */}
+        {user.email ? (
+          <SettingRow
+            label="Email"
+            value={user.email}
+            mono
+            readOnly
+            hint="Email đã đặt thì không tự đổi được, vì đây là nơi nhận mã đặt lại mật khẩu."
+          />
+        ) : (
+          <SettingRow
+            label="Email"
+            value={undefined}
+            mono
+            open={editing === "email"}
+            onToggle={() => toggle("email")}
+          >
+            <FieldForm
+              saving={saving}
+              onSave={() => save({ email })}
+              onCancel={() => toggle("email")}
+              hint="Thêm email để tự lấy lại mật khẩu khi quên. Thêm xong thì không tự đổi được nữa, nên hãy nhập đúng địa chỉ bạn đang dùng."
+            >
+              <input
+                type="email"
+                className={inputCls}
+                value={email}
+                placeholder="ban@gmail.com"
+                onChange={(e) => setEmail(e.target.value)}
+                autoFocus
+              />
+            </FieldForm>
+          </SettingRow>
+        )}
 
         {user.role === "instructor" && (
           <SettingRow

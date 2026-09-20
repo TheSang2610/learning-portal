@@ -8,7 +8,10 @@ const API_URL = `${GOC_API}/api/users`;
 
 interface RegisterUserData {
   name: string;
-  email: string;
+  /** Dang chuan 0XXXXXXXXX - xem chuanHoaSoDienThoai trong quyDinh.ts. */
+  phone: string;
+  /** Tuy chon. Chuoi rong = khong nhap; may chu se bo han truong nay. */
+  email?: string;
   password: string;
   role?: string;
 }
@@ -52,18 +55,14 @@ const parseResponse = async (res: Response) => {
   return json;
 };
 
-// Dang ky co HAI hinh dang phan hoi, va noi goi phai phan biet duoc:
+// Dang ky tra ve 201 kem danh tinh va cookie phien - vao thang, khong qua
+// buoc mo hom thu.
 //
-//   202 { message, canXacMinh }  binh thuong - may chu vua gui thu xac minh,
-//                                CHUA co phien dang nhap nao.
-//   201 { _id, name, ... }       chi khi may chu chua cau hinh hom thu (may
-//                                dev): tao tai khoan va dang nhap luon.
-//
-// Vi sao khong con dang nhap thang: xem registerUser trong
-// backend/src/controllers/userController.js.
+// Truoc day co hinh dang thu hai: 202 { message, canXacMinh } khi may chu vua
+// gui thu xac minh. Da bo cung luc voi buoc do o may chu. Van de Partial va
+// `message` lai vi cac nhanh loi tra ve { message } khong kem danh tinh.
 export interface RegisterResponse extends Partial<LoginResponse> {
   message?: string;
-  canXacMinh?: boolean;
 }
 
 export const registerUser = async (
@@ -137,35 +136,6 @@ export const loginUser = async (userData: LoginUserData): Promise<LoginResponse>
     // theo nguoi dung. Dang nhap khong di qua apiRequest nen khong tu xoa - phai
     // xoa tay o day, neu khong nguoi vua dang nhap co the nhan lai du lieu cua
     // nguoi dung truoc do tren cung trinh duyet.
-    clearApiCache();
-  }
-
-  return data;
-};
-
-// Kich hoat tai khoan bang token trong email dang ky.
-//
-// May chu tra ve dung hinh dang cua dang nhap (kem cookie phien), vi bam duoc
-// vao lien ket trong hom thu la da chung minh so huu dia chi - bat go lai mat
-// khau mot lan nua chi lam phien chu khong them an toan.
-export const verifyEmail = async (token: string): Promise<LoginResponse> => {
-  const res = await fetch(`${API_URL}/verify-email`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    // Can thiet de trinh duyet NHAN cookie token may chu dat trong phan hoi.
-    credentials: "include",
-    body: JSON.stringify({ token }),
-  });
-
-  const data = await parseResponse(res);
-
-  if (data && data._id) {
-    datNguoiDung(data);
-    yeuCauNapLai();
-    // Cung ly do voi loginUser: bo dem GET khoa theo dia chi chu khong theo
-    // nguoi dung, khong xoa thi nguoi vua vao co the nhan du lieu cua nguoi truoc.
     clearApiCache();
   }
 

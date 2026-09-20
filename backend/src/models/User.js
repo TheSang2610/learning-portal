@@ -21,10 +21,30 @@ const userSchema = new mongoose.Schema({
         type: Date
     },
 
+    /**
+     * Dia chi email - KHONG con bat buoc.
+     *
+     * Dang ky gio chi doi SO DIEN THOAI. Email la truong tuy chon, va la thu
+     * DUY NHAT lay lai duoc mat khau cho toi khi gan duoc nha cung cap SMS -
+     * xem quenMatKhauController.js.
+     *
+     * `sparse: true` PHAI co, va phai khop voi chi muc that tren Atlas.
+     *
+     * MongoDB coi truong thieu la null, va chi muc unique thong thuong se cho
+     * rang hai ban ghi cung thieu email la trung nhau - tuc la tai khoan thu
+     * HAI khong co email se bi tu choi bang loi E11000. `sparse` bao chi muc
+     * bo qua han cac ban ghi khong co truong nay.
+     *
+     * Mongoose KHONG tu sua duoc dieu nay: autoIndex chi tao chi muc con
+     * thieu, khong doi tuy chon cua chi muc da co. Chi muc email_1 tren Atlas
+     * da duoc drop va tao lai voi { unique, sparse } dung mot lan bang tay.
+     * Doi dong nay ma quen doi chi muc (hoac nguoc lai) thi moi lan khoi dong
+     * Mongoose se doi tao mot chi muc mau thuan va bao loi IndexOptionsConflict.
+     */
     email: {
         type: String,
-        required: true,
-        unique: true
+        unique: true,
+        sparse: true
     },
 
     password: {
@@ -92,32 +112,26 @@ const userSchema = new mongoose.Schema({
     /**
      * Da chung minh duoc quyen so huu dia chi email chua.
      *
-     * CHU Y - truong nay CO Y khong co `default`:
-     *   undefined  tai khoan tao TRUOC khi co luong xac minh. Van dang nhap
-     *              binh thuong.
-     *   false      vua dang ky, dang cho bam lien ket trong email.
-     *   true       da bam lien ket, hoac dang nhap bang Google (Google da xac
-     *              minh ho roi).
+     * KHONG CON CHAN DANG NHAP THEO TRUONG NAY. Buoc xac minh khi dang ky da
+     * bo - email gio chi dung de doi mat khau va de quan tri gui thong bao.
+     * Truong duoc giu lai vi ba cho van ghi vao no (dang ky, dang nhap Google,
+     * dat lai mat khau) va vi no ghi lai mot su that co that: dia chi nay da
+     * duoc chung minh la co chu hay chua.
      *
-     * Dat `default: false` o day nhin thi vo hai nhung la KHOA TOAN BO NGUOI
-     * DUNG CU RA NGOAI ngay trong lan deploy dau tien: Mongoose ap gia tri mac
-     * dinh ca luc NAP mot ban ghi cu thieu truong, chu khong chi luc tao moi.
-     * Vi vay loginUser chi chan khi truong nay dung bang false, chu khong dung
-     * phep phu dinh.
+     * Trong CSDL dang co du ba trang thai, va do la ly do truoc day cho nay
+     * CO Y khong dat `default`:
+     *   undefined  tai khoan tao truoc khi co luong xac minh
+     *   false      dang ky thoi xac minh nhung khong bao gio bam lien ket
+     *   true       da bam lien ket, dang nhap Google, hoac dang ky tu khi bo
+     *              buoc xac minh
+     *
+     * Dat `default: false` o day van nguy hiem y nguyen: Mongoose ap gia tri
+     * mac dinh ca luc NAP mot ban ghi cu thieu truong, chu khong chi luc tao
+     * moi - tuc la no se ghi de len su that cua nhung ban ghi cu.
      */
     emailVerified: {
         type: Boolean
     },
-
-    // Ban bam SHA-256 cua token xac minh email - xem utils/tokenXacMinh.js.
-    // Chi luu ban bam, khong bao gio luu token goc: ly do ghi o dau file do.
-    verifyTokenHash: {
-        type: String,
-        index: true,
-        sparse: true
-    },
-
-    verifyTokenExp: Date,
 
     /**
      * Luong QUEN MAT KHAU - xem utils/maOtp.js va
@@ -127,8 +141,8 @@ const userSchema = new mongoose.Schema({
      * mang mot loai bi mat khac han nhau:
      *
      *   resetOtpHash     ban bam BCRYPT cua ma 6 chu so gui trong thu.
-     *                    Bcrypt chu khong phai SHA-256 nhu verifyTokenHash o
-     *                    tren: ma 6 chu so chi co mot trieu kha nang nen ban
+     *                    Bcrypt chu khong phai SHA-256 nhu resetTicketHash o
+     *                    duoi: ma 6 chu so chi co mot trieu kha nang nen ban
      *                    bam SHA-256 do het trong chua mot giay. Ly do day du
      *                    ghi o dau utils/maOtp.js.
      *
