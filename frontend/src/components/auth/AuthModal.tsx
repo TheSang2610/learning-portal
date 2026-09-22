@@ -787,27 +787,16 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
               className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
             />
 
-            <div>
-              <input
-                type="email"
-                name="email"
-                placeholder="Email (không bắt buộc)"
-                value={registerData.email}
-                onChange={handleRegisterChange}
-                autoComplete="email"
-                maxLength={DAI_EMAIL_TOI_DA}
-                className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
-              />
-
-              {/* Nói thẳng email dùng để làm gì, thay vì để ô trống không lời
-                  giải thích rồi người dùng bỏ qua và mất đường lấy lại mật
-                  khẩu. Chưa gắn được nhà cung cấp SMS nên email vẫn là cách
-                  duy nhất tự lấy lại mật khẩu. */}
-              <p className="mt-2 text-xs leading-relaxed text-slate-500">
-                Điền email thì bạn tự lấy lại được mật khẩu khi quên. Bỏ trống cũng đăng
-                ký được, nhưng lúc đó phải nhờ quản trị viên đặt lại giúp.
-              </p>
-            </div>
+            <input
+              type="email"
+              name="email"
+              placeholder="Email (không bắt buộc)"
+              value={registerData.email}
+              onChange={handleRegisterChange}
+              autoComplete="email"
+              maxLength={DAI_EMAIL_TOI_DA}
+              className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
+            />
 
             <input
               type="password"
