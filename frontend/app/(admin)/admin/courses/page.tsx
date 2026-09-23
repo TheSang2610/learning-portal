@@ -6,6 +6,7 @@ import { Video, Trash2, Edit, HelpCircle } from "lucide-react"; // 🎯 Thêm He
 import { deleteCourseAdmin } from "@/src/services/adminService";
 import { Course, getInstructorCourses } from "@/src/services/course";
 
+import styles from "./page.module.scss";
 export default function AdminCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,75 +56,62 @@ export default function AdminCoursesPage() {
   };
 
   if (loading) {
-    return (
-      <div className="animate-pulse p-8 text-center font-medium text-slate-500">
-        Loading courses...
-      </div>
-    );
+    return <div className={styles.box}>Loading courses...</div>;
   }
 
   return (
-    <div className="mx-auto max-w-7xl py-2">
-      <div className="mb-8 flex items-center justify-between">
+    <div className={styles.container}>
+      <div className={styles.row}>
         <div>
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900">Courses</h1>
-          <p className="mt-2 text-slate-500">Manage your LMS courses</p>
+          <h1 className={styles.title}>Courses</h1>
+          <p className={styles.text}>Manage your LMS courses</p>
         </div>
 
-        <Link
-          href="/admin/course-create"
-          className="bg-blue-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
-        >
+        <Link href="/admin/course-create" className={styles.box2}>
           Create Course
         </Link>
       </div>
 
-      <div className="overflow-hidden border border-slate-200 bg-white shadow-sm">
-        <table className="w-full border-collapse text-left">
-          <thead className="border-b border-slate-200 bg-slate-50/80">
+      <div className={styles.box3}>
+        <table className={styles.table}>
+          <thead className={styles.thead}>
             <tr>
-              <th className="p-5 text-sm font-semibold text-slate-600">Title</th>
-              <th className="p-5 text-sm font-semibold text-slate-600">Level</th>
-              <th className="p-5 text-sm font-semibold text-slate-600">Price</th>
-              <th className="p-5 text-sm font-semibold text-slate-600">Status</th>
-              <th className="p-5 text-sm font-semibold text-slate-600">Actions</th>
+              <th className={styles.headCell}>Title</th>
+              <th className={styles.headCell}>Level</th>
+              <th className={styles.headCell}>Price</th>
+              <th className={styles.headCell}>Status</th>
+              <th className={styles.headCell}>Actions</th>
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-slate-100">
+          <tbody className={styles.tbody}>
             {courses.map((course) => (
-              <tr key={course._id} className="transition hover:bg-slate-50/50">
-                <td className="max-w-xs truncate p-5 font-medium text-slate-900 md:max-w-md">
-                  {course.title}
+              <tr key={course._id} className={styles.row2}>
+                <td className={styles.cell}>{course.title}</td>
+                <td className={styles.cell2}>
+                  <span className={styles.label}>{course.level}</span>
                 </td>
-                <td className="p-5 text-sm text-slate-700 capitalize">
-                  <span className="text-xs font-semibold text-slate-600">
-                    {course.level}
-                  </span>
-                </td>
-                <td className="p-5 text-sm font-medium text-slate-700">
+                <td className={styles.cell3}>
                   {(course.price ?? 0) === 0 ? (
-                    <span className="font-bold text-emerald-600">Miễn phí</span>
+                    <span className={styles.label2}>Miễn phí</span>
                   ) : (
                     `${(course.price ?? 0).toLocaleString("vi-VN")}đ`
                   )}
                 </td>
-                <td className="p-5">
+                <td className={styles.cell4}>
                   <span
-                    className={`rounded-full px-3 py-1 text-xs font-bold ${
-                      course.isPublished
-                        ? "border border-green-200 bg-green-50 text-green-700"
-                        : "border border-amber-200 bg-amber-50 text-amber-700"
+                    className={`${styles.label5} ${
+                      course.isPublished ? styles.label3 : styles.label4
                     }`}
                   >
                     {course.isPublished ? "Published" : "Draft"}
                   </span>
                 </td>
 
-                <td className="flex items-center gap-2 p-5">
+                <td className={styles.cell5}>
                   <Link
                     href={course._id ? `/admin/lessons?courseId=${course._id}` : "#"}
-                    className="inline-flex items-center gap-1 rounded-xl bg-slate-100 px-2.5 py-2 text-xs font-bold text-slate-800 transition hover:bg-slate-200"
+                    className={styles.box4}
                   >
                     <Video size={13} /> Bài học
                   </Link>
@@ -131,7 +119,7 @@ export default function AdminCoursesPage() {
                   {/* 🎯 NÚT MỚI THÊM: Quản lý FAQ theo Course ID */}
                   <Link
                     href={course._id ? `/admin/course-faqs?courseId=${course._id}` : "#"}
-                    className="inline-flex items-center gap-1 rounded-xl bg-purple-50 px-2.5 py-2 text-xs font-bold text-purple-600 transition hover:bg-purple-100"
+                    className={styles.box5}
                   >
                     <HelpCircle size={13} /> Hỏi đáp
                   </Link>
@@ -140,7 +128,7 @@ export default function AdminCoursesPage() {
                     href={
                       course._id ? `/admin/course-detail?courseId=${course._id}` : "#"
                     }
-                    className="inline-flex items-center gap-1 rounded-xl bg-blue-50 px-2.5 py-2 text-xs font-bold text-blue-600 transition hover:bg-blue-100"
+                    className={styles.box6}
                   >
                     <Edit size={13} /> Sửa
                   </Link>
@@ -149,7 +137,7 @@ export default function AdminCoursesPage() {
                     type="button"
                     disabled={deletingId === course._id}
                     onClick={() => handleDeleteCourse(course._id!, course.title)}
-                    className="inline-flex items-center gap-1 rounded-xl bg-red-50 px-2.5 py-2 text-xs font-bold text-red-600 transition hover:bg-red-100 disabled:bg-slate-100 disabled:text-slate-400"
+                    className={styles.button}
                   >
                     <Trash2 size={13} />
                     {deletingId === course._id ? "Đang xóa..." : "Xóa"}
@@ -160,7 +148,7 @@ export default function AdminCoursesPage() {
 
             {courses.length === 0 && (
               <tr>
-                <td colSpan={5} className="p-16 text-center text-sm text-slate-500">
+                <td colSpan={5} className={styles.cell6}>
                   📭 Không tìm thấy khóa học nào trong hệ thống quản trị.
                 </td>
               </tr>

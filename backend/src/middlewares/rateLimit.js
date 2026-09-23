@@ -4,12 +4,12 @@
 // khong tinh), con cai nay dem MOI luot goi. Dung cho nhung duong ma ban than
 // viec goi nhieu da la van de - dang ky hang loat chang han.
 //
-// Bo dem nam trong kho dung chung utils/khoGioiHan.js, khong con la Map trong
+// Bo dem nam trong kho dung chung utils/rateLimitStore.js, khong con la Map trong
 // bo nho tien trinh. Ly do o models/RateLimitCounter.js: tren Vercel, Map trong
 // RAM la bo dem rieng cua tung lambda instance nen nguong gan nhu khong chan
 // duoc gi.
 
-const { tang } = require('../utils/khoGioiHan');
+const { tang } = require('../utils/rateLimitStore');
 
 const ipOf = (req) => req.ip || req.socket?.remoteAddress || 'unknown';
 

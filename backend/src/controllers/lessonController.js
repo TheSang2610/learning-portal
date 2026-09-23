@@ -4,7 +4,7 @@ const Quiz = require('../models/Quiz');
 const QuizAttempt = require('../models/QuizAttempt');
 const { protect } = require('../middlewares/authMiddleware');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
-const { duocXemNoiDung } = require('../utils/quyenNoiDung');
+const { duocXemNoiDung } = require('../utils/contentAccess');
 
 // Hàm helper chuyển đổi Tiếng Việt có dấu thành Slug gọn đẹp
 const slugify = (str) => {

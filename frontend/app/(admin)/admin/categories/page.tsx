@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { getErrorMessage } from "@/src/services/apiHelper";
 import { Plus, Edit3, Trash2, X, Loader2, FolderOpen } from "lucide-react";
+
+import styles from "./page.module.scss";
 import {
   getCategories,
   createCategory,
@@ -99,83 +101,67 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const inputCls =
-    "w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 " +
-    "placeholder:text-slate-500 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10";
+  const inputCls = styles.input;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className={styles.stack}>
+      <div className={styles.row}>
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900">Danh mục</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className={styles.title}>Danh mục</h1>
+          <p className={styles.text}>
             {loading ? "Đang tải..." : `${categories.length} danh mục`}
           </p>
         </div>
-        <button
-          onClick={openCreate}
-          className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
-        >
+        <button onClick={openCreate} className={styles.button}>
           <Plus size={16} /> Thêm danh mục
         </button>
       </div>
 
-      {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-          {error}
-        </div>
-      )}
+      {error && <div className={styles.card}>{error}</div>}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[560px]">
-            <thead className="bg-slate-50 text-left text-xs font-bold tracking-wider text-slate-600 uppercase">
+      <div className={styles.card2}>
+        <div className={styles.scroller}>
+          <table className={styles.table}>
+            <thead className={styles.thead}>
               <tr>
-                <th className="px-4 py-3">Tên</th>
-                <th className="px-4 py-3">Slug (tự sinh)</th>
-                <th className="px-4 py-3">Icon</th>
-                <th className="px-4 py-3 text-right">Thao tác</th>
+                <th className={styles.headCell}>Tên</th>
+                <th className={styles.headCell}>Slug (tự sinh)</th>
+                <th className={styles.headCell}>Icon</th>
+                <th className={styles.headCell2}>Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className={styles.tbody}>
               {loading ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-16 text-center text-slate-500">
-                    <Loader2 size={20} className="mx-auto animate-spin" />
+                  <td colSpan={4} className={styles.cell}>
+                    <Loader2 size={20} className={styles.spinner} />
                   </td>
                 </tr>
               ) : categories.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={4}
-                    className="px-4 py-16 text-center text-sm text-slate-500"
-                  >
+                  <td colSpan={4} className={styles.cell2}>
                     Chưa có danh mục nào.
                   </td>
                 </tr>
               ) : (
                 categories.map((c) => (
-                  <tr key={c._id} className="transition hover:bg-slate-50/60">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                  <tr key={c._id} className={styles.row2}>
+                    <td className={styles.headCell}>
+                      <div className={styles.row3}>
+                        <span className={styles.row4}>
                           <FolderOpen size={15} />
                         </span>
-                        <span className="text-sm font-semibold text-slate-900">
-                          {c.name}
-                        </span>
+                        <span className={styles.label}>{c.name}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-slate-600">
-                      {c.slug}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-slate-600">{c.icon || "--"}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1.5">
+                    <td className={styles.cell3}>{c.slug}</td>
+                    <td className={styles.cell4}>{c.icon || "--"}</td>
+                    <td className={styles.headCell}>
+                      <div className={styles.row5}>
                         <button
                           onClick={() => openEdit(c)}
                           title="Sửa"
-                          className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                          className={styles.button2}
                         >
                           <Edit3 size={16} />
                         </button>
@@ -183,7 +169,7 @@ export default function AdminCategoriesPage() {
                           onClick={() => remove(c)}
                           disabled={busyId === c._id}
                           title="Xóa"
-                          className="rounded-lg p-2 text-red-600 transition hover:bg-red-50 disabled:text-slate-400"
+                          className={styles.button3}
                         >
                           <Trash2 size={16} />
                         </button>
@@ -198,46 +184,35 @@ export default function AdminCategoriesPage() {
       </div>
 
       {editingId !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-              <h2 className="text-base font-bold text-slate-900">
+        <div className={styles.overlay}>
+          <div className={styles.card3}>
+            <div className={styles.row6}>
+              <h2 className={styles.heading}>
                 {editingId ? "Sửa danh mục" : "Thêm danh mục"}
               </h2>
-              <button
-                onClick={() => setEditingId(null)}
-                className="rounded-lg p-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
-              >
+              <button onClick={() => setEditingId(null)} className={styles.button4}>
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={submit} className="space-y-4 px-5 py-5">
-              {formError && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">
-                  {formError}
-                </div>
-              )}
+            <form onSubmit={submit} className={styles.form}>
+              {formError && <div className={styles.card4}>{formError}</div>}
 
               <div>
-                <label className="mb-1.5 block text-xs font-bold text-slate-700">
-                  Tên danh mục *
-                </label>
+                <label className={styles.fieldLabel}>Tên danh mục *</label>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className={inputCls}
                   placeholder="Ví dụ: Trí tuệ nhân tạo"
                 />
-                <p className="mt-1.5 text-xs text-slate-600">
+                <p className={styles.text2}>
                   Slug được backend tự sinh từ tên, không cần nhập.
                 </p>
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-bold text-slate-700">
-                  Icon
-                </label>
+                <label className={styles.fieldLabel}>Icon</label>
                 <input
                   value={icon}
                   onChange={(e) => setIcon(e.target.value)}
@@ -246,20 +221,16 @@ export default function AdminCategoriesPage() {
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className={styles.row7}>
                 <button
                   type="button"
                   onClick={() => setEditingId(null)}
-                  className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                  className={styles.button5}
                 >
                   Hủy
                 </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:bg-slate-400"
-                >
-                  {saving && <Loader2 size={14} className="animate-spin" />}
+                <button type="submit" disabled={saving} className={styles.button6}>
+                  {saving && <Loader2 size={14} className={styles.spinner2} />}
                   {editingId ? "Lưu thay đổi" : "Tạo danh mục"}
                 </button>
               </div>

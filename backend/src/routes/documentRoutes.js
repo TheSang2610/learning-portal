@@ -2,9 +2,9 @@ const express = require('express');
 const multer = require('multer');
 const { datCache } = require('../middlewares/cacheControl');
 const router = express.Router();
-const { capIdHopLe } = require('../middlewares/idHopLe');
+const { capIdHopLe } = require('../middlewares/validObjectId');
 
-// Chan id sai dinh dang -> 404 thay vi 500. Xem middlewares/idHopLe.js
+// Chan id sai dinh dang -> 404 thay vi 500. Xem middlewares/validObjectId.js
 capIdHopLe(router);
 
 const {

@@ -1,0 +1,65 @@
+// File nay do script sinh ra tu class Tailwind cu.
+// Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
+
+.section {
+  margin-inline: auto;
+  max-width: var(--container-7xl);
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 10);
+
+  @media (min-width: 40rem) {
+    padding-inline: calc(var(--spacing) * 6);
+  }
+}
+
+.row {
+  margin-bottom: calc(var(--spacing) * 5);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+}
+
+.box {
+  color: var(--color-blue-600);
+}
+
+.heading {
+  font-size: var(--text-xl);
+  line-height: var(--tw-leading, var(--text-xl--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-slate-900);
+
+  @media (min-width: 40rem) {
+    font-size: var(--text-2xl);
+    line-height: var(--tw-leading, var(--text-2xl--line-height));
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(var(--spacing) * 4);
+
+  @media (min-width: 48rem) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (min-width: 64rem) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+}
+
+.text {
+  margin-top: calc(var(--spacing) * 2);
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  --tw-leading: var(--leading-snug);
+  line-height: var(--leading-snug);
+  color: var(--color-slate-500);
+}

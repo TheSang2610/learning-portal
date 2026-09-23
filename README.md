@@ -3,7 +3,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38BDF8?logo=tailwindcss&logoColor=white)
+![Sass](https://img.shields.io/badge/Sass-CSS_Modules-CC6699?logo=sass&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-24-339933?logo=node.js&logoColor=white)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white)
@@ -56,31 +56,31 @@ OAuth 2.0, phiên đăng nhập bằng cookie `httpOnly`.
 
 ### Frontend
 
-| | |
-| --- | --- |
-| Framework | Next.js 16 — App Router, Turbopack |
-| UI | React 19, TypeScript 5 |
-| Styling | Tailwind CSS v4 |
+|            |                                                       |
+| ---------- | ----------------------------------------------------- |
+| Framework  | Next.js 16 — App Router, Turbopack                    |
+| UI         | React 19, TypeScript 5                                |
+| Styling    | CSS Module SCSS (Sass)                                |
 | Chất lượng | ESLint, Prettier, `tsc --noEmit`, husky + lint-staged |
 
 ### Backend
 
-| | |
-| --- | --- |
-| Máy chủ | Express 5 (CommonJS) |
-| CSDL | MongoDB Atlas qua Mongoose 9 |
+|          |                                               |
+| -------- | --------------------------------------------- |
+| Máy chủ  | Express 5 (CommonJS)                          |
+| CSDL     | MongoDB Atlas qua Mongoose 9                  |
 | Xác thực | JWT trong cookie `httpOnly`, Google OAuth 2.0 |
-| Lưu trữ | Cloudinary (ảnh, video, tài liệu) |
-| Mail | Nodemailer qua Gmail app password |
-| Kiểm thử | `node:test` — 158 test |
+| Lưu trữ  | Cloudinary (ảnh, video, tài liệu)             |
+| Mail     | Nodemailer qua Gmail app password             |
+| Kiểm thử | `node:test` — 158 test                        |
 
 ### Hạ tầng
 
-| | |
-| --- | --- |
-| Triển khai | Vercel (hai project riêng) |
-| CI | GitHub Actions — hai job song song |
-| Tài liệu API | Swagger UI trên GitHub Pages |
+|              |                                    |
+| ------------ | ---------------------------------- |
+| Triển khai   | Vercel (hai project riêng)         |
+| CI           | GitHub Actions — hai job song song |
+| Tài liệu API | Swagger UI trên GitHub Pages       |
 
 ---
 
@@ -118,10 +118,10 @@ nhất** — không có `sameSite` đỡ lưng.
 
 ```
 learning-portal/
-├── frontend/               # Next.js 16 — giao diện
-├── backend/                # Express 5 — REST API
-├── docs/                   # Swagger UI + openapi.json (GitHub Pages)
-├── .github/workflows/      # CI hai job song song
+├── frontend/                        # Next.js 16 — giao diện
+├── backend/                         # Express 5 — REST API
+├── docs/                            # Swagger UI + openapi.json (GitHub Pages)
+├── .github/workflows/               # CI hai job song song
 └── README.md
 ```
 
@@ -134,7 +134,7 @@ gốc, để nó trong thư mục con là trang tài liệu chết.
 frontend/
 ├── public/                          # Ảnh tĩnh, favicon, api-docs.html
 ├── app/                             # App Router — 56 trang, 3 nhóm route
-│   ├── globals.css                  # CSS toàn cục + Tailwind v4
+│   ├── globals.css                  # CSS toàn cục — nạp nền + bảng token
 │   ├── api/auth/google/             # Đổi mã Google OAuth lấy phiên
 │   │
 │   ├── (portal)/                    # KHU HỌC VIÊN — 19 trang
@@ -195,7 +195,7 @@ frontend/
     │   └── diaChiApi · quyDinh/
     │
     └── hooks/
-        └── nguoiDungLuu.ts          # Nhớ người dùng giữa các lần dựng
+        └── userStore.ts             # Nhớ người dùng giữa các lần dựng
 ```
 
 Component **không tự gọi `fetch`** — luôn đi qua `services/`, để khi đổi cách
@@ -214,15 +214,15 @@ backend/
     │   ├── db.js                    # Kết nối MongoDB, dùng lại giữa các lần gọi
     │   ├── cloudinary.js            # Ưu tiên CLOUDINARY_URL, lùi về ba biến rời
     │   ├── mail.js                  # Thiếu cấu hình thì bỏ qua, KHÔNG ném lỗi
-    │   └── thanhToan.js             # Sinh mã VietQR theo từng đơn
+    │   └── payment.js               # Sinh mã VietQR theo từng đơn
     │
     ├── middlewares/
     │   ├── authMiddleware.js        # protect · instructor · admin
-    │   ├── chongCsrf.js             # Xét Origin, lùi về Referer
+    │   ├── csrf.js                  # Xét Origin, lùi về Referer
     │   ├── loginRateLimit.js        # Đếm hai khoá: ip|email VÀ ip riêng
     │   ├── rateLimit.js             # Giới hạn tần suất dùng chung
     │   ├── cacheControl.js          # Đặt no-store cho dữ liệu riêng tư
-    │   └── idHopLe.js               # Chặn ObjectId sai dạng trước khi truy vấn
+    │   └── validObjectId.js         # Chặn ObjectId sai dạng trước khi truy vấn
     │
     ├── models/                      # 17 lược đồ Mongoose
     │   ├── User · Course · Lesson · Enrollment/
@@ -243,15 +243,15 @@ backend/
     │   └── adminOrderController.js  # Xác nhận đơn, cộng coin, gửi mail
     │
     └── utils/                       # Công cụ dùng chung + tệp *.test.js
-        ├── quyenNoiDung.js          # CỬA DUY NHẤT gác nội dung có phí
-        ├── viCoin.js · coin.js      # Trừ/cộng coin bằng một lệnh ghi
+        ├── contentAccess.js         # CỬA DUY NHẤT gác nội dung có phí
+        ├── coinWallet.js · coin.js  # Trừ/cộng coin bằng một lệnh ghi
         ├── cookieToken.js           # NƠI DUY NHẤT đặt cookie phiên
-        ├── htmlBaiViet.js           # Lọc HTML chặn XSS lưu trữ
-        ├── matKhau.js               # Băm bcrypt, quy tắc độ mạnh
+        ├── postHtml.js              # Lọc HTML chặn XSS lưu trữ
+        ├── password.js              # Băm bcrypt, quy tắc độ mạnh
         ├── contentFilter.js         # Lọc từ ngữ vi phạm
-        ├── truyVan.js               # Phân trang, sắp xếp dùng chung
-        ├── uploadCloud.js · vanBan.js · ghiDanh.js · mailDonHang.js/
-        └── checkDb · checkMail · checkCloudinary · doiMatKhauAdmin/
+        ├── queryParams.js           # Phân trang, sắp xếp dùng chung
+        ├── uploadCloud.js · textUtils.js · enrollment.js · orderMail.js/
+        └── checkDb · checkMail · checkCloudinary · adminResetPassword/
                                      # Script chạy tay, không phải route
 ```
 
@@ -286,17 +286,17 @@ npm run dev               # http://localhost:5000
 
 Biến môi trường trong `backend/.env`:
 
-| Biến | Bắt buộc | Ý nghĩa |
-| --- | --- | --- |
-| `MONGO_URI` | có | Chuỗi kết nối MongoDB |
-| `JWT_SECRET` | có | Khoá ký token phiên |
-| `FRONTEND_ORIGINS` | có | Origin được phép gọi CORS, cách nhau dấu phẩy. Cái **đầu tiên** cũng là gốc để ghép link trong thư xác minh |
-| `FRONTEND_URL` | không | Ghi đè gốc dùng cho link xác minh, khi nó khác cái đầu của `FRONTEND_ORIGINS` |
-| `CLOUDINARY_URL` | có | Dạng gộp `cloudinary://key:secret@cloud` |
-| `GOOGLE_CLIENT_ID` | không | Bật đăng nhập Google |
-| `MAIL_USER` · `MAIL_APP_PASSWORD` | **có trên bản chạy thật** | Mail báo đơn chuyển khoản, **và thư xác minh khi đăng ký**. Thiếu thì đăng ký quay về hành vi cũ và lộ email nào đã tồn tại |
-| `MAIL_ADMIN` | không | Địa chỉ nhận thông báo quản trị. Trống thì gửi về `MAIL_USER` |
-| `SO_TAI_KHOAN` · `TEN_TAI_KHOAN` · `NGAN_HANG` | không | Hiển thị ở màn hình chuyển khoản |
+| Biến                                           | Bắt buộc                  | Ý nghĩa                                                                                                                     |
+| ---------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `MONGO_URI`                                    | có                        | Chuỗi kết nối MongoDB                                                                                                       |
+| `JWT_SECRET`                                   | có                        | Khoá ký token phiên                                                                                                         |
+| `FRONTEND_ORIGINS`                             | có                        | Origin được phép gọi CORS, cách nhau dấu phẩy. Cái **đầu tiên** cũng là gốc để ghép link trong thư xác minh                 |
+| `FRONTEND_URL`                                 | không                     | Ghi đè gốc dùng cho link xác minh, khi nó khác cái đầu của `FRONTEND_ORIGINS`                                               |
+| `CLOUDINARY_URL`                               | có                        | Dạng gộp `cloudinary://key:secret@cloud`                                                                                    |
+| `GOOGLE_CLIENT_ID`                             | không                     | Bật đăng nhập Google                                                                                                        |
+| `MAIL_USER` · `MAIL_APP_PASSWORD`              | **có trên bản chạy thật** | Mail báo đơn chuyển khoản, **và thư xác minh khi đăng ký**. Thiếu thì đăng ký quay về hành vi cũ và lộ email nào đã tồn tại |
+| `MAIL_ADMIN`                                   | không                     | Địa chỉ nhận thông báo quản trị. Trống thì gửi về `MAIL_USER`                                                               |
+| `SO_TAI_KHOAN` · `TEN_TAI_KHOAN` · `NGAN_HANG` | không                     | Hiển thị ở màn hình chuyển khoản                                                                                            |
 
 Kiểm tra kết nối bên ngoài:
 
@@ -304,7 +304,7 @@ Kiểm tra kết nối bên ngoài:
 npm run check:db          # thử kết nối MongoDB
 npm run check:cloudinary  # thử tải ảnh lên
 npm run check:mail        # gửi thử một mail thật
-npm run check:gioihan     # kiểm bộ đếm chống dò mật khẩu trên CSDL thật
+npm run check:ratelimit     # kiểm bộ đếm chống dò mật khẩu trên CSDL thật
 npm run check:dangky      # kiểm đầu-cuối luồng đăng ký có xác minh email
 ```
 
@@ -328,28 +328,28 @@ giá trị trên Vercel xong phải deploy lại mới có tác dụng.
 **136 endpoint / 16 nhóm.** Tài liệu đầy đủ, bấm thử được:
 [Swagger UI](https://thesang2610.github.io/learning-portal/)
 
-| Nhóm | Số lượng | Ví dụ |
-| --- | --- | --- |
-| Quản trị | 23 | `GET /api/admin/dashboard/statistics` |
-| Khoá học | 14 | `PUT /api/courses/:id/publish` |
-| Người dùng | 13 | `POST /api/users/login` · `POST /api/users/verify-email` |
-| Trắc nghiệm | 11 | `POST /api/quizzes/:id/submit` |
-| Ghi danh | 10 | `PUT /api/enrollments/:id/progress` |
-| Chứng chỉ | 9 | `GET /api/certificates/verify/:code` |
-| Đánh giá | 9 | `POST /api/reviews/:id/helpful` |
-| Bài viết | 8 | `GET /api/posts/:slug` |
-| Ví coin | 5 | `GET /api/coins/lich-su` |
-| Đơn hàng | 5 | `PUT /api/admin/orders/:code/confirm` |
-| Tài liệu · Bài học · FAQ · Nhà cung cấp | 20 | |
-| Banner · Danh mục | 8 | |
+| Nhóm                                    | Số lượng | Ví dụ                                                    |
+| --------------------------------------- | -------- | -------------------------------------------------------- |
+| Quản trị                                | 23       | `GET /api/admin/dashboard/statistics`                    |
+| Khoá học                                | 14       | `PUT /api/courses/:id/publish`                           |
+| Người dùng                              | 13       | `POST /api/users/login` · `POST /api/users/verify-email` |
+| Trắc nghiệm                             | 11       | `POST /api/quizzes/:id/submit`                           |
+| Ghi danh                                | 10       | `PUT /api/enrollments/:id/progress`                      |
+| Chứng chỉ                               | 9        | `GET /api/certificates/verify/:code`                     |
+| Đánh giá                                | 9        | `POST /api/reviews/:id/helpful`                          |
+| Bài viết                                | 8        | `GET /api/posts/:slug`                                   |
+| Ví coin                                 | 5        | `GET /api/coins/lich-su`                                 |
+| Đơn hàng                                | 5        | `PUT /api/admin/orders/:code/confirm`                    |
+| Tài liệu · Bài học · FAQ · Nhà cung cấp | 20       |                                                          |
+| Banner · Danh mục                       | 8        |                                                          |
 
 Ba lớp bảo vệ trong `middlewares/authMiddleware.js`:
 
-| | Cho qua ai |
-| --- | --- |
-| `protect` | đã đăng nhập (đọc token từ cookie `httpOnly`) |
-| `instructor` | **giảng viên và quản trị** |
-| `admin` | chỉ quản trị |
+|              | Cho qua ai                                    |
+| ------------ | --------------------------------------------- |
+| `protect`    | đã đăng nhập (đọc token từ cookie `httpOnly`) |
+| `instructor` | **giảng viên và quản trị**                    |
+| `admin`      | chỉ quản trị                                  |
 
 ---
 
@@ -358,7 +358,7 @@ Ba lớp bảo vệ trong `middlewares/authMiddleware.js`:
 Ghi lại những chỗ nhìn qua tưởng làm phức tạp thừa, nhưng bỏ đi là mở lại một lỗ
 hổng đã từng có thật.
 
-**Nội dung có phí đi qua đúng một cửa.** `backend/src/utils/quyenNoiDung.js`
+**Nội dung có phí đi qua đúng một cửa.** `backend/src/utils/contentAccess.js`
 xuất ra `duocXemNoiDung(course, user)`, và mọi đường trả nội dung bài học đều
 phải gọi nó. Trước đây cổng 402 chỉ đặt ở đường ghi danh, đường đọc bài không
 kiểm gì — mở một tài khoản miễn phí rồi gọi thẳng `GET /api/lessons/:id` là lấy
@@ -405,10 +405,10 @@ lưới an toàn duy nhất bắt lỗi cú pháp ở tệp không test nào ch�
 
 Hai project Vercel riêng, mỗi cái build một thư mục:
 
-| Thư mục | Project | Địa chỉ |
-| --- | --- | --- |
-| `frontend/` | `learning-portal-s` | learning-portal-s.vercel.app |
-| `backend/` | `learning-portal-s-api` | learning-portal-backend-ten.vercel.app |
+| Thư mục     | Project                 | Địa chỉ                                |
+| ----------- | ----------------------- | -------------------------------------- |
+| `frontend/` | `learning-portal-s`     | learning-portal-s.vercel.app           |
+| `backend/`  | `learning-portal-s-api` | learning-portal-backend-ten.vercel.app |
 
 Hiện deploy bằng tay, chạy `npx vercel --prod` **trong đúng thư mục con**. Khi
 nối Git integration thì mỗi project phải đặt **Root Directory** trỏ vào thư mục

@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
-const { BCRYPT_ROUNDS, HAN_TOKEN } = require('../utils/matKhau');
+const { BCRYPT_ROUNDS, HAN_TOKEN } = require('../utils/password');
 const { datCookieToken, xoaCookieToken } = require('../utils/cookieToken');
 const jwt = require('jsonwebtoken');
 const {
@@ -10,7 +10,7 @@ const {
     MAX_FAILS_TAI_KHOAN,
     WINDOW_MS: CUA_SO_DANG_NHAP,
 } = require('../middlewares/loginRateLimit');
-const { conBiKhoa, ghiNhanSai, xoaKhoa } = require('../utils/khoGioiHan');
+const { conBiKhoa, ghiNhanSai, xoaKhoa } = require('../utils/rateLimitStore');
 const {
     chuanHoaEmail,
     emailHopLe,
@@ -18,9 +18,9 @@ const {
     loiMatKhauMoi,
     kiemTen,
     kiemPayloadGoogle,
-} = require('../utils/xacThucDauVao');
-const { chuanHoaDinhDanh, boLocTaiKhoan } = require('../utils/dinhDanhDangNhap');
-const { chuanHoaSoDienThoai } = require('../utils/soDienThoai');
+} = require('../utils/validateInput');
+const { chuanHoaDinhDanh, boLocTaiKhoan } = require('../utils/loginIdentifier');
+const { chuanHoaSoDienThoai } = require('../utils/phoneNumber');
 const layCloudinary = require('../config/cloudinary');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
 
@@ -36,7 +36,7 @@ const layGoogleClient = () => {
   return googleClient;
 };
 
-// Chuan hoa va kiem dau vao: xem utils/xacThucDauVao.js. Truoc day moi ham o
+// Chuan hoa va kiem dau vao: xem utils/validateInput.js. Truoc day moi ham o
 // file nay tu kiem lay va da lech nhau that - ly do ghi ro o dau file do.
 
 // Hash gia de doi chieu khi KHONG co tai khoan nao khop.
@@ -79,7 +79,7 @@ const loginUser = async (req, res) => {
     try {
         // O dang nhap nhan BA cach go: so dien thoai, dia chi email, va ten
         // tai khoan ngan ("thesang" thay cho "thesang@gmail.com"). Quy tac tra
-        // cuu, va cac cai bay cua no, ghi day du o utils/dinhDanhDangNhap.js.
+        // cuu, va cac cai bay cua no, ghi day du o utils/loginIdentifier.js.
         //
         // Truong van ten la `email` de khong pha cac ban giao dien cu dang
         // chay - chi y nghia cua no rong ra.
@@ -268,7 +268,7 @@ const googleLogin = async (req, res) => {
       return res.status(401).json({ message: 'Google credential không hợp lệ' });
     }
 
-    // Kiem noi dung payload: xem kiemPayloadGoogle trong utils/xacThucDauVao.js.
+    // Kiem noi dung payload: xem kiemPayloadGoogle trong utils/validateInput.js.
     //
     // LO HONG DA VA - THIEU email_verified: ban cu chi hoi "payload co email
     // khong" roi lay email do di tim tai khoan va cap token. Google KHONG bao
@@ -399,7 +399,7 @@ const registerUser = async (req, res) => {
 
         // SO DIEN THOAI la thu bat buoc duy nhat de dinh danh.
         //
-        // Luu dang chuan 0XXXXXXXXX - xem utils/soDienThoai.js. Khong chuan
+        // Luu dang chuan 0XXXXXXXXX - xem utils/phoneNumber.js. Khong chuan
         // hoa thi '+84901234567' va '0901234567' thanh hai ban ghi khac nhau
         // trong CSDL, va nguoi dang ky bang cach nay khong dang nhap duoc
         // bang cach kia.
@@ -431,7 +431,7 @@ const registerUser = async (req, res) => {
         // `undefined < 8` la FALSE - qua duoc buoc nay roi di thang toi
         // bcrypt.hash, noi no nem loi va thanh mot 500. loginUser da ep kieu
         // tu truoc, registerUser thi khong: dung kieu lech nhau ma khong ai
-        // nhin thay. Nay ca hai dung chung utils/xacThucDauVao.js.
+        // nhin thay. Nay ca hai dung chung utils/validateInput.js.
         const loiMk = loiMatKhauMoi(password);
         if (loiMk) {
             return res.status(400).json({ message: loiMk });
@@ -678,7 +678,7 @@ const updateUserProfile = async (req, res) => {
                 }
             } else {
                 // Chuan hoa TRUOC khi kiem trung va truoc khi luu - xem
-                // utils/soDienThoai.js. Ban cu chi kiem hinh dang bang
+                // utils/phoneNumber.js. Ban cu chi kiem hinh dang bang
                 // /^[0-9+\s.-]{8,15}$/, nen '+84901234567' va '0901234567'
                 // luu thanh hai gia tri khac nhau: chi muc duy nhat khong
                 // thay trung, va nguoi dung doi so o day xong thi khong dang
@@ -750,7 +750,7 @@ const updateUserProfile = async (req, res) => {
             // khau xuong duoi nguong cua chinh he thong nay.
             //
             // Nay ca ba duong (dang ky, doi mat khau, va bat cu duong nao them
-            // sau) dung chung mot ham: xem utils/xacThucDauVao.js.
+            // sau) dung chung mot ham: xem utils/validateInput.js.
             const loiMk = loiMatKhauMoi(newPassword);
             if (loiMk) {
                 return res.status(400).json({ message: loiMk.replace('Mật khẩu', 'Mật khẩu mới') });

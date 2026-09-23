@@ -1,0 +1,507 @@
+// File nay do script sinh ra tu class Tailwind cu.
+// Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
+
+.overlay {
+  position: fixed;
+  inset: calc(var(--spacing) * 0);
+  z-index: 60;
+  display: flex;
+  justify-content: center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background-color: #00000080;
+  padding: calc(var(--spacing) * 4);
+
+  @supports (color: color-mix(in lab, red, red)) {
+    background-color: color-mix(in oklab, var(--color-black) 50%, transparent);
+  }
+}
+
+.floating {
+  position: absolute;
+  inset: calc(var(--spacing) * 0);
+}
+
+.card {
+  position: relative;
+  margin-block: auto;
+  width: 100%;
+  max-width: var(--container-md);
+  border-radius: var(--radius-3xl);
+  background-color: var(--color-white);
+  padding: calc(var(--spacing) * 6);
+  --tw-shadow: 0 25px 50px -12px var(--tw-shadow-color, #00000040);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+  --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width))
+    var(--tw-ring-color, currentcolor);
+  --tw-ring-color: var(--color-slate-200);
+
+  @media (min-width: 40rem) {
+    padding: calc(var(--spacing) * 8);
+  }
+}
+
+.button {
+  position: absolute;
+  top: calc(var(--spacing) * 3);
+  right: calc(var(--spacing) * 3);
+  display: flex;
+  height: calc(var(--spacing) * 11);
+  width: calc(var(--spacing) * 11);
+  align-items: center;
+  justify-content: center;
+  border-radius: 3.40282e38px;
+  background-color: var(--color-slate-100);
+  font-size: var(--text-xl);
+  line-height: var(--tw-leading, var(--text-xl--line-height));
+  --tw-leading: 1;
+  line-height: 1;
+  color: var(--color-slate-600);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-slate-200);
+    }
+  }
+}
+
+.heading {
+  margin-bottom: calc(var(--spacing) * 2);
+  text-align: center;
+  font-size: var(--text-3xl);
+  line-height: var(--tw-leading, var(--text-3xl--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+}
+
+.text {
+  margin-bottom: calc(var(--spacing) * 4);
+  text-align: center;
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  color: var(--color-slate-500);
+}
+
+.row {
+  margin-top: calc(var(--spacing) * 4);
+  margin-bottom: calc(var(--spacing) * 6);
+  display: flex;
+  border-radius: var(--radius-2xl);
+  background-color: var(--color-slate-100);
+  padding: calc(var(--spacing) * 1);
+}
+
+.button2 {
+  background-color: var(--color-blue-600);
+  color: var(--color-white);
+}
+
+.button3 {
+  color: var(--color-slate-600);
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-slate-900);
+    }
+  }
+}
+
+.card2 {
+  margin-bottom: calc(var(--spacing) * 4);
+  border-radius: var(--radius-lg);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-red-200);
+  background-color: var(--color-red-50);
+  padding: calc(var(--spacing) * 3);
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  color: var(--color-red-600);
+}
+
+.text2 {
+  margin-top: calc(var(--spacing) * 1);
+  color: var(--color-slate-600);
+}
+
+.card3 {
+  margin-bottom: calc(var(--spacing) * 4);
+  border-radius: var(--radius-lg);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-emerald-200);
+  background-color: var(--color-emerald-50);
+  padding: calc(var(--spacing) * 3);
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  color: var(--color-emerald-700);
+}
+
+.button4 {
+  margin-bottom: calc(var(--spacing) * 4);
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--spacing) * 3);
+  border-radius: var(--radius-2xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-300);
+  background-color: var(--color-white);
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 3);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-700);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-slate-50);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+.box {
+  height: calc(var(--spacing) * 5);
+  width: calc(var(--spacing) * 5);
+}
+
+.form {
+  :where(& > :not(:last-child)) {
+    --tw-space-y-reverse: 0;
+    margin-block-start: calc(calc(var(--spacing) * 4) * var(--tw-space-y-reverse));
+    margin-block-end: calc(
+      calc(var(--spacing) * 4) * calc(1 - var(--tw-space-y-reverse))
+    );
+  }
+}
+
+.text3 {
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  --tw-leading: var(--leading-relaxed);
+  line-height: var(--leading-relaxed);
+  color: var(--color-slate-600);
+}
+
+.text4 {
+  border-radius: var(--radius-xl);
+  background-color: var(--color-amber-50);
+  padding: calc(var(--spacing) * 3);
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  --tw-leading: var(--leading-relaxed);
+  line-height: var(--leading-relaxed);
+  color: var(--color-amber-800);
+}
+
+.input {
+  width: 100%;
+  border-radius: var(--radius-2xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-300);
+  padding: calc(var(--spacing) * 3);
+  color: var(--color-black);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+  --tw-outline-style: none;
+  outline-style: none;
+
+  &::placeholder {
+    color: var(--color-slate-500);
+  }
+
+  &:focus {
+    border-color: var(--color-blue-600);
+  }
+}
+
+.button5 {
+  width: 100%;
+  border-radius: var(--radius-2xl);
+  background-color: var(--color-blue-600);
+  padding-block: calc(var(--spacing) * 3);
+  color: var(--color-white);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-blue-700);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+.button6 {
+  width: 100%;
+  text-align: center;
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-500);
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-slate-800);
+    }
+  }
+}
+
+.label {
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+}
+
+.input2 {
+  width: 100%;
+  border-radius: var(--radius-2xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-300);
+  padding: calc(var(--spacing) * 3);
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xl);
+  line-height: var(--tw-leading, var(--text-2xl--line-height));
+  --tw-tracking: 0.5em;
+  letter-spacing: 0.5em;
+  color: var(--color-black);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+  --tw-outline-style: none;
+  outline-style: none;
+
+  &::placeholder {
+    color: var(--color-slate-300);
+  }
+
+  &:focus {
+    border-color: var(--color-blue-600);
+  }
+}
+
+.row2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+}
+
+.button7 {
+  color: var(--color-blue-600);
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-blue-800);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+.button8 {
+  color: var(--color-slate-500);
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-slate-800);
+    }
+  }
+}
+
+.button9 {
+  width: 100%;
+  text-align: center;
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-blue-600);
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-blue-800);
+    }
+  }
+}
+
+/* Cac lop con ket trong template literal, va bo sung. */
+.button10 {
+  flex: 1;
+  border-radius: var(--radius-2xl);
+  padding-block: calc(var(--spacing) * 2);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+}

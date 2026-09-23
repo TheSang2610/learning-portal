@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import type { ReactNode } from "react";
 import { Bookmark, Check, Copy, Ellipsis } from "lucide-react";
 
+import styles from "./CardActions.module.scss";
 // Hai nut o goc phai tren cua the: luu bai va menu ba cham.
 //
 // Danh sach da luu nam trong localStorage cua tung trinh duyet - khong co bang
@@ -122,18 +123,16 @@ export default function CardActions({ href, tieuDe, themMuc = [] }: Props) {
   ];
 
   return (
-    <div ref={boc} className="relative flex shrink-0 items-center gap-0.5">
+    <div ref={boc} className={styles.row}>
       <button
         type="button"
         onClick={() => doiLuu(href)}
         aria-pressed={daLuu}
         aria-label={daLuu ? `Bỏ lưu ${tieuDe}` : `Lưu ${tieuDe}`}
         title={daLuu ? "Bỏ lưu" : "Lưu bài"}
-        className={`rounded-lg p-2 transition hover:bg-slate-100 ${
-          daLuu ? "text-blue-600" : "text-slate-400 hover:text-slate-700"
-        }`}
+        className={`${styles.button6} ${daLuu ? styles.button : styles.button2}`}
       >
-        <Bookmark size={17} className={daLuu ? "fill-blue-600" : undefined} />
+        <Bookmark size={17} className={daLuu ? styles.box : undefined} />
       </button>
 
       <button
@@ -142,16 +141,13 @@ export default function CardActions({ href, tieuDe, themMuc = [] }: Props) {
         aria-expanded={moMenu}
         aria-haspopup="menu"
         aria-label={`Tùy chọn cho ${tieuDe}`}
-        className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+        className={styles.button3}
       >
         <Ellipsis size={17} />
       </button>
 
       {moMenu && (
-        <div
-          role="menu"
-          className="absolute top-full right-0 z-20 mt-1 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg"
-        >
+        <div role="menu" className={styles.floating}>
           {muc.map((m) => (
             <button
               key={m.nhan}
@@ -161,10 +157,8 @@ export default function CardActions({ href, tieuDe, themMuc = [] }: Props) {
                 m.onChon();
                 if (!m.nhan.startsWith("Đã")) setMoMenu(false);
               }}
-              className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium transition ${
-                m.nguyHiem
-                  ? "text-red-700 hover:bg-red-50"
-                  : "text-slate-700 hover:bg-slate-50"
+              className={`${styles.button7} ${
+                m.nguyHiem ? styles.button4 : styles.button5
               }`}
             >
               {m.icon}

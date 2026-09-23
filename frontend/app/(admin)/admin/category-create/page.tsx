@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createCategory } from "@/src/services/categoryService";
 import { ArrowLeft } from "lucide-react";
 
+import styles from "./page.module.scss";
 // Hàm helper để convert Tên tiếng Việt thành Slug chuẩn SEO
 const convertToSlug = (text: string) => {
   return text
@@ -53,57 +54,50 @@ export default function CreateCategoryPage() {
   };
 
   return (
-    <div className="max-w-xl space-y-6">
+    <div className={styles.stack}>
       {/* NÚT BACK QUAY LẠI */}
-      <button
-        onClick={() => router.push("/admin/categories")}
-        className="flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-800"
-      >
+      <button onClick={() => router.push("/admin/categories")} className={styles.button}>
         <ArrowLeft size={16} />
         Back to Categories
       </button>
 
       <div>
-        <h1 className="text-4xl font-bold text-slate-800">Create Category</h1>
-        <p className="mt-1 text-gray-500">
+        <h1 className={styles.title}>Create Category</h1>
+        <p className={styles.text}>
           Add a new category to classify your academic courses
         </p>
       </div>
 
       {/* FORM TẠO */}
-      <div className="rounded-3xl border bg-white p-8 shadow-sm">
-        <form onSubmit={submitHandler} className="space-y-5">
+      <div className={styles.card}>
+        <form onSubmit={submitHandler} className={styles.form}>
           {/* FIELD: NAME */}
           <div>
-            <label className="mb-2 block font-medium text-slate-700">Category Name</label>
+            <label className={styles.fieldLabel}>Category Name</label>
             <input
               type="text"
               placeholder="e.g. Lập trình Web, Thiết kế Đồ họa..."
               value={name}
               onChange={handleNameChange}
-              className="w-full rounded-2xl border p-4 transition outline-none focus:border-blue-500"
+              className={styles.input}
               required
             />
           </div>
 
           {/* FIELD: SLUG (THAY THẾ CHO ICON) */}
           <div>
-            <label className="mb-2 block font-medium text-slate-700">Category Slug</label>
+            <label className={styles.fieldLabel}>Category Slug</label>
             <input
               type="text"
               placeholder="e.g. lap-trinh-web, thiet-ke-do-hoa"
               value={slug}
               onChange={(e) => setSlug(convertToSlug(e.target.value))} // Đảm bảo người dùng nhập tay vẫn ra format slug chuẩn
-              className="w-full rounded-2xl border p-4 transition outline-none focus:border-blue-500"
+              className={styles.input}
               required
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-2xl bg-blue-600 p-4 font-medium text-white transition hover:bg-blue-700 disabled:bg-slate-300"
-          >
+          <button type="submit" disabled={submitting} className={styles.button2}>
             {submitting ? "Creating..." : "Publish Category"}
           </button>
         </form>

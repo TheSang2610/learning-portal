@@ -16,7 +16,7 @@ const mongoose = require('mongoose');
 const tinNhanSchema = new mongoose.Schema(
     {
         // Ten vai tro rieng cua du an, khong phai ten cua hang API nao. Doi
-        // sang 'user'/'model'/'assistant' o nhaCungCapAi.js, de sau nay doi
+        // sang 'user'/'model'/'assistant' o aiProvider.js, de sau nay doi
         // nha cung cap khong phai di sua du lieu da luu.
         vaiTro: {
             type: String,

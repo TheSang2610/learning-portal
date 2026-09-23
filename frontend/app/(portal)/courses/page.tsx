@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import CourseSearchClient from "@/src/components/courses/CourseSearchClient";
-import { locKhoaDaDang } from "@/src/components/home/locKhoaHoc";
+import { locKhoaDaDang } from "@/src/components/home/filterCourses";
 import type { Category } from "@/src/services/categoryService";
 import { layTuMayChu } from "@/src/services/serverFetch";
 
@@ -12,6 +12,7 @@ export const metadata = {
 // Danh sach khoa hoc doi khi admin dang bai moi, khong dung trang tinh vinh vien.
 export const revalidate = 60;
 
+import styles from "./page.module.scss";
 export default async function SearchResultPage() {
   // Lay ca danh sach mot lan o may chu. Phep loc theo ?search= va ?category=
   // lam o phia trinh duyet tren chinh danh sach nay, nen doi tu khoa khong
@@ -28,8 +29,8 @@ export default async function SearchResultPage() {
     // trang mat kha nang prerender tinh.
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-[#f8fafc]">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
+        <div className={styles.page}>
+          <div className={styles.spinner} />
         </div>
       }
     >

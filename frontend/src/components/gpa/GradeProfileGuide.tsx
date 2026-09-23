@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import styles from "./GradeProfileGuide.module.scss";
 const STEPS: { title: string; body: string }[] = [
   {
     title: "Nhập điểm và theo dõi GPA",
@@ -27,42 +28,39 @@ const STEPS: { title: string; body: string }[] = [
 // the trang + vien + do bong dat tren nen trang cua khung cha thi ranh gioi
 // gan nhu bien mat, nhin ra "the long the". Doi sang nen slate nhat, vien mo,
 // bo do bong - phan cap ro ma van thay tung buoc tach nhau.
-const stepCard =
-  "flex items-start gap-5 rounded-xl border border-slate-200/80 bg-slate-50 p-5 " +
-  "transition-colors duration-200 hover:border-blue-600/30";
+const stepCard = styles.card;
 
-const stepNumber =
-  "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white";
+const stepNumber = styles.row;
 
 export default function GradeProfileGuide() {
   return (
     // Khung ngoai dung y het CalcPointGuide va Convert10To4 - ba man GPA
     // dung chung mot kieu khung.
-    <section className="mt-12 rounded-2xl border border-blue-200 bg-white px-5 py-8 shadow-sm sm:px-8">
-      <div className="text-center">
+    <section className={styles.section}>
+      <div className={styles.box}>
         {/* Vong tron xanh lay theo hai man kia; ben trong van giu emoji sach
             thay vi doi sang icon lucide, de khong doi y nghia san co. */}
-        <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 text-2xl">
+        <span className={styles.label}>
           <span role="img" aria-label="Sách">
             📚
           </span>
         </span>
         {/* Van la h2: trang co h1 "Ho so diem", nen muc nay dung cap 2 moi dung
             thu tu tieu de. Hai man kia dung h3 vi chung nam sau mot h2 khac. */}
-        <h2 className="mt-3 text-xl font-extrabold text-blue-600">Hướng dẫn sử dụng</h2>
-        <p className="mx-auto mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+        <h2 className={styles.heading}>Hướng dẫn sử dụng</h2>
+        <p className={styles.text}>
           Dưới đây là phần giới thiệu màn hình tính điểm trung bình học kỳ (GPA), điểm
           trung bình tích lũy (CPA/CGPA), xây dựng mục tiêu và điểm của sinh viên.
         </p>
       </div>
 
-      <ol className="mt-8 space-y-3">
+      <ol className={styles.list}>
         {STEPS.map((s, i) => (
           <li key={s.title} className={stepCard}>
             <span className={stepNumber}>{i + 1}</span>
-            <div className="min-w-0">
-              <h4 className="text-base font-bold text-slate-900">{s.title}</h4>
-              <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{s.body}</p>
+            <div className={styles.box2}>
+              <h4 className={styles.minorHeading}>{s.title}</h4>
+              <p className={styles.text2}>{s.body}</p>
             </div>
           </li>
         ))}
@@ -70,11 +68,9 @@ export default function GradeProfileGuide() {
         {/* Buoc cuoi co lien ket nen tach rieng khoi mang van ban */}
         <li className={stepCard}>
           <span className={stepNumber}>{STEPS.length + 1}</span>
-          <div className="min-w-0">
-            <h4 className="text-base font-bold text-slate-900">
-              Đăng nhập để trải nghiệm đầy đủ
-            </h4>
-            <p className="mt-1 text-sm leading-relaxed text-slate-600">
+          <div className={styles.box2}>
+            <h4 className={styles.minorHeading}>Đăng nhập để trải nghiệm đầy đủ</h4>
+            <p className={styles.text3}>
               Nếu là sinh viên Học Viện Công Nghệ Bưu Chính Viễn Thông (PTIT), các bạn hãy
               đăng ký hoặc đăng nhập để sử dụng đầy đủ tính năng của hệ thống, bao gồm
               việc tạo hồ sơ điểm theo khóa học, ngành học, tạo được nhiều hồ sơ điểm và
@@ -82,10 +78,7 @@ export default function GradeProfileGuide() {
             </p>
             {/* Du an nay khong co route /login rieng - dang nhap mo bang tham so
                 ?auth=login tren trang chu, giong nut Dang nhap tren thanh dieu huong. */}
-            <Link
-              href="/?auth=login"
-              className="mt-3 inline-block rounded-lg bg-blue-600 px-5 py-2 text-sm font-bold text-white transition hover:bg-blue-700"
-            >
+            <Link href="/?auth=login" className={styles.box3}>
               Đăng nhập
             </Link>
           </div>

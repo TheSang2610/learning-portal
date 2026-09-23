@@ -116,7 +116,7 @@ route thấy thiếu middleware là chỗ đó không được bảo vệ.
 ## Vài quyết định kỹ thuật đáng chú ý
 
 **Nội dung có phí đi qua đúng một cửa.**
-`utils/quyenNoiDung.js` xuất ra `duocXemNoiDung(course, user)`. Mọi đường trả về
+`utils/contentAccess.js` xuất ra `duocXemNoiDung(course, user)`. Mọi đường trả về
 nội dung bài học **bắt buộc** gọi hàm này.
 
 Lý do ghi ngay đầu tệp: trước đây cổng 402 chỉ đặt ở đường ghi danh, còn đường
@@ -170,7 +170,7 @@ npx vercel --prod
 
 `sanitize-html` bị **ghim ở đúng bản 2.17.0**. Bản 2.17.7 nâng phụ thuộc
 `htmlparser2` từ `^8` lên `^12`, mà `htmlparser2` từ bản 10 trở đi là ESM thuần.
-`utils/htmlBaiViet.js` gọi nó bằng `require()` thường, và runtime của Vercel từ
+`utils/postHtml.js` gọi nó bằng `require()` thường, và runtime của Vercel từ
 chối `require()` một module ESM — **toàn bộ hàm chết ngay lúc nạp**, mọi đường
 dẫn trả 500, kể cả những đường không liên quan gì tới lọc HTML.
 

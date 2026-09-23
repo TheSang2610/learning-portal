@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { getErrorMessage } from "@/src/services/apiHelper";
+
+import styles from "./StudentQuizView.module.scss";
 import {
   ArrowLeft,
   Award,
@@ -183,19 +185,14 @@ export default function StudentQuizView({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center rounded-2xl border border-slate-200 bg-white py-20 text-slate-500 shadow-sm">
-        <Loader2 className="mr-2 animate-spin text-[#0056d2]" size={20} /> Đang kiểm tra
-        lịch sử làm bài...
+      <div className={styles.card}>
+        <Loader2 className={styles.spinner} size={20} /> Đang kiểm tra lịch sử làm bài...
       </div>
     );
   }
 
   if (!quiz) {
-    return (
-      <div className="rounded-2xl border border-slate-200 bg-white py-20 text-center font-medium text-red-600 shadow-sm">
-        Không tìm thấy thông tin bài kiểm tra.
-      </div>
-    );
+    return <div className={styles.card2}>Không tìm thấy thông tin bài kiểm tra.</div>;
   }
 
   // attemptNumber co the vang mat trong phan hoi; coi nhu lan thu nhat.
@@ -203,39 +200,30 @@ export default function StudentQuizView({
     result && !result.passed && (result.attemptNumber ?? 1) < (quiz.attempts || 1);
 
   return (
-    <div className="space-y-6 text-slate-700">
+    <div className={styles.stack}>
       {/* THANH THOÁT / QUAY LẠI VIDEO */}
-      <button
-        onClick={onClose}
-        className="flex w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-black"
-      >
+      <button onClick={onClose} className={styles.button}>
         <ArrowLeft size={14} /> Quay lại bài học
       </button>
 
       {/* THÔNG TIN CHI TIẾT BÀI KIỂM TRA */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className={styles.card3}>
         {isLocked && (
-          <div className="absolute top-3 right-3 flex items-center gap-1 rounded-md border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-bold tracking-wider text-[#0056d2] uppercase">
+          <div className={styles.floating}>
             <Lock size={12} /> Chế độ xem lại kết quả
           </div>
         )}
-        <h1 className="mb-2 text-base font-extrabold text-slate-900">{quiz.title}</h1>
-        <p className="mb-4 text-xs leading-relaxed text-slate-500">{quiz.description}</p>
+        <h1 className={styles.title}>{quiz.title}</h1>
+        <p className={styles.text}>{quiz.description}</p>
 
-        <div className="flex flex-wrap gap-3 text-xs text-slate-600">
-          <span className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-medium">
-            Giới hạn lượt làm bài: {quiz.attempts} lần
-          </span>
-          <span className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-medium">
-            <Award size={13} className="text-amber-500" /> Cần {quiz.passingScore}% để đạt
+        <div className={styles.row}>
+          <span className={styles.card4}>Giới hạn lượt làm bài: {quiz.attempts} lần</span>
+          <span className={styles.card4}>
+            <Award size={13} className={styles.box} /> Cần {quiz.passingScore}% để đạt
           </span>
           {timeLeft !== null && !isLocked && (
             <span
-              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-bold ${
-                timeLeft < 60
-                  ? "animate-pulse border-red-200 bg-red-50 text-red-600"
-                  : "border-blue-100 bg-blue-50 text-[#0056d2]"
-              }`}
+              className={`${styles.row5} ${timeLeft < 60 ? styles.label : styles.label2}`}
             >
               <Timer size={13} /> Thời gian: {formatTime(timeLeft)}
             </span>
@@ -245,34 +233,25 @@ export default function StudentQuizView({
 
       {/* KHỐI THÔNG BÁO ĐIỂM SỐ PASTEL */}
       {result && (
-        <div
-          className={`flex flex-col items-center justify-between gap-4 rounded-2xl border p-5 shadow-sm md:flex-row ${
-            result.passed
-              ? "border-emerald-200 bg-emerald-50/60"
-              : "border-red-200 bg-red-50/60"
-          }`}
-        >
+        <div className={`${styles.col} ${result.passed ? styles.box2 : styles.box3}`}>
           <div>
             <h2
-              className={`flex items-center gap-2 text-sm font-bold ${result.passed ? "text-emerald-700" : "text-red-700"}`}
+              className={`${styles.heading3} ${result.passed ? styles.heading : styles.heading2}`}
             >
               {result.passed ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
               {result.passed
                 ? "BẠN ĐÃ ĐẠT TIÊU CHUẨN BÀI HỌC"
                 : "BẠN CHƯA ĐẠT ĐIỂM ĐIỀU KIỆN"}
             </h2>
-            <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
+            <p className={styles.text2}>
               Bạn đã hoàn thành bài kiểm tra ở lượt thứ{" "}
-              <span className="font-semibold text-slate-800">
+              <span className={styles.label3}>
                 {result.attemptNumber || 1}/{quiz.attempts}
               </span>
               .<br />
-              Đạt tỉ lệ:{" "}
-              <span className="text-xs font-bold text-slate-900">
-                {result.percentage}%
-              </span>{" "}
-              | Điểm số:{" "}
-              <span className="font-semibold text-slate-800">
+              Đạt tỉ lệ: <span className={styles.label4}>{result.percentage}%</span> |
+              Điểm số:{" "}
+              <span className={styles.label3}>
                 {result.score}/{quiz.totalPoints || quiz.questions.length}
               </span>
             </p>
@@ -287,16 +266,14 @@ export default function StudentQuizView({
                 setIsLocked(false);
                 if (quiz.timeLimit) setTimeLeft(quiz.timeLimit * 60);
               }}
-              className="flex-shrink-0 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800"
+              className={styles.button2}
             >
               Làm lại bài mới
             </button>
           ) : (
             <span
-              className={`rounded-xl border px-3 py-1.5 text-xs font-bold ${
-                result.passed
-                  ? "border-emerald-200 bg-emerald-100/60 text-emerald-700"
-                  : "border-red-200 bg-red-100/60 text-red-700"
+              className={`${styles.label8} ${
+                result.passed ? styles.label5 : styles.label6
               }`}
             >
               {result.passed ? "✓ Đã Hoàn Thành" : "✕ Đã Hết Lượt Làm Bài"}
@@ -306,7 +283,7 @@ export default function StudentQuizView({
       )}
 
       {/* DANH SÁCH KHỐI CÂU HỎI SÁNG */}
-      <div className="space-y-4">
+      <div className={styles.stack2}>
         {quiz.questions.map((q, index: number) => {
           const studentAnswerRecord = result?.answers?.find(
             (ans) => layIdCauHoi(ans.questionId) === q._id,
@@ -317,53 +294,41 @@ export default function StudentQuizView({
             answers[q._id!] || studentAnswerRecord?.studentAnswer;
 
           return (
-            <div
-              key={q._id}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-            >
-              <h3 className="mb-3 flex items-center justify-between text-xs leading-snug font-bold text-slate-900">
+            <div key={q._id} className={styles.card5}>
+              <h3 className={styles.subheading}>
                 <span>
-                  <span className="mr-1 text-[#0056d2]">Câu {index + 1}:</span> {q.text}
+                  <span className={styles.label7}>Câu {index + 1}:</span> {q.text}
                 </span>
                 {result &&
                   (isQuestionCorrect ? (
-                    <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-600">
-                      ✓ Đúng
-                    </span>
+                    <span className={styles.row2}>✓ Đúng</span>
                   ) : (
-                    <span className="flex items-center gap-1 text-[11px] font-bold text-red-600">
-                      ✕ Sai
-                    </span>
+                    <span className={styles.row3}>✕ Sai</span>
                   ))}
               </h3>
 
-              <div className="grid grid-cols-1 gap-2.5">
+              <div className={styles.grid}>
                 {q.options?.map((option) => {
                   const isThisOptionSelected = studentSelectedText === option.text;
 
                   // Style mặc định Light Mode cho các ô đáp án
-                  let optionStyle =
-                    "border-slate-200 bg-slate-50/50 hover:bg-slate-100/70 text-slate-700";
+                  let optionStyle = styles.box4;
 
                   if (result) {
                     if (isThisOptionSelected) {
                       if (isQuestionCorrect) {
-                        optionStyle =
-                          "border-emerald-500 bg-emerald-50 text-emerald-700 font-semibold";
+                        optionStyle = styles.box5;
                       } else {
-                        optionStyle =
-                          "border-red-500 bg-red-50 text-red-700 font-semibold";
+                        optionStyle = styles.box6;
                       }
                     } else {
                       if (option.isCorrect === true) {
-                        optionStyle =
-                          "border-emerald-500 bg-emerald-50 text-emerald-700 font-semibold";
+                        optionStyle = styles.box5;
                       }
                     }
                   } else if (answers[q._id!] === option.text) {
                     // Đang làm bài bình thường: hiện viền xanh dương chuẩn hiệu ứng click hệ thống sáng
-                    optionStyle =
-                      "border-[#0056d2] bg-blue-50/60 text-[#0056d2] font-semibold";
+                    optionStyle = styles.box7;
                   }
 
                   return (
@@ -372,7 +337,7 @@ export default function StudentQuizView({
                       key={option._id}
                       onClick={() => handleSelectOption(q._id!, option.text)}
                       disabled={isLocked || !!result || submitting}
-                      className={`flex w-full items-center justify-between gap-4 rounded-xl border p-3.5 text-left text-xs transition ${optionStyle}`}
+                      className={`${styles.button4} ${optionStyle}`}
                     >
                       <span>{option.text}</span>
                     </button>
@@ -386,14 +351,14 @@ export default function StudentQuizView({
 
       {/* KHỐI GỬI BÀI CHẤM ĐIỂM */}
       {!result && !isLocked && (
-        <div className="flex justify-end pt-2">
+        <div className={styles.row4}>
           <button
             type="button"
             onClick={handleSubmit}
             disabled={submitting}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-xs font-bold text-white shadow-md transition hover:from-blue-700 hover:to-indigo-700 disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400"
+            className={styles.button3}
           >
-            {submitting && <Loader2 className="animate-spin" size={13} />}
+            {submitting && <Loader2 className={styles.spinner2} size={13} />}
             Gửi bài chấm điểm
           </button>
         </div>

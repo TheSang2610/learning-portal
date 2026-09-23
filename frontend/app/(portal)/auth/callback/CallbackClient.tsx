@@ -1,10 +1,11 @@
 "use client";
 
-import { datNguoiDung, yeuCauNapLai } from "@/src/hooks/nguoiDungLuu";
+import { datNguoiDung, yeuCauNapLai } from "@/src/hooks/userStore";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { googleLogin } from "@/src/services/api";
 
+import styles from "./CallbackClient.module.scss";
 export default function GoogleCallbackInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -81,10 +82,10 @@ export default function GoogleCallbackInner() {
   }, [code, state, error, router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12">
-      <div className="w-full max-w-lg rounded-3xl bg-white p-10 text-center shadow-2xl ring-1 ring-slate-200">
-        <h1 className="mb-4 text-2xl font-semibold">Google sign-in</h1>
-        <p className="text-sm text-slate-600">{status}</p>
+    <div className={styles.page}>
+      <div className={styles.card}>
+        <h1 className={styles.title}>Google sign-in</h1>
+        <p className={styles.text}>{status}</p>
       </div>
     </div>
   );

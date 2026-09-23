@@ -1,0 +1,42 @@
+// File nay do script sinh ra tu class Tailwind cu.
+// Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
+
+.title {
+  margin-bottom: calc(var(--spacing) * 8);
+  font-size: var(--text-4xl);
+  line-height: var(--tw-leading, var(--text-4xl--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: calc(var(--spacing) * 6);
+}
+
+.card {
+  border-radius: var(--radius-2xl);
+  background-color: var(--color-white);
+  padding: calc(var(--spacing) * 6);
+  --tw-shadow:
+    0 1px 3px 0 var(--tw-shadow-color, #0000001a),
+    0 1px 2px -1px var(--tw-shadow-color, #0000001a);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+.heading {
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-gray-500);
+}
+
+.text {
+  margin-top: calc(var(--spacing) * 2);
+  font-size: var(--text-3xl);
+  line-height: var(--tw-leading, var(--text-3xl--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+}

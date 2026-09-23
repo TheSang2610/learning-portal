@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, Trash2, RotateCcw, Target as TargetIcon } from "lucide-react";
 import GradeChart, { type ChartPoint } from "./GradeChart";
+
+import styles from "./GradeProfile.module.scss";
 import {
   SCALES,
   TARGETS,
@@ -262,9 +264,9 @@ export default function GradeProfile() {
   const reached = target && Number.isFinite(stats.cpa) && stats.cpa >= target.min;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-12">
+    <div className={styles.container}>
       {/* ============ THANG DIEM + RESET ============ */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className={styles.row}>
         <select
           value={scaleId}
           onChange={(e) => changeScale(e.target.value)}
@@ -284,22 +286,19 @@ export default function GradeProfile() {
       </div>
 
       {/* ============ BIEU DO ============ */}
-      <div className="mt-5">
+      <div className={styles.box}>
         <GradeChart data={chartData} />
       </div>
 
       {/* ============ MUC TIEU ============ */}
-      <div className="mt-6 flex flex-wrap items-center gap-3">
-        <div className="relative">
-          <TargetIcon
-            size={15}
-            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-blue-600"
-          />
+      <div className={styles.row2}>
+        <div className={styles.box2}>
+          <TargetIcon size={15} className={styles.floating} />
           <select
             value={targetId}
             onChange={(e) => setTargetId(e.target.value)}
             aria-label="Mục tiêu xếp loại bằng"
-            className={`${selectCls} pl-9`}
+            className={`${selectCls} ${styles.select}`}
           >
             <option value="">Không đặt mục tiêu</option>
             {TARGETS.map((t) => (
@@ -316,24 +315,20 @@ export default function GradeProfile() {
           disabled={!target}
           aria-label="Tính lại gợi ý"
           title="Chưa hài lòng với gợi ý? Bấm để hệ thống tính phương án khác"
-          className="rounded-lg bg-blue-600 p-2.5 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+          className={styles.button}
         >
           <RotateCcw size={16} />
         </button>
 
         {target && (
-          <span className="text-sm text-slate-700">
-            Cần CPA ≥ <strong className="text-blue-600">{target.min.toFixed(2)}</strong>
+          <span className={styles.label}>
+            Cần CPA ≥ <strong className={styles.strong}>{target.min.toFixed(2)}</strong>
             {reached ? (
-              <span className="ml-2 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
-                Đã đạt
-              </span>
+              <span className={styles.label2}>Đã đạt</span>
             ) : (
               suggestion &&
               !suggestion.enough && (
-                <span className="ml-2 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-900">
-                  Cải thiện hết mức vẫn chưa đủ
-                </span>
+                <span className={styles.label3}>Cải thiện hết mức vẫn chưa đủ</span>
               )
             )}
           </span>
@@ -341,15 +336,12 @@ export default function GradeProfile() {
       </div>
 
       {/* ============ CAC HOC KY ============ */}
-      <div className="mt-4 space-y-5">
+      <div className={styles.stack}>
         {semesters.map((sem, si) => {
           const st = stats.perSemester[si];
 
           return (
-            <section
-              key={sem.id}
-              className="rounded-2xl border-2 border-blue-200 bg-white p-5 shadow-sm"
-            >
+            <section key={sem.id} className={styles.section}>
               <input
                 value={sem.name}
                 onChange={(e) =>
@@ -358,19 +350,19 @@ export default function GradeProfile() {
                   )
                 }
                 aria-label={`Tên học kỳ ${si + 1}`}
-                className="w-full rounded-lg border border-transparent px-2 py-1 text-lg font-extrabold text-slate-900 transition outline-none hover:border-slate-300 focus:border-blue-600"
+                className={styles.input}
               />
 
               {/* --- Danh sach mon --- */}
-              <div className="mt-3 space-y-4">
+              <div className={styles.stack2}>
                 {sem.subjects.map((sub, i) => {
                   const hint = suggestion?.bySubject[sub.id];
                   // Diem cao nhat thi khong con gi de cai thien
                   const isTop = sub.letter === scale.grades[0].letter;
 
                   return (
-                    <div key={sub.id} className="border-l-4 border-blue-200 pl-3">
-                      <div className="flex items-start gap-2">
+                    <div key={sub.id} className={styles.box3}>
+                      <div className={styles.row3}>
                         <input
                           value={sub.name}
                           placeholder={`Môn học số ${i + 1}`}
@@ -378,7 +370,7 @@ export default function GradeProfile() {
                           onChange={(e) =>
                             patchSubject(sem.id, sub.id, { name: e.target.value })
                           }
-                          className="min-w-0 flex-1 rounded-lg border border-transparent px-2 py-1 text-sm font-bold text-slate-900 transition outline-none hover:border-slate-300 focus:border-blue-600"
+                          className={styles.input2}
                         />
                         <button
                           type="button"
@@ -398,14 +390,14 @@ export default function GradeProfile() {
                             )
                           }
                           aria-label={`Xóa ${sub.name || `môn học số ${i + 1}`}`}
-                          className="shrink-0 p-1 text-slate-500 transition hover:text-blue-600"
+                          className={styles.button2}
                         >
                           <Trash2 size={15} />
                         </button>
                       </div>
 
-                      <div className="mt-1.5 flex flex-wrap items-center gap-2 pl-2">
-                        <span className="inline-flex items-center gap-1 rounded-lg bg-blue-100 px-2.5 py-1.5 text-sm font-semibold text-blue-600">
+                      <div className={styles.row4}>
+                        <span className={styles.label4}>
                           <input
                             value={sub.credits}
                             placeholder="0"
@@ -414,7 +406,7 @@ export default function GradeProfile() {
                             onChange={(e) =>
                               patchSubject(sem.id, sub.id, { credits: e.target.value })
                             }
-                            className="w-7 bg-transparent text-center outline-none placeholder:text-blue-600/50"
+                            className={styles.input3}
                           />
                           tín chỉ
                         </span>
@@ -456,7 +448,7 @@ export default function GradeProfile() {
                         {hint && (
                           <span
                             title={`Gợi ý: học cải thiện môn này lên ${hint} để đạt mục tiêu`}
-                            className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1.5 text-sm font-bold text-white"
+                            className={styles.label5}
                           >
                             <TargetIcon size={13} />
                             {hint}
@@ -469,7 +461,7 @@ export default function GradeProfile() {
               </div>
 
               {/* --- Thong ke hoc ky --- */}
-              <dl className="mt-4 space-y-1.5 text-sm">
+              <dl className={styles.stack3}>
                 <StatLine label="Điểm trung bình học kì" value={fmt(st.gpa)} />
                 <StatLine label="Điểm trung bình tích luỹ" value={fmt(st.cpa)} />
                 <StatLine label="Số tín chỉ đạt" value={String(st.passed)} />
@@ -477,7 +469,7 @@ export default function GradeProfile() {
               </dl>
 
               {/* --- Nut --- */}
-              <div className="mt-4 flex flex-wrap justify-end gap-2">
+              <div className={styles.row5}>
                 <button
                   type="button"
                   onClick={() =>
@@ -517,26 +509,22 @@ export default function GradeProfile() {
         <button
           type="button"
           onClick={() => setSemesters((s) => [...s, newSemester(s.length)])}
-          className="flex w-full items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-blue-200 bg-white px-4 py-4 text-sm font-bold text-blue-600 transition hover:border-blue-600 hover:bg-blue-50"
+          className={styles.button3}
         >
           <Plus size={16} /> Thêm học kì
         </button>
       </div>
 
       {/* ============ TONG KET ============ */}
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
+      <div className={styles.grid}>
         <Stat label="CPA tích luỹ" value={fmt(stats.cpa)} big />
         <Stat label="Tổng tín chỉ tích luỹ" value={String(stats.totalPassed)} />
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-center shadow-sm">
-          <p className="text-xs font-semibold text-slate-600">Xếp loại</p>
+        <div className={styles.card}>
+          <p className={styles.text}>Xếp loại</p>
           {rank ? (
-            <span
-              className={`mt-1.5 inline-block rounded-full px-3.5 py-1 text-sm font-bold ${rank.cls}`}
-            >
-              {rank.label}
-            </span>
+            <span className={`${styles.label6} ${styles[rank.muc]}`}>{rank.label}</span>
           ) : (
-            <p className="mt-1 text-lg font-bold text-slate-900">--</p>
+            <p className={styles.text2}>--</p>
           )}
         </div>
       </div>
@@ -546,36 +534,28 @@ export default function GradeProfile() {
 
 /* ---------- dung chung ---------- */
 
-const selectCls =
-  "rounded-lg border-2 border-blue-600 bg-white px-3 py-2 text-sm font-semibold text-blue-600 outline-none transition focus:ring-2 focus:ring-blue-100";
+const selectCls = styles.box6;
 
-const smallSelect =
-  "rounded-lg border-2 border-blue-300 bg-white px-2.5 py-1.5 text-sm font-semibold text-blue-600 outline-none transition focus:border-blue-600";
+const smallSelect = styles.box7;
 
-const solidBtn =
-  "rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700";
+const solidBtn = styles.button4;
 
-const outlineBtn =
-  "inline-flex items-center gap-1.5 rounded-lg border-2 border-blue-300 bg-white px-3.5 py-2 text-sm font-bold text-blue-600 transition hover:border-blue-600 hover:bg-blue-50";
+const outlineBtn = styles.button5;
 
 function StatLine({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center gap-2">
-      <dt className="text-slate-700">{label}:</dt>
-      <dd className="rounded-md bg-blue-600 px-2 py-0.5 text-xs font-bold text-white">
-        {value}
-      </dd>
+    <div className={styles.row6}>
+      <dt className={styles.box4}>{label}:</dt>
+      <dd className={styles.box5}>{value}</dd>
     </div>
   );
 }
 
 function Stat({ label, value, big }: { label: string; value: string; big?: boolean }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-center shadow-sm">
-      <p className="text-xs font-semibold text-slate-600">{label}</p>
-      <p className={`mt-1 font-extrabold text-blue-600 ${big ? "text-3xl" : "text-lg"}`}>
-        {value}
-      </p>
+    <div className={styles.card}>
+      <p className={styles.text}>{label}</p>
+      <p className={`${styles.text5} ${big ? styles.text3 : styles.text4}`}>{value}</p>
     </div>
   );
 }

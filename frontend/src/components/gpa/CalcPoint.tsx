@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Calculator } from "lucide-react";
 import { STRUCTURES, SCALES, structureById, scaleById, gradeOf } from "./gradeScales";
 
+import styles from "./CalcPoint.module.scss";
 export default function CalcPoint() {
   const [structureId, setStructureId] = useState("2");
   const [scaleId, setScaleId] = useState("0");
@@ -40,18 +41,16 @@ export default function CalcPoint() {
   };
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex items-center justify-center gap-2 bg-blue-600 px-5 py-3">
-        <Calculator size={17} className="text-white" />
-        <h2 className="text-base font-bold text-white">Tính điểm tổng kết</h2>
+    <div className={styles.card}>
+      <div className={styles.row}>
+        <Calculator size={17} className={styles.box} />
+        <h2 className={styles.heading}>Tính điểm tổng kết</h2>
       </div>
 
       {/* --- Hai o chon --- */}
-      <div className="grid gap-5 px-5 py-5 sm:grid-cols-2">
+      <div className={styles.grid}>
         <div>
-          <h4 className="mb-2 border-l-[3px] border-blue-600 pl-2 text-sm font-bold text-blue-600">
-            Chọn cấu trúc điểm của môn học
-          </h4>
+          <h4 className={styles.minorHeading}>Chọn cấu trúc điểm của môn học</h4>
           <select
             value={structureId}
             onChange={(e) => changeStructure(e.target.value)}
@@ -66,9 +65,7 @@ export default function CalcPoint() {
         </div>
 
         <div>
-          <h4 className="mb-2 border-l-[3px] border-blue-600 pl-2 text-sm font-bold text-blue-600">
-            Chọn cấu trúc thang điểm
-          </h4>
+          <h4 className={styles.minorHeading}>Chọn cấu trúc thang điểm</h4>
           <select
             value={scaleId}
             onChange={(e) => setScaleId(e.target.value)}
@@ -85,27 +82,22 @@ export default function CalcPoint() {
 
       {/* --- Bang nhap diem --- */}
       {/* Cuon ngang khi mang hinh hep: 5 cot khong the co lai vua dien thoai */}
-      <div className="overflow-x-auto px-5 pb-6">
+      <div className={styles.scroller}>
         <div
-          className="grid min-w-[560px] overflow-hidden rounded-xl border border-blue-200"
+          className={styles.grid2}
           style={{
             gridTemplateColumns: `repeat(${structure.weights.length + 1}, minmax(0, 1fr))`,
           }}
         >
           {structure.weights.map((w, i) => (
-            <div
-              key={`h-${i}`}
-              className="border-r border-white/25 bg-blue-600 px-3 py-2.5 text-center text-sm font-bold text-white"
-            >
+            <div key={`h-${i}`} className={styles.box2}>
               Điểm {w}%
             </div>
           ))}
-          <div className="bg-blue-700 px-3 py-2.5 text-center text-sm font-bold text-white">
-            Tổng kết
-          </div>
+          <div className={styles.box3}>Tổng kết</div>
 
           {structure.weights.map((w, i) => (
-            <div key={`i-${i}`} className="border-r border-blue-200 bg-white">
+            <div key={`i-${i}`} className={styles.box4}>
               <input
                 type="number"
                 min={0}
@@ -115,13 +107,13 @@ export default function CalcPoint() {
                 placeholder={`Điểm ${w}%`}
                 aria-label={`Điểm thành phần hệ số ${w}%`}
                 onChange={(e) => setScores((p) => ({ ...p, [i]: e.target.value }))}
-                className="w-full bg-transparent px-3 py-3.5 text-center text-sm font-semibold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400 focus:bg-blue-50"
+                className={styles.input}
               />
             </div>
           ))}
 
-          <div className="flex items-center justify-center bg-blue-600 px-3 py-3.5">
-            <span className="text-base font-extrabold text-white">
+          <div className={styles.row2}>
+            <span className={styles.label}>
               {total.toFixed(2)} ({grade.letter})
             </span>
           </div>
@@ -131,5 +123,4 @@ export default function CalcPoint() {
   );
 }
 
-const selectCls =
-  "w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100";
+const selectCls = styles.card2;

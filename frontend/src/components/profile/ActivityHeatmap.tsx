@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { ActivityDay } from "@/src/services/userApi";
 
+import styles from "./ActivityHeatmap.module.scss";
 // Ve bang SVG thay vi dung thu vien lich (cal-heatmap keo theo d3 ~250KB).
 // Ca bieu do chi la mot luoi 53x7 hinh vuong - khong dang them phu thuoc.
 
@@ -125,13 +126,11 @@ export default function ActivityHeatmap({ days, total }: Props) {
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h3 className="mb-4 text-sm font-bold text-slate-900">
-        {total} hoạt động trong 12 tháng qua
-      </h3>
+    <div className={styles.card}>
+      <h3 className={styles.subheading}>{total} hoạt động trong 12 tháng qua</h3>
 
       {/* Bieu do rong hon man hinh dien thoai -> cuon ngang trong khung rieng */}
-      <div className="relative overflow-x-auto pb-1">
+      <div className={styles.scroller}>
         <svg
           width={width}
           height={height}
@@ -143,7 +142,7 @@ export default function ActivityHeatmap({ days, total }: Props) {
               key={l.text + l.x}
               x={LEFT_LABEL + l.x}
               y={11}
-              className="fill-slate-600"
+              className={styles.box}
               style={{ fontSize: 10 }}
             >
               {l.text}
@@ -160,7 +159,7 @@ export default function ActivityHeatmap({ days, total }: Props) {
               key={r.text}
               x={0}
               y={TOP_LABEL + r.row * PITCH + CELL - 2}
-              className="fill-slate-600"
+              className={styles.box}
               style={{ fontSize: 10 }}
             >
               {r.text}
@@ -198,7 +197,7 @@ export default function ActivityHeatmap({ days, total }: Props) {
 
         {hover && (
           <div
-            className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-white shadow-lg"
+            className={styles.overlay}
             style={{ left: hover.x + CELL / 2, top: hover.y - 6 }}
           >
             {hover.day
@@ -208,12 +207,12 @@ export default function ActivityHeatmap({ days, total }: Props) {
         )}
       </div>
 
-      <div className="mt-3 flex items-center justify-end gap-1.5 text-xs text-slate-600">
+      <div className={styles.row}>
         <span>Ít hơn</span>
         {LEVEL_COLORS.map((c) => (
           <span
             key={c}
-            className="inline-block rounded-sm"
+            className={styles.label}
             style={{
               width: CELL,
               height: CELL,

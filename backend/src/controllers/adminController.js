@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const { BCRYPT_ROUNDS } = require('../utils/matKhau');
+const { BCRYPT_ROUNDS } = require('../utils/password');
 const User = require('../models/User');
 
 // Dung CHUNG bo kiem cua userController, khong chep lai.
@@ -15,13 +15,13 @@ const {
     emailHopLe,
     loiMatKhauMoi,
     kiemTen,
-} = require('../utils/xacThucDauVao');
-const { chuanHoaSoDienThoai } = require('../utils/soDienThoai');
+} = require('../utils/validateInput');
+const { chuanHoaSoDienThoai } = require('../utils/phoneNumber');
 const Course = require('../models/Course');
 const Lesson = require('../models/Lesson');
 const Enrollment = require('../models/Enrollment');
 const Certificate = require('../models/Certificate');
-const { phanTrang, timGan } = require('../utils/truyVan');
+const { phanTrang, timGan } = require('../utils/queryParams');
 const Review = require('../models/Review');
 const Quiz = require('../models/Quiz');
 
@@ -291,7 +291,7 @@ const createUserAdmin = async (req, res) => {
             // "undefined la tai khoan cu", ma luat do co the bi sua sau nay.
             emailVerified: true,
             name, email, password: hashedPassword, role, status,
-            // Chuan hoa TRUOC khi luu - xem utils/soDienThoai.js. Luu tho
+            // Chuan hoa TRUOC khi luu - xem utils/phoneNumber.js. Luu tho
             // thi quan tri go '+84901234567' va nguoi do khong dang nhap duoc
             // bang so, vi tra cuu luon quy ve dang 0XXXXXXXXX.
             ...(soChuan ? { phone: soChuan } : {}),

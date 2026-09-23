@@ -4,6 +4,7 @@ import { GraduationCap, FileText, PenLine, BadgeCheck } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { CSSProperties } from "react";
 
+import styles from "./HeroSection.module.scss";
 /**
  * Phan mo dau trang chu.
  *
@@ -67,14 +68,14 @@ const CANH: Canh[] = [
   // Canh quy dao dat DAU TIEN theo y chu du an. No thuan CSS/SVG, khong tai
   // anh nao - nen canh dau tien nguoi dung thay cung la canh nhe nhat.
   {
-    mau: "from-[#ffc63f] to-pha shadow-[0_10px_20px_-10px_rgb(255_176_0/.9)]",
+    mau: `${styles.gradChungNhan} ${styles.bongChungNhan}`,
     Icon: BadgeCheck,
     nhan: "Chứng nhận",
     dan: "Bốn phần nối vào một chỗ",
     tua: "Gọn trong một nền tảng",
   },
   {
-    mau: "from-tim-2 to-tim shadow-[0_10px_20px_-10px_rgb(79_43_255/.9)]",
+    mau: `${styles.gradKhoaHoc} ${styles.bongKhoaHoc}`,
     Icon: GraduationCap,
     nhan: "Khóa học",
     // KHONG dat lai cau "Di len tung tang, khong nhay coc" o day: no la dung
@@ -82,7 +83,7 @@ const CANH: Canh[] = [
     dan: "Xem bài giảng rồi làm bài tập",
     tua: "Khóa học có lộ trình",
     anh: {
-      src: "/anh/man-khoa-hoc.png",
+      src: "/images/screen-courses.webp",
       alt: "Danh sách khóa học kèm đơn vị đào tạo, số bài và học phí",
     },
     // Ban truoc ghi "Bai mo dan / Qua bai truoc moi len bai sau" - sai het,
@@ -92,25 +93,25 @@ const CANH: Canh[] = [
     the: { tieu: "Nhớ tiến độ", phu: "Bài nào xong hệ thống ghi lại" },
   },
   {
-    mau: "from-ngoc to-[#009d93] shadow-[0_10px_20px_-10px_rgb(0_191_179/.9)]",
+    mau: `${styles.gradTaiLieu} ${styles.bongTaiLieu}`,
     Icon: FileText,
     nhan: "Tài liệu",
     dan: "Người học góp, người học dùng",
     tua: "Kho tài liệu chia sẻ",
     anh: {
-      src: "/anh/man-tai-lieu.png",
+      src: "/images/screen-documents.webp",
       alt: "Trang tài liệu do người học chia sẻ, kèm định dạng và lượt tải",
     },
     the: { tieu: "Tải về miễn phí", phu: "PDF, slide, đề ôn tập" },
   },
   {
-    mau: "from-[#ff6fb5] to-hong shadow-[0_10px_20px_-10px_rgb(255_62_157/.9)]",
+    mau: `${styles.gradBaiViet} ${styles.bongBaiViet}`,
     Icon: PenLine,
     nhan: "Bài viết",
     dan: "Kinh nghiệm của người đi trước",
     tua: "Học cách tự học",
     anh: {
-      src: "/anh/man-bai-viet.png",
+      src: "/images/screen-posts.webp",
       alt: "Trang bài viết chia sẻ kinh nghiệm tự học, lọc theo chủ đề",
     },
     the: { tieu: "Lọc theo chủ đề", phu: "Đọc đúng thứ đang cần" },
@@ -138,7 +139,7 @@ const QUY_DAO = [
   {
     nhan: "Khóa học",
     Icon: GraduationCap,
-    mau: "from-tim-2 to-tim",
+    mau: styles.gradKhoaHoc,
     goc: "0deg",
     banKinh: "46%",
     chuKy: "44s",
@@ -146,7 +147,7 @@ const QUY_DAO = [
   {
     nhan: "Bài viết",
     Icon: PenLine,
-    mau: "from-[#ff6fb5] to-hong",
+    mau: styles.gradBaiViet,
     goc: "180deg",
     banKinh: "46%",
     chuKy: "44s",
@@ -154,7 +155,7 @@ const QUY_DAO = [
   {
     nhan: "Chứng nhận",
     Icon: BadgeCheck,
-    mau: "from-[#ffc63f] to-pha",
+    mau: styles.gradChungNhan,
     goc: "90deg",
     banKinh: "29%",
     chuKy: "30s",
@@ -162,7 +163,7 @@ const QUY_DAO = [
   {
     nhan: "Tài liệu",
     Icon: FileText,
-    mau: "from-ngoc to-[#009d93]",
+    mau: styles.gradTaiLieu,
     goc: "270deg",
     banKinh: "29%",
     chuKy: "30s",
@@ -182,14 +183,14 @@ export default function HeroSection({ soKhoa, soMienPhi }: HeroSectionProps) {
   // khi khung nhin cao 900 - hut 120px. Them chu vao phan mo dau thi phai do
   // lai, dung them khoang trong.
   return (
-    <header className="relative overflow-hidden bg-white pt-8 pb-12 md:pt-8 md:pb-14">
+    <header className={styles.header}>
       {/* Hai quang sang mo, thuan CSS - khong tai anh nao.
           Ban mau goc dung hai file PNG da lam mo san dat o hai goc; ve bang
           radial-gradient thi duoc dung ket qua do ma khong ton them mot luot
           tai anh nao o cho de nhat trang. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
+        className={styles.floating}
         style={{
           backgroundImage: `
             radial-gradient(38% 42% at 12% 26%, rgb(79 43 255 / .13), transparent 72%),
@@ -198,15 +199,13 @@ export default function HeroSection({ soKhoa, soMienPhi }: HeroSectionProps) {
         }}
       />
 
-      <div className="relative z-2 mx-auto w-[min(76rem,100%-2.5rem)]">
-        <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-8">
+      <div className={styles.box}>
+        <div className={styles.grid}>
           {/* ------------------------------ Chu ------------------------------ */}
           <div>
             {soMienPhi ? (
-              <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1.5 pr-4 pl-1.5 text-sm font-medium shadow-sm">
-                <b className="bg-ngoc rounded-full px-2 py-0.5 font-mono text-[.66rem] font-semibold text-[#04231F]">
-                  MỚI
-                </b>
+              <span className={styles.card}>
+                <b className={styles.box2}>MỚI</b>
                 {soMienPhi} khóa đang mở miễn phí
               </span>
             ) : null}
@@ -225,17 +224,17 @@ export default function HeroSection({ soKhoa, soMienPhi }: HeroSectionProps) {
                 bon dong va day tut ca khoi ben duoi xuong. Da thu
                 "Tu bai hoc dau tien / toi tam chung nhan" (19/18 ky tu) va bi
                 dung loi do. */}
-            <h1 className="font-hien text-muc text-[clamp(2.4rem,5.4vw,4rem)] leading-[1.1] font-extrabold tracking-[-.035em] text-balance">
+            <h1 className={styles.title}>
               Học có lộ trình,
               <br />
-              <span className="text-tim relative inline-block">
+              <span className={styles.label}>
                 lấy chứng nhận
                 {/* Net gach chan ve tay - khong phai border-bottom thang tap */}
                 <svg
                   viewBox="0 0 300 20"
                   preserveAspectRatio="none"
                   aria-hidden="true"
-                  className="absolute -bottom-[.32em] left-[-2%] h-[.4em] w-[104%] overflow-visible"
+                  className={styles.icon}
                 >
                   <path
                     d="M4 13 C 60 4, 110 18, 168 9 S 262 6, 296 12"
@@ -248,26 +247,18 @@ export default function HeroSection({ soKhoa, soMienPhi }: HeroSectionProps) {
               </span>
             </h1>
 
-            <p className="mt-6 max-w-[56ch] text-[1.06rem] text-slate-500">
+            <p className={styles.text}>
               Mỗi khóa là một chuỗi bài xếp sẵn theo thứ tự: xem bài giảng, làm bài kiểm
               tra, hệ thống ghi lại bài nào bạn đã xong. Hết khóa thì có chứng nhận kèm
               mã, ai cũng tra cứu lại được.
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="/courses"
-                className="from-tim-2 to-tim font-hien inline-flex items-center gap-2.5 rounded-full bg-linear-to-br px-7 py-3.5 text-base font-bold text-white shadow-[0_16px_30px_-16px_rgb(79_43_255/.85)] transition hover:-translate-y-0.5"
-              >
+            <div className={styles.row}>
+              <Link href="/courses" className={styles.card2}>
                 Học thử miễn phí
-                <span className="grid size-6.5 place-items-center rounded-full bg-white/20">
-                  →
-                </span>
+                <span className={styles.grid2}>→</span>
               </Link>
-              <Link
-                href="/courses"
-                className="font-hien text-muc hover:border-tim hover:text-tim rounded-full border border-slate-200 bg-white px-7 py-3.5 text-base font-bold transition"
-              >
+              <Link href="/courses" className={styles.card3}>
                 {soKhoa ? `Xem ${soKhoa} khóa học` : "Xem tất cả khóa học"}
               </Link>
             </div>
@@ -289,9 +280,9 @@ export default function HeroSection({ soKhoa, soMienPhi }: HeroSectionProps) {
               the nao vao day - mot tam nen chang han - la canh dau mat luat
               first-child (nguoi tat chuyen dong thay o TRONG TRON) va canh thu
               tu tuot khoi danh sach buoc tre. Da dinh dung loi do mot lan. */}
-          <div className="khung-canh-hero">
+          <div className={styles.box3}>
             {CANH.map(({ mau, Icon, nhan, dan, tua, anh, the }) => (
-              <div key={nhan} className="canh-hero flex flex-col px-1 pt-2 pb-4 sm:px-3">
+              <div key={nhan} className={styles.col}>
                 {/* Dau canh: huy hieu + hai dong chu. Ca cum nay DOI theo canh.
                     CAN GIUA o CA BON canh. Da thu chi can giua rieng canh quy
                     dao (vi vong tron hep hon cot, de canh trai thi chu treo lo
@@ -300,22 +291,18 @@ export default function HeroSection({ soKhoa, soMienPhi }: HeroSectionProps) {
                     khac nhau va chong len nhau, doc ra mot dam chu lem. Can
                     giua het thi tam chu, tam anh va tam vong tron trung nhau,
                     khong con cho nao nhay. */}
-                <div className="flex items-center justify-center gap-3">
-                  <span
-                    className={`grid size-11 shrink-0 place-items-center rounded-[.9rem] bg-linear-to-br text-white ${mau}`}
-                  >
+                <div className={styles.row2}>
+                  <span className={`${styles.grid6} ${mau}`}>
                     <Icon size={21} strokeWidth={2.2} aria-hidden="true" />
                   </span>
-                  <span className="leading-tight">
-                    <span className="block text-[.78rem] text-slate-500">{dan}</span>
-                    <b className="font-hien text-muc block text-[1.02rem] font-bold">
-                      {tua}
-                    </b>
+                  <span className={styles.label2}>
+                    <span className={styles.label3}>{dan}</span>
+                    <b className={styles.box4}>{tua}</b>
                   </span>
                 </div>
 
                 {/* Phan hinh - chiem het cho con lai va tu can giua */}
-                <div className="mt-5 grid min-h-0 flex-1 place-items-center">
+                <div className={styles.grid3}>
                   {anh ? (
                     /* Anh tran, KHONG long trong khung may tinh nao.
                        Ban truoc ve mot cai vien may mau muc kem de may ben duoi;
@@ -330,7 +317,7 @@ export default function HeroSection({ soKhoa, soMienPhi }: HeroSectionProps) {
                       // se cao hon cho con lai va tran ra ngoai. Chan lai thi
                       // anh bi cat bot tren duoi - object-cover lo phan do -
                       // van hon la de no day vo bo cuc.
-                      className="relative aspect-[31/16] max-h-full w-full overflow-hidden rounded-2xl bg-white ring-1 ring-slate-900/8"
+                      className={styles.box5}
                       style={{ boxShadow: "0 26px 50px -28px rgb(15 23 42 / .45)" }}
                     >
                       {/* Ty le 31/16 = dung 1240x640 cua anh goc */}
@@ -349,7 +336,7 @@ export default function HeroSection({ soKhoa, soMienPhi }: HeroSectionProps) {
                         // biet duy nhat: chung khong con tranh bang thong voi
                         // thu ve dau tien nua.
                         sizes="(min-width: 1024px) 46vw, 92vw"
-                        className="object-cover"
+                        className={styles.box6}
                       />
                     </div>
                   ) : (
@@ -358,7 +345,7 @@ export default function HeroSection({ soKhoa, soMienPhi }: HeroSectionProps) {
                        lai (h-full + aspect-square) chu khong theo be rong: o
                        man hinh hep, an theo be rong thi no cao vuot ra ngoai
                        khung va bi cat mat mot khuc. */
-                    <div className="relative aspect-square h-full">
+                    <div className={styles.box7}>
                       {/* He vanh ve bang SVG chu khong phai border cua CSS.
                           Ly do: ban mau co MOT doan vanh dam chuyen sac (ngoc
                           sang tim). border cua CSS chi nhan mot mau dac - muon
@@ -371,7 +358,7 @@ export default function HeroSection({ soKhoa, soMienPhi }: HeroSectionProps) {
                           tinh lai gi khi doi kich thuoc. */}
                       <svg
                         viewBox="0 0 400 400"
-                        className="absolute inset-0 size-full overflow-visible"
+                        className={styles.icon2}
                         aria-hidden="true"
                       >
                         <defs>
@@ -426,7 +413,7 @@ export default function HeroSection({ soKhoa, soMienPhi }: HeroSectionProps) {
                             Quay cham 70 giay mot vong va NGUOC chieu bon the -
                             chuyen dong nen, khong tranh voi cai chinh. */}
                         <path
-                          className="vanh-sang"
+                          className={styles.iconPath}
                           d="M 103.6 314.9 A 150 150 0 0 1 148.7 59"
                           fill="none"
                           stroke="url(#vanh-hero)"
@@ -436,7 +423,7 @@ export default function HeroSection({ soKhoa, soMienPhi }: HeroSectionProps) {
 
                         {/* Ba cham nho tren vanh, quay cung chieu voi bon the
                             nhung cham hon nhieu (90 giay). */}
-                        <g className="cham-quay">
+                        <g className={styles.box8}>
                           <circle cx="12.9" cy="233" r="5.5" fill="#4F8BFF" />
                           <circle cx="378.5" cy="135" r="5" fill="#4F8BFF" />
                           <circle
@@ -453,10 +440,8 @@ export default function HeroSection({ soKhoa, soMienPhi }: HeroSectionProps) {
                           Ban mau dat logo tren nen TRANG chu khong phai tren
                           nen mau - de vay thi cai dia noi han len khoi cac vanh
                           mo phia sau. */}
-                      <span className="absolute top-1/2 left-1/2 grid size-[27%] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white shadow-[0_0_0_10px_rgb(255_255_255/.75),0_18px_38px_-14px_rgb(79_43_255/.45)]">
-                        <span className="from-tim-2 to-ngoc grid size-[76%] place-items-center rounded-full bg-linear-to-br text-[1.05rem] font-black text-white">
-                          LP
-                        </span>
+                      <span className={styles.floating2}>
+                        <span className={styles.grid4}>LP</span>
                       </span>
 
                       {/* Bon the quay quanh tam.
@@ -469,7 +454,7 @@ export default function HeroSection({ soKhoa, soMienPhi }: HeroSectionProps) {
                       {QUY_DAO.map((m) => (
                         <span
                           key={m.nhan}
-                          className="quy-dao-tay"
+                          className={styles.label4}
                           style={
                             {
                               "--goc": m.goc,
@@ -478,11 +463,9 @@ export default function HeroSection({ soKhoa, soMienPhi }: HeroSectionProps) {
                             } as CSSProperties
                           }
                         >
-                          <span className="quy-dao-neo">
-                            <span className="quy-dao-the w-[4.6rem] flex-col items-center gap-1 rounded-xl bg-white px-1.5 py-2 text-center text-[.62rem] leading-tight font-semibold text-slate-700 shadow-[0_12px_26px_-14px_rgb(15_23_42/.5)] ring-1 ring-slate-900/6">
-                              <span
-                                className={`grid size-6 place-items-center rounded-lg bg-linear-to-br text-white ${m.mau}`}
-                              >
+                          <span className={styles.label5}>
+                            <span className={styles.card4}>
+                              <span className={`${styles.grid7} ${m.mau}`}>
                                 <m.Icon size={13} strokeWidth={2.4} aria-hidden="true" />
                               </span>
                               {m.nhan}
@@ -498,18 +481,12 @@ export default function HeroSection({ soKhoa, soMienPhi }: HeroSectionProps) {
                     dung the DOI theo canh. An o man hinh hep: cho do vua du cho
                     cai may tinh, them the nua la che mat thu can nhin. */}
                 {the ? (
-                  <div className="absolute right-6 bottom-5 hidden max-w-[15rem] rounded-xl bg-white/95 px-4 py-3 shadow-[0_18px_36px_-20px_rgb(15_23_42/.5)] ring-1 ring-slate-900/8 backdrop-blur-sm sm:block">
-                    <div className="flex items-center gap-2.5">
-                      <span className="bg-ngoc/15 text-ngoc grid size-8 shrink-0 place-items-center rounded-lg text-sm font-bold">
-                        ✓
-                      </span>
-                      <span className="leading-snug">
-                        <b className="text-muc block text-[.82rem] font-semibold">
-                          {the.tieu}
-                        </b>
-                        <span className="block text-[.72rem] text-slate-500">
-                          {the.phu}
-                        </span>
+                  <div className={styles.floating3}>
+                    <div className={styles.row3}>
+                      <span className={styles.grid5}>✓</span>
+                      <span className={styles.label6}>
+                        <b className={styles.box9}>{the.tieu}</b>
+                        <span className={styles.label7}>{the.phu}</span>
                       </span>
                     </div>
                   </div>
@@ -530,11 +507,11 @@ export default function HeroSection({ soKhoa, soMienPhi }: HeroSectionProps) {
             60 giay, nen admin them/xoa/go xuat ban mot KHOA HOC la cho nay tu
             tang giam theo. Thay mot con so bang chu la lan sau no thanh loi
             noi sai. */}
-        <p className="mt-6 text-center text-[.95rem] text-slate-500 md:mt-6">
-          <b className="text-tim font-semibold">{soKhoa}</b> khóa học
-          <span className="mx-2.5 text-slate-300">·</span>
-          <b className="text-tim font-semibold">{soMienPhi}</b> khóa mở miễn phí
-          <span className="mx-2.5 text-slate-300">·</span>
+        <p className={styles.text2}>
+          <b className={styles.box10}>{soKhoa}</b> khóa học
+          <span className={styles.label8}>·</span>
+          <b className={styles.box10}>{soMienPhi}</b> khóa mở miễn phí
+          <span className={styles.label8}>·</span>
           chứng nhận tra cứu được bằng mã
         </p>
       </div>

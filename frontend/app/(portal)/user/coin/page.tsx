@@ -14,9 +14,10 @@ import {
   taoYeuCauNap,
   type YeuCauNap,
 } from "@/src/services/coin.api";
-import { baoCoinDaDoi } from "@/src/components/common/SoDuCoin";
+import { baoCoinDaDoi } from "@/src/components/common/CoinBalance";
 import { getErrorMessage } from "@/src/services/apiHelper";
 
+import styles from "./page.module.scss";
 // Cac muc nap goi san. Nguoi dung van go so tuy y duoc, nhung phan lon chon
 // mot muc co san nhanh hon go.
 const GOI = [100, 200, 500, 1000, 2000, 5000];
@@ -44,7 +45,7 @@ function NutChep({ giaTri, nhan }: { giaTri: string; nhan: string }) {
           // khong bao loi - so van hien ngay canh do de go tay.
         }
       }}
-      className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 transition hover:text-blue-800"
+      className={styles.button}
       aria-label={`Sao chép ${nhan}`}
     >
       {xong ? <Check size={12} /> : <Copy size={12} />}
@@ -192,57 +193,48 @@ export default function TrangNapCoin() {
   const ck = yeuCau?.chuyenKhoan;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
+    <div className={styles.container}>
       <div>
-        <Link
-          href="/user/profile"
-          className="mb-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-800"
-        >
+        <Link href="/user/profile" className={styles.box}>
           <ArrowLeft size={16} /> Về hồ sơ của tôi
         </Link>
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
-          <Coins size={22} className="text-amber-500" /> Nạp coin
+        <h1 className={styles.title}>
+          <Coins size={22} className={styles.box2} /> Nạp coin
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className={styles.text}>
           1 coin = {dinhDangDong(DONG_MOI_COIN)}. Coin dùng để mở khóa học ngay, không
           phải chờ đối chiếu từng lần mua.
         </p>
       </div>
 
       {soDu !== null && (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
-          <p className="text-xs font-semibold text-amber-700">Số dư hiện tại</p>
-          <p className="text-2xl font-bold text-amber-900 tabular-nums">
-            {soDu.toLocaleString("vi-VN")} coin
-          </p>
+        <div className={styles.card}>
+          <p className={styles.text2}>Số dư hiện tại</p>
+          <p className={styles.text3}>{soDu.toLocaleString("vi-VN")} coin</p>
         </div>
       )}
 
-      {loi && (
-        <p className="rounded-xl bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
-          {loi}
-        </p>
-      )}
+      {loi && <p className={styles.text4}>{loi}</p>}
 
       {dangTai ? (
-        <div className="flex justify-center py-16">
-          <Loader2 size={22} className="animate-spin text-slate-400" />
+        <div className={styles.row}>
+          <Loader2 size={22} className={styles.spinner} />
         </div>
       ) : yeuCau && yeuCau.status === "pending" ? (
-        <section className="space-y-5 rounded-2xl border border-slate-200 p-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-sm font-semibold text-slate-900">
+        <section className={styles.section}>
+          <div className={styles.row2}>
+            <h2 className={styles.heading}>
               Chuyển khoản {dinhDangDong(yeuCau.amount)} để nhận{" "}
               {yeuCau.soCoin.toLocaleString("vi-VN")} coin
             </h2>
-            <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700 tabular-nums">
+            <span className={styles.label}>
               <Clock size={13} /> {dangDongHo(conLai)}
             </span>
           </div>
 
           {ck?.daCauHinh ? (
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="flex flex-col items-center gap-2">
+            <div className={styles.grid}>
+              <div className={styles.col}>
                 {ck.anhQR && (
                   <Image
                     src={ck.anhQR}
@@ -251,46 +243,46 @@ export default function TrangNapCoin() {
                     height={380}
                     unoptimized
                     referrerPolicy="no-referrer"
-                    className="h-auto w-full max-w-[260px] rounded-xl border border-slate-200"
+                    className={styles.box3}
                   />
                 )}
-                <p className="text-center text-xs text-slate-500">
+                <p className={styles.text5}>
                   Quét mã là mọi ô đã điền sẵn, không phải gõ tay.
                 </p>
               </div>
 
-              <dl className="space-y-3 text-sm">
-                <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-2">
-                  <dt className="text-slate-500">Ngân hàng</dt>
-                  <dd className="font-semibold text-slate-900">{ck.nganHang}</dd>
+              <dl className={styles.stack}>
+                <div className={styles.row3}>
+                  <dt className={styles.box4}>Ngân hàng</dt>
+                  <dd className={styles.box5}>{ck.nganHang}</dd>
                 </div>
-                <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-2">
-                  <dt className="text-slate-500">Số tài khoản</dt>
-                  <dd className="flex items-center gap-2 font-semibold text-slate-900">
+                <div className={styles.row3}>
+                  <dt className={styles.box4}>Số tài khoản</dt>
+                  <dd className={styles.row4}>
                     {ck.soTaiKhoan} <NutChep giaTri={ck.soTaiKhoan} nhan="số tài khoản" />
                   </dd>
                 </div>
-                <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-2">
-                  <dt className="text-slate-500">Tên tài khoản</dt>
-                  <dd className="font-semibold text-slate-900">{ck.tenTaiKhoan}</dd>
+                <div className={styles.row3}>
+                  <dt className={styles.box4}>Tên tài khoản</dt>
+                  <dd className={styles.box5}>{ck.tenTaiKhoan}</dd>
                 </div>
-                <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-2">
-                  <dt className="text-slate-500">Số tiền</dt>
-                  <dd className="flex items-center gap-2 font-semibold text-slate-900">
+                <div className={styles.row3}>
+                  <dt className={styles.box4}>Số tiền</dt>
+                  <dd className={styles.row4}>
                     {dinhDangDong(yeuCau.amount)}{" "}
                     <NutChep giaTri={String(yeuCau.amount)} nhan="số tiền" />
                   </dd>
                 </div>
-                <div className="flex items-center justify-between gap-3">
-                  <dt className="text-slate-500">Nội dung</dt>
-                  <dd className="flex items-center gap-2 font-mono font-bold text-slate-900">
+                <div className={styles.row5}>
+                  <dt className={styles.box4}>Nội dung</dt>
+                  <dd className={styles.row6}>
                     {yeuCau.code} <NutChep giaTri={yeuCau.code} nhan="nội dung" />
                   </dd>
                 </div>
               </dl>
             </div>
           ) : (
-            <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <p className={styles.text6}>
               Máy chủ chưa khai báo tài khoản nhận tiền nên chưa sinh được mã QR. Mã{" "}
               <strong>{yeuCau.code}</strong> vẫn hợp lệ — liên hệ ban quản trị để lấy
               thông tin chuyển khoản.
@@ -300,7 +292,7 @@ export default function TrangNapCoin() {
           {/* Ma nay la thu DUY NHAT noi khoan tien voi yeu cau nap. Nhac rieng
               mot dong vi day la cho hay sai nhat: thieu ma thi tien ve toi noi
               ma khong ai biet la cua ai. */}
-          <p className="rounded-xl bg-slate-50 px-4 py-3 text-xs text-slate-600">
+          <p className={styles.text7}>
             Nội dung chuyển khoản <strong>bắt buộc</strong> là <b>{yeuCau.code}</b>. Ghi
             thiếu hoặc ghi sai thì ban quản trị không biết khoản tiền đó là của ai.
           </p>
@@ -308,36 +300,23 @@ export default function TrangNapCoin() {
           {daBao ? (
             // KHONG bao "tai lai trang de xem" nhu truoc nua: tai lai la mat ma.
             // Trang tu do may chu 5 giay mot lan, coin vao la no tu doi.
-            <p
-              className={`rounded-xl px-4 py-3 text-sm font-medium ${
-                mailHong
-                  ? "border border-amber-200 bg-amber-50 text-amber-900"
-                  : "bg-emerald-50 text-emerald-800"
-              }`}
-            >
+            <p className={`${styles.text13} ${mailHong ? styles.text8 : styles.text9}`}>
               Đã báo cho ban quản trị. Coin sẽ vào ví sau khi đối chiếu sao kê — bạn cứ để
               yên trang này, có coin là nó tự hiện.
               {mailHong && (
                 <>
                   {" "}
                   Tuy nhiên mail báo chưa gửi được, nên bạn nhắn thêm cho ban quản trị kèm
-                  mã <strong className="font-mono">{yeuCau.code}</strong> cho chắc.
+                  mã <strong className={styles.strong}>{yeuCau.code}</strong> cho chắc.
                 </>
               )}
             </p>
           ) : (
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={bao}
-                disabled={dangBao}
-                className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-700 disabled:bg-blue-400"
-              >
+            <div className={styles.row7}>
+              <button onClick={bao} disabled={dangBao} className={styles.button2}>
                 {dangBao ? "Đang gửi..." : "Tôi đã chuyển khoản"}
               </button>
-              <button
-                onClick={huy}
-                className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
-              >
+              <button onClick={huy} className={styles.button3}>
                 Hủy yêu cầu
               </button>
             </div>
@@ -348,41 +327,32 @@ export default function TrangNapCoin() {
               void dongBo();
               baoCoinDaDoi();
             }}
-            className="text-xs font-semibold text-slate-500 underline transition hover:text-slate-800"
+            className={styles.button4}
           >
             Kiểm tra lại xem coin đã vào chưa
           </button>
         </section>
       ) : (
-        <section className="space-y-5 rounded-2xl border border-slate-200 p-5">
-          <h2 className="text-sm font-semibold text-slate-900">Chọn số coin muốn nạp</h2>
+        <section className={styles.section}>
+          <h2 className={styles.heading}>Chọn số coin muốn nạp</h2>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className={styles.grid2}>
             {GOI.map((g) => (
               <button
                 key={g}
                 onClick={() => setSoCoin(g)}
-                className={`rounded-xl border px-4 py-3 text-left transition ${
-                  soCoin === g
-                    ? "border-amber-400 bg-amber-50 ring-1 ring-amber-300"
-                    : "border-slate-200 hover:border-slate-300"
+                className={`${styles.button7} ${
+                  soCoin === g ? styles.button5 : styles.button6
                 }`}
               >
-                <p className="text-base font-bold text-slate-900 tabular-nums">
-                  {g.toLocaleString("vi-VN")} coin
-                </p>
-                <p className="text-xs text-slate-500 tabular-nums">
-                  {dinhDangDong(g * DONG_MOI_COIN)}
-                </p>
+                <p className={styles.text10}>{g.toLocaleString("vi-VN")} coin</p>
+                <p className={styles.text11}>{dinhDangDong(g * DONG_MOI_COIN)}</p>
               </button>
             ))}
           </div>
 
           <div>
-            <label
-              htmlFor="so-coin"
-              className="mb-1.5 block text-xs font-bold text-slate-600"
-            >
+            <label htmlFor="so-coin" className={styles.fieldLabel}>
               Hoặc nhập số coin khác
             </label>
             <input
@@ -392,18 +362,14 @@ export default function TrangNapCoin() {
               step={1}
               value={soCoin || ""}
               onChange={(e) => setSoCoin(Math.floor(Number(e.target.value)) || 0)}
-              className="w-full rounded-xl border border-slate-200 p-3 text-sm outline-none focus:border-blue-500"
+              className={styles.input}
             />
-            <p className="mt-1.5 text-xs text-slate-500 tabular-nums">
+            <p className={styles.text12}>
               Phải chuyển: <b>{dinhDangDong(Math.max(0, soCoin) * DONG_MOI_COIN)}</b>
             </p>
           </div>
 
-          <button
-            onClick={tao}
-            disabled={dangTao || soCoin <= 0}
-            className="w-full rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-amber-600 disabled:bg-slate-200 disabled:text-slate-400"
-          >
+          <button onClick={tao} disabled={dangTao || soCoin <= 0} className={styles.box6}>
             {dangTao ? "Đang tạo yêu cầu..." : "Tạo yêu cầu nạp"}
           </button>
         </section>

@@ -15,15 +15,16 @@ import {
   X,
 } from "lucide-react";
 import FeedCard from "@/src/components/common/FeedCard";
-import { thoiGianTuongDoi } from "@/src/components/common/thoiGian";
+import { thoiGianTuongDoi } from "@/src/components/common/time";
 import {
   documentService,
   type DocumentListResponse,
   type SharedDocument,
 } from "@/src/services/document";
-import { useNguoiDungLuu } from "@/src/hooks/nguoiDungLuu";
+import { useNguoiDungLuu } from "@/src/hooks/userStore";
 import { getErrorMessage } from "@/src/services/apiHelper";
 
+import styles from "./ShareDocumentClient.module.scss";
 const MAX_MB = 20;
 const DUOI_CHO_PHEP = ["pdf", "doc", "docx"];
 
@@ -42,10 +43,12 @@ function duoiCuaFile(name: string): string {
   return name.split(".").pop()?.toLowerCase() ?? "";
 }
 
+// Mau nhan theo duoi file. Truoc day la chuoi lop Tailwind dat thang o day;
+// go Tailwind xong thi nhan pdf va nhan doc nhin y het nhau.
 const MAU_LOAI: Record<string, string> = {
-  pdf: "bg-red-50 text-red-700",
-  doc: "bg-blue-50 text-blue-700",
-  docx: "bg-blue-50 text-blue-700",
+  pdf: styles.nhanPdf,
+  doc: styles.nhanDoc,
+  docx: styles.nhanDoc,
 };
 
 export default function ShareDocumentClient({ initialData }: Props) {
@@ -57,7 +60,7 @@ export default function ShareDocumentClient({ initialData }: Props) {
   const [tuKhoaDangDung, setTuKhoaDangDung] = useState("");
 
   // Danh tinh lay tu kho chung o RAM; <NapNguoiDung /> lo nap va dong bo giua
-  // cac tab - xem src/hooks/nguoiDungLuu.ts.
+  // cac tab - xem src/hooks/userStore.ts.
   const user = useNguoiDungLuu();
   const [moForm, setMoForm] = useState(false);
 
@@ -150,57 +153,41 @@ export default function ShareDocumentClient({ initialData }: Props) {
     Boolean(user && (user.role === "admin" || user._id === doc.uploader?._id));
 
   return (
-    <div className="mx-auto max-w-7xl px-6">
+    <div className={styles.container}>
       {/* ------------------------------------------------------------------ */}
       {/* Khu dang bai - de tren cung, ngoai luoi hai cot                     */}
       {/* ------------------------------------------------------------------ */}
       {!user ? (
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50">
-              <LogIn size={20} className="text-blue-700" />
+        <div className={styles.card}>
+          <div className={styles.row}>
+            <span className={styles.row2}>
+              <LogIn size={20} className={styles.box} />
             </span>
             <div>
-              <p className="text-sm font-bold text-slate-900">
-                Đăng nhập để chia sẻ tài liệu
-              </p>
-              <p className="text-sm text-slate-600">
+              <p className={styles.text}>Đăng nhập để chia sẻ tài liệu</p>
+              <p className={styles.text2}>
                 Xem và tải thì không cần tài khoản, chỉ khi đăng lên mới cần.
               </p>
             </div>
           </div>
-          <Link
-            href="/?auth=login"
-            className="rounded-xl bg-blue-600 px-5 py-2 text-sm font-bold text-white transition hover:bg-blue-700"
-          >
+          <Link href="/?auth=login" className={styles.box2}>
             Đăng nhập
           </Link>
         </div>
       ) : !moForm ? (
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4">
-          <p className="text-sm text-slate-700">
-            Bạn có đề cương, đề thi hay slide muốn chia sẻ?
-          </p>
-          <button
-            type="button"
-            onClick={() => setMoForm(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2 text-sm font-bold text-white transition hover:bg-blue-700"
-          >
+        <div className={styles.card}>
+          <p className={styles.text3}>Bạn có đề cương, đề thi hay slide muốn chia sẻ?</p>
+          <button type="button" onClick={() => setMoForm(true)} className={styles.button}>
             <Upload size={16} />
             Đăng tài liệu
           </button>
         </div>
       ) : (
-        <form
-          onSubmit={guiBai}
-          className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
-        >
-          <div className="flex items-start justify-between gap-4">
+        <form onSubmit={guiBai} className={styles.form}>
+          <div className={styles.row3}>
             <div>
-              <h2 className="text-lg font-extrabold text-slate-900">
-                Đăng tài liệu của bạn
-              </h2>
-              <p className="mt-1 text-sm text-slate-600">
+              <h2 className={styles.heading}>Đăng tài liệu của bạn</h2>
+              <p className={styles.text4}>
                 Mọi người đều xem và tải được tài liệu bạn chia sẻ.
               </p>
             </div>
@@ -208,19 +195,16 @@ export default function ShareDocumentClient({ initialData }: Props) {
               type="button"
               onClick={() => setMoForm(false)}
               aria-label="Đóng biểu mẫu"
-              className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+              className={styles.button2}
             >
               <X size={18} />
             </button>
           </div>
 
-          <div className="mt-5 space-y-4">
+          <div className={styles.stack}>
             <div>
-              <label
-                htmlFor="tieu-de"
-                className="block text-sm font-semibold text-slate-800"
-              >
-                Tiêu đề <span className="text-red-600">*</span>
+              <label htmlFor="tieu-de" className={styles.fieldLabel}>
+                Tiêu đề <span className={styles.label}>*</span>
               </label>
               <input
                 id="tieu-de"
@@ -228,19 +212,14 @@ export default function ShareDocumentClient({ initialData }: Props) {
                 onChange={(e) => setTieuDe(e.target.value)}
                 maxLength={200}
                 placeholder="VD: Đề cương ôn tập Cấu trúc dữ liệu và giải thuật"
-                className="mt-1.5 w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm transition outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15"
+                className={styles.input}
               />
-              <p className="mt-1 text-right text-xs text-slate-500">
-                {tieuDe.length}/200
-              </p>
+              <p className={styles.text5}>{tieuDe.length}/200</p>
             </div>
 
             <div>
-              <label
-                htmlFor="noi-dung"
-                className="block text-sm font-semibold text-slate-800"
-              >
-                Nội dung <span className="text-red-600">*</span>
+              <label htmlFor="noi-dung" className={styles.fieldLabel}>
+                Nội dung <span className={styles.label}>*</span>
               </label>
               <textarea
                 id="noi-dung"
@@ -256,62 +235,48 @@ export default function ShareDocumentClient({ initialData }: Props) {
                   "- Ý thứ nhất\n" +
                   "- Ý thứ hai"
                 }
-                className="mt-1.5 w-full resize-y rounded-xl border border-slate-300 px-4 py-2.5 text-sm leading-relaxed transition outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15"
+                className={styles.textarea}
               />
-              <div className="mt-1 flex flex-wrap items-start justify-between gap-2">
+              <div className={styles.row4}>
                 {/* Muc luc ben trai trang chi tiet duoc dung tu chinh nhung dong
                     nay. Khong noi ro thi nguoi dang go mot khoi van lien, va
                     trang chi tiet khong co gi de dieu huong. */}
-                <p className="text-xs leading-relaxed text-slate-500">
-                  Dòng bắt đầu bằng{" "}
-                  <code className="rounded bg-slate-100 px-1 font-semibold">
-                    Chương 1:
-                  </code>
-                  ,{" "}
-                  <code className="rounded bg-slate-100 px-1 font-semibold">Mục 1.1</code>{" "}
-                  hoặc{" "}
-                  <code className="rounded bg-slate-100 px-1 font-semibold">
-                    ## Tiêu đề
-                  </code>{" "}
-                  sẽ thành mục lục ở trang xem bài.
+                <p className={styles.text6}>
+                  Dòng bắt đầu bằng <code className={styles.code}>Chương 1:</code>,{" "}
+                  <code className={styles.code}>Mục 1.1</code> hoặc{" "}
+                  <code className={styles.code}>## Tiêu đề</code> sẽ thành mục lục ở trang
+                  xem bài.
                 </p>
-                <p className="text-xs text-slate-500">{noiDung.length}/5000</p>
+                <p className={styles.text7}>{noiDung.length}/5000</p>
               </div>
             </div>
 
             <div>
-              <span className="block text-sm font-semibold text-slate-800">
-                File tài liệu <span className="text-red-600">*</span>
+              <span className={styles.fieldLabel}>
+                File tài liệu <span className={styles.label}>*</span>
               </span>
 
               {file ? (
-                <div className="mt-1.5 flex items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
-                  <FileText size={20} className="shrink-0 text-blue-700" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-slate-900">
-                      {file.name}
-                    </p>
-                    <p className="text-xs text-slate-600">{doiKichThuoc(file.size)}</p>
+                <div className={styles.card2}>
+                  <FileText size={20} className={styles.box3} />
+                  <div className={styles.box4}>
+                    <p className={styles.text8}>{file.name}</p>
+                    <p className={styles.text9}>{doiKichThuoc(file.size)}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setFile(null)}
                     aria-label="Bỏ file đã chọn"
-                    className="rounded-lg p-1.5 text-slate-500 transition hover:bg-white hover:text-slate-900"
+                    className={styles.button3}
                   >
                     <X size={16} />
                   </button>
                 </div>
               ) : (
-                <label
-                  htmlFor="file-tai-lieu"
-                  className="mt-1.5 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center transition hover:border-blue-500 hover:bg-blue-50/40"
-                >
-                  <Upload size={24} className="text-slate-500" />
-                  <span className="mt-2 text-sm font-semibold text-slate-800">
-                    Bấm để chọn file
-                  </span>
-                  <span className="mt-0.5 text-xs text-slate-500">
+                <label htmlFor="file-tai-lieu" className={styles.fieldLabel2}>
+                  <Upload size={24} className={styles.box5} />
+                  <span className={styles.label2}>Bấm để chọn file</span>
+                  <span className={styles.label3}>
                     PDF, DOC hoặc DOCX &middot; tối đa {MAX_MB}MB
                   </span>
                 </label>
@@ -320,36 +285,26 @@ export default function ShareDocumentClient({ initialData }: Props) {
                 id="file-tai-lieu"
                 type="file"
                 accept=".pdf,.doc,.docx"
-                className="hidden"
+                className={styles.input2}
                 onChange={(e) => chonFile(e.target.files?.[0] ?? null)}
               />
             </div>
           </div>
 
           {loiForm && (
-            <p
-              role="alert"
-              className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
-            >
+            <p role="alert" className={styles.text10}>
               {loiForm}
             </p>
           )}
           {thanhCong && (
-            <p
-              role="status"
-              className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800"
-            >
+            <p role="status" className={styles.text11}>
               {thanhCong}
             </p>
           )}
 
-          <button
-            type="submit"
-            disabled={dangGui}
-            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          <button type="submit" disabled={dangGui} className={styles.button4}>
             {dangGui ? (
-              <Loader2 size={16} className="animate-spin" />
+              <Loader2 size={16} className={styles.spinner} />
             ) : (
               <Upload size={16} />
             )}
@@ -361,67 +316,57 @@ export default function ShareDocumentClient({ initialData }: Props) {
       {/* ------------------------------------------------------------------ */}
       {/* Luoi hai cot: danh sach ben trai, thong tin phu ben phai            */}
       {/* ------------------------------------------------------------------ */}
-      <div className="mt-8 grid gap-x-14 gap-y-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className={styles.grid}>
         <div>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <h2 className="text-lg font-extrabold text-slate-900">
-              Tài liệu đã chia sẻ{" "}
-              <span className="text-sm font-semibold text-slate-500">({data.total})</span>
+          <div className={styles.row5}>
+            <h2 className={styles.heading}>
+              Tài liệu đã chia sẻ <span className={styles.label4}>({data.total})</span>
             </h2>
 
-            <form onSubmit={timKiem} className="flex items-center gap-2">
-              <div className="relative">
-                <Search
-                  size={16}
-                  className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
-                />
+            <form onSubmit={timKiem} className={styles.form2}>
+              <div className={styles.box6}>
+                <Search size={16} className={styles.floating} />
                 <input
                   value={tuKhoa}
                   onChange={(e) => setTuKhoa(e.target.value)}
                   placeholder="Tìm tài liệu"
                   aria-label="Tìm tài liệu"
-                  className="w-44 rounded-xl border border-slate-300 py-2 pr-3 pl-9 text-sm transition outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15 sm:w-56"
+                  className={styles.input3}
                 />
               </div>
-              <button
-                type="submit"
-                className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:border-blue-600 hover:text-blue-700"
-              >
+              <button type="submit" className={styles.button5}>
                 Tìm
               </button>
             </form>
           </div>
 
           {loiDanhSach && (
-            <p
-              role="alert"
-              className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
-            >
+            <p role="alert" className={styles.text10}>
               {loiDanhSach}
             </p>
           )}
 
           {dangTai ? (
-            <div className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-16 text-sm text-slate-600">
-              <Loader2 size={18} className="animate-spin" />
+            <div className={styles.card3}>
+              <Loader2 size={18} className={styles.spinner} />
               Đang tải...
             </div>
           ) : data.documents.length === 0 ? (
-            <div className="mt-4 rounded-xl border border-slate-200 bg-white py-16 text-center">
-              <FileText size={32} className="mx-auto text-slate-300" />
-              <p className="mt-3 text-sm font-semibold text-slate-800">
+            <div className={styles.card4}>
+              <FileText size={32} className={styles.box7} />
+              <p className={styles.text12}>
                 {tuKhoaDangDung
                   ? "Không tìm thấy tài liệu phù hợp"
                   : "Chưa có tài liệu nào"}
               </p>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className={styles.text13}>
                 {tuKhoaDangDung
                   ? "Thử từ khóa khác xem sao."
                   : "Hãy là người đầu tiên chia sẻ."}
               </p>
             </div>
           ) : (
-            <div className="mt-4 space-y-4">
+            <div className={styles.stack2}>
               {data.documents.map((doc) => (
                 <FeedCard
                   key={doc._id}
@@ -433,21 +378,21 @@ export default function ShareDocumentClient({ initialData }: Props) {
                   meta={
                     <>
                       <span
-                        className={`rounded-md px-2.5 py-1 text-[13px] font-bold ${
+                        className={`${styles.label8} ${
                           MAU_LOAI[doc.fileExt] ?? MAU_LOAI.pdf
                         }`}
                       >
                         {doc.fileExt.toUpperCase()}
                       </span>
                       <span>{thoiGianTuongDoi(doc.createdAt)}</span>
-                      <span aria-hidden className="text-slate-300">
+                      <span aria-hidden className={styles.label5}>
                         &middot;
                       </span>
-                      <span className="inline-flex items-center gap-1">
+                      <span className={styles.label6}>
                         <Download size={13} />
                         {doc.downloadCount} lượt tải
                       </span>
-                      <span aria-hidden className="text-slate-300">
+                      <span aria-hidden className={styles.label5}>
                         &middot;
                       </span>
                       <span>{doiKichThuoc(doc.fileSize)}</span>
@@ -471,23 +416,23 @@ export default function ShareDocumentClient({ initialData }: Props) {
           )}
 
           {data.totalPages > 1 && (
-            <div className="mt-8 flex items-center justify-center gap-2">
+            <div className={styles.row6}>
               <button
                 type="button"
                 disabled={data.page <= 1 || dangTai}
                 onClick={() => taiLai(data.page - 1, tuKhoaDangDung)}
-                className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:border-blue-600 disabled:cursor-not-allowed disabled:opacity-40"
+                className={styles.card5}
               >
                 Trước
               </button>
-              <span className="px-2 text-sm text-slate-600">
+              <span className={styles.label7}>
                 Trang {data.page}/{data.totalPages}
               </span>
               <button
                 type="button"
                 disabled={data.page >= data.totalPages || dangTai}
                 onClick={() => taiLai(data.page + 1, tuKhoaDangDung)}
-                className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:border-blue-600 disabled:cursor-not-allowed disabled:opacity-40"
+                className={styles.card5}
               >
                 Sau
               </button>
@@ -500,14 +445,12 @@ export default function ShareDocumentClient({ initialData }: Props) {
         {/* Quy dinh dat o day thay vi mot dai bang ngang phia tren: nguoi   */}
         {/* dung van thay no khi cuon danh sach, khong chi luc vao trang.    */}
         {/* ---------------------------------------------------------------- */}
-        <aside className="lg:sticky lg:top-[120px] lg:self-start">
-          <h2 className="text-xs font-bold tracking-wide text-slate-500 uppercase">
-            Quy định khi đăng
-          </h2>
-          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <div className="flex items-start gap-2.5">
-              <ShieldAlert size={18} className="mt-0.5 shrink-0 text-amber-700" />
-              <p className="text-sm leading-relaxed text-amber-900">
+        <aside className={styles.aside}>
+          <h2 className={styles.heading2}>Quy định khi đăng</h2>
+          <div className={styles.card6}>
+            <div className={styles.row7}>
+              <ShieldAlert size={18} className={styles.box8} />
+              <p className={styles.text14}>
                 Hệ thống tự động từ chối bài có nội dung{" "}
                 <strong>chửi thề, tục tĩu</strong>, <strong>kỳ thị chủng tộc</strong>,
                 hoặc <strong>kích động gây hấn</strong>.
@@ -515,35 +458,25 @@ export default function ShareDocumentClient({ initialData }: Props) {
             </div>
           </div>
 
-          <h2 className="mt-6 text-xs font-bold tracking-wide text-slate-500 uppercase">
-            Định dạng nhận
-          </h2>
-          <ul className="mt-3 flex flex-wrap gap-2">
+          <h2 className={styles.heading3}>Định dạng nhận</h2>
+          <ul className={styles.list}>
             {DUOI_CHO_PHEP.map((d) => (
-              <li
-                key={d}
-                className={`rounded-full px-3 py-1 text-xs font-bold ${MAU_LOAI[d]}`}
-              >
+              <li key={d} className={`${styles.item2} ${MAU_LOAI[d]}`}>
                 {d.toUpperCase()}
               </li>
             ))}
-            <li className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-              tối đa {MAX_MB}MB
-            </li>
+            <li className={styles.item}>tối đa {MAX_MB}MB</li>
           </ul>
 
-          <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50 p-4">
-            <p className="flex items-center gap-2 text-sm font-bold text-slate-900">
-              <Newspaper size={16} className="text-blue-700" />
+          <div className={styles.card7}>
+            <p className={styles.text15}>
+              <Newspaper size={16} className={styles.box} />
               Đọc bài viết
             </p>
-            <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
+            <p className={styles.text16}>
               Kinh nghiệm tự học lập trình và các kỹ thuật lập trình web.
             </p>
-            <Link
-              href="/blog"
-              className="mt-3 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-blue-700"
-            >
+            <Link href="/blog" className={styles.box9}>
               Xem bài viết
             </Link>
           </div>

@@ -7,12 +7,12 @@
 //
 // Doi lai: cookie duoc trinh duyet TU DONG gui kem moi request toi mien do,
 // ke ca request do trang cua ke khac tao ra. Do la CSRF. Vi vay bat buoc phai
-// co middlewares/chongCsrf.js di kem - dung cai nay ma bo cai kia la doi mot
+// co middlewares/csrf.js di kem - dung cai nay ma bo cai kia la doi mot
 // lo hong lay mot lo hong khac.
 
 const TEN_COOKIE = 'token';
 
-// Khop voi HAN_TOKEN trong utils/matKhau.js ('1d').
+// Khop voi HAN_TOKEN trong utils/password.js ('1d').
 // De lech nhau thi cookie con song sau khi JWT ben trong da het han: nguoi
 // dung thay minh "van dang nhap" nhung moi request deu 401.
 const HAN_MS = 24 * 60 * 60 * 1000;
@@ -27,7 +27,7 @@ const HAN_MS = 24 * 60 * 60 * 1000;
 // 'none' nghia la "gui cookie nay kem CA nhung request do trang cua ke khac
 // tao ra". Do la be mat CSRF - ke tan cong dung mot trang bat ky la co the ep
 // trinh duyet nan nhan goi API nay KEM COOKIE dang nhap cua ho.
-// middlewares/chongCsrf.js dang che cho, nhung mot lop che khong bang viec
+// middlewares/csrf.js dang che cho, nhung mot lop che khong bang viec
 // khong tao ra lo hong tu dau.
 //
 // 'none' sinh ra tu gia dinh "frontend va backend o hai mien khac nhau nen

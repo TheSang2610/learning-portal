@@ -1,0 +1,329 @@
+// File nay do script sinh ra tu class Tailwind cu.
+// Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
+
+.box {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.button {
+  position: relative;
+  display: flex;
+  height: calc(var(--spacing) * 11);
+  width: calc(var(--spacing) * 11);
+  align-items: center;
+  justify-content: center;
+  border-radius: 3.40282e38px;
+  color: var(--color-slate-600);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-gray-100);
+      color: var(--color-slate-900);
+    }
+  }
+}
+
+.floating {
+  position: absolute;
+  top: calc(var(--spacing) * 1.5);
+  right: calc(var(--spacing) * 1.5);
+  display: flex;
+  height: 18px;
+  min-width: 18px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3.40282e38px;
+  background-color: var(--color-red-600);
+  padding-inline: calc(var(--spacing) * 1);
+  font-size: 10px;
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-white);
+  --tw-numeric-spacing: tabular-nums;
+  font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,)
+    var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);
+}
+
+.floating2 {
+  position: absolute;
+  top: calc(var(--spacing) * 14);
+  right: calc(var(--spacing) * 0);
+  z-index: 50;
+  width: min(22rem, 100vw - 2rem);
+  overflow: hidden;
+  border-radius: var(--radius-2xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-200);
+  background-color: var(--color-white);
+  --tw-shadow:
+    0 20px 25px -5px var(--tw-shadow-color, #0000001a),
+    0 8px 10px -6px var(--tw-shadow-color, #0000001a);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom-style: var(--tw-border-style);
+  border-bottom-width: 1px;
+  border-color: var(--color-slate-200);
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 3);
+}
+
+.button2 {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1);
+  border-radius: 0.25rem;
+  padding-inline: calc(var(--spacing) * 1);
+  padding-block: calc(var(--spacing) * 1);
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-blue-600);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      text-decoration-line: underline;
+    }
+  }
+}
+
+.scroller {
+  max-height: min(26rem, 60vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.text2 {
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 8);
+  text-align: center;
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-slate-500);
+}
+
+.text3 {
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 8);
+  text-align: center;
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-red-600);
+}
+
+.box2 {
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 10);
+  text-align: center;
+}
+
+.box3 {
+  margin-inline: auto;
+  margin-bottom: calc(var(--spacing) * 2);
+  color: var(--color-slate-300);
+}
+
+.text4 {
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-slate-500);
+}
+
+.box4 {
+  min-width: calc(var(--spacing) * 0);
+  flex: 1;
+}
+
+.text5 {
+  color: var(--color-slate-600);
+}
+
+.text6 {
+  margin-top: calc(var(--spacing) * 0.5);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-leading: var(--leading-snug);
+  line-height: var(--leading-snug);
+  color: var(--color-slate-500);
+}
+
+.text7 {
+  margin-top: calc(var(--spacing) * 1);
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  color: var(--color-slate-400);
+}
+
+.label {
+  margin-top: calc(var(--spacing) * 1.5);
+  height: calc(var(--spacing) * 2);
+  width: calc(var(--spacing) * 2);
+  flex-shrink: 0;
+  border-radius: 3.40282e38px;
+  background-color: var(--color-blue-600);
+}
+
+/* Cac lop con ket trong template literal, va bo sung. */
+.box5 {
+  margin-top: calc(var(--spacing) * 0.5);
+  flex-shrink: 0;
+}
+.text8 {
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-leading: var(--leading-snug);
+  line-height: var(--leading-snug);
+}
+
+.text {
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-900);
+}
+
+/* Mau NGU NGHIA cua bieu tuong tung loai thong bao (tot / hong / trung tinh),
+   khong phai mau nhan dien cua trang. Truoc day la chuoi lop Tailwind dat
+   thang trong bang KIEU o file .tsx; go Tailwind xong thi ca bay loai thong
+   bao deu mot mau den, va don bi tu choi khong con doc duoc bang mau nua. */
+.mauDuyet {
+  color: var(--color-emerald-600);
+}
+.mauTuChoi {
+  color: var(--color-red-600);
+}
+.mauMoKhoa {
+  color: var(--color-blue-600);
+}
+.mauChungNhan {
+  color: var(--color-amber-600);
+}
+.mauTraLoi {
+  color: var(--color-indigo-600);
+}
+.mauCoin {
+  color: var(--color-amber-600);
+}
+.mauHeThong {
+  color: var(--color-slate-500);
+}
+
+/* Mot dong trong danh sach thong bao. Truoc day la mot chuoi lop Tailwind dai
+   ghep thang trong JSX - lop duy nhat con sot lai kieu do sau khi chuyen. */
+.dong {
+  display: flex;
+  width: 100%;
+  gap: calc(var(--spacing) * 3);
+  border-bottom-style: var(--tw-border-style);
+  border-bottom-width: 1px;
+  border-color: var(--color-slate-100);
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 3);
+  text-align: left;
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  &:last-child {
+    border-bottom-style: var(--tw-border-style);
+    border-bottom-width: 0;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-slate-50);
+    }
+  }
+}
+
+/* Thong bao chua doc: nen xanh rat nhat lam noi so voi dong da doc. */
+.chuaDoc {
+  background-color: #eff6ff66;
+
+  @supports (color: color-mix(in lab, red, red)) {
+    background-color: color-mix(in oklab, var(--color-blue-50) 40%, transparent);
+  }
+}

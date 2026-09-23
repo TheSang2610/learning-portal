@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema({
      *
      * Dang ky gio chi doi SO DIEN THOAI. Email la truong tuy chon, va la thu
      * DUY NHAT lay lai duoc mat khau cho toi khi gan duoc nha cung cap SMS -
-     * xem quenMatKhauController.js.
+     * xem passwordResetController.js.
      *
      * `sparse: true` PHAI co, va phai khop voi chi muc that tren Atlas.
      *
@@ -134,8 +134,8 @@ const userSchema = new mongoose.Schema({
     },
 
     /**
-     * Luong QUEN MAT KHAU - xem utils/maOtp.js va
-     * controllers/quenMatKhauController.js.
+     * Luong QUEN MAT KHAU - xem utils/otpCode.js va
+     * controllers/passwordResetController.js.
      *
      * Hai cap truong chu khong phai mot, vi luong co hai buoc va moi buoc
      * mang mot loai bi mat khac han nhau:
@@ -144,7 +144,7 @@ const userSchema = new mongoose.Schema({
      *                    Bcrypt chu khong phai SHA-256 nhu resetTicketHash o
      *                    duoi: ma 6 chu so chi co mot trieu kha nang nen ban
      *                    bam SHA-256 do het trong chua mot giay. Ly do day du
-     *                    ghi o dau utils/maOtp.js.
+     *                    ghi o dau utils/otpCode.js.
      *
      *   resetTicketHash  ban bam SHA-256 cua "phieu" 32 byte ngau nhien, cap
      *                    ra SAU khi nhap dung ma. Phieu moi la thu mang quyen
@@ -173,7 +173,7 @@ const userSchema = new mongoose.Schema({
     /**
      * So coin dang co trong vi.
      *
-     * Chi duoc doi qua utils/viCoin.js - dung $inc co dieu kien, khong bao gio
+     * Chi duoc doi qua utils/coinWallet.js - dung $inc co dieu kien, khong bao gio
      * doc ra roi gan de len. Ly do ghi ro trong file do.
      *
      * min: 0 la luoi cuoi cung o tang luoc do: du co duong nao tinh sai thi

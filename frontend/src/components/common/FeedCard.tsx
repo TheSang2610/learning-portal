@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { CircleCheck } from "lucide-react";
 import SafeImage from "@/src/components/ui/SafeImage";
-import AnhDaiDien from "@/src/components/ui/AnhDaiDien";
+import AnhDaiDien from "@/src/components/ui/Avatar";
 import CardActions, { type MucMenu } from "@/src/components/common/CardActions";
 import type { ReactNode } from "react";
 
+import styles from "./FeedCard.module.scss";
 // The dung chung cho danh sach bai viet (blog) va danh sach tai lieu chia se.
 // Hai noi cung mot hinh dang: tac gia + nut luu / menu o hang tren, tieu de +
 // mo ta + dong thong tin ben trai, anh xem truoc ben phai.
@@ -39,30 +40,25 @@ export default function FeedCard({
   themMuc,
 }: Props) {
   return (
-    <article className="relative rounded-xl border border-slate-200 bg-white px-6 py-5 transition focus-within:border-blue-500 hover:border-slate-300 hover:shadow-sm">
+    <article className={styles.article}>
       {/* Hang tac gia */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
+      <div className={styles.row}>
+        <div className={styles.row2}>
           <span
             aria-hidden
-            className={`shrink-0 rounded-full ${daXacThuc ? "ring-2 ring-orange-400" : ""}`}
+            className={`${styles.label3} ${daXacThuc ? styles.label : ""}`}
           >
-            <AnhDaiDien
-              src={anhTacGia}
-              ten={tacGia}
-              size={28}
-              nenChuCai="bg-slate-200 text-slate-600"
-            />
+            <AnhDaiDien src={anhTacGia} ten={tacGia} size={28} nenChuCai={styles.box7} />
           </span>
 
-          <span className="truncate text-sm font-semibold text-slate-800">{tacGia}</span>
+          <span className={styles.label2}>{tacGia}</span>
 
           {daXacThuc && (
             // fill + stroke trang: ra dung dau tich tron dac nhu ban mau,
             // thay vi vien rong mac dinh cua lucide.
             <CircleCheck
               size={15}
-              className="shrink-0 fill-blue-600 text-white"
+              className={styles.box}
               aria-label="Tài khoản đã xác thực"
             />
           )}
@@ -70,48 +66,37 @@ export default function FeedCard({
 
         {/* Nam tren lop phu cua tieu de (z-10), neu khong thi bam nut lai
             dieu huong sang trang chi tiet. */}
-        <div className="relative z-10">
+        <div className={styles.box2}>
           <CardActions href={href} tieuDe={tieuDe} themMuc={themMuc} />
         </div>
       </div>
 
       {/* Than the */}
-      <div className="mt-4 flex items-start gap-6">
-        <div className="min-w-0 flex-1">
+      <div className={styles.row3}>
+        <div className={styles.box3}>
           {/* Neo that nam o tieu de - nguoi dung ban phim tab toi day, bo doc
               man hinh doc ra ten bai thay vi "lien ket". Lop phu tuyet doi cho
               phep bam vao cho trong cua the. */}
-          <h2 className="text-[20px] leading-snug font-bold text-slate-900">
-            <Link href={href} className="transition hover:text-blue-700">
-              <span className="absolute inset-0" aria-hidden />
+          <h2 className={styles.heading}>
+            <Link href={href} className={styles.box4}>
+              <span className={styles.floating} aria-hidden />
               {tieuDe}
             </Link>
           </h2>
 
-          {moTa && (
-            <p className="mt-2 line-clamp-2 text-[15px] leading-relaxed text-slate-600">
-              {moTa}
-            </p>
-          )}
+          {moTa && <p className={styles.text}>{moTa}</p>}
 
-          <div className="mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-sm text-slate-500">
-            {meta}
-          </div>
+          <div className={styles.row4}>{meta}</div>
         </div>
 
         {anh && (
-          <Link
-            href={href}
-            tabIndex={-1}
-            aria-hidden
-            className="relative hidden h-[100px] w-[196px] shrink-0 overflow-hidden rounded-lg bg-slate-100 sm:block"
-          >
+          <Link href={href} tabIndex={-1} aria-hidden className={styles.box5}>
             <SafeImage
               src={anh.src}
               alt={anh.alt}
               fill
               sizes="196px"
-              className="object-cover"
+              className={styles.box6}
             />
           </Link>
         )}

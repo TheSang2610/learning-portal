@@ -1,0 +1,126 @@
+// File nay do script sinh ra tu class Tailwind cu.
+// Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
+
+.section {
+  margin-top: calc(var(--spacing) * 12);
+}
+
+.box {
+  text-align: center;
+}
+
+.heading {
+  font-size: var(--text-2xl);
+  line-height: var(--tw-leading, var(--text-2xl--line-height));
+  --tw-font-weight: var(--font-weight-extrabold);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-slate-900);
+}
+
+.text {
+  margin-top: calc(var(--spacing) * 1.5);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-slate-600);
+}
+
+.grid {
+  margin-top: calc(var(--spacing) * 6);
+  display: grid;
+  gap: calc(var(--spacing) * 4);
+
+  @media (min-width: 40rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 4);
+  border-radius: var(--radius-2xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-200);
+  background-color: var(--color-white);
+  padding-inline: calc(var(--spacing) * 5);
+  padding-block: calc(var(--spacing) * 5);
+  --tw-shadow:
+    0 1px 3px 0 var(--tw-shadow-color, #0000001a),
+    0 1px 2px -1px var(--tw-shadow-color, #0000001a);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--color-blue-600);
+      --tw-shadow:
+        0 4px 6px -1px var(--tw-shadow-color, #0000001a),
+        0 2px 4px -2px var(--tw-shadow-color, #0000001a);
+      box-shadow:
+        var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+        var(--tw-ring-shadow), var(--tw-shadow);
+    }
+  }
+}
+
+.row {
+  display: flex;
+  height: calc(var(--spacing) * 11);
+  width: calc(var(--spacing) * 11);
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xl);
+  background-color: var(--color-blue-100);
+}
+
+.box2 {
+  color: var(--color-blue-600);
+}
+
+.box3 {
+  min-width: calc(var(--spacing) * 0);
+}
+
+.subheading {
+  font-size: var(--text-base);
+  line-height: var(--tw-leading, var(--text-base--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-slate-900);
+}
+
+.text2 {
+  margin-top: calc(var(--spacing) * 0.5);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-slate-600);
+}

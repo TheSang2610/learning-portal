@@ -1,0 +1,228 @@
+/* File nay do script sinh ra - dung sua tay.
+   Nguon: gia tri that ma Tailwind v4 da build ra truoc khi go bo.
+   Sinh lai: node scratchpad/ks-scss/sinh-token.js <file-css-build> <file-ra>
+
+   Giu nguyen ten bien cua Tailwind (--color-slate-500, --text-sm...) de cac
+   file .module.scss doc thang bang var(). Doi ten se phai sua lai ca 17.976
+   cho dung class, khong duoc lam gi ca. */
+
+:root {
+  /* Mau (106) */
+  --color-amber-100: #fef3c6;
+  --color-amber-200: #fee685;
+  --color-amber-300: #ffd236;
+  --color-amber-400: #fcbb00;
+  --color-amber-50: #fffbeb;
+  --color-amber-500: #f99c00;
+  --color-amber-600: #dd7400;
+  --color-amber-700: #b75000;
+  --color-amber-800: #953d00;
+  --color-amber-900: #7b3306;
+  --color-black: #000;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bedbff;
+  --color-blue-300: #90c5ff;
+  --color-blue-400: #54a2ff;
+  --color-blue-50: #eff6ff;
+  --color-blue-500: #3080ff;
+  --color-blue-600: #155dfc;
+  --color-blue-700: #1447e6;
+  --color-blue-800: #193cb8;
+  --color-blue-900: #1c398e;
+  --color-emerald-100: #d0fae5;
+  --color-emerald-200: #a4f4cf;
+  --color-emerald-300: #5ee9b5;
+  --color-emerald-400: #00d294;
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-500: #00bb7f;
+  --color-emerald-600: #009767;
+  --color-emerald-700: #007956;
+  --color-emerald-800: #005f46;
+  --color-emerald-900: #004e3b;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5dc;
+  --color-gray-50: #f9fafb;
+  --color-gray-500: #6a7282;
+  --color-gray-600: #4a5565;
+  --color-gray-700: #364153;
+  --color-gray-800: #1e2939;
+  --color-gray-900: #101828;
+  --color-green-100: #dcfce7;
+  --color-green-200: #b9f8cf;
+  --color-green-50: #f0fdf4;
+  --color-green-600: #00a544;
+  --color-green-700: #008138;
+  --color-green-800: #016630;
+  --color-indigo-100: #e0e7ff;
+  --color-indigo-300: #a4b3ff;
+  --color-indigo-400: #7d87ff;
+  --color-indigo-50: #eef2ff;
+  --color-indigo-500: #625fff;
+  --color-indigo-600: #4f39f6;
+  --color-indigo-700: #432dd7;
+  --color-indigo-800: #372aac;
+  --color-orange-100: #ffedd5;
+  --color-orange-400: #ff8b1a;
+  --color-orange-50: #fff7ed;
+  --color-orange-500: #fe6e00;
+  --color-orange-600: #f05100;
+  --color-orange-700: #c53c00;
+  --color-orange-900: #7e2a0c;
+  --color-purple-100: #f3e8ff;
+  --color-purple-200: #e9d5ff;
+  --color-purple-400: #c07eff;
+  --color-purple-50: #faf5ff;
+  --color-purple-600: #9810fa;
+  --color-purple-700: #8200da;
+  --color-purple-800: #6e11b0;
+  --color-red-100: #ffe2e2;
+  --color-red-200: #ffcaca;
+  --color-red-400: #ff6568;
+  --color-red-50: #fef2f2;
+  --color-red-500: #fb2c36;
+  --color-red-600: #e40014;
+  --color-red-700: #bf000f;
+  --color-red-800: #9f0712;
+  --color-red-900: #82181a;
+  --color-rose-100: #ffe4e6;
+  --color-rose-200: #ffccd3;
+  --color-rose-50: #fff1f2;
+  --color-rose-500: #ff2357;
+  --color-rose-600: #e70044;
+  --color-rose-700: #c20039;
+  --color-rose-800: #a30037;
+  --color-rose-900: #8b0836;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cad5e2;
+  --color-slate-400: #90a1b9;
+  --color-slate-50: #f8fafc;
+  --color-slate-500: #62748e;
+  --color-slate-600: #45556c;
+  --color-slate-700: #314158;
+  --color-slate-800: #1d293d;
+  --color-slate-900: #0f172b;
+  --color-slate-950: #020618;
+  --color-violet-200: #ddd6ff;
+  --color-violet-400: #a685ff;
+  --color-violet-50: #f5f3ff;
+  --color-violet-500: #8d54ff;
+  --color-violet-600: #7f22fe;
+  --color-violet-700: #7008e7;
+  --color-white: #fff;
+  --color-yellow-300: #ffe02a;
+  --color-yellow-400: #fac800;
+  --color-yellow-500: #edb200;
+
+  /* Co chu (18) */
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: calc(2 / 1.5);
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: calc(2.25 / 1.875);
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: calc(2.5 / 2.25);
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 1;
+  --text-base: 1rem;
+  --text-base--line-height: calc(1.5 / 1);
+  --text-lg: 1.125rem;
+  --text-lg--line-height: calc(1.75 / 1.125);
+  --text-sm: 0.875rem;
+  --text-sm--line-height: calc(1.25 / 0.875);
+  --text-xl: 1.25rem;
+  --text-xl--line-height: calc(1.75 / 1.25);
+  --text-xs: 0.75rem;
+  --text-xs--line-height: calc(1 / 0.75);
+
+  /* Do dam (7) */
+  --font-weight-black: 900;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  --font-weight-light: 300;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --font-weight-semibold: 600;
+
+  /* Font (2) */
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  --font-sans:
+    ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* Gian dong (3) */
+  --leading-relaxed: 1.625;
+  --leading-snug: 1.375;
+  --leading-tight: 1.25;
+
+  /* Gian chu (4) */
+  --tracking-tight: -0.025em;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+
+  /* Bo goc (6) */
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+  --radius-lg: 0.5rem;
+  --radius-md: 0.375rem;
+  --radius-sm: 0.25rem;
+  --radius-xl: 0.75rem;
+
+  /* Be ngang khung (11) */
+  --container-2xl: 42rem;
+  --container-3xl: 48rem;
+  --container-4xl: 56rem;
+  --container-5xl: 64rem;
+  --container-6xl: 72rem;
+  --container-7xl: 80rem;
+  --container-lg: 32rem;
+  --container-md: 28rem;
+  --container-sm: 24rem;
+  --container-xl: 36rem;
+  --container-xs: 20rem;
+
+  /* Mac dinh (4) */
+  --default-font-family: var(--font-sans);
+  --default-mono-font-family: var(--font-mono);
+  --default-transition-duration: 0.15s;
+  --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Don vi khoang cach (1) */
+  --spacing: 0.25rem;
+
+  /* Duong cong chuyen dong (2) */
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+
+  /* Lam mo (2) */
+  --blur-sm: 8px;
+  --blur-xs: 4px;
+
+  /* Hoat anh (3) */
+  --animate-bounce: bounce 1s infinite;
+  --animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-spin: spin 1s linear infinite;
+
+  /* Do bong (1) */
+  --drop-shadow-sm: 0 1px 2px #00000026;
+
+  /* Ti le khung (1) */
+  --aspect-video: 16 / 9;
+
+  /* Con lai (2) */
+  --background: #f8fafc;
+  --foreground: #0f172a;
+
+  /* Do bong - viet thang thay cho co che --tw-shadow cua Tailwind */
+  --shadow-2xs: 0 1px rgb(0 0 0 / 0.05);
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+}

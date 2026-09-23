@@ -16,7 +16,7 @@ Backend nằm ở [`../backend`](../backend/README.md) trong cùng kho mã ngu�
 | --------- | ------------------------------------------------------ |
 | Framework | Next.js **16.2.5** — App Router, Turbopack             |
 | UI        | React **19.2.4**, TypeScript                           |
-| Styling   | Tailwind CSS **v4**                                    |
+| Styling   | CSS Module SCSS (Sass)                                 |
 | Kiểm tra  | ESLint, Prettier, `tsc --noEmit`, chạy tự động trên CI |
 
 Cần **Node >= 20.9** (yêu cầu tối thiểu của Next 16).
@@ -135,6 +135,6 @@ find . -name 'page.tsx' -not -path './node_modules/*' | wc -l
 # số tệp service
 ls src/services/ | wc -l
 
-# phiên bản thật của Next / React / Tailwind
+# phiên bản thật của Next / React
 node -e "const p=require('./package.json');console.log(p.dependencies.next,p.dependencies.react)"
 ```

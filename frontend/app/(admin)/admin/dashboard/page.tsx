@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
+import styles from "./page.module.scss";
 import {
   getDashboardStatistics,
   type DashboardStatistics,
@@ -28,31 +30,31 @@ export default function AdminDashboardPage() {
 
   return (
     <div>
-      <h1 className="mb-8 text-4xl font-bold">Admin Dashboard</h1>
+      <h1 className={styles.title}>Admin Dashboard</h1>
 
-      <div className="grid grid-cols-4 gap-6">
-        <div className="rounded-2xl bg-white p-6 shadow">
-          <h2 className="text-sm text-gray-500">Total Users</h2>
+      <div className={styles.grid}>
+        <div className={styles.card}>
+          <h2 className={styles.heading}>Total Users</h2>
 
-          <p className="mt-2 text-3xl font-bold">{stats.users.total}</p>
+          <p className={styles.text}>{stats.users.total}</p>
         </div>
 
-        <div className="rounded-2xl bg-white p-6 shadow">
-          <h2 className="text-sm text-gray-500">Courses</h2>
+        <div className={styles.card}>
+          <h2 className={styles.heading}>Courses</h2>
 
-          <p className="mt-2 text-3xl font-bold">{stats.courses.total}</p>
+          <p className={styles.text}>{stats.courses.total}</p>
         </div>
 
-        <div className="rounded-2xl bg-white p-6 shadow">
-          <h2 className="text-sm text-gray-500">Enrollments</h2>
+        <div className={styles.card}>
+          <h2 className={styles.heading}>Enrollments</h2>
 
-          <p className="mt-2 text-3xl font-bold">{stats.enrollments.total}</p>
+          <p className={styles.text}>{stats.enrollments.total}</p>
         </div>
 
-        <div className="rounded-2xl bg-white p-6 shadow">
-          <h2 className="text-sm text-gray-500">Certificates</h2>
+        <div className={styles.card}>
+          <h2 className={styles.heading}>Certificates</h2>
 
-          <p className="mt-2 text-3xl font-bold">{stats.certificates.total}</p>
+          <p className={styles.text}>{stats.certificates.total}</p>
         </div>
       </div>
     </div>

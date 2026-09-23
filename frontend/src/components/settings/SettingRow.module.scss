@@ -1,0 +1,156 @@
+// File nay do script sinh ra tu class Tailwind cu.
+// Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
+
+.box {
+  border-bottom-style: var(--tw-border-style);
+  border-bottom-width: 1px;
+  border-color: var(--color-slate-100);
+
+  &:last-child {
+    border-bottom-style: var(--tw-border-style);
+    border-bottom-width: 0;
+  }
+}
+
+.box2 {
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-slate-50);
+    }
+  }
+}
+
+.box3 {
+  background-color: var(--color-slate-50);
+}
+
+.box4 {
+  min-width: calc(var(--spacing) * 0);
+  flex: 1;
+}
+
+.minorHeading {
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-900);
+}
+
+.text {
+  margin-top: calc(var(--spacing) * 0.5);
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  color: var(--color-slate-600);
+}
+
+.image {
+  margin-top: calc(var(--spacing) * 2);
+  height: calc(var(--spacing) * 14);
+  width: calc(var(--spacing) * 14);
+  border-radius: 3.40282e38px;
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-200);
+  object-fit: cover;
+}
+
+.label {
+  margin-top: calc(var(--spacing) * 1);
+  display: block;
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-slate-600);
+}
+
+.label2 {
+  color: var(--color-slate-500);
+}
+
+.label3 {
+  color: var(--color-slate-700);
+}
+
+.label4 {
+  --tw-font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-slate-800);
+}
+
+.box5 {
+  flex-shrink: 0;
+  color: var(--color-slate-600);
+}
+
+.box6 {
+  flex-shrink: 0;
+  color: var(--color-slate-500);
+}
+
+.box7 {
+  border-top-style: var(--tw-border-style);
+  border-top-width: 1px;
+  border-color: var(--color-slate-100);
+  background-color: var(--color-slate-50);
+  padding-inline: calc(var(--spacing) * 5);
+  padding-block: calc(var(--spacing) * 4);
+}
+
+.section {
+  overflow: hidden;
+  border-radius: var(--radius-2xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-200);
+  background-color: var(--color-white);
+  --tw-shadow:
+    0 1px 3px 0 var(--tw-shadow-color, #0000001a),
+    0 1px 2px -1px var(--tw-shadow-color, #0000001a);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+.box8 {
+  border-bottom-style: var(--tw-border-style);
+  border-bottom-width: 1px;
+  border-color: var(--color-slate-100);
+  padding-inline: calc(var(--spacing) * 5);
+  padding-block: calc(var(--spacing) * 4);
+}
+
+.heading {
+  font-size: var(--text-base);
+  line-height: var(--tw-leading, var(--text-base--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-slate-900);
+}
+
+.text2 {
+  margin-top: calc(var(--spacing) * 1);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-slate-600);
+}
+
+/* Cac lop con ket trong template literal, va bo sung. */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--spacing) * 4);
+  padding-inline: calc(var(--spacing) * 5);
+  padding-block: calc(var(--spacing) * 4);
+}
+.label5 {
+  margin-top: calc(var(--spacing) * 1);
+  display: block;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+}

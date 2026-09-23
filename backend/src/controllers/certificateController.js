@@ -4,9 +4,9 @@ const Enrollment = require('../models/Enrollment');
 const Course = require('../models/Course');
 const User = require('../models/User');
 const crypto = require('crypto');
-const { phanTrang } = require('../utils/truyVan');
-const { dungChungChiPdf } = require('../utils/chungChiPdf');
-const { guiThongBao } = require('./thongBaoController');
+const { phanTrang } = require('../utils/queryParams');
+const { dungChungChiPdf } = require('../utils/certificatePdf');
+const { guiThongBao } = require('./notificationController');
 
 // @desc    Tạo chứng chỉ khi hoàn thành khóa học
 // @route   POST /api/certificates

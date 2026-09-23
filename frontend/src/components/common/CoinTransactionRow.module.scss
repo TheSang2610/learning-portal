@@ -1,0 +1,102 @@
+// File nay do script sinh ra tu class Tailwind cu.
+// Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--spacing) * 3);
+  padding-inline: calc(var(--spacing) * 5);
+  padding-block: calc(var(--spacing) * 3.5);
+}
+
+.box {
+  min-width: calc(var(--spacing) * 0);
+  flex: 1;
+}
+
+.text {
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-900);
+}
+
+.label {
+  --tw-font-weight: var(--font-weight-normal);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-slate-500);
+}
+
+.text2 {
+  margin-top: calc(var(--spacing) * 0.5);
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  color: var(--color-slate-500);
+}
+
+.box2 {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.text3 {
+  color: var(--color-emerald-600);
+}
+
+.text4 {
+  color: var(--color-rose-600);
+}
+
+.text5 {
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  color: var(--color-slate-400);
+  --tw-numeric-spacing: tabular-nums;
+  font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,)
+    var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);
+}
+
+/* Cac lop con ket trong template literal, va bo sung. */
+.grid {
+  display: grid;
+  width: calc(var(--spacing) * 8);
+  height: calc(var(--spacing) * 8);
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: var(--radius-lg);
+}
+.text6 {
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+  --tw-numeric-spacing: tabular-nums;
+  font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,)
+    var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);
+}
+
+/* Mau ngu nghia cua o bieu tuong, theo tung loai giao dich.
+   Truoc day la cap lop Tailwind ("bg-emerald-50" / "text-emerald-700") dat
+   thang trong bang KIEU o file .tsx. Go Tailwind xong thi chung chi con la
+   chuoi chet: o bieu tuong mat sach mau nen, bon loai giao dich nhin y het
+   nhau - va khong co loi nao bao ra. */
+.nap {
+  background-color: var(--color-emerald-50);
+  color: var(--color-emerald-700);
+}
+
+.thuHoi {
+  background-color: var(--color-rose-50);
+  color: var(--color-rose-700);
+}
+
+.mua {
+  background-color: var(--color-blue-50);
+  color: var(--color-blue-700);
+}
+
+.tangKhoa {
+  background-color: var(--color-amber-50);
+  color: var(--color-amber-700);
+}

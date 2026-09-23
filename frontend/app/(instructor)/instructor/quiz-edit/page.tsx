@@ -5,6 +5,8 @@ import { getErrorMessage } from "@/src/services/apiHelper";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Trash2, HelpCircle, Save, AlertCircle } from "lucide-react";
+
+import styles from "./page.module.scss";
 import {
   getCourseQuizzes,
   updateQuiz,
@@ -208,21 +210,16 @@ function InstructorEditQuizPageContent() {
     }
   };
 
-  if (loading)
-    return (
-      <div className="animate-pulse py-20 text-center text-slate-500">
-        Đang tải cấu trúc đề thi...
-      </div>
-    );
+  if (loading) return <div className={styles.box}>Đang tải cấu trúc đề thi...</div>;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 px-4 py-4">
+    <div className={styles.container}>
       {/* BANNER THÔNG BÁO CHẾ ĐỘ INSTRUCTOR */}
-      <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-800">
-        <AlertCircle size={18} className="mt-0.5 shrink-0 text-amber-600" />
-        <div className="text-xs">
-          <p className="font-bold">Chế độ Giảng viên (Instructor Mode)</p>
-          <p className="mt-0.5 text-amber-600">
+      <div className={styles.card}>
+        <AlertCircle size={18} className={styles.box2} />
+        <div className={styles.box3}>
+          <p className={styles.text}>Chế độ Giảng viên (Instructor Mode)</p>
+          <p className={styles.text2}>
             Mọi thay đổi tại đây sẽ cập nhật trực tiếp vào kho lưu trữ học liệu của bạn.
           </p>
         </div>
@@ -230,40 +227,31 @@ function InstructorEditQuizPageContent() {
 
       <div>
         {/* 🎯 ĐỔI LINK SANG INSTRUCTOR */}
-        <Link
-          href={`/instructor/lessons?courseId=${courseId}`}
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 transition hover:text-slate-800"
-        >
+        <Link href={`/instructor/lessons?courseId=${courseId}`} className={styles.box4}>
           <ArrowLeft size={14} /> Quay lại giáo trình
         </Link>
-        <h1 className="mt-1 text-2xl font-bold text-slate-900">
-          Cập Nhật Bài Tập Trắc Nghiệm
-        </h1>
+        <h1 className={styles.title}>Cập Nhật Bài Tập Trắc Nghiệm</h1>
       </div>
 
-      <form onSubmit={handleFormSubmit} className="space-y-6">
+      <form onSubmit={handleFormSubmit} className={styles.form}>
         {/* THÔNG TIN CHUNG */}
-        <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className={styles.card2}>
           <div>
-            <label className="mb-1 block text-xs font-bold text-slate-600">
-              Tiêu đề Quiz
-            </label>
+            <label className={styles.fieldLabel}>Tiêu đề Quiz</label>
             <input
               type="text"
-              className="w-full rounded-xl border p-2.5 text-sm outline-none focus:border-blue-500"
+              className={styles.input}
               value={quizConfig.title}
               onChange={(e) => setQuizConfig({ ...quizConfig, title: e.target.value })}
               required
             />
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className={styles.grid}>
             <div>
-              <label className="mb-1 block text-xs font-bold text-slate-600">
-                Thời gian (Phút)
-              </label>
+              <label className={styles.fieldLabel}>Thời gian (Phút)</label>
               <input
                 type="number"
-                className="w-full rounded-xl border p-2.5 text-sm outline-none"
+                className={styles.input2}
                 value={quizConfig.timeLimit || ""}
                 onChange={(e) =>
                   setQuizConfig({ ...quizConfig, timeLimit: Number(e.target.value) })
@@ -271,12 +259,10 @@ function InstructorEditQuizPageContent() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-bold text-slate-600">
-                Điểm Đạt (%)
-              </label>
+              <label className={styles.fieldLabel}>Điểm Đạt (%)</label>
               <input
                 type="number"
-                className="w-full rounded-xl border p-2.5 text-sm outline-none"
+                className={styles.input2}
                 value={quizConfig.passingScore}
                 onChange={(e) =>
                   setQuizConfig({ ...quizConfig, passingScore: Number(e.target.value) })
@@ -284,12 +270,10 @@ function InstructorEditQuizPageContent() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-bold text-slate-600">
-                Số lượt làm
-              </label>
+              <label className={styles.fieldLabel}>Số lượt làm</label>
               <input
                 type="number"
-                className="w-full rounded-xl border p-2.5 text-sm outline-none"
+                className={styles.input2}
                 value={quizConfig.attempts}
                 onChange={(e) =>
                   setQuizConfig({ ...quizConfig, attempts: Number(e.target.value) })
@@ -300,37 +284,30 @@ function InstructorEditQuizPageContent() {
         </div>
 
         {/* DANH SÁCH CÂU HỎI */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="flex items-center gap-1 text-sm font-bold text-slate-800">
-              <HelpCircle size={16} className="text-blue-500" /> Danh sách câu hỏi (
+        <div className={styles.stack}>
+          <div className={styles.row}>
+            <h2 className={styles.heading}>
+              <HelpCircle size={16} className={styles.box5} /> Danh sách câu hỏi (
               {questions.length})
             </h2>
-            <button
-              type="button"
-              onClick={addQuestion}
-              className="rounded-xl bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-600 transition hover:bg-blue-100"
-            >
+            <button type="button" onClick={addQuestion} className={styles.button}>
               + Thêm câu hỏi
             </button>
           </div>
 
           {questions.map((question, qIndex) => (
-            <div
-              key={qIndex}
-              className="relative space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-            >
+            <div key={qIndex} className={styles.card3}>
               <button
                 type="button"
                 onClick={() => removeQuestion(qIndex)}
-                className="absolute top-4 right-4 text-slate-500 transition hover:text-red-500"
+                className={styles.button2}
               >
                 <Trash2 size={16} />
               </button>
-              <div className="grid grid-cols-4 gap-4">
+              <div className={styles.grid2}>
                 <input
                   type="text"
-                  className="col-span-3 rounded-xl border p-2.5 text-sm outline-none focus:border-blue-500"
+                  className={styles.input3}
                   value={question.text}
                   onChange={(e) => handleQuestionChange(qIndex, "text", e.target.value)}
                   placeholder="Nội dung câu hỏi..."
@@ -338,7 +315,7 @@ function InstructorEditQuizPageContent() {
                 />
                 <input
                   type="number"
-                  className="rounded-xl border p-2.5 text-sm outline-none"
+                  className={styles.input4}
                   value={question.points}
                   onChange={(e) =>
                     handleQuestionChange(qIndex, "points", Number(e.target.value))
@@ -346,19 +323,19 @@ function InstructorEditQuizPageContent() {
                 />
               </div>
 
-              <div className="space-y-2 rounded-xl border border-dashed bg-slate-50/50 p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-600">Các phương án:</span>
+              <div className={styles.card4}>
+                <div className={styles.row}>
+                  <span className={styles.label}>Các phương án:</span>
                   <button
                     type="button"
                     onClick={() => addOption(qIndex)}
-                    className="text-xs font-semibold text-blue-600 hover:underline"
+                    className={styles.button3}
                   >
                     + Thêm phương án
                   </button>
                 </div>
                 {question.options?.map((option, oIndex: number) => (
-                  <div key={oIndex} className="flex items-center gap-3">
+                  <div key={oIndex} className={styles.row2}>
                     <input
                       type="radio"
                       name={`correct-ans-edit-${qIndex}`}
@@ -366,11 +343,11 @@ function InstructorEditQuizPageContent() {
                       onChange={() =>
                         handleOptionChange(qIndex, oIndex, "isCorrect", true)
                       }
-                      className="h-4 w-4 text-blue-600"
+                      className={styles.input5}
                     />
                     <input
                       type="text"
-                      className="w-full rounded-lg border bg-white p-2 text-xs outline-none focus:border-blue-500"
+                      className={styles.input6}
                       value={option.text}
                       onChange={(e) =>
                         handleOptionChange(qIndex, oIndex, "text", e.target.value)
@@ -385,12 +362,8 @@ function InstructorEditQuizPageContent() {
         </div>
 
         {/* NÚT LƯU */}
-        <div className="flex justify-end gap-3">
-          <button
-            type="submit"
-            disabled={submitting}
-            className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-6 py-3 text-xs font-bold text-white transition hover:bg-blue-700 disabled:bg-blue-400"
-          >
+        <div className={styles.row3}>
+          <button type="submit" disabled={submitting} className={styles.button4}>
             <Save size={14} /> {submitting ? "Đang cập nhật..." : "Lưu thay đổi"}
           </button>
         </div>
@@ -405,8 +378,8 @@ export default function InstructorEditQuizPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-600" />
+        <div className={styles.row4}>
+          <div className={styles.spinner} />
         </div>
       }
     >

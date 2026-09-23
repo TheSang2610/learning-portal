@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "./GradeChart.module.scss";
+
 import {
   CartesianGrid,
   Legend,
@@ -25,14 +27,14 @@ export interface ChartPoint {
 export default function GradeChart({ data }: { data: ChartPoint[] }) {
   if (data.length === 0) {
     return (
-      <div className="flex h-[300px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white px-6 text-center text-sm text-slate-600">
+      <div className={styles.card}>
         Thêm học kỳ và nhập điểm để xem biểu đồ GPA / CPA.
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className={styles.card2}>
       {/* Ban goc dat cung 900px. Dung ResponsiveContainer de tren dien thoai
           bieu do co lai thay vi tran ra ngoai man hinh. */}
       <ResponsiveContainer width="100%" height={300}>

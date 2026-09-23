@@ -1,0 +1,332 @@
+// File nay do script sinh ra tu class Tailwind cu.
+// Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
+
+.box {
+  padding: calc(var(--spacing) * 4);
+
+  @media (min-width: 40rem) {
+    padding: calc(var(--spacing) * 6);
+  }
+}
+
+.row {
+  margin-bottom: calc(var(--spacing) * 2);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+}
+
+.box2 {
+  color: var(--color-blue-600);
+}
+
+.title {
+  font-size: var(--text-xl);
+  line-height: var(--tw-leading, var(--text-xl--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-slate-900);
+
+  @media (min-width: 40rem) {
+    font-size: var(--text-2xl);
+    line-height: var(--tw-leading, var(--text-2xl--line-height));
+  }
+}
+
+.text {
+  margin-bottom: calc(var(--spacing) * 6);
+  max-width: var(--container-2xl);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-slate-500);
+}
+
+.card {
+  max-width: var(--container-2xl);
+  border-radius: var(--radius-2xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-200);
+  background-color: var(--color-white);
+  padding: calc(var(--spacing) * 4);
+
+  @media (min-width: 40rem) {
+    padding: calc(var(--spacing) * 5);
+  }
+}
+
+.fieldLabel {
+  margin-bottom: calc(var(--spacing) * 4);
+  display: block;
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+}
+
+.label {
+  margin-bottom: calc(var(--spacing) * 1);
+  display: block;
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-700);
+}
+
+.input {
+  height: calc(var(--spacing) * 11);
+  width: 100%;
+  border-radius: var(--radius-xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-300);
+  padding-inline: calc(var(--spacing) * 3);
+  --tw-outline-style: none;
+  outline-style: none;
+
+  &:focus {
+    border-color: var(--color-blue-500);
+  }
+}
+
+.label2 {
+  margin-top: calc(var(--spacing) * 1);
+  display: block;
+  text-align: right;
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  color: var(--color-slate-400);
+  --tw-numeric-spacing: tabular-nums;
+  font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,)
+    var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);
+}
+
+.textarea {
+  width: 100%;
+  resize: vertical;
+  border-radius: var(--radius-xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-300);
+  padding-inline: calc(var(--spacing) * 3);
+  padding-block: calc(var(--spacing) * 2);
+  --tw-outline-style: none;
+  outline-style: none;
+
+  &:focus {
+    border-color: var(--color-blue-500);
+  }
+}
+
+.label3 {
+  margin-top: calc(var(--spacing) * 1);
+  display: block;
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  color: var(--color-slate-400);
+}
+
+.fieldLabel2 {
+  margin-bottom: calc(var(--spacing) * 5);
+  display: block;
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+}
+
+.text2 {
+  margin-bottom: calc(var(--spacing) * 4);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-red-50);
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 3);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-red-700);
+}
+
+.text3 {
+  margin-bottom: calc(var(--spacing) * 4);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-emerald-50);
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 3);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-emerald-800);
+}
+
+.strong {
+  --tw-numeric-spacing: tabular-nums;
+  font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,)
+    var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);
+}
+
+.card2 {
+  border-radius: var(--radius-xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-amber-300);
+  background-color: var(--color-amber-50);
+  padding: calc(var(--spacing) * 4);
+}
+
+.text4 {
+  margin-bottom: calc(var(--spacing) * 3);
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--spacing) * 2);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-amber-900);
+}
+
+.box3 {
+  margin-top: calc(var(--spacing) * 0.5);
+  flex-shrink: 0;
+}
+
+.row2 {
+  display: flex;
+  justify-content: flex-end;
+  gap: calc(var(--spacing) * 2);
+}
+
+.button {
+  height: calc(var(--spacing) * 10);
+  border-radius: var(--radius-lg);
+  padding-inline: calc(var(--spacing) * 4);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-600);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-amber-100);
+    }
+  }
+}
+
+.button2 {
+  height: calc(var(--spacing) * 10);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-amber-600);
+  padding-inline: calc(var(--spacing) * 4);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-white);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-amber-700);
+    }
+  }
+
+  &:disabled {
+    background-color: var(--color-slate-300);
+  }
+}
+
+.button3 {
+  display: flex;
+  height: calc(var(--spacing) * 11);
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  border-radius: var(--radius-xl);
+  background-color: var(--color-blue-600);
+  padding-inline: calc(var(--spacing) * 5);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-white);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-blue-700);
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    background-color: var(--color-slate-300);
+  }
+}

@@ -1,10 +1,10 @@
 const Document = require('../models/Document');
 const layCloudinary = require('../config/cloudinary');
-const { phanTrang } = require('../utils/truyVan');
+const { phanTrang } = require('../utils/queryParams');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
 const { checkDocument } = require('../utils/contentFilter');
-const { chuanHoaNoiDung, boThe } = require('../utils/htmlBaiViet');
-const { taoSlug } = require('../utils/vanBan');
+const { chuanHoaNoiDung, boThe } = require('../utils/postHtml');
+const { taoSlug } = require('../utils/textUtils');
 
 const LOAI_CHO_PHEP = ['pdf', 'doc', 'docx'];
 

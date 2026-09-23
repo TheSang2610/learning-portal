@@ -15,6 +15,8 @@
 
 # next.js
 /.next/
+# Thu muc rieng cua `next dev` - xem distDir trong next.config.ts
+/.next-dev/
 /out/
 
 # production

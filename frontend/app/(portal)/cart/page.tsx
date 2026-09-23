@@ -6,13 +6,14 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { CircleCheck, CircleX, ShoppingCart, Trash2 } from "lucide-react";
 
-import { useGioHang } from "@/src/hooks/gioHang";
+import { useGioHang } from "@/src/hooks/cart";
 import { giaRaCoin, layViCuaToi, muaBangCoin } from "@/src/services/coin.api";
 import { getErrorMessage } from "@/src/services/apiHelper";
-import OMaGiamGiaGioHang from "@/src/components/magiamgia/OMaGiamGiaGioHang";
-import { useNguoiDungLuu, useDangTaiNguoiDung } from "@/src/hooks/nguoiDungLuu";
-import { duongDanDangNhap } from "@/src/components/auth/duongDanDangNhap";
+import OMaGiamGiaGioHang from "@/src/components/vouchers/CartVoucherBox";
+import { useNguoiDungLuu, useDangTaiNguoiDung } from "@/src/hooks/userStore";
+import { duongDanDangNhap } from "@/src/components/auth/loginUrl";
 
+import styles from "./page.module.scss";
 type TrangThaiMon = "cho" | "dangMua" | "xong" | "hong";
 
 export default function CartPage() {
@@ -144,33 +145,25 @@ export default function CartPage() {
 
   if (soMon === 0) {
     return (
-      <div className="min-h-screen bg-[#f5f7fa] py-16">
-        <div className="mx-auto max-w-2xl px-4 text-center sm:px-6">
-          <ShoppingCart size={36} className="mx-auto mb-4 text-slate-300" />
-          <h1 className="mb-2 text-2xl font-bold text-slate-900">Giỏ hàng trống</h1>
+      <div className={styles.page}>
+        <div className={styles.container}>
+          <ShoppingCart size={36} className={styles.box} />
+          <h1 className={styles.title}>Giỏ hàng trống</h1>
 
           {xong ? (
-            <p className="mb-6 text-sm text-slate-500">
+            <p className={styles.text}>
               Đã mua xong. Vào mục khóa học của bạn để bắt đầu học.
             </p>
           ) : (
-            <p className="mb-6 text-sm text-slate-500">
-              Bạn chưa thêm khóa học nào vào giỏ.
-            </p>
+            <p className={styles.text}>Bạn chưa thêm khóa học nào vào giỏ.</p>
           )}
 
-          <div className="flex flex-wrap justify-center gap-3">
-            <Link
-              href="/courses"
-              className="inline-flex h-11 items-center rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white transition hover:bg-blue-700"
-            >
+          <div className={styles.row}>
+            <Link href="/courses" className={styles.box2}>
               Tìm khóa học
             </Link>
             {xong && (
-              <Link
-                href="/user/my-courses"
-                className="inline-flex h-11 items-center rounded-xl border border-slate-300 bg-white px-6 text-sm font-semibold text-slate-700 transition hover:border-blue-500"
-              >
+              <Link href="/user/my-courses" className={styles.card}>
                 Khóa học của tôi
               </Link>
             )}
@@ -181,62 +174,53 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f7fa] pb-16">
-      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-        <div className="mb-6 flex items-center gap-2">
-          <ShoppingCart size={22} className="text-blue-600" />
-          <h1 className="text-2xl font-bold text-slate-900">Giỏ hàng ({soMon})</h1>
+    <div className={styles.page2}>
+      <div className={styles.container2}>
+        <div className={styles.row2}>
+          <ShoppingCart size={22} className={styles.box3} />
+          <h1 className={styles.title2}>Giỏ hàng ({soMon})</h1>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="flex flex-col gap-3 lg:col-span-2">
+        <div className={styles.grid}>
+          <div className={styles.col}>
             {gio.map((m) => {
               const tt = trangThai[m.courseId];
 
               return (
-                <article
-                  key={m.courseId}
-                  className="flex gap-3 rounded-2xl bg-white p-3 ring-1 ring-slate-200"
-                >
-                  <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                <article key={m.courseId} className={styles.article}>
+                  <div className={styles.box4}>
                     {m.thumbnail && (
                       <Image
                         src={m.thumbnail}
                         alt={m.title}
                         fill
                         sizes="112px"
-                        className="object-cover"
+                        className={styles.box5}
                       />
                     )}
                   </div>
 
-                  <div className="min-w-0 flex-1">
-                    <h2 className="line-clamp-2 text-sm font-bold text-slate-900">
-                      {m.title}
-                    </h2>
-                    <p className="mt-1 text-sm font-semibold text-slate-700 tabular-nums">
+                  <div className={styles.box6}>
+                    <h2 className={styles.heading}>{m.title}</h2>
+                    <p className={styles.text2}>
                       {m.gia.toLocaleString("vi-VN")}đ
-                      <span className="ml-1 text-xs font-normal text-slate-400">
+                      <span className={styles.label}>
                         ({giaRaCoin(m.gia).toLocaleString("vi-VN")} coin)
                       </span>
                     </p>
 
                     {tt === "xong" && (
-                      <p className="mt-1 flex items-center gap-1 text-xs font-semibold text-emerald-700">
+                      <p className={styles.text3}>
                         <CircleCheck size={12} /> Đã mở khóa
                       </p>
                     )}
                     {tt === "hong" && (
-                      <p className="mt-1 flex items-start gap-1 text-xs font-semibold text-red-600">
-                        <CircleX size={12} className="mt-0.5 shrink-0" />
+                      <p className={styles.text4}>
+                        <CircleX size={12} className={styles.box7} />
                         {loiTheoMon[m.courseId] || "Không mua được"}
                       </p>
                     )}
-                    {tt === "dangMua" && (
-                      <p className="mt-1 text-xs font-semibold text-blue-600">
-                        Đang mua…
-                      </p>
-                    )}
+                    {tt === "dangMua" && <p className={styles.text5}>Đang mua…</p>}
                   </div>
 
                   <button
@@ -244,7 +228,7 @@ export default function CartPage() {
                     onClick={() => boMon(m.courseId)}
                     disabled={dangMua}
                     aria-label={`Bỏ ${m.title} khỏi giỏ`}
-                    className="flex h-10 w-10 shrink-0 items-center justify-center self-start rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                    className={styles.button}
                   >
                     <Trash2 size={16} />
                   </button>
@@ -256,42 +240,36 @@ export default function CartPage() {
               type="button"
               onClick={doSachHet}
               disabled={dangMua}
-              className="self-start py-2 text-sm font-semibold text-slate-500 transition hover:text-red-600 disabled:opacity-40"
+              className={styles.button2}
             >
               Xóa hết giỏ hàng
             </button>
           </div>
 
-          <aside className="lg:col-span-1">
-            <div className="sticky top-24 rounded-2xl bg-white p-5 ring-1 ring-slate-200">
-              <h2 className="mb-4 font-bold text-slate-900">Thanh toán</h2>
+          <aside className={styles.aside}>
+            <div className={styles.sticky}>
+              <h2 className={styles.heading2}>Thanh toán</h2>
 
-              <div className="mb-2 flex justify-between text-sm">
-                <span className="text-slate-500">
+              <div className={styles.row3}>
+                <span className={styles.label2}>
                   {giam > 0 ? "Tạm tính" : "Tổng tiền"}
                 </span>
-                <span className="font-semibold tabular-nums">
-                  {tongTien.toLocaleString("vi-VN")}đ
-                </span>
+                <span className={styles.label3}>{tongTien.toLocaleString("vi-VN")}đ</span>
               </div>
 
               {giam > 0 && (
-                <div className="mb-2 flex justify-between text-sm">
-                  <span className="text-slate-500">Mã giảm giá</span>
-                  <span className="font-semibold text-emerald-700 tabular-nums">
-                    −{giam.toLocaleString("vi-VN")}đ
-                  </span>
+                <div className={styles.row3}>
+                  <span className={styles.label2}>Mã giảm giá</span>
+                  <span className={styles.label4}>−{giam.toLocaleString("vi-VN")}đ</span>
                 </div>
               )}
 
-              <div className="mb-4 flex justify-between text-sm">
-                <span className="text-slate-500">Quy ra coin</span>
-                <span className="font-semibold tabular-nums">
-                  {tongCoin.toLocaleString("vi-VN")}
-                </span>
+              <div className={styles.row4}>
+                <span className={styles.label2}>Quy ra coin</span>
+                <span className={styles.label3}>{tongCoin.toLocaleString("vi-VN")}</span>
               </div>
 
-              <div className="mb-4 border-t border-slate-200 pt-4">
+              <div className={styles.box8}>
                 <OMaGiamGiaGioHang
                   key={lanMa}
                   mon={gio.map((m) => ({ courseId: m.courseId, title: m.title }))}
@@ -308,25 +286,22 @@ export default function CartPage() {
                   nhanh nay thi ho thay "Ví của bạn … coin" voi mot nut xam
                   khong bam duoc va khong cau nao noi ly do. */}
               {!user && !dangTai ? (
-                <div className="mb-4 border-t border-slate-200 pt-4">
-                  <p className="mb-3 text-sm text-slate-500">
+                <div className={styles.box8}>
+                  <p className={styles.text6}>
                     Đăng nhập để thanh toán. Giỏ hàng của bạn được giữ nguyên.
                   </p>
-                  <Link
-                    href={duongDangNhap}
-                    className="flex h-12 w-full items-center justify-center rounded-xl bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700"
-                  >
+                  <Link href={duongDangNhap} className={styles.row5}>
                     Đăng nhập
                   </Link>
                 </div>
               ) : (
                 <>
-                  <div className="mb-4 border-t border-slate-200 pt-4 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Ví của bạn</span>
+                  <div className={styles.box9}>
+                    <div className={styles.row6}>
+                      <span className={styles.label2}>Ví của bạn</span>
                       <span
-                        className={`font-semibold tabular-nums ${
-                          duCoin ? "text-emerald-700" : "text-red-600"
+                        className={`${styles.label7} ${
+                          duCoin ? styles.label5 : styles.label6
                         }`}
                       >
                         {soDu === null ? "…" : soDu.toLocaleString("vi-VN")} coin
@@ -334,7 +309,7 @@ export default function CartPage() {
                     </div>
 
                     {soDu !== null && !duCoin && (
-                      <p className="mt-2 text-xs text-red-600">
+                      <p className={styles.text7}>
                         Thiếu {(tongCoin - soDu).toLocaleString("vi-VN")} coin.
                       </p>
                     )}
@@ -344,7 +319,7 @@ export default function CartPage() {
                     type="button"
                     onClick={thanhToan}
                     disabled={dangMua || !duCoin}
-                    className="mb-3 h-12 w-full rounded-xl bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                    className={styles.button3}
                   >
                     {dangMua ? "Đang mua…" : "Thanh toán bằng coin"}
                   </button>
@@ -354,10 +329,10 @@ export default function CartPage() {
               {/* Noi thang vi sao khong co nut chuyen khoan o day, thay vi de
                   nguoi dung tim mai khong thay. Ma QR khop tien theo TUNG don,
                   nen mot lan chuyen cho nhieu khoa se khong doi chieu duoc. */}
-              <p className="text-xs leading-relaxed text-slate-500">
+              <p className={styles.text8}>
                 Giỏ hàng chỉ thanh toán bằng coin. Muốn chuyển khoản thì mua từng khóa ở
                 trang khóa học đó, hoặc{" "}
-                <Link href="/user/coin" className="font-semibold text-blue-600 underline">
+                <Link href="/user/coin" className={styles.box10}>
                   nạp coin
                 </Link>{" "}
                 rồi quay lại đây.
@@ -367,7 +342,7 @@ export default function CartPage() {
                 <button
                   type="button"
                   onClick={() => router.push("/user/my-courses")}
-                  className="mt-3 h-11 w-full rounded-xl border border-slate-300 text-sm font-semibold text-slate-700 transition hover:border-blue-500"
+                  className={styles.button4}
                 >
                   Tới khóa học của tôi
                 </button>

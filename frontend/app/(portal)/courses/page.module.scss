@@ -1,0 +1,20 @@
+// File nay do script sinh ra tu class Tailwind cu.
+// Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
+
+.page {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+}
+
+.spinner {
+  height: calc(var(--spacing) * 8);
+  width: calc(var(--spacing) * 8);
+  animation: var(--animate-spin);
+  border-radius: 3.40282e38px;
+  border-bottom-style: var(--tw-border-style);
+  border-bottom-width: 2px;
+  border-color: var(--color-blue-600);
+}

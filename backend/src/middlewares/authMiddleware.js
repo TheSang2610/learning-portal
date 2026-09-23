@@ -32,7 +32,7 @@ const timNguoiDungTuToken = async (req) => {
     if (!nguoiDung) return { loi: 'khong_co_user' };
 
     // Token cap truoc khi bi khoa van song het han cua no (HAN_TOKEN trong
-    // utils/matKhau.js, hien la 1 ngay), nen phai kiem tra trang thai o day
+    // utils/password.js, hien la 1 ngay), nen phai kiem tra trang thai o day
     // chu khong chi luc dang nhap.
     if (nguoiDung.status === false) return { loi: 'bi_khoa' };
 

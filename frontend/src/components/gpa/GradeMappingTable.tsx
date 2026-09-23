@@ -1,17 +1,18 @@
 import { rangeOf, type Scale } from "./gradeScales";
 
+import styles from "./GradeMappingTable.module.scss";
 // Bang quy doi dung chung cho trang Tinh diem tong ket va trang Quy doi 10 -> 4.
 // Sinh tu gradeScales.ts nen khong bao gio lech voi ket qua tinh that.
 
 export default function GradeMappingTable({ scale }: { scale: Scale }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-blue-200">
-      <table className="w-full text-xs">
+    <div className={styles.box}>
+      <table className={styles.table}>
         <thead>
-          <tr className="bg-blue-600 text-white">
-            <th className="px-2 py-2 font-bold">Điểm hệ 10</th>
-            <th className="px-2 py-2 font-bold">Điểm hệ 4</th>
-            <th className="px-2 py-2 font-bold">Điểm dạng chữ</th>
+          <tr className={styles.row}>
+            <th className={styles.headCell}>Điểm hệ 10</th>
+            <th className={styles.headCell}>Điểm hệ 4</th>
+            <th className={styles.headCell}>Điểm dạng chữ</th>
           </tr>
         </thead>
         <tbody>
@@ -20,10 +21,10 @@ export default function GradeMappingTable({ scale }: { scale: Scale }) {
             .map((g, i) => ({ g, i }))
             .reverse()
             .map(({ g, i }) => (
-              <tr key={g.letter} className="border-t border-blue-200">
-                <td className="px-2 py-2 text-slate-700">{rangeOf(scale, i)}</td>
-                <td className="px-2 py-2 text-slate-700">{g.gpa4}</td>
-                <td className="px-2 py-2 font-bold text-slate-900">{g.letter}</td>
+              <tr key={g.letter} className={styles.row2}>
+                <td className={styles.cell}>{rangeOf(scale, i)}</td>
+                <td className={styles.cell}>{g.gpa4}</td>
+                <td className={styles.cell2}>{g.letter}</td>
               </tr>
             ))}
         </tbody>

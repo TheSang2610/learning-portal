@@ -16,7 +16,7 @@ export interface LessonData {
   order?: number;
   // May chu dat co nay khi nguoi xem CHUA duoc mo khoa hoc: luc do videoUrl,
   // content va documentUrl bi cat het, chi con muc luc. Xem
-  // backend/src/utils/quyenNoiDung.js.
+  // backend/src/utils/contentAccess.js.
   biKhoa?: boolean;
   createdAt?: string;
   updatedAt?: string;

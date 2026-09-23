@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { getQuizStats, allowStudentRetry, QuizStats } from "@/src/services/quizService";
 
+import styles from "./page.module.scss";
 function QuizStatsPageContent() {
   // Moi tham so deu lay tu query string:
   // /instructor/quiz-stats?courseId=...&lessonId=...&quizId=...
@@ -92,7 +93,7 @@ function QuizStatsPageContent() {
 
   if (!quizId) {
     return (
-      <div className="p-8 text-center font-semibold text-red-500">
+      <div className={styles.box}>
         Không tìm thấy ID bài tập Quiz hợp lệ. Vui lòng quay lại giáo trình!
       </div>
     );
@@ -100,70 +101,58 @@ function QuizStatsPageContent() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[400px] flex-col items-center justify-center gap-2 text-slate-500">
-        <Loader2 className="animate-spin text-blue-600" size={28} />
-        <p className="text-sm font-medium">Đang tải báo cáo lớp học...</p>
+      <div className={styles.col}>
+        <Loader2 className={styles.spinner} size={28} />
+        <p className={styles.text}>Đang tải báo cáo lớp học...</p>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-6 text-slate-700">
+    <div className={styles.container}>
       {/* NÚT QUAY LẠI GIÁO TRÌNH */}
       <div>
         <button
           onClick={() => router.push(`/instructor/lessons?courseId=${courseId}`)}
-          className="mb-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-800"
+          className={styles.button}
         >
           <ArrowLeft size={16} /> Quay lại quản lý giáo trình
         </button>
-        <span className="block text-xs font-bold tracking-wider text-blue-600 uppercase">
-          Báo cáo tổng quan điểm số
-        </span>
-        <h1 className="mt-0.5 text-2xl font-bold text-slate-900">
-          Bài tập: {stats?.title || "Đang cập nhật..."}
-        </h1>
+        <span className={styles.label}>Báo cáo tổng quan điểm số</span>
+        <h1 className={styles.title}>Bài tập: {stats?.title || "Đang cập nhật..."}</h1>
       </div>
 
       {/* THẺ TỔNG QUAN SỐ LIỆU (LIGHT MODE) */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium text-slate-500">Đã nộp bài</p>
-          <p className="mt-1 text-2xl font-bold text-slate-900">
-            {stats?.submittedList?.length || 0}
-          </p>
+      <div className={styles.grid}>
+        <div className={styles.card}>
+          <p className={styles.text2}>Đã nộp bài</p>
+          <p className={styles.text3}>{stats?.submittedList?.length || 0}</p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium text-slate-500">Điểm trung bình</p>
-          <p className="mt-1 text-2xl font-bold text-blue-600">
-            {stats?.averageScore || 0}%
-          </p>
+        <div className={styles.card}>
+          <p className={styles.text2}>Điểm trung bình</p>
+          <p className={styles.text4}>{stats?.averageScore || 0}%</p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium text-slate-500">Tỷ lệ Đạt (Pass)</p>
-          <p className="mt-1 text-2xl font-bold text-emerald-600">
-            {stats?.passRate || 0}%
-          </p>
+        <div className={styles.card}>
+          <p className={styles.text2}>Tỷ lệ Đạt (Pass)</p>
+          <p className={styles.text5}>{stats?.passRate || 0}%</p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium text-slate-500">Chưa hoàn thành</p>
-          <p className="mt-1 text-2xl font-bold text-amber-600">
-            {stats?.unsubmittedList?.length || 0}
-          </p>
+        <div className={styles.card}>
+          <p className={styles.text2}>Chưa hoàn thành</p>
+          <p className={styles.text6}>{stats?.unsubmittedList?.length || 0}</p>
         </div>
       </div>
 
       {/* THANH DI CHUYỂN TAB */}
-      <div className="flex gap-6 border-b border-slate-200 text-sm font-bold">
+      <div className={styles.row}>
         <button
           onClick={() => setActiveTab("submitted")}
-          className={`relative pb-3 transition-colors ${activeTab === "submitted" ? "border-b-2 border-blue-600 text-blue-600" : "text-slate-500 hover:text-slate-600"}`}
+          className={`${styles.button9} ${activeTab === "submitted" ? styles.button2 : styles.button3}`}
         >
           Đã làm bài ({stats?.submittedList?.length || 0})
         </button>
         <button
           onClick={() => setActiveTab("unsubmitted")}
-          className={`relative pb-3 transition-colors ${activeTab === "unsubmitted" ? "border-b-2 border-amber-600 text-amber-600" : "text-slate-500 hover:text-slate-600"}`}
+          className={`${styles.button9} ${activeTab === "unsubmitted" ? styles.button4 : styles.button3}`}
         >
           Chưa nộp bài ({stats?.unsubmittedList?.length || 0})
         </button>
@@ -171,56 +160,52 @@ function QuizStatsPageContent() {
 
       {/* DANH SÁCH ĐÃ LÀM BÀI */}
       {activeTab === "submitted" && (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <table className="w-full border-collapse text-left text-sm">
+        <div className={styles.card2}>
+          <table className={styles.table}>
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-xs font-bold text-slate-500 uppercase">
-                <th className="p-4">Học viên</th>
-                <th className="p-4">Kết quả đạt được</th>
-                <th className="p-4">Trạng thái</th>
-                <th className="p-4">Thời gian nộp bài</th>
-                <th className="p-4 text-right">Hệ thống quản trị</th>
+              <tr className={styles.row2}>
+                <th className={styles.headCell}>Học viên</th>
+                <th className={styles.headCell}>Kết quả đạt được</th>
+                <th className={styles.headCell}>Trạng thái</th>
+                <th className={styles.headCell}>Thời gian nộp bài</th>
+                <th className={styles.headCell2}>Hệ thống quản trị</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-700">
+            <tbody className={styles.tbody}>
               {stats?.submittedList?.map((item) => (
-                <tr key={item._id} className="transition-colors hover:bg-slate-50/50">
-                  <td className="p-4">
-                    <p className="font-semibold text-slate-900">{item.student?.name}</p>
-                    <p className="text-xs text-slate-500">{item.student?.email}</p>
+                <tr key={item._id} className={styles.row3}>
+                  <td className={styles.headCell}>
+                    <p className={styles.text7}>{item.student?.name}</p>
+                    <p className={styles.text8}>{item.student?.email}</p>
                   </td>
-                  <td className="p-4">
-                    <span className="font-bold text-slate-900">{item.score} điểm</span>
-                    <span className="block text-xs text-slate-500">
+                  <td className={styles.headCell}>
+                    <span className={styles.label2}>{item.score} điểm</span>
+                    <span className={styles.label3}>
                       Tỷ lệ chính xác: {item.percentage}%
                     </span>
                   </td>
-                  <td className="p-4">
+                  <td className={styles.headCell}>
                     {item.passed ? (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
+                      <span className={styles.card3}>
                         <CheckCircle size={12} /> Đạt yêu cầu
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700">
+                      <span className={styles.card4}>
                         <XCircle size={12} /> Điểm thấp
                       </span>
                     )}
                   </td>
-                  <td className="p-4 text-xs text-slate-500">
+                  <td className={styles.cell}>
                     {new Date(item.submittedAt).toLocaleString("vi-VN")}
-                    <p className="text-[10px] text-slate-500">
-                      Lượt làm: Thứ #{item.attemptNumber}
-                    </p>
+                    <p className={styles.text9}>Lượt làm: Thứ #{item.attemptNumber}</p>
                   </td>
-                  <td className="p-4 text-right">
+                  <td className={styles.headCell2}>
                     <button
                       onClick={() =>
                         openRetryModal(item.student?._id, item.student?.name)
                       }
-                      className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition ${
-                        !item.passed
-                          ? "border-amber-200 bg-amber-50 text-amber-700 shadow-xs hover:bg-amber-100"
-                          : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      className={`${styles.button10} ${
+                        !item.passed ? styles.button5 : styles.button6
                       }`}
                     >
                       <RotateCcw size={12} />
@@ -231,10 +216,7 @@ function QuizStatsPageContent() {
               ))}
               {stats?.submittedList?.length === 0 && (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="py-10 text-center text-xs text-slate-500 italic"
-                  >
+                  <td colSpan={5} className={styles.cell2}>
                     Chưa có học sinh nào nộp bài tập này.
                   </td>
                 </tr>
@@ -246,27 +228,27 @@ function QuizStatsPageContent() {
 
       {/* DANH SÁCH CHƯA LÀM BÀI */}
       {activeTab === "unsubmitted" && (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <table className="w-full border-collapse text-left text-sm">
+        <div className={styles.card2}>
+          <table className={styles.table}>
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-xs font-bold text-slate-500 uppercase">
-                <th className="p-4">Họ và tên</th>
-                <th className="p-4">Email</th>
-                <th className="p-4 text-right">Thao tác nhanh</th>
+              <tr className={styles.row2}>
+                <th className={styles.headCell}>Họ và tên</th>
+                <th className={styles.headCell}>Email</th>
+                <th className={styles.headCell2}>Thao tác nhanh</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className={styles.tbody2}>
               {stats?.unsubmittedList?.map((student) => (
-                <tr key={student._id} className="transition-colors hover:bg-slate-50/50">
-                  <td className="inline-flex items-center gap-2 p-4 font-semibold text-slate-900">
-                    <AlertCircle size={14} className="text-amber-500" />
+                <tr key={student._id} className={styles.row3}>
+                  <td className={styles.cell3}>
+                    <AlertCircle size={14} className={styles.box2} />
                     {student.name}
                   </td>
-                  <td className="p-4 text-slate-500">{student.email}</td>
-                  <td className="p-4 text-right">
+                  <td className={styles.cell4}>{student.email}</td>
+                  <td className={styles.headCell2}>
                     <a
                       href={`mailto:${student.email}?subject=Nhắc nhở làm bài tập&body=Chào ${student.name}, bạn chưa hoàn thành bài tập trắc nghiệm.`}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-600 transition hover:bg-blue-100"
+                      className={styles.link}
                     >
                       <Mail size={12} /> Hối thúc lẹ
                     </a>
@@ -275,10 +257,7 @@ function QuizStatsPageContent() {
               ))}
               {stats?.unsubmittedList?.length === 0 && (
                 <tr>
-                  <td
-                    colSpan={3}
-                    className="py-10 text-center text-xs font-bold text-emerald-600"
-                  >
+                  <td colSpan={3} className={styles.cell5}>
                     🎉 Đơn lớp hoàn hảo! Không có ai nợ bài tập này.
                   </td>
                 </tr>
@@ -290,51 +269,42 @@ function QuizStatsPageContent() {
 
       {/* 🎯 MODAL NHẬP LÝ DO CHO LÀM LẠI BÀI */}
       {selectedStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-          <div className="animate-in fade-in zoom-in-95 w-full max-w-md space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xl duration-150">
-            <div className="flex items-start gap-3">
-              <div className="rounded-xl border border-amber-100 bg-amber-50 p-2 text-amber-600">
+        <div className={styles.overlay}>
+          <div className={`${styles.hienPhongTo} ${styles.card5}`}>
+            <div className={styles.row4}>
+              <div className={styles.card6}>
                 <MessageSquare size={20} />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900">
-                  Xác nhận cấp quyền làm lại
-                </h3>
-                <p className="mt-0.5 text-xs text-slate-500">
+                <h3 className={styles.subheading}>Xác nhận cấp quyền làm lại</h3>
+                <p className={styles.text10}>
                   Học sinh được chọn:{" "}
-                  <span className="font-semibold text-slate-700">
-                    {selectedStudent.name}
-                  </span>
+                  <span className={styles.label4}>{selectedStudent.name}</span>
                 </p>
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-500">
-                Lý do mở khóa lại (Bắt buộc)
-              </label>
+            <div className={styles.stack}>
+              <label className={styles.fieldLabel}>Lý do mở khóa lại (Bắt buộc)</label>
               <textarea
                 rows={3}
                 value={retryReason}
                 onChange={(e) => setRetryReason(e.target.value)}
                 placeholder="Ví dụ: Điểm thấp dưới trung bình, lỗi đường truyền mạng tại lớp, xin làm lại để cải thiện điểm số..."
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:outline-none"
+                className={styles.textarea}
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 text-xs font-bold">
-              <button
-                onClick={() => setSelectedStudent(null)}
-                className="rounded-xl bg-slate-100 px-4 py-2 text-slate-600 transition hover:bg-slate-200"
-              >
+            <div className={styles.row5}>
+              <button onClick={() => setSelectedStudent(null)} className={styles.button7}>
                 Hủy bỏ
               </button>
               <button
                 onClick={handleConfirmRetry}
                 disabled={submittingId !== null}
-                className="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-4 py-2 text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
+                className={styles.button8}
               >
-                {submittingId ? <Loader2 className="animate-spin" size={12} /> : null}
+                {submittingId ? <Loader2 className={styles.spinner2} size={12} /> : null}
                 Xác nhận & Khởi tạo lại
               </button>
             </div>
@@ -351,8 +321,8 @@ export default function QuizStatsPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-600" />
+        <div className={styles.row6}>
+          <div className={styles.spinner3} />
         </div>
       }
     >

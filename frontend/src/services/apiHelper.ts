@@ -1,5 +1,5 @@
-import { GOC_API_TRINH_DUYET as API_ORIGIN } from "./diaChiApi";
-import { datNguoiDung, dangCoPhien } from "@/src/hooks/nguoiDungLuu";
+import { GOC_API_TRINH_DUYET as API_ORIGIN } from "./apiBase";
+import { datNguoiDung, dangCoPhien } from "@/src/hooks/userStore";
 
 const resolveApiUrl = (path: string) => {
   if (/^https?:\/\//i.test(path)) {

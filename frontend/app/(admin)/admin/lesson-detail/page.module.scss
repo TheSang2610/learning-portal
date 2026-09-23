@@ -1,0 +1,599 @@
+// File nay do script sinh ra tu class Tailwind cu.
+// Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
+
+.box {
+  padding: calc(var(--spacing) * 20);
+  text-align: center;
+  --tw-font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-slate-500);
+}
+
+.container {
+  margin-inline: auto;
+  max-width: var(--container-3xl);
+  padding-block: calc(var(--spacing) * 10);
+}
+
+.button {
+  margin-bottom: calc(var(--spacing) * 5);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-500);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-slate-800);
+    }
+  }
+}
+
+.card {
+  border-radius: var(--radius-3xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  background-color: var(--color-white);
+  padding: calc(var(--spacing) * 8);
+  --tw-shadow:
+    0 1px 3px 0 var(--tw-shadow-color, #0000001a),
+    0 1px 2px -1px var(--tw-shadow-color, #0000001a);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+.row {
+  margin-bottom: calc(var(--spacing) * 6);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.title {
+  margin-bottom: calc(var(--spacing) * 1);
+  font-size: var(--text-3xl);
+  line-height: var(--tw-leading, var(--text-3xl--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-slate-800);
+}
+
+.text {
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-slate-500);
+}
+
+.button2 {
+  border-radius: var(--radius-xl);
+  background-color: var(--color-red-50);
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 2);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-red-600);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-red-100);
+    }
+  }
+
+  &:disabled {
+    background-color: var(--color-slate-100);
+    color: var(--color-slate-400);
+  }
+}
+
+.form {
+  :where(& > :not(:last-child)) {
+    --tw-space-y-reverse: 0;
+    margin-block-start: calc(calc(var(--spacing) * 5) * var(--tw-space-y-reverse));
+    margin-block-end: calc(
+      calc(var(--spacing) * 5) * calc(1 - var(--tw-space-y-reverse))
+    );
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: calc(var(--spacing) * 5);
+}
+
+.box2 {
+  grid-column: span 3 / span 3;
+}
+
+.fieldLabel {
+  margin-bottom: calc(var(--spacing) * 2);
+  display: block;
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-700);
+}
+
+.input {
+  width: 100%;
+  border-radius: var(--radius-2xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  padding: calc(var(--spacing) * 4);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+  --tw-outline-style: none;
+  outline-style: none;
+
+  &:focus {
+    border-color: var(--color-blue-500);
+  }
+}
+
+.box3 {
+  grid-column: span 1 / span 1;
+}
+
+.box4 {
+  border-radius: var(--radius-2xl);
+  border-style: var(--tw-border-style);
+  border-width: 2px;
+  --tw-border-style: dashed;
+  border-style: dashed;
+  border-color: var(--color-blue-300);
+  background-color: var(--color-blue-50);
+  padding: calc(var(--spacing) * 6);
+}
+
+.box5 {
+  margin-bottom: calc(var(--spacing) * 5);
+}
+
+.text2 {
+  margin-bottom: calc(var(--spacing) * 4);
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  color: var(--color-slate-500);
+}
+
+.card2 {
+  margin-bottom: calc(var(--spacing) * 4);
+  border-radius: var(--radius-xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-blue-200);
+  background-color: var(--color-white);
+  padding: calc(var(--spacing) * 4);
+}
+
+.fieldLabel2 {
+  margin-bottom: calc(var(--spacing) * 3);
+  display: block;
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-700);
+}
+
+.input2 {
+  display: block;
+  width: 100%;
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-slate-500);
+
+  &::file-selector-button {
+    margin-right: calc(var(--spacing) * 4);
+    border-radius: var(--radius-xl);
+    border-style: var(--tw-border-style);
+    border-width: 0;
+    background-color: var(--color-blue-600);
+    padding-inline: calc(var(--spacing) * 4);
+    padding-block: calc(var(--spacing) * 2);
+    font-size: var(--text-sm);
+    line-height: var(--tw-leading, var(--text-sm--line-height));
+    --tw-font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-white);
+  }
+
+  @media (hover: hover) {
+    &:hover::file-selector-button {
+      background-color: var(--color-blue-700);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+.text3 {
+  margin-top: calc(var(--spacing) * 2);
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  color: var(--color-slate-500);
+}
+
+.card3 {
+  margin-bottom: calc(var(--spacing) * 4);
+  border-radius: var(--radius-xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-green-200);
+  background-color: var(--color-green-50);
+  padding: calc(var(--spacing) * 4);
+}
+
+.text4 {
+  margin-bottom: calc(var(--spacing) * 3);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-green-700);
+}
+
+.video {
+  max-height: calc(var(--spacing) * 48);
+  width: 100%;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-black);
+  object-fit: cover;
+}
+
+.button3 {
+  margin-top: calc(var(--spacing) * 3);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-red-600);
+  text-decoration-line: underline;
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-red-700);
+    }
+  }
+}
+
+.card4 {
+  border-radius: var(--radius-xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-amber-200);
+  background-color: var(--color-white);
+  padding: calc(var(--spacing) * 4);
+}
+
+.input3 {
+  cursor: not-allowed;
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-500);
+}
+
+.input4 {
+  color: var(--color-slate-600);
+}
+
+.text5 {
+  margin-top: calc(var(--spacing) * 2);
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  color: var(--color-amber-600);
+}
+
+.text6 {
+  margin-top: calc(var(--spacing) * 2);
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  color: var(--color-green-600);
+}
+
+.textarea {
+  width: 100%;
+  border-radius: var(--radius-2xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  padding: calc(var(--spacing) * 4);
+  --tw-leading: var(--leading-relaxed);
+  line-height: var(--leading-relaxed);
+  color: var(--color-slate-700);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+  --tw-outline-style: none;
+  outline-style: none;
+
+  &:focus {
+    border-color: var(--color-blue-500);
+  }
+}
+
+.row2 {
+  display: flex;
+  justify-content: flex-end;
+  gap: calc(var(--spacing) * 4);
+  border-top-style: var(--tw-border-style);
+  border-top-width: 1px;
+  padding-top: calc(var(--spacing) * 4);
+}
+
+.button4 {
+  border-radius: var(--radius-2xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  padding-inline: calc(var(--spacing) * 6);
+  padding-block: calc(var(--spacing) * 3.5);
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-700);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-slate-50);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+.button5 {
+  border-radius: var(--radius-2xl);
+  background-color: var(--color-blue-600);
+  padding-inline: calc(var(--spacing) * 8);
+  padding-block: calc(var(--spacing) * 3.5);
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-white);
+  --tw-shadow:
+    0 4px 6px -1px var(--tw-shadow-color, #0000001a),
+    0 2px 4px -2px var(--tw-shadow-color, #0000001a);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+  --tw-shadow-color: #155dfc1a;
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @supports (color: color-mix(in lab, red, red)) {
+    --tw-shadow-color: color-mix(
+      in oklab,
+      color-mix(in oklab, var(--color-blue-600) 10%, transparent) var(--tw-shadow-alpha),
+      transparent
+    );
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-blue-700);
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    background-color: var(--color-slate-300);
+  }
+}
+
+.row3 {
+  display: flex;
+  min-height: 60vh;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  height: calc(var(--spacing) * 8);
+  width: calc(var(--spacing) * 8);
+  animation: var(--animate-spin);
+  border-radius: 3.40282e38px;
+  border-bottom-style: var(--tw-border-style);
+  border-bottom-width: 2px;
+  border-color: var(--color-indigo-600);
+}
+
+/* Cac lop con ket trong template literal, va bo sung. */
+.input5 {
+  width: 100%;
+  border-radius: var(--radius-xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  padding: calc(var(--spacing) * 3);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+  --tw-outline-style: none;
+  outline-style: none;
+
+  &:focus {
+    border-color: var(--color-blue-500);
+  }
+}

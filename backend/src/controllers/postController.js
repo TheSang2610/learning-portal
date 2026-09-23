@@ -1,9 +1,9 @@
 const Post = require('../models/Post');
-const { phanTrang } = require('../utils/truyVan');
+const { phanTrang } = require('../utils/queryParams');
 const { CHU_DE, TEN_CHU_DE } = require('../models/Post');
 const { checkText } = require('../utils/contentFilter');
-const { taoSlug, tachTags } = require('../utils/vanBan');
-const { chuanHoaNoiDung, boThe } = require('../utils/htmlBaiViet');
+const { taoSlug, tachTags } = require('../utils/textUtils');
+const { chuanHoaNoiDung, boThe } = require('../utils/postHtml');
 
 // Bang dung gioi han cua truong content trong model.
 const NOI_DUNG_TOI_DA = 120000;

@@ -5,7 +5,7 @@
    nen dung the <img> o day moi dung. */
 
 import { useEffect, useState } from "react";
-import { useNguoiDungLuu } from "@/src/hooks/nguoiDungLuu";
+import { useNguoiDungLuu } from "@/src/hooks/userStore";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -21,6 +21,7 @@ import { createCourse } from "@/src/services/course";
 import { getCategories, Category } from "@/src/services/categoryService";
 import { getProviders, ProviderData } from "@/src/services/provider";
 
+import styles from "./page.module.scss";
 // Hàm hỗ trợ tạo link SEO (slug) sạch
 const convertToSlug = (text: string) => {
   return text
@@ -175,72 +176,55 @@ export default function InstructorCreateCoursePage() {
   };
 
   if (loadingMetadata) {
-    return (
-      <div className="animate-pulse py-20 text-center text-sm font-medium text-slate-500">
-        Đang đồng bộ biểu mẫu hệ thống...
-      </div>
-    );
+    return <div className={styles.box}>Đang đồng bộ biểu mẫu hệ thống...</div>;
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 py-6">
-      <div className="flex items-center gap-3">
-        <Link
-          href="/instructor/courses"
-          className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:bg-slate-50"
-        >
+    <div className={styles.container}>
+      <div className={styles.row}>
+        <Link href="/instructor/courses" className={styles.card}>
           <ArrowLeft size={18} />
         </Link>
         <div>
-          <h3 className="text-xl font-bold text-slate-800">Tạo khóa học mới</h3>
-          <p className="text-sm text-slate-500">
+          <h3 className={styles.subheading}>Tạo khóa học mới</h3>
+          <p className={styles.text}>
             Bước 1: Thiết lập các thông tin hiển thị cơ bản bên ngoài.
           </p>
         </div>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-5 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"
-      >
+      <form onSubmit={handleSubmit} className={styles.form}>
         {/* THUMBNAIL UPLOAD (Giao diện đồng bộ bản mới gọn gàng hơn) */}
         <div>
-          <label className="mb-2 block flex items-center gap-2 text-sm font-semibold text-slate-700">
-            <ImageIcon size={16} className="text-blue-500" />
+          <label className={styles.fieldLabel}>
+            <ImageIcon size={16} className={styles.box2} />
             Ảnh bìa khóa học (Thumbnail) *
           </label>
 
-          <div className="grid grid-cols-1 items-center gap-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 md:grid-cols-3">
-            <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-200 md:col-span-1">
+          <div className={styles.card2}>
+            <div className={styles.card3}>
               {previewUrl ? (
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="h-full w-full object-cover"
-                />
+                <img src={previewUrl} alt="Preview" className={styles.image} />
               ) : (
-                <div className="p-2 text-center text-slate-500">
-                  <ImageIcon2 size={24} className="mx-auto mb-1 opacity-60" />
-                  <span className="block text-[10px]">Khung xem trước</span>
+                <div className={styles.box3}>
+                  <ImageIcon2 size={24} className={styles.box4} />
+                  <span className={styles.label}>Khung xem trước</span>
                 </div>
               )}
             </div>
 
-            <div className="md:col-span-2">
+            <div className={styles.box5}>
               <input
                 type="file"
                 id="instructor-thumb-upload"
                 accept="image/*"
                 onChange={handleFileChange}
-                className="hidden"
+                className={styles.input}
               />
-              <label
-                htmlFor="instructor-thumb-upload"
-                className="inline-flex cursor-pointer items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50"
-              >
+              <label htmlFor="instructor-thumb-upload" className={styles.fieldLabel2}>
                 Chọn tệp ảnh từ máy tính
               </label>
-              <p className="mt-2 text-[11px] text-slate-500">
+              <p className={styles.text2}>
                 Hỗ trợ định dạng JPG, PNG, WEBP. Tỉ lệ khuyên dùng 16:9.
               </p>
             </div>
@@ -248,31 +232,27 @@ export default function InstructorCreateCoursePage() {
         </div>
 
         {/* TÊN KHÓA HỌC */}
-        <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-slate-700">
-            Tiêu đề khóa học *
-          </label>
+        <div className={styles.stack}>
+          <label className={styles.fieldLabel3}>Tiêu đề khóa học *</label>
           <input
             type="text"
             required
             name="title"
             placeholder="Ví dụ: Lập trình Fullstack Next.js Masterclass"
-            className="w-full rounded-2xl border border-slate-200 p-4 text-sm transition outline-none focus:border-blue-500"
+            className={styles.input2}
             value={formData.title}
             onChange={handleTitleChange}
           />
         </div>
 
         {/* ĐƯỜNG DẪN SEO SLUG */}
-        <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-slate-700">
-            Đường dẫn SEO (Slug)
-          </label>
+        <div className={styles.stack}>
+          <label className={styles.fieldLabel3}>Đường dẫn SEO (Slug)</label>
           <input
             type="text"
             required
             name="slug"
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 font-mono text-xs text-slate-600 transition outline-none focus:border-blue-500"
+            className={styles.input3}
             value={formData.slug}
             onChange={(e) =>
               setFormData({ ...formData, slug: convertToSlug(e.target.value) })
@@ -281,29 +261,25 @@ export default function InstructorCreateCoursePage() {
         </div>
 
         {/* GIÁ CẢ & TRÌNH ĐỘ */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-slate-700">
-              Giá bán (VND) *
-            </label>
+        <div className={styles.grid}>
+          <div className={styles.stack}>
+            <label className={styles.fieldLabel3}>Giá bán (VND) *</label>
             <input
               type="number"
               required
               name="price"
               min="0"
-              className="w-full rounded-2xl border border-slate-200 p-4 text-sm transition outline-none focus:border-blue-500"
+              className={styles.input2}
               value={formData.price}
               onChange={handleInputChange}
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-slate-700">
-              Trình độ học viên hướng tới
-            </label>
+          <div className={styles.stack}>
+            <label className={styles.fieldLabel3}>Trình độ học viên hướng tới</label>
             <select
               name="level"
-              className="w-full rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-800 transition outline-none focus:border-blue-500"
+              className={styles.select}
               value={formData.level}
               onChange={handleInputChange}
             >
@@ -315,14 +291,14 @@ export default function InstructorCreateCoursePage() {
         </div>
 
         {/* ĐỐI TÁC CẤP CHỨNG CHỈ */}
-        <div className="space-y-1.5 border-t pt-4">
-          <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-            <Building2 size={16} className="text-violet-500" />
+        <div className={styles.stack2}>
+          <label className={styles.fieldLabel4}>
+            <Building2 size={16} className={styles.box6} />
             Đơn vị đối tác / Trường học liên kết công tác
           </label>
           <select
             name="providerId"
-            className="w-full rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-800 transition outline-none focus:border-blue-500"
+            className={styles.select}
             value={formData.providerId}
             onChange={handleInputChange}
           >
@@ -337,25 +313,25 @@ export default function InstructorCreateCoursePage() {
         </div>
 
         {/* MÔ TẢ TỔNG QUAN */}
-        <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-slate-700">Mô tả tóm tắt</label>
+        <div className={styles.stack}>
+          <label className={styles.fieldLabel3}>Mô tả tóm tắt</label>
           <textarea
             rows={4}
             name="description"
             placeholder="Mô tả nội dung cốt lõi của khóa học..."
-            className="w-full rounded-2xl border border-slate-200 p-4 text-sm transition outline-none focus:border-blue-500"
+            className={styles.input2}
             value={formData.description}
             onChange={handleInputChange}
           />
         </div>
 
         {/* 🎯 ĐỒNG BỘ: CHỌN NHIỀU CATEGORIES (Multi-select y hệt Admin) */}
-        <div className="border-t pt-4">
-          <label className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
-            <Tag size={16} className="text-emerald-500" />
+        <div className={styles.box7}>
+          <label className={styles.fieldLabel5}>
+            <Tag size={16} className={styles.box8} />
             Danh mục liên kết học thuật (Có thể chọn nhiều) *
           </label>
-          <div className="flex flex-wrap gap-2.5 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+          <div className={styles.card4}>
             {categories.map((cat) => {
               const active = formData.category.includes(cat._id);
               return (
@@ -363,14 +339,12 @@ export default function InstructorCreateCoursePage() {
                   type="button"
                   key={cat._id}
                   onClick={() => handleCategoryToggle(cat._id)}
-                  className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-semibold transition-all ${
-                    active
-                      ? "border-emerald-600 bg-emerald-600 text-white shadow-sm shadow-emerald-600/10"
-                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                  className={`${styles.button5} ${
+                    active ? styles.button : styles.button2
                   }`}
                 >
                   {cat.name}
-                  {active && <Check size={14} className="stroke-[3]" />}
+                  {active && <Check size={14} className={styles.box9} />}
                 </button>
               );
             })}
@@ -378,15 +352,11 @@ export default function InstructorCreateCoursePage() {
         </div>
 
         {/* NÚT SUBMIT ĐỒNG BỘ STYLE */}
-        <div className="pt-2">
+        <div className={styles.box10}>
           <button
             type="submit"
             disabled={loading}
-            className={`flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-sm font-bold text-white transition ${
-              loading
-                ? "cursor-not-allowed bg-blue-400"
-                : "bg-blue-600 shadow-lg shadow-blue-600/10 hover:bg-blue-700"
-            }`}
+            className={`${styles.button6} ${loading ? styles.button3 : styles.button4}`}
           >
             <Sparkles size={16} />
             {loading ? "Đang xử lý..." : "Khởi tạo & Tiếp tục xây dựng giáo trình"}

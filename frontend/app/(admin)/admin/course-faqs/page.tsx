@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import styles from "./page.module.scss";
 function CourseFaqsPageContent() {
   // Lấy courseId từ query string: /admin/course-faqs?courseId=...
   const searchParams = useSearchParams();
@@ -114,98 +115,78 @@ function CourseFaqsPageContent() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className={styles.stack}>
       {/* NÚT QUAY LẠI DANH SÁCH COURES */}
       <div>
-        <Link
-          href="/admin/courses"
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-800"
-        >
+        <Link href="/admin/courses" className={styles.box}>
           <ArrowLeft size={16} /> Back to Courses
         </Link>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className={styles.row}>
         <div>
-          <h3 className="flex items-center gap-2 text-2xl font-bold text-slate-800">
-            <HelpCircle className="text-purple-600" size={26} />
+          <h3 className={styles.subheading}>
+            <HelpCircle className={styles.box2} size={26} />
             Course FAQs Management
           </h3>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className={styles.text}>
             Thiết lập danh sách câu hỏi giải đáp thắc mắc hiển thị riêng cho khóa học này
             (ID: {courseId}).
           </p>
         </div>
-        <button
-          onClick={handleOpenCreateModal}
-          className="flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-medium text-white shadow-md shadow-purple-600/10 transition-all hover:bg-purple-700"
-        >
+        <button onClick={handleOpenCreateModal} className={styles.button}>
           <Plus size={18} />
           Add Course FAQ
         </button>
       </div>
 
       {successMsg && (
-        <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
-          <CheckCircle className="flex-shrink-0 text-emerald-500" size={20} />
-          <span className="text-sm font-medium">{successMsg}</span>
+        <div className={styles.card}>
+          <CheckCircle className={styles.box3} size={20} />
+          <span className={styles.label}>{successMsg}</span>
         </div>
       )}
 
       {isLoading ? (
-        <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm">
-          <Loader2 className="animate-spin text-purple-600" size={32} />
-          <p className="text-sm font-medium">Loading course questions...</p>
+        <div className={styles.card2}>
+          <Loader2 className={styles.spinner} size={32} />
+          <p className={styles.label}>Loading course questions...</p>
         </div>
       ) : error ? (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-rose-100 bg-rose-50 p-6 text-center text-rose-700">
+        <div className={styles.card3}>
           <AlertCircle size={32} />
-          <p className="font-semibold">Lỗi tải dữ liệu</p>
-          <p className="text-sm">{error}</p>
+          <p className={styles.text2}>Lỗi tải dữ liệu</p>
+          <p className={styles.text3}>{error}</p>
         </div>
       ) : faqs.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-slate-500">
-          <HelpCircle className="mx-auto mb-3 text-slate-400" size={48} />
-          <p className="font-medium text-slate-600">
-            Khóa học này chưa có câu hỏi FAQ nào
-          </p>
-          <p className="mt-1 text-xs text-slate-500">
+        <div className={styles.card4}>
+          <HelpCircle className={styles.box4} size={48} />
+          <p className={styles.text4}>Khóa học này chưa có câu hỏi FAQ nào</p>
+          <p className={styles.text5}>
             Bấm nút &quot;Add Course FAQ&quot; ở trên để bổ trợ nội dung giải đáp cho học
             viên.
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className={styles.stack2}>
           {faqs.map((faq, index) => (
-            <div
-              key={faq._id}
-              className="group flex items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-slate-300"
-            >
-              <div className="flex-1 space-y-2">
-                <div className="flex items-start gap-2.5">
-                  <span className="mt-0.5 rounded-lg bg-purple-50 px-2.5 py-1 text-xs font-bold text-purple-600">
-                    Q{index + 1}
-                  </span>
-                  <h4 className="text-[16px] leading-snug font-bold text-slate-800">
-                    {faq.question}
-                  </h4>
+            <div key={faq._id} className={`group ${styles.card5}`}>
+              <div className={styles.stack3}>
+                <div className={styles.row2}>
+                  <span className={styles.label2}>Q{index + 1}</span>
+                  <h4 className={styles.minorHeading}>{faq.question}</h4>
                 </div>
-                <div className="ml-4 border-l-2 border-slate-100 pl-9 text-[15px] leading-relaxed text-slate-600">
-                  {faq.answer}
-                </div>
+                <div className={styles.box5}>{faq.answer}</div>
               </div>
 
-              <div className="flex flex-shrink-0 items-center gap-1 opacity-80 transition-opacity group-hover:opacity-100">
+              <div className={styles.row3}>
                 <button
                   onClick={() => handleOpenEditModal(faq)}
-                  className="rounded-xl p-2 text-slate-500 transition-all hover:bg-purple-50 hover:text-purple-600"
+                  className={styles.button2}
                 >
                   <Edit3 size={18} />
                 </button>
-                <button
-                  onClick={() => handleDelete(faq._id!)}
-                  className="rounded-xl p-2 text-slate-500 transition-all hover:bg-red-50 hover:text-red-600"
-                >
+                <button onClick={() => handleDelete(faq._id!)} className={styles.button3}>
                   <Trash2 size={18} />
                 </button>
               </div>
@@ -216,63 +197,52 @@ function CourseFaqsPageContent() {
 
       {/* MODAL DIALOG */}
       {isOpenModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4">
-              <h4 className="text-lg font-bold text-slate-800">
+        <div className={styles.overlay}>
+          <div className={styles.card6}>
+            <div className={styles.row4}>
+              <h4 className={styles.minorHeading2}>
                 {editingId ? "Edit Course FAQ" : "Add New Course FAQ"}
               </h4>
-              <button
-                onClick={() => setIsOpenModal(false)}
-                className="rounded-lg p-1 text-slate-500 hover:text-slate-600"
-              >
+              <button onClick={() => setIsOpenModal(false)} className={styles.button4}>
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4 p-6">
+            <form onSubmit={handleSubmit} className={styles.form}>
               <div>
-                <label className="mb-1.5 block text-sm font-semibold text-slate-700">
-                  Question
-                </label>
+                <label className={styles.fieldLabel}>Question</label>
                 <input
                   type="text"
                   required
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   placeholder="Yêu cầu cấu hình tối thiểu để học mượt bài thực hành?"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800"
+                  className={styles.input}
                 />
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-semibold text-slate-700">
-                  Answer
-                </label>
+                <label className={styles.fieldLabel}>Answer</label>
                 <textarea
                   required
                   rows={4}
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
                   placeholder="Bạn chỉ cần một chiếc máy tính RAM từ 4GB trở lên..."
-                  className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800"
+                  className={styles.textarea}
                 />
               </div>
 
-              <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-2">
+              <div className={styles.row5}>
                 <button
                   type="button"
                   onClick={() => setIsOpenModal(false)}
-                  className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50"
+                  className={styles.button5}
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex items-center gap-2 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-purple-700 disabled:bg-purple-400"
-                >
-                  {isSubmitting && <Loader2 className="animate-spin" size={16} />}
+                <button type="submit" disabled={isSubmitting} className={styles.button6}>
+                  {isSubmitting && <Loader2 className={styles.spinner2} size={16} />}
                   {editingId ? "Save Changes" : "Add FAQ"}
                 </button>
               </div>
@@ -290,8 +260,8 @@ export default function CourseFaqsPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-600" />
+        <div className={styles.row6}>
+          <div className={styles.spinner3} />
         </div>
       }
     >

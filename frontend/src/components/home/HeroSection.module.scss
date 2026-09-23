@@ -1,0 +1,753 @@
+// File nay do script sinh ra tu class Tailwind cu.
+// Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
+
+.header {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-white);
+  padding-top: calc(var(--spacing) * 8);
+  padding-bottom: calc(var(--spacing) * 12);
+
+  @media (min-width: 48rem) {
+    padding-top: calc(var(--spacing) * 8);
+    padding-bottom: calc(var(--spacing) * 14);
+  }
+}
+
+.floating {
+  pointer-events: none;
+  position: absolute;
+  inset: calc(var(--spacing) * 0);
+}
+
+.box {
+  position: relative;
+  z-index: 2;
+  margin-inline: auto;
+  width: min(76rem, 100% - 2.5rem);
+}
+
+.grid {
+  display: grid;
+  align-items: center;
+  gap: calc(var(--spacing) * 12);
+
+  @media (min-width: 64rem) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: calc(var(--spacing) * 8);
+  }
+}
+
+.card {
+  margin-bottom: calc(var(--spacing) * 6);
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  border-radius: 3.40282e38px;
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-200);
+  background-color: var(--color-white);
+  padding-block: calc(var(--spacing) * 1.5);
+  padding-right: calc(var(--spacing) * 4);
+  padding-left: calc(var(--spacing) * 1.5);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-medium);
+  --tw-shadow:
+    0 1px 3px 0 var(--tw-shadow-color, #0000001a),
+    0 1px 2px -1px var(--tw-shadow-color, #0000001a);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+.box2 {
+  background-color: #00bfb3;
+  border-radius: 3.40282e38px;
+  padding-inline: calc(var(--spacing) * 2);
+  padding-block: calc(var(--spacing) * 0.5);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: #04231f;
+}
+
+.title {
+  font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+  color: #0b0c1e;
+  font-size: clamp(2.4rem, 5.4vw, 4rem);
+  --tw-leading: 1.1;
+  line-height: 1.1;
+  --tw-font-weight: var(--font-weight-extrabold);
+  font-weight: var(--font-weight-extrabold);
+  --tw-tracking: -0.035em;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.label {
+  color: #4f2bff;
+  position: relative;
+  display: inline-block;
+}
+
+.icon {
+  position: absolute;
+  bottom: -0.32em;
+  left: -2%;
+  height: 0.4em;
+  width: 104%;
+  overflow: visible;
+}
+
+.text {
+  margin-top: calc(var(--spacing) * 6);
+  max-width: 56ch;
+  font-size: 1.06rem;
+  color: var(--color-slate-500);
+}
+
+.row {
+  margin-top: calc(var(--spacing) * 8);
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--spacing) * 3);
+}
+
+.card2 {
+  --tw-gradient-from: #8b6bff;
+  --tw-gradient-stops: var(
+    --tw-gradient-via-stops,
+    var(--tw-gradient-position),
+    var(--tw-gradient-from) var(--tw-gradient-from-position),
+    var(--tw-gradient-to) var(--tw-gradient-to-position)
+  );
+  --tw-gradient-to: #4f2bff;
+  font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2.5);
+  border-radius: 3.40282e38px;
+  --tw-gradient-position: to bottom right;
+  background-image: linear-gradient(var(--tw-gradient-stops));
+  padding-inline: calc(var(--spacing) * 7);
+  padding-block: calc(var(--spacing) * 3.5);
+  font-size: var(--text-base);
+  line-height: var(--tw-leading, var(--text-base--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-white);
+  --tw-shadow: 0 16px 30px -16px var(--tw-shadow-color, #4f2bffd9);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @supports (background-image: linear-gradient(in lab, red, red)) {
+    --tw-gradient-position: to bottom right in oklab;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      --tw-translate-y: calc(var(--spacing) * -0.5);
+      translate: var(--tw-translate-x) var(--tw-translate-y);
+    }
+  }
+}
+
+.grid2 {
+  display: grid;
+  width: calc(var(--spacing) * 6.5);
+  height: calc(var(--spacing) * 6.5);
+  place-items: center;
+  border-radius: 3.40282e38px;
+  background-color: #fff3;
+
+  @supports (color: color-mix(in lab, red, red)) {
+    background-color: color-mix(in oklab, var(--color-white) 20%, transparent);
+  }
+}
+
+.card3 {
+  font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+  color: #0b0c1e;
+  border-radius: 3.40282e38px;
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-200);
+  background-color: var(--color-white);
+  padding-inline: calc(var(--spacing) * 7);
+  padding-block: calc(var(--spacing) * 3.5);
+  font-size: var(--text-base);
+  line-height: var(--tw-leading, var(--text-base--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: #4f2bff;
+      color: #4f2bff;
+    }
+  }
+}
+
+.box3 {
+  aspect-ratio: 10/9;
+  width: 100%;
+  position: relative;
+
+  @media (min-width: 1024px) {
+    aspect-ratio: auto;
+    height: min(38rem, 100vh - 24rem);
+    min-height: 18rem;
+  }
+}
+
+.col {
+  opacity: 0;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding-inline: calc(var(--spacing) * 1);
+  padding-top: calc(var(--spacing) * 2);
+  padding-bottom: calc(var(--spacing) * 4);
+
+  &:first-child {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: 14s ease-in-out -0.7s infinite doi-canh-hero;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    &:first-child {
+      animation-name: doi-canh-hero-dai;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    &:nth-child(2) {
+      animation-delay: 4.3s;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    &:nth-child(3) {
+      animation-delay: 7.3s;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    &:nth-child(4) {
+      animation-delay: 10.3s;
+    }
+  }
+
+  @media (min-width: 40rem) {
+    padding-inline: calc(var(--spacing) * 3);
+  }
+}
+
+.row2 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--spacing) * 3);
+}
+
+.label2 {
+  --tw-leading: var(--leading-tight);
+  line-height: var(--leading-tight);
+}
+
+.label3 {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--color-slate-500);
+}
+
+.box4 {
+  font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+  color: #0b0c1e;
+  display: block;
+  font-size: 1.02rem;
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+}
+
+.grid3 {
+  margin-top: calc(var(--spacing) * 5);
+  display: grid;
+  min-height: calc(var(--spacing) * 0);
+  flex: 1;
+  place-items: center;
+}
+
+.box5 {
+  position: relative;
+  aspect-ratio: 31/16;
+  max-height: 100%;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-2xl);
+  background-color: var(--color-white);
+  --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width))
+    var(--tw-ring-color, currentcolor);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+  --tw-ring-color: #0f172b14;
+
+  @supports (color: color-mix(in lab, red, red)) {
+    --tw-ring-color: color-mix(in oklab, var(--color-slate-900) 8%, transparent);
+  }
+}
+
+.box6 {
+  object-fit: cover;
+}
+
+.box7 {
+  position: relative;
+  aspect-ratio: 1;
+  height: 100%;
+}
+
+.icon2 {
+  position: absolute;
+  inset: calc(var(--spacing) * 0);
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.iconPath {
+  transform-box: view-box;
+  transform-origin: 50%;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: 70s linear infinite quy-dao-quay-nguoc;
+  }
+}
+
+.box8 {
+  transform-box: view-box;
+  transform-origin: 50%;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: 90s linear infinite quy-dao-quay-tron;
+  }
+}
+
+.floating2 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 27%;
+  height: 27%;
+  --tw-translate-x: calc(calc(1 / 2 * 100%) * -1);
+  translate: var(--tw-translate-x) var(--tw-translate-y);
+  --tw-translate-y: calc(calc(1 / 2 * 100%) * -1);
+  place-items: center;
+  border-radius: 3.40282e38px;
+  background-color: var(--color-white);
+  --tw-shadow:
+    0 0 0 10px var(--tw-shadow-color, #ffffffbf),
+    0 18px 38px -14px var(--tw-shadow-color, #4f2bff73);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+.grid4 {
+  --tw-gradient-from: #8b6bff;
+  --tw-gradient-stops: var(
+    --tw-gradient-via-stops,
+    var(--tw-gradient-position),
+    var(--tw-gradient-from) var(--tw-gradient-from-position),
+    var(--tw-gradient-to) var(--tw-gradient-to-position)
+  );
+  --tw-gradient-to: #00bfb3;
+  display: grid;
+  width: 76%;
+  height: 76%;
+  place-items: center;
+  border-radius: 3.40282e38px;
+  --tw-gradient-position: to bottom right;
+  background-image: linear-gradient(var(--tw-gradient-stops));
+  font-size: 1.05rem;
+  --tw-font-weight: var(--font-weight-black);
+  font-weight: var(--font-weight-black);
+  color: var(--color-white);
+
+  @supports (background-image: linear-gradient(in lab, red, red)) {
+    --tw-gradient-position: to bottom right in oklab;
+  }
+}
+
+.label4 {
+  transform: rotate(var(--goc));
+  position: absolute;
+  inset: 0;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: quy-dao-quay var(--chu-ky) linear infinite;
+  }
+}
+
+.label5 {
+  top: calc(50% - var(--ban-kinh));
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.card4 {
+  transform: rotate(calc(-1 * var(--goc)));
+  display: inline-flex;
+  width: 4.6rem;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--spacing) * 1);
+  border-radius: var(--radius-xl);
+  background-color: var(--color-white);
+  padding-inline: calc(var(--spacing) * 1.5);
+  padding-block: calc(var(--spacing) * 2);
+  text-align: center;
+  font-size: 0.62rem;
+  --tw-leading: var(--leading-tight);
+  line-height: var(--leading-tight);
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-700);
+  --tw-shadow: 0 12px 26px -14px var(--tw-shadow-color, #0f172a80);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+  --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width))
+    var(--tw-ring-color, currentcolor);
+  --tw-ring-color: #0f172b0f;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: quy-dao-dung-thang var(--chu-ky) linear infinite;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    --tw-ring-color: color-mix(in oklab, var(--color-slate-900) 6%, transparent);
+  }
+}
+
+.floating3 {
+  position: absolute;
+  right: calc(var(--spacing) * 6);
+  bottom: calc(var(--spacing) * 5);
+  display: none;
+  max-width: 15rem;
+  border-radius: var(--radius-xl);
+  background-color: #fffffff2;
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 3);
+  --tw-shadow: 0 18px 36px -20px var(--tw-shadow-color, #0f172a80);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+  --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width))
+    var(--tw-ring-color, currentcolor);
+  --tw-ring-color: #0f172b14;
+  --tw-backdrop-blur: blur(var(--blur-sm));
+  -webkit-backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,)
+    var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,)
+    var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,)
+    var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
+  backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,)
+    var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,)
+    var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,)
+    var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
+
+  @supports (color: color-mix(in lab, red, red)) {
+    background-color: color-mix(in oklab, var(--color-white) 95%, transparent);
+    --tw-ring-color: color-mix(in oklab, var(--color-slate-900) 8%, transparent);
+  }
+
+  @media (min-width: 40rem) {
+    display: block;
+  }
+}
+
+.row3 {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2.5);
+}
+
+.grid5 {
+  background-color: #00bfb326;
+  background-color: lab(69.5281% -43.5161 -5.96304/0.15);
+  color: #00bfb3;
+  display: grid;
+  width: calc(var(--spacing) * 8);
+  height: calc(var(--spacing) * 8);
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+}
+
+.label6 {
+  --tw-leading: var(--leading-snug);
+  line-height: var(--leading-snug);
+}
+
+.box9 {
+  color: #0b0c1e;
+  display: block;
+  font-size: 0.82rem;
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+}
+
+.label7 {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--color-slate-500);
+}
+
+.text2 {
+  margin-top: calc(var(--spacing) * 6);
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--color-slate-500);
+
+  @media (min-width: 48rem) {
+    margin-top: calc(var(--spacing) * 6);
+  }
+}
+
+.box10 {
+  color: #4f2bff;
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+}
+
+.label8 {
+  margin-inline: calc(var(--spacing) * 2.5);
+  color: var(--color-slate-300);
+}
+
+/* Cac lop con ket trong template literal, va bo sung. */
+.grid6 {
+  display: grid;
+  width: calc(var(--spacing) * 11);
+  height: calc(var(--spacing) * 11);
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 0.9rem;
+  --tw-gradient-position: to bottom right;
+  background-image: linear-gradient(var(--tw-gradient-stops));
+  color: var(--color-white);
+
+  @supports (background-image: linear-gradient(in lab, red, red)) {
+    --tw-gradient-position: to bottom right in oklab;
+  }
+}
+.grid7 {
+  display: grid;
+  width: calc(var(--spacing) * 6);
+  height: calc(var(--spacing) * 6);
+  place-items: center;
+  border-radius: var(--radius-lg);
+  --tw-gradient-position: to bottom right;
+  background-image: linear-gradient(var(--tw-gradient-stops));
+  color: var(--color-white);
+
+  @supports (background-image: linear-gradient(in lab, red, red)) {
+    --tw-gradient-position: to bottom right in oklab;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Khung hinh phai dat NGAY TRONG file module nay, khong de o globals.css.
+   CSS module bam ten @keyframes y het nhu bam ten class, nen mot luat trong
+   module viet `animation: troi-ngang ...` se di tim mot khung hinh da bi bam
+   ten - khong thay thi hieu ung dung im, va khong co loi nao duoc bao ra.
+   Day dung la ly do dai ten don vi dao tao o trang chu tung dung yen.
+   --------------------------------------------------------------------------- */
+
+@keyframes doi-canh-hero {
+  0% {
+    opacity: 0;
+  }
+  5%,
+  21.43% {
+    opacity: 1;
+  }
+  26.43%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes doi-canh-hero-dai {
+  0% {
+    opacity: 0;
+  }
+  5%,
+  35.71% {
+    opacity: 1;
+  }
+  40.71%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes quy-dao-quay {
+  from {
+    transform: rotate(var(--goc));
+  }
+  to {
+    transform: rotate(calc(var(--goc) + 360deg));
+  }
+}
+
+@keyframes quy-dao-dung-thang {
+  from {
+    transform: rotate(calc(-1 * var(--goc)));
+  }
+  to {
+    transform: rotate(calc(-1 * var(--goc) - 360deg));
+  }
+}
+
+@keyframes quy-dao-quay-tron {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes quy-dao-quay-nguoc {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+/* ==========================================================================
+   MAU CHUYEN SAC CUA BON MIEN + do bong cung tong mau.
+
+   Truoc day CANH[].mau va QUY_DAO[].mau giu chuoi lop Tailwind
+   ("from-[#ffc63f] to-pha shadow-[...]"). Go Tailwind xong thi chung thanh
+   chuoi chet: .grid6/.grid7 van dat background-image: linear-gradient(...)
+   nhung khong con diem dung nao, nen o bieu tuong ra trong suot ma chu lai
+   mau trang - tuc la BIEN MAT tren nen trang, khong phai chi lech mau.
+   ========================================================================== */
+
+// Tailwind dat ca ba bien moi lan; giu nguyen de .grid6/.grid7 khong phai doi.
+@mixin diem-dung($tu, $den) {
+  --tw-gradient-from: #{$tu};
+  --tw-gradient-to: #{$den};
+  --tw-gradient-stops: var(
+    --tw-gradient-via-stops,
+    var(--tw-gradient-position),
+    var(--tw-gradient-from) var(--tw-gradient-from-position),
+    var(--tw-gradient-to) var(--tw-gradient-to-position)
+  );
+}
+
+@mixin do-bong($mau) {
+  --tw-shadow: 0 10px 20px -10px var(--tw-shadow-color, #{$mau});
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+.gradChungNhan {
+  @include diem-dung(#ffc63f, #ffb000);
+}
+.gradKhoaHoc {
+  @include diem-dung(#8b6bff, #4f2bff);
+}
+.gradTaiLieu {
+  @include diem-dung(#00bfb3, #009d93);
+}
+.gradBaiViet {
+  @include diem-dung(#ff6fb5, #ff3e9d);
+}
+
+.bongChungNhan {
+  @include do-bong(#ffb000e6);
+}
+.bongKhoaHoc {
+  @include do-bong(#4f2bffe6);
+}
+.bongTaiLieu {
+  @include do-bong(#00bfb3e6);
+}
+.bongBaiViet {
+  @include do-bong(#ff3e9de6);
+}

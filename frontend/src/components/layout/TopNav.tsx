@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import styles from "./TopNav.module.scss";
 export default function TopNav() {
   const pathname = usePathname();
 
@@ -37,14 +38,14 @@ export default function TopNav() {
   ];
 
   return (
-    <div className="border-b border-[#1d2230] bg-[#0b0f19] text-white">
+    <div className={styles.box}>
       {/* Bon muc phai VUA man hinh 390px, khong phai vuot sang ngang moi thay
           het - do la viec cua nhan rut gon o tren.
           overflow-x-auto chi la luoi an toan cho truong hop them muc moi hoac
           co ten dai hon du tinh: luc do no cuon duoc thay vi bop chu xuong
           dong roi bi h-10 cat cut, dung canh cu cua muc "Tinh diem GPA".
           An thanh cuon vi day la dai dieu huong, khong phai vung noi dung. */}
-      <div className="mx-auto flex h-10 max-w-7xl items-center overflow-x-auto px-4 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden">
+      <div className={styles.container}>
         {menus.map((item) => {
           const active = pathname === item.href || pathname.startsWith(item.href + "/");
 
@@ -55,20 +56,16 @@ export default function TopNav() {
               // shrink-0 + whitespace-nowrap: khong co hai cai nay thi flex tu
               // bop tung muc lai cho vua man hinh, va do chinh la cai lam chu
               // xuong dong roi bi cat.
-              className={`relative flex h-full shrink-0 items-center px-3 text-sm font-semibold whitespace-nowrap transition md:px-6 ${
-                active ? "text-white" : "text-gray-300 hover:text-white"
-              } `}
+              className={`${styles.row} ${active ? styles.box2 : styles.box3} `}
             >
               {/* Hai the chu khong phai mot chuoi doi theo be ngang: be ngang
                   chi biet duoc sau khi chay, ma doc no trong lan ve dau tien
                   se lam HTML dung san lech voi HTML trinh duyet ve ra. De CSS
                   quyet dinh thi ca hai ben deu ve giong nhau. */}
-              <span className="md:hidden">{item.nhanNgan ?? item.title}</span>
-              <span className="hidden md:inline">{item.title}</span>
+              <span className={styles.label}>{item.nhanNgan ?? item.title}</span>
+              <span className={styles.label2}>{item.title}</span>
 
-              {active && (
-                <span className="absolute bottom-0 left-0 h-[3px] w-full bg-white" />
-              )}
+              {active && <span className={styles.floating} />}
             </Link>
           );
         })}

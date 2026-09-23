@@ -3,11 +3,11 @@ const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
 const Order = require('../models/Order');
 const CoinTransaction = require('../models/CoinTransaction');
-const { congCoin, truCoin } = require('../utils/viCoin');
+const { congCoin, truCoin } = require('../utils/coinWallet');
 const { giaRaCoin, kiemSoCoinNap, coinRaDong } = require('../utils/coin');
-const { taoGhiDanh } = require('../utils/ghiDanh');
-const { guiThongBao } = require('./thongBaoController');
-const { datChoLuotDung } = require('./maGiamGiaController');
+const { taoGhiDanh } = require('../utils/enrollment');
+const { guiThongBao } = require('./notificationController');
+const { datChoLuotDung } = require('./voucherController');
 
 /* ==========================================================================
    QUAN TRI

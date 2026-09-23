@@ -10,7 +10,7 @@ const mongoose = require('mongoose');
  *
  * Luong: hoc vien dat yeu cau -> chuyen khoan theo ma -> NGAN HANG bao co ve
  * webhook -> he thong khop ma va cong coin ngay. Xem
- * controllers/webhookNganHangController.js.
+ * controllers/bankWebhookController.js.
  *
  * Duong xac nhan tay cua quan tri VAN GIU, cho cac khoan webhook khong khop
  * duoc: go sai ma, chuyen thieu tien, chuyen sau khi da huy.

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { getInstructorCourses, Course, tenChuDe } from "@/src/services/course";
 import { Plus, BookOpen, User, Tag, ChevronRight } from "lucide-react";
 
+import styles from "./page.module.scss";
 export default function AllCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,28 +29,21 @@ export default function AllCoursesPage() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex h-64 animate-pulse items-center justify-center font-medium text-slate-500">
-        Đang tải danh sách khóa học của bạn...
-      </div>
-    );
+    return <div className={styles.row}>Đang tải danh sách khóa học của bạn...</div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className={styles.stack}>
       {/* HEADER DANH SÁCH */}
-      <div className="flex items-center justify-between">
+      <div className={styles.row2}>
         <div>
-          <h3 className="text-xl font-bold text-slate-800">Khóa học của tôi</h3>
-          <p className="text-sm text-slate-500">
+          <h3 className={styles.subheading}>Khóa học của tôi</h3>
+          <p className={styles.text}>
             Quản lý và cập nhật nội dung các chương trình giảng dạy.
           </p>
         </div>
         {/* ✅ Đã sửa: text-black -> text-white tăng độ tương phản */}
-        <Link
-          href="/instructor/course-create"
-          className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white shadow-md shadow-indigo-600/10 transition-all hover:bg-indigo-700"
-        >
+        <Link href="/instructor/course-create" className={styles.card}>
           <Plus size={18} />
           Tạo khóa học mới
         </Link>
@@ -57,33 +51,25 @@ export default function AllCoursesPage() {
 
       {/* ĐIỀU KIỆN RỖNG (EMPTY STATE) */}
       {courses.length === 0 ? (
-        <div className="mx-auto mt-8 max-w-xl rounded-3xl border border-dashed border-slate-200 bg-white p-12 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-50 p-4 text-slate-500">
+        <div className={styles.container}>
+          <div className={styles.row3}>
             <BookOpen size={24} />
           </div>
-          <h4 className="mb-1 text-base font-bold text-slate-800">
-            Chưa có khóa học nào
-          </h4>
-          <p className="mb-5 text-sm text-slate-500">
+          <h4 className={styles.minorHeading}>Chưa có khóa học nào</h4>
+          <p className={styles.text2}>
             Bạn chưa khởi tạo chương trình giảng dạy nào trên hệ thống LMS.
           </p>
-          <Link
-            href="/instructor/course-create"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700"
-          >
+          <Link href="/instructor/course-create" className={styles.box}>
             Bắt đầu tạo khóa học đầu tiên <ChevronRight size={16} />
           </Link>
         </div>
       ) : (
         /* GRID KHÓA HỌC */
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className={styles.grid}>
           {courses.map((course) => (
-            <div
-              key={course._id}
-              className="group flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md"
-            >
+            <div key={course._id} className={`group ${styles.card2}`}>
               {/* THUMBNAIL */}
-              <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
+              <div className={styles.box2}>
                 <SafeImage
                   src={
                     course.thumbnail ||
@@ -92,13 +78,11 @@ export default function AllCoursesPage() {
                   alt={course.title}
                   fill
                   sizes="(max-width: 768px) 100vw, 33vw"
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  className={styles.box3}
                 />
                 <span
-                  className={`absolute top-4 right-4 rounded-full px-3 py-1.5 text-xs font-semibold shadow-sm ${
-                    course.isPublished
-                      ? "border border-emerald-100 bg-emerald-50 text-emerald-600"
-                      : "border border-amber-100 bg-amber-50 text-amber-600"
+                  className={`${styles.floating} ${
+                    course.isPublished ? styles.label : styles.label2
                   }`}
                 >
                   {course.isPublished ? "Đang phát hành" : "Bản nháp"}
@@ -106,27 +90,25 @@ export default function AllCoursesPage() {
               </div>
 
               {/* NỘI DUNG CARD */}
-              <div className="flex flex-1 flex-col justify-between space-y-4 p-5">
-                <div className="space-y-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-600">
+              <div className={styles.col}>
+                <div className={styles.stack2}>
+                  <span className={styles.label3}>
                     <Tag size={12} />
                     {tenChuDe(course.category)[0] || "Chưa phân loại"}
                   </span>
-                  <h4 className="line-clamp-2 text-base font-bold text-slate-800 transition-colors group-hover:text-indigo-600">
-                    {course.title}
-                  </h4>
-                  <p className="line-clamp-2 text-xs text-slate-500">
+                  <h4 className={styles.minorHeading2}>{course.title}</h4>
+                  <p className={styles.text3}>
                     {course.description || "Chưa có mô tả chi tiết cho khóa học này."}
                   </p>
                 </div>
 
                 {/* THÔNG SỐ PHỤ */}
-                <div className="flex items-center justify-between border-t border-slate-100 pt-4 text-xs font-medium text-slate-500">
-                  <span className="flex items-center gap-1">
-                    <User size={14} className="text-slate-500" />
+                <div className={styles.row4}>
+                  <span className={styles.row5}>
+                    <User size={14} className={styles.box4} />
                     {course.studentsCount || 0} học viên
                   </span>
-                  <span className="text-sm font-bold text-slate-800">
+                  <span className={styles.label4}>
                     {(course.price ?? 0) === 0
                       ? "Miễn phí"
                       : `${(course.price ?? 0).toLocaleString("vi-VN")}đ`}
@@ -136,7 +118,7 @@ export default function AllCoursesPage() {
                 {/* HÀNH ĐỘNG */}
                 <Link
                   href={`/instructor/course-detail?courseId=${course._id}`}
-                  className="inline-block w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 text-center text-xs font-semibold text-slate-700 transition-all hover:bg-slate-100"
+                  className={styles.card3}
                 >
                   Chỉnh sửa nội dung & Bài học
                 </Link>

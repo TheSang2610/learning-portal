@@ -3,15 +3,16 @@ import { Be_Vietnam_Pro, Lexend } from "next/font/google";
 import "../globals.css";
 import Header from "@/src/components/layout/Header";
 import Footer from "@/src/components/layout/Footer";
-import NapNguoiDung from "@/src/components/common/NapNguoiDung";
+import NapNguoiDung from "@/src/components/common/UserBootstrap";
 import AuthModalGate from "@/src/components/home/AuthModalGate";
-import TroLyToanTrang from "@/src/components/troly/TroLyToanTrang";
+import TroLyToanTrang from "@/src/components/assistant/AssistantWidget";
 import { layTuMayChu, hoacNull } from "@/src/services/serverFetch";
-import { DUONG_HO_SO } from "@/src/services/diaChiApi";
+import { DUONG_HO_SO } from "@/src/services/apiBase";
 import type { Category } from "@/src/services/categoryService";
 import type { Course } from "@/src/services/course";
 import type { ProviderData } from "@/src/services/provider";
 
+import styles from "./layout.module.scss";
 // Hai bo chu nay CHI nap o khu vuc hoc vien. Trang quan tri co layout rieng
 // va khong dat hai bien nay, nen no van dung Inter nhu cu - doi giao dien
 // trang chu khong keo theo viec doi mau va chu cua ca trang admin.
@@ -62,7 +63,7 @@ export default async function PortalRootLayout({
       className={`${chuThan.variable} ${chuHien.variable}`}
       suppressHydrationWarning
     >
-      <body className="antialiased">
+      <body className={styles.box}>
         {/* Ban luot goi "toi la ai" di NGAY, truoc ca khi React gan vao trang.
 
             Van de: <NapNguoiDung /> goi trong useEffect, ma useEffect chi chay
@@ -91,7 +92,7 @@ export default async function PortalRootLayout({
           }}
         />
         {/* Hoi may chu "toi la ai" mot lan. Danh tinh nam trong RAM, khong
-            con ghi xuong localStorage - xem src/hooks/nguoiDungLuu.ts. */}
+            con ghi xuong localStorage - xem src/hooks/userStore.ts. */}
         <NapNguoiDung />
         {/* Hop dang nhap, mo bang ?auth tren dia chi. Dat o layout chu khong
             phai rieng trang chu: moi trang trong khu hoc vien deu co the can
@@ -102,11 +103,11 @@ export default async function PortalRootLayout({
         </Suspense>
         {/* Header goi useSearchParams(). Khong boc Suspense thi TOAN BO trang portal
             khong prerender tinh duoc -> moi luot xem deu ton mot lan chay serverless. */}
-        <Suspense fallback={<div className="h-[104px]" />}>
+        <Suspense fallback={<div className={styles.box2} />}>
           <Header />
         </Suspense>
         {/* 40px topbar + 64px header */}
-        <main className="pt-[104px]">{children}</main>
+        <main className={styles.main}>{children}</main>
         <Footer
           initialCategories={hoacNull(categories.slice(0, 5))}
           initialPopular={hoacNull(phoBien.slice(0, 5))}

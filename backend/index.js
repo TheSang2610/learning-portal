@@ -4,8 +4,8 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
-const { chongCsrf } = require('./src/middlewares/chongCsrf');
-const { taoTranChung } = require('./src/middlewares/tranChung');
+const { chongCsrf } = require('./src/middlewares/csrf');
+const { taoTranChung } = require('./src/middlewares/globalRateLimit');
 const connectDB = require('./src/config/db');
 
 
@@ -134,7 +134,7 @@ app.use(cors({
 //
 // Dat sau express.json thi mot request tu origin la mang than JSON hong se bi
 // tra 400 truoc khi kip kiem origin - vua sai ma trang thai, vua ton cong doc
-// than cua mot request dang le phai vut di ngay. Xem middlewares/chongCsrf.js.
+// than cua mot request dang le phai vut di ngay. Xem middlewares/csrf.js.
 app.use(chongCsrf(originDuocPhep));
 
 // Tran chung cho toan bo API.
@@ -148,7 +148,7 @@ app.use(chongCsrf(originDuocPhep));
 // `while(true) fetch('/api/courses')` la moi luot mot truy van Atlas, va Atlas
 // co tran so ket noi: cham tran thi CA WEB ngung phuc vu, khong rieng ke quet.
 //
-// Doc dau middlewares/tranChung.js de biet ro cai nay chan duoc gi va KHONG
+// Doc dau middlewares/globalRateLimit.js de biet ro cai nay chan duoc gi va KHONG
 // chan duoc gi - dung tuong co no roi la an toan truoc DDoS.
 app.use(taoTranChung());
 
@@ -220,11 +220,11 @@ app.use('/api/faqs', require('./src/routes/faqRoutes'));
 app.use('/api/banners', require('./src/routes/bannerRoutes'));
 app.use('/api/documents', require('./src/routes/documentRoutes'));
 app.use('/api/posts', require('./src/routes/postRoutes'));
-app.use('/api/tro-ly', require('./src/routes/troLyRoutes'));
-app.use('/api/thong-bao', require('./src/routes/thongBaoRoutes'));
-app.use('/api/hoi-dap', require('./src/routes/hoiDapRoutes'));
-app.use('/api/ghi-chu', require('./src/routes/ghiChuRoutes'));
-app.use('/api/ma-giam-gia', require('./src/routes/maGiamGiaRoutes'));
+app.use('/api/tro-ly', require('./src/routes/assistantRoutes'));
+app.use('/api/thong-bao', require('./src/routes/notificationRoutes'));
+app.use('/api/hoi-dap', require('./src/routes/questionRoutes'));
+app.use('/api/ghi-chu', require('./src/routes/noteRoutes'));
+app.use('/api/ma-giam-gia', require('./src/routes/voucherRoutes'));
 
 // Tai lieu API. Dat SAU cac route that de khong bao gio che mat chung, va
 // TRUOC middleware 404.

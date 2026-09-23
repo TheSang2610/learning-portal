@@ -18,8 +18,9 @@ import {
   type AdminEnrollmentRow,
 } from "@/src/services/adminService";
 import { getCourses, type Course } from "@/src/services/course";
-import AnhDaiDien from "@/src/components/ui/AnhDaiDien";
+import AnhDaiDien from "@/src/components/ui/Avatar";
 
+import styles from "./page.module.scss";
 // Truoc day cho nay khai lai mot ban rieng. Dung chung voi tang service de khi
 // backend doi hinh dang thi chi phai sua mot noi.
 type Enrollment = AdminEnrollmentRow;
@@ -28,17 +29,17 @@ const STATUSES = ["active", "completed", "dropped"] as const;
 
 const STATUS_STYLE: Record<string, { cls: string; Icon: LucideIcon; label: string }> = {
   active: {
-    cls: "bg-blue-50 text-blue-700 border-blue-200",
+    cls: styles.nhanDangHoc,
     Icon: PlayCircle,
     label: "Đang học",
   },
   completed: {
-    cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    cls: styles.nhanHoanThanh,
     Icon: CheckCircle2,
     label: "Hoàn thành",
   },
   dropped: {
-    cls: "bg-slate-100 text-slate-700 border-slate-200",
+    cls: styles.nhanDaBo,
     Icon: XCircle,
     label: "Đã bỏ",
   },
@@ -117,27 +118,25 @@ export default function AdminEnrollmentsPage() {
     }
   };
 
-  const selectCls =
-    "rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 outline-none " +
-    "transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10";
+  const selectCls = styles.box5;
 
   return (
-    <div className="space-y-6">
+    <div className={styles.stack}>
       <div>
-        <h1 className="text-2xl font-extrabold text-slate-900">Ghi danh</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className={styles.title}>Ghi danh</h1>
+        <p className={styles.text}>
           {fetching ? "Đang tải..." : `${total} lượt ghi danh`}
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className={styles.row}>
         <select
           value={courseFilter}
           onChange={(e) => {
             setCourseFilter(e.target.value);
             setPage(1);
           }}
-          className={selectCls + " max-w-[320px] flex-1"}
+          className={`${selectCls} ${styles.select}`}
         >
           <option value="">Mọi khóa học</option>
           {courses.map((c) => (
@@ -163,38 +162,31 @@ export default function AdminEnrollmentsPage() {
         </select>
       </div>
 
-      {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-          {error}
-        </div>
-      )}
+      {error && <div className={styles.card}>{error}</div>}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[860px]">
-            <thead className="bg-slate-50 text-left text-xs font-bold tracking-wider text-slate-600 uppercase">
+      <div className={styles.card2}>
+        <div className={styles.scroller}>
+          <table className={styles.table}>
+            <thead className={styles.thead}>
               <tr>
-                <th className="px-4 py-3">Học viên</th>
-                <th className="px-4 py-3">Khóa học</th>
-                <th className="w-40 px-4 py-3">Tiến độ</th>
-                <th className="px-4 py-3">Điểm</th>
-                <th className="px-4 py-3">Ghi danh</th>
-                <th className="px-4 py-3 text-right">Trạng thái</th>
+                <th className={styles.headCell}>Học viên</th>
+                <th className={styles.headCell}>Khóa học</th>
+                <th className={styles.headCell2}>Tiến độ</th>
+                <th className={styles.headCell}>Điểm</th>
+                <th className={styles.headCell}>Ghi danh</th>
+                <th className={styles.headCell3}>Trạng thái</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className={styles.tbody}>
               {fetching ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-16 text-center text-slate-500">
-                    <Loader2 size={20} className="mx-auto animate-spin" />
+                  <td colSpan={6} className={styles.cell}>
+                    <Loader2 size={20} className={styles.spinner} />
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={6}
-                    className="px-4 py-16 text-center text-sm text-slate-500"
-                  >
+                  <td colSpan={6} className={styles.cell2}>
                     Không có lượt ghi danh nào.
                   </td>
                 </tr>
@@ -203,55 +195,45 @@ export default function AdminEnrollmentsPage() {
                   const pct = Math.round(r.totalProgress ?? 0);
                   const st = STATUS_STYLE[r.status] ?? STATUS_STYLE.active;
                   return (
-                    <tr key={r._id} className="transition hover:bg-slate-50/60">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
+                    <tr key={r._id} className={styles.row2}>
+                      <td className={styles.headCell}>
+                        <div className={styles.row3}>
                           <AnhDaiDien
                             src={r.student?.avatar}
                             ten={r.student?.name}
                             size={36}
                           />
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-slate-900">
+                          <div className={styles.box}>
+                            <p className={styles.text2}>
                               {r.student?.name || "(đã xóa)"}
                             </p>
-                            <p className="truncate text-xs text-slate-500">
-                              {r.student?.email || "--"}
-                            </p>
+                            <p className={styles.text3}>{r.student?.email || "--"}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3">
-                        <p className="max-w-[240px] truncate text-sm text-slate-700">
-                          {r.course?.title || "(đã xóa)"}
-                        </p>
+                      <td className={styles.headCell}>
+                        <p className={styles.text4}>{r.course?.title || "(đã xóa)"}</p>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200">
+                      <td className={styles.headCell}>
+                        <div className={styles.row4}>
+                          <div className={styles.box2}>
                             <div
-                              className="h-full rounded-full bg-indigo-600 transition-all"
+                              className={styles.box3}
                               style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}
                             />
                           </div>
-                          <span className="w-9 shrink-0 text-right text-xs font-semibold text-slate-700">
-                            {pct}%
-                          </span>
+                          <span className={styles.label}>{pct}%</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-700">
-                        {r.finalScore ?? "--"}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-slate-600">
+                      <td className={styles.cell3}>{r.finalScore ?? "--"}</td>
+                      <td className={styles.cell4}>
                         {r.createdAt
                           ? new Date(r.createdAt).toLocaleDateString("vi-VN")
                           : "--"}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-2">
-                          <span
-                            className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs font-semibold ${st.cls}`}
-                          >
+                      <td className={styles.headCell}>
+                        <div className={styles.row5}>
+                          <span className={`${styles.label2} ${st.cls}`}>
                             <st.Icon size={12} /> {st.label}
                           </span>
                           <select
@@ -259,7 +241,7 @@ export default function AdminEnrollmentsPage() {
                             disabled={busyId === r._id}
                             onChange={(e) => changeStatus(r, e.target.value)}
                             title="Đổi trạng thái"
-                            className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-slate-700 transition outline-none focus:border-blue-500 disabled:text-slate-400"
+                            className={styles.select2}
                           >
                             {STATUSES.map((s) => (
                               <option key={s} value={s}>
@@ -278,22 +260,22 @@ export default function AdminEnrollmentsPage() {
         </div>
 
         {pages > 1 && (
-          <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
-            <p className="text-xs text-slate-600">
+          <div className={styles.row6}>
+            <p className={styles.text5}>
               Trang {page} / {pages}
             </p>
-            <div className="flex gap-2">
+            <div className={styles.row7}>
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400"
+                className={styles.box4}
               >
                 <ChevronLeft size={14} /> Trước
               </button>
               <button
                 onClick={() => setPage((p) => Math.min(pages, p + 1))}
                 disabled={page >= pages}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400"
+                className={styles.box4}
               >
                 Sau <ChevronRight size={14} />
               </button>

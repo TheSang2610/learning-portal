@@ -1,0 +1,270 @@
+// File nay do script sinh ra tu class Tailwind cu.
+// Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
+
+.row {
+  display: flex;
+  min-height: 60vh;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  animation: var(--animate-spin);
+  color: var(--color-slate-500);
+}
+
+.container {
+  margin-inline: auto;
+  max-width: var(--container-md);
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 20);
+  text-align: center;
+}
+
+.text {
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-red-700);
+}
+
+.page {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  padding-block: calc(var(--spacing) * 8);
+}
+
+.container2 {
+  margin-inline: auto;
+  max-width: var(--container-6xl);
+  padding-inline: calc(var(--spacing) * 4);
+}
+
+.grid {
+  display: grid;
+  gap: calc(var(--spacing) * 6);
+
+  @media (min-width: 64rem) {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+}
+
+.aside {
+  @media (min-width: 64rem) {
+    grid-column: span 4 / span 4;
+  }
+
+  @media (min-width: 80rem) {
+    grid-column: span 3 / span 3;
+  }
+}
+
+.card {
+  border-radius: var(--radius-2xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-200);
+  background-color: var(--color-white);
+  padding: calc(var(--spacing) * 6);
+  --tw-shadow:
+    0 1px 3px 0 var(--tw-shadow-color, #0000001a),
+    0 1px 2px -1px var(--tw-shadow-color, #0000001a);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.title {
+  margin-top: calc(var(--spacing) * 4);
+  font-size: var(--text-xl);
+  line-height: var(--tw-leading, var(--text-xl--line-height));
+  --tw-font-weight: var(--font-weight-extrabold);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-slate-900);
+}
+
+.text2 {
+  margin-top: calc(var(--spacing) * 0.5);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-blue-600);
+}
+
+.row2 {
+  margin-top: calc(var(--spacing) * 3);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: calc(var(--spacing) * 2);
+}
+
+.label {
+  border-radius: 3.40282e38px;
+  background-color: var(--color-blue-50);
+  padding-inline: calc(var(--spacing) * 3);
+  padding-block: calc(var(--spacing) * 1);
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-blue-700);
+  text-transform: capitalize;
+}
+
+.label2 {
+  border-radius: 3.40282e38px;
+  background-color: var(--color-violet-50);
+  padding-inline: calc(var(--spacing) * 3);
+  padding-block: calc(var(--spacing) * 1);
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-violet-700);
+}
+
+.stack {
+  margin-top: calc(var(--spacing) * 6);
+  border-top-style: var(--tw-border-style);
+  border-top-width: 1px;
+  border-color: var(--color-slate-100);
+  padding-top: calc(var(--spacing) * 5);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+
+  :where(& > :not(:last-child)) {
+    --tw-space-y-reverse: 0;
+    margin-block-start: calc(calc(var(--spacing) * 3) * var(--tw-space-y-reverse));
+    margin-block-end: calc(
+      calc(var(--spacing) * 3) * calc(1 - var(--tw-space-y-reverse))
+    );
+  }
+}
+
+.row3 {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--spacing) * 2.5);
+}
+
+.box {
+  margin-top: calc(var(--spacing) * 0.5);
+  flex-shrink: 0;
+  color: var(--color-orange-500);
+}
+
+.label3 {
+  color: var(--color-slate-700);
+}
+
+.strong {
+  color: var(--color-slate-900);
+}
+
+.label4 {
+  margin-inline: calc(var(--spacing) * 1.5);
+  color: var(--color-slate-400);
+}
+
+.box2 {
+  margin-top: calc(var(--spacing) * 0.5);
+  flex-shrink: 0;
+  color: var(--color-slate-500);
+}
+
+.section {
+  :where(& > :not(:last-child)) {
+    --tw-space-y-reverse: 0;
+    margin-block-start: calc(calc(var(--spacing) * 6) * var(--tw-space-y-reverse));
+    margin-block-end: calc(
+      calc(var(--spacing) * 6) * calc(1 - var(--tw-space-y-reverse))
+    );
+  }
+
+  @media (min-width: 64rem) {
+    grid-column: span 8 / span 8;
+  }
+
+  @media (min-width: 80rem) {
+    grid-column: span 9 / span 9;
+  }
+}
+
+.card2 {
+  border-radius: var(--radius-2xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-200);
+  background-color: var(--color-white);
+  padding: calc(var(--spacing) * 6);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-slate-600);
+  --tw-shadow:
+    0 1px 3px 0 var(--tw-shadow-color, #0000001a),
+    0 1px 2px -1px var(--tw-shadow-color, #0000001a);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+.heading {
+  margin-bottom: calc(var(--spacing) * 5);
+  font-size: var(--text-base);
+  line-height: var(--tw-leading, var(--text-base--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-slate-900);
+}
+
+.grid2 {
+  display: grid;
+  gap: calc(var(--spacing) * 4);
+
+  @media (min-width: 48rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.box3 {
+  @media (min-width: 48rem) {
+    grid-column: span 2 / span 2;
+  }
+}
+
+.fieldLabel {
+  margin-bottom: calc(var(--spacing) * 1.5);
+  display: block;
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-600);
+}
+
+.card3 {
+  border-radius: var(--radius-xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-200);
+  background-color: var(--color-slate-50);
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 2.5);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-slate-900);
+}
+
+/* Cac lop nam trong hang so / prop tu dat ten, va bo sung. */
+.box4 {
+  background-color: var(--color-blue-600);
+  color: var(--color-white);
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { datNguoiDung } from "@/src/hooks/nguoiDungLuu";
+import { datNguoiDung } from "@/src/hooks/userStore";
 import { xoaPhien } from "@/src/services/apiHelper";
 import Link from "next/link";
 import {
@@ -16,7 +16,9 @@ import {
   X,
 } from "lucide-react";
 import SettingRow, { SettingCard } from "@/src/components/settings/SettingRow";
-import { loiMatKhauMoi } from "@/src/services/quyDinh";
+import { loiMatKhauMoi } from "@/src/services/rules";
+
+import styles from "./page.module.scss";
 import {
   getMyProfile,
   updateUserProfileApi,
@@ -183,16 +185,16 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 size={24} className="animate-spin text-slate-500" />
+      <div className={styles.row}>
+        <Loader2 size={24} className={styles.spinner} />
       </div>
     );
   }
 
   if (loadError || !user) {
     return (
-      <div className="mx-auto max-w-md px-4 py-20 text-center">
-        <p className="text-sm font-medium text-red-700">
+      <div className={styles.container}>
+        <p className={styles.text}>
           {loadError || "Vui lòng đăng nhập để vào phần cài đặt."}
         </p>
       </div>
@@ -207,32 +209,25 @@ export default function SettingsPage() {
   const meta = TAB_META[tab];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] py-8">
-      <div className="mx-auto max-w-6xl px-4">
-        <div className="grid gap-6 lg:grid-cols-12">
+    <div className={styles.page}>
+      <div className={styles.container2}>
+        <div className={styles.grid}>
           {/* ============ THANH DIEU HUONG ============ */}
-          <aside className="lg:col-span-4 xl:col-span-3">
-            <div className="lg:sticky lg:top-[120px]">
-              <div className="mb-4 hidden lg:block">
-                <h1 className="text-lg font-extrabold text-slate-900">
-                  Cài đặt tài khoản
-                </h1>
-                <p className="mt-1 text-sm text-slate-600">
+          <aside className={styles.aside}>
+            <div className={styles.box}>
+              <div className={styles.box2}>
+                <h1 className={styles.title}>Cài đặt tài khoản</h1>
+                <p className={styles.text2}>
                   Quản lý hồ sơ, bảo mật và khóa học của bạn.
                 </p>
               </div>
 
               {/* Man hinh nho: thanh ngang cuon duoc. Man hinh lon: danh sach doc */}
-              <nav
-                aria-label="Cài đặt tài khoản"
-                className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 lg:mx-0 lg:block lg:space-y-5 lg:overflow-visible lg:px-0 lg:pb-0"
-              >
+              <nav aria-label="Cài đặt tài khoản" className={styles.nav}>
                 {NAV.map((section) => (
-                  <div key={section.group} className="contents lg:block">
-                    <h3 className="hidden px-1 pb-2 text-xs font-bold tracking-wide text-slate-500 uppercase lg:block">
-                      {section.group}
-                    </h3>
-                    <div className="contents lg:block lg:overflow-hidden lg:rounded-2xl lg:border lg:border-slate-200 lg:bg-white lg:shadow-sm">
+                  <div key={section.group} className={styles.box3}>
+                    <h3 className={styles.subheading}>{section.group}</h3>
+                    <div className={styles.box4}>
                       {section.items.map(({ key, label, icon: Icon }) => {
                         const active = tab === key;
                         return (
@@ -245,13 +240,11 @@ export default function SettingsPage() {
                               setMsg(null);
                             }}
                             aria-current={active ? "page" : undefined}
-                            className={`flex shrink-0 items-center gap-2.5 rounded-full border px-4 py-2 text-sm font-semibold whitespace-nowrap transition lg:w-full lg:rounded-none lg:border-0 lg:border-b lg:border-slate-100 lg:px-5 lg:py-3.5 lg:last:border-b-0 ${
-                              active
-                                ? "border-blue-600 bg-blue-600 text-white lg:border-slate-100 lg:bg-blue-50 lg:text-blue-700"
-                                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 lg:border-slate-100"
+                            className={`${styles.button8} ${
+                              active ? styles.button : styles.button2
                             }`}
                           >
-                            <Icon size={16} className="shrink-0" />
+                            <Icon size={16} className={styles.box5} />
                             {label}
                           </button>
                         );
@@ -264,25 +257,21 @@ export default function SettingsPage() {
           </aside>
 
           {/* ============ NOI DUNG ============ */}
-          <main className="space-y-5 lg:col-span-8 xl:col-span-9">
+          <main className={styles.main}>
             <div>
-              <h2 className="text-xl font-extrabold text-slate-900">{meta.title}</h2>
-              <p className="mt-1 text-sm text-slate-600">{meta.desc}</p>
+              <h2 className={styles.heading}>{meta.title}</h2>
+              <p className={styles.text2}>{meta.desc}</p>
             </div>
 
             {msg && (
               <div
                 role="status"
-                className={`flex items-start gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium ${
-                  msg.ok
-                    ? "border-green-200 bg-green-50 text-green-800"
-                    : "border-red-200 bg-red-50 text-red-800"
-                }`}
+                className={`${styles.row11} ${msg.ok ? styles.box6 : styles.box7}`}
               >
                 {msg.ok ? (
-                  <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+                  <CheckCircle2 size={16} className={styles.box8} />
                 ) : (
-                  <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                  <AlertCircle size={16} className={styles.box8} />
                 )}
                 {msg.text}
               </div>
@@ -483,7 +472,7 @@ function PersonalTab({
             hint={`${bio.length}/500 ký tự`}
           >
             <textarea
-              className={`${inputCls} min-h-[110px] resize-y`}
+              className={`${inputCls} ${styles.textarea}`}
               value={bio}
               maxLength={500}
               placeholder="Vài dòng về bản thân bạn..."
@@ -509,49 +498,40 @@ function PersonalTab({
             {anhChon ? (
               /* Da chon file -> an han o dan duong dan, de khong phai doan
                  cai nao se duoc dung khi bam Luu. */
-              <div className="flex items-center gap-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+              <div className={styles.card}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={xemTruoc}
                   alt="Xem trước ảnh vừa chọn"
-                  className="h-20 w-20 shrink-0 rounded-full border border-white object-cover shadow-sm"
+                  className={styles.image}
                 />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-slate-900">
-                    {anhChon.name}
-                  </p>
-                  <p className="text-xs text-slate-600">{doiKichThuoc(anhChon.size)}</p>
+                <div className={styles.box9}>
+                  <p className={styles.text3}>{anhChon.name}</p>
+                  <p className={styles.text4}>{doiKichThuoc(anhChon.size)}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => chonAnh(null)}
                   aria-label="Bỏ ảnh đã chọn"
-                  className="rounded-lg p-1.5 text-slate-500 transition hover:bg-white hover:text-slate-900"
+                  className={styles.button3}
                 >
                   <X size={16} />
                 </button>
               </div>
             ) : (
               <>
-                <label
-                  htmlFor="anh-dai-dien"
-                  className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-white px-4 py-6 text-center transition hover:border-blue-500 hover:bg-blue-50/40"
-                >
-                  <Upload size={22} className="text-slate-500" />
-                  <span className="mt-2 text-sm font-semibold text-slate-800">
-                    Bấm để chọn ảnh từ máy
-                  </span>
-                  <span className="mt-0.5 text-xs text-slate-600">
+                <label htmlFor="anh-dai-dien" className={styles.fieldLabel}>
+                  <Upload size={22} className={styles.box10} />
+                  <span className={styles.label}>Bấm để chọn ảnh từ máy</span>
+                  <span className={styles.label2}>
                     JPG, PNG, WEBP hoặc GIF &middot; tối đa {MAX_ANH_MB}MB
                   </span>
                 </label>
 
-                <div className="my-4 flex items-center gap-3">
-                  <span className="h-px flex-1 bg-slate-200" />
-                  <span className="text-xs font-medium text-slate-500">
-                    hoặc dán đường dẫn
-                  </span>
-                  <span className="h-px flex-1 bg-slate-200" />
+                <div className={styles.row2}>
+                  <span className={styles.label3} />
+                  <span className={styles.label4}>hoặc dán đường dẫn</span>
+                  <span className={styles.label3} />
                 </div>
 
                 <input
@@ -565,7 +545,7 @@ function PersonalTab({
                   <img
                     src={avatar}
                     alt="Xem trước ảnh đại diện"
-                    className="mt-3 h-20 w-20 rounded-full border border-slate-200 object-cover"
+                    className={styles.image2}
                     onError={(e) => {
                       e.currentTarget.style.display = "none";
                     }}
@@ -578,15 +558,12 @@ function PersonalTab({
               id="anh-dai-dien"
               type="file"
               accept="image/jpeg,image/png,image/webp,image/gif"
-              className="hidden"
+              className={styles.input}
               onChange={(e) => chonAnh(e.target.files?.[0] ?? null)}
             />
 
             {loiAnh && (
-              <p
-                role="alert"
-                className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
-              >
+              <p role="alert" className={styles.text5}>
                 {loiAnh}
               </p>
             )}
@@ -732,7 +709,7 @@ function SecurityTab({
       setMsg({ ok: false, text: "Vui lòng nhập mật khẩu hiện tại." });
       return false;
     }
-    // Dung chung ham voi backend (services/quyDinh.ts). Truoc day cho nay chi
+    // Dung chung ham voi backend (services/rules.ts). Truoc day cho nay chi
     // kiem do dai toi thieu; bcrypt thi bo lang moi byte tu 73 tro di, nen mot
     // mat khau dai hon the bi cat am tham ma khong ai duoc bao.
     const loiMk = loiMatKhauMoi(next);
@@ -792,7 +769,7 @@ function SecurityTab({
             onCancel={() => toggle("password")}
             saveLabel={hasPassword ? "Đổi mật khẩu" : "Đặt mật khẩu"}
           >
-            <div className="space-y-3">
+            <div className={styles.stack}>
               {hasPassword ? (
                 <div>
                   <label className={labelCls}>Mật khẩu hiện tại</label>
@@ -806,7 +783,7 @@ function SecurityTab({
                   />
                 </div>
               ) : (
-                <p className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+                <p className={styles.text6}>
                   Tài khoản của bạn đăng nhập bằng Google và chưa có mật khẩu. Đặt mật
                   khẩu để đăng nhập được bằng email.
                 </p>
@@ -846,13 +823,11 @@ function SecurityTab({
           readOnly
           trailing={
             hasGoogle ? (
-              <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-800">
+              <span className={styles.row3}>
                 <Link2 size={12} /> Đã liên kết
               </span>
             ) : (
-              <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                Chưa liên kết
-              </span>
+              <span className={styles.label5}>Chưa liên kết</span>
             )
           }
         />
@@ -870,8 +845,8 @@ function SecurityTab({
             open={editing === "deactivate"}
             onToggle={() => toggle("deactivate")}
           >
-            <div className="space-y-3">
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <div className={styles.stack}>
+              <div className={styles.card2}>
                 Dữ liệu học tập của bạn được giữ nguyên, nhưng bạn sẽ không đăng nhập lại
                 được cho tới khi quản trị viên mở khóa.
               </div>
@@ -885,19 +860,19 @@ function SecurityTab({
                   onChange={(e) => setDelPassword(e.target.value)}
                 />
               </div>
-              <div className="flex gap-2">
+              <div className={styles.row4}>
                 <button
                   type="button"
                   disabled={deleting || !delPassword}
                   onClick={submitDeactivate}
-                  className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+                  className={styles.button4}
                 >
                   {deleting ? "Đang xử lý..." : "Vô hiệu hóa tài khoản"}
                 </button>
                 <button
                   type="button"
                   onClick={() => toggle("deactivate")}
-                  className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  className={styles.button5}
                 >
                   Hủy
                 </button>
@@ -917,9 +892,9 @@ function SecurityTab({
 // Kieu nay truoc day khai lai o day mot ban rieng. Nay dung chung voi tang
 // service de khi backend doi hinh dang thi chi phai sua mot cho.
 const STATUS_LABEL: Record<EnrollmentStatus, { text: string; cls: string }> = {
-  active: { text: "Đang học", cls: "bg-blue-50 text-blue-700" },
-  completed: { text: "Hoàn thành", cls: "bg-green-50 text-green-800" },
-  dropped: { text: "Đã dừng", cls: "bg-slate-100 text-slate-700" },
+  active: { text: "Đang học", cls: styles.nhanDangHoc },
+  completed: { text: "Hoàn thành", cls: styles.nhanHoanThanh },
+  dropped: { text: "Đã dừng", cls: styles.nhanDaDung },
 };
 
 function CoursesTab() {
@@ -935,15 +910,15 @@ function CoursesTab() {
   if (err) {
     return (
       <SettingCard title="Khóa học đã đăng ký">
-        <p className="px-5 py-6 text-sm text-red-700">{err}</p>
+        <p className={styles.text7}>{err}</p>
       </SettingCard>
     );
   }
 
   if (!rows) {
     return (
-      <div className="flex justify-center py-12">
-        <Loader2 size={22} className="animate-spin text-slate-500" />
+      <div className={styles.row5}>
+        <Loader2 size={22} className={styles.spinner} />
       </div>
     );
   }
@@ -951,17 +926,10 @@ function CoursesTab() {
   if (rows.length === 0) {
     return (
       <SettingCard title="Khóa học đã đăng ký">
-        <div className="px-5 py-10 text-center">
-          <p className="text-sm font-semibold text-slate-900">
-            Chưa đăng ký khóa học nào
-          </p>
-          <p className="mt-1 text-sm text-slate-600">
-            Các khóa học bạn đăng ký sẽ xuất hiện tại đây.
-          </p>
-          <Link
-            href="/courses"
-            className="mt-4 inline-block rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
-          >
+        <div className={styles.box11}>
+          <p className={styles.text8}>Chưa đăng ký khóa học nào</p>
+          <p className={styles.text2}>Các khóa học bạn đăng ký sẽ xuất hiện tại đây.</p>
+          <Link href="/courses" className={styles.box12}>
             Khám phá khóa học
           </Link>
         </div>
@@ -976,49 +944,33 @@ function CoursesTab() {
         const pct = Math.max(0, Math.min(100, Math.round(r.totalProgress || 0)));
 
         return (
-          <div
-            key={r._id}
-            className="flex items-center gap-4 border-b border-slate-100 px-5 py-4 last:border-b-0"
-          >
+          <div key={r._id} className={styles.row6}>
             {r.course?.thumbnail ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={r.course.thumbnail}
-                alt=""
-                className="h-14 w-24 shrink-0 rounded-lg border border-slate-200 object-cover"
-              />
+              <img src={r.course.thumbnail} alt="" className={styles.image3} />
             ) : (
-              <div className="flex h-14 w-24 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                <BookOpen size={18} className="text-slate-500" />
+              <div className={styles.row7}>
+                <BookOpen size={18} className={styles.box10} />
               </div>
             )}
 
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h4 className="truncate text-sm font-semibold text-slate-900">
+            <div className={styles.box9}>
+              <div className={styles.row8}>
+                <h4 className={styles.text3}>
                   {/* Khoa hoc co the da bi xoa nhung ban ghi dang ky van con */}
                   {r.course?.title ?? "Khóa học không còn tồn tại"}
                 </h4>
-                <span
-                  className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${s.cls}`}
-                >
-                  {s.text}
-                </span>
+                <span className={`${styles.label7} ${s.cls}`}>{s.text}</span>
               </div>
 
-              <div className="mt-2 flex items-center gap-2.5">
-                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200">
-                  <div
-                    className="h-full rounded-full bg-blue-600"
-                    style={{ width: `${pct}%` }}
-                  />
+              <div className={styles.row9}>
+                <div className={styles.box13}>
+                  <div className={styles.box14} style={{ width: `${pct}%` }} />
                 </div>
-                <span className="shrink-0 text-xs font-semibold text-slate-700">
-                  {pct}%
-                </span>
+                <span className={styles.label6}>{pct}%</span>
               </div>
 
-              <p className="mt-1.5 text-xs text-slate-600">
+              <p className={styles.text9}>
                 Đăng ký {fmtDate(r.createdAt)}
                 {r.lastAccessedAt && ` · Học gần nhất ${fmtDate(r.lastAccessedAt)}`}
               </p>
@@ -1027,7 +979,7 @@ function CoursesTab() {
             {r.course?.slug && (
               <Link
                 href={`/learn?slug=${encodeURIComponent(r.course.slug)}`}
-                className="shrink-0 rounded-xl border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-50"
+                className={styles.box15}
               >
                 Vào học
               </Link>
@@ -1043,10 +995,9 @@ function CoursesTab() {
    PHAN DUNG CHUNG
    ========================================================================== */
 
-const inputCls =
-  "w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-100";
+const inputCls = styles.input2;
 
-const labelCls = "mb-1.5 block text-xs font-semibold text-slate-700";
+const labelCls = styles.box16;
 
 function FieldForm({
   children,
@@ -1066,21 +1017,17 @@ function FieldForm({
   return (
     <div>
       {children}
-      {hint && <p className="mt-2 text-xs text-slate-600">{hint}</p>}
-      <div className="mt-3 flex gap-2">
+      {hint && <p className={styles.text10}>{hint}</p>}
+      <div className={styles.row10}>
         <button
           type="button"
           disabled={saving}
           onClick={() => onSave()}
-          className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+          className={styles.button6}
         >
           {saving ? "Đang lưu..." : saveLabel}
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-        >
+        <button type="button" onClick={onCancel} className={styles.button7}>
           Hủy
         </button>
       </div>

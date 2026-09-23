@@ -5,7 +5,7 @@ const nodemailer = require('nodemailer');
  *
  * KHONG ghi cung tai khoan mail vao ma nguon: day la thong tin dang nhap that
  * su - lo ra la nguoi khac gui mail duoi ten ban. Khac han so tai khoan ngan
- * hang o thanhToan.js (thu von phai dua ra moi nhan duoc tien).
+ * hang o payment.js (thu von phai dua ra moi nhan duoc tien).
  *
  * Ba bien can dat:
  *   MAIL_USER          dia chi Gmail dung de GUI

@@ -1,0 +1,59 @@
+// Diem dung man hinh, thay cho tien to sm: md: lg: xl: cua Tailwind.
+//
+// Bon moc nay lay dung tu ban CSS ma Tailwind da build ra, khong phai tu tri
+// nho: sai mot moc la ca trang gay o dung mot co man hinh ma khong ai thu toi.
+//
+// Cach dung trong file .module.scss:
+//
+//   @use 'styles/breakpoints' as mq;
+//
+//   .khung {
+//     padding: 1rem;
+//     @include md.tu-md { padding: 3rem; }
+//   }
+//
+// Luu y: Tailwind la min-width, tuc la viet cho MAN HEP TRUOC roi moi noi
+// rong ra. Giu dung chieu do khi chuyen, dao chieu la phai viet lai het.
+
+$sm: 40rem; // 640px
+$md: 48rem; // 768px
+$lg: 64rem; // 1024px
+$xl: 80rem; // 1280px
+
+@mixin tu-sm {
+  @media (min-width: $sm) {
+    @content;
+  }
+}
+
+@mixin tu-md {
+  @media (min-width: $md) {
+    @content;
+  }
+}
+
+@mixin tu-lg {
+  @media (min-width: $lg) {
+    @content;
+  }
+}
+
+@mixin tu-xl {
+  @media (min-width: $xl) {
+    @content;
+  }
+}
+
+// Nguoi dung tat chuyen dong. Tailwind co motion-reduce:, va trong du an nay
+// dang duoc dung that (hieu ung o trang chu), nen phai co cho tuong duong.
+@mixin it-chuyen-dong {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+@mixin cho-phep-chuyen-dong {
+  @media (prefers-reduced-motion: no-preference) {
+    @content;
+  }
+}

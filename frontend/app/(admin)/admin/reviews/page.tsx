@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { reviewService, Review } from "@/src/services/review";
 
+import styles from "./page.module.scss";
 export default function AdminReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -134,32 +135,26 @@ export default function AdminReviewsPage() {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className={styles.stack}>
       {/* HEADER */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className={styles.col}>
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-slate-800">
-            <MessageSquare className="text-blue-600" size={24} />
+          <h1 className={styles.title}>
+            <MessageSquare className={styles.box} size={24} />
             Reviews Management
           </h1>
-          <p className="text-sm text-slate-500">
+          <p className={styles.text}>
             Xem, tạo mới, chỉnh sửa hoặc loại bỏ các nội dung đánh giá trên hệ thống.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={fetchAllReviews}
-            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50"
-          >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+        <div className={styles.row}>
+          <button onClick={fetchAllReviews} className={styles.button}>
+            <RefreshCw size={14} className={loading ? styles.spinner : ""} />
             Làm mới
           </button>
 
-          <button
-            onClick={openCreateModal}
-            className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm shadow-blue-100 transition hover:bg-blue-700"
-          >
+          <button onClick={openCreateModal} className={styles.button2}>
             <Plus size={14} />
             Tạo Review mới
           </button>
@@ -167,28 +162,26 @@ export default function AdminReviewsPage() {
       </div>
 
       {/* BẢNG QUẢN LÝ DANH SÁCH */}
-      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+      <div className={styles.card}>
         {loading ? (
-          <div className="space-y-3 py-20 text-center">
-            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
-            <p className="text-xs font-medium text-slate-500">
-              Đang tải dữ liệu đánh giá toàn hệ thống...
-            </p>
+          <div className={styles.stack2}>
+            <div className={styles.spinner2}></div>
+            <p className={styles.text2}>Đang tải dữ liệu đánh giá toàn hệ thống...</p>
           </div>
         ) : reviews.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
+          <div className={styles.scroller}>
+            <table className={styles.table}>
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/70 text-xs font-bold tracking-wider text-slate-500 uppercase">
-                  <th className="w-[220px] p-4">Học viên / Ngày đăng</th>
-                  <th className="w-[200px] p-4">Khóa học</th>
-                  <th className="w-[120px] p-4">Đánh giá</th>
-                  <th className="p-4">Nội dung bình luận</th>
-                  <th className="w-[100px] p-4 text-center">Tương tác</th>
-                  <th className="w-[110px] p-4 text-center">Hành động</th>
+                <tr className={styles.row2}>
+                  <th className={styles.headCell}>Học viên / Ngày đăng</th>
+                  <th className={styles.headCell2}>Khóa học</th>
+                  <th className={styles.headCell3}>Đánh giá</th>
+                  <th className={styles.headCell4}>Nội dung bình luận</th>
+                  <th className={styles.headCell5}>Tương tác</th>
+                  <th className={styles.headCell6}>Hành động</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
+              <tbody className={styles.tbody}>
                 {reviews.map((review) => {
                   const studentName = review.student?.name || "Ẩn danh";
                   // review.course la ObjectId dang chuoi khi khong duoc populate.
@@ -197,17 +190,14 @@ export default function AdminReviewsPage() {
                     "Khóa học học viên đăng ký";
 
                   return (
-                    <tr
-                      key={review._id}
-                      className="transition-colors hover:bg-slate-50/50"
-                    >
-                      <td className="p-4">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1.5 font-semibold text-slate-800">
-                            <User size={14} className="text-slate-500" />
-                            <span className="max-w-[160px] truncate">{studentName}</span>
+                    <tr key={review._id} className={styles.row3}>
+                      <td className={styles.headCell4}>
+                        <div className={styles.stack3}>
+                          <div className={styles.row4}>
+                            <User size={14} className={styles.box2} />
+                            <span className={styles.label}>{studentName}</span>
                           </div>
-                          <p className="text-[11px] font-medium text-slate-500">
+                          <p className={styles.text3}>
                             {new Date(review.createdAt).toLocaleDateString("vi-VN")} lúc{" "}
                             {new Date(review.createdAt).toLocaleTimeString("vi-VN", {
                               hour: "2-digit",
@@ -217,18 +207,16 @@ export default function AdminReviewsPage() {
                         </div>
                       </td>
 
-                      <td className="p-4">
-                        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
-                          <BookOpen size={14} className="flex-shrink-0 text-blue-500" />
-                          <span className="line-clamp-2 leading-relaxed">
-                            {courseTitle}
-                          </span>
+                      <td className={styles.headCell4}>
+                        <div className={styles.row5}>
+                          <BookOpen size={14} className={styles.box3} />
+                          <span className={styles.label2}>{courseTitle}</span>
                         </div>
                       </td>
 
-                      <td className="p-4">
-                        <div className="space-y-1">
-                          <div className="flex gap-0.5 text-amber-500">
+                      <td className={styles.headCell4}>
+                        <div className={styles.stack3}>
+                          <div className={styles.row6}>
                             {[...Array(5)].map((_, i) => (
                               <Star
                                 key={i}
@@ -238,30 +226,26 @@ export default function AdminReviewsPage() {
                             ))}
                           </div>
                           {review.isVerifiedPurchase && (
-                            <span className="inline-flex items-center gap-0.5 rounded border border-emerald-100 bg-emerald-50 px-1 py-0.5 text-[9px] font-bold text-emerald-600">
+                            <span className={styles.card2}>
                               <CheckCircle size={9} /> Đã mua
                             </span>
                           )}
                         </div>
                       </td>
 
-                      <td className="p-4">
-                        <p className="line-clamp-3 rounded-xl border border-slate-100 bg-slate-50/40 p-2.5 text-xs leading-relaxed text-slate-600 italic">
-                          &quot;{review.comment}&quot;
-                        </p>
+                      <td className={styles.headCell4}>
+                        <p className={styles.text4}>&quot;{review.comment}&quot;</p>
                       </td>
 
-                      <td className="p-4 text-center">
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">
-                          👍 {review.helpful || 0}
-                        </span>
+                      <td className={styles.cell}>
+                        <span className={styles.label3}>👍 {review.helpful || 0}</span>
                       </td>
 
-                      <td className="p-4 text-center">
-                        <div className="flex items-center justify-center gap-1">
+                      <td className={styles.cell}>
+                        <div className={styles.row7}>
                           <button
                             onClick={() => openUpdateModal(review)}
-                            className="inline-flex items-center gap-1 rounded-xl bg-blue-50 px-3 py-2 text-xs font-bold text-blue-600 transition hover:bg-blue-100"
+                            className={styles.button3}
                             title="Sửa đánh giá"
                           >
                             <Edit3 size={15} /> Sửa
@@ -269,7 +253,7 @@ export default function AdminReviewsPage() {
                           <button
                             disabled={isDeleting === review._id}
                             onClick={() => handleDeleteReview(review._id)}
-                            className="inline-flex items-center gap-1 rounded-xl bg-blue-50 px-3 py-2 text-xs font-bold text-red-600 transition hover:bg-blue-100"
+                            className={styles.button4}
                             title="Xóa đánh giá"
                           >
                             <Trash2 size={15} /> Xoá
@@ -283,9 +267,9 @@ export default function AdminReviewsPage() {
             </table>
           </div>
         ) : (
-          <div className="space-y-2 py-16 text-center text-slate-500">
-            <MessageSquare size={36} className="mx-auto stroke-[1.5] text-slate-400" />
-            <p className="text-sm font-medium">
+          <div className={styles.stack4}>
+            <MessageSquare size={36} className={styles.box4} />
+            <p className={styles.text5}>
               Chưa có đánh giá nào được ghi nhận trên hệ thống.
             </p>
           </div>
@@ -294,90 +278,75 @@ export default function AdminReviewsPage() {
 
       {/* ================= MODAL DIỀU HƯỚNG: CREATE / UPDATE ================= */}
       {isModalOpen && (
-        <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md transform overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl transition-all">
+        <div className={styles.overlay}>
+          <div className={styles.card3}>
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
-              <h3 className="text-base font-bold text-slate-800">
+            <div className={styles.row8}>
+              <h3 className={styles.subheading}>
                 {modalMode === "create"
                   ? "Tạo Đánh Giá Trực Tiếp"
                   : "Chỉnh Sửa Đánh Giá Học Viên"}
               </h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="rounded-lg p-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-600"
-              >
+              <button onClick={() => setIsModalOpen(false)} className={styles.button5}>
                 <X size={18} />
               </button>
             </div>
 
             {/* Modal Body */}
-            <form onSubmit={handleFormSubmit} className="space-y-4 p-6">
+            <form onSubmit={handleFormSubmit} className={styles.form}>
               {modalMode === "create" && (
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold tracking-wider text-slate-600 uppercase">
-                    Course ID (Mã khóa học)
-                  </label>
+                <div className={styles.stack5}>
+                  <label className={styles.fieldLabel}>Course ID (Mã khóa học)</label>
                   <input
                     type="text"
                     required
                     value={courseId}
                     onChange={(e) => setCourseId(e.target.value)}
                     placeholder="Nhập chuỗi ID khóa học (e.g. 6a149071d...)"
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                    className={styles.input}
                   />
                 </div>
               )}
 
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold tracking-wider text-slate-600 uppercase">
-                  Xếp hạng (Số sao)
-                </label>
-                <div className="flex w-fit items-center gap-1.5 rounded-xl border border-slate-100 bg-slate-50 p-2">
+              <div className={styles.stack5}>
+                <label className={styles.fieldLabel2}>Xếp hạng (Số sao)</label>
+                <div className={styles.card4}>
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       type="button"
                       key={star}
                       onClick={() => setRating(star)}
-                      className="text-amber-400 transition duration-150 hover:scale-110"
+                      className={styles.button6}
                     >
                       <Star size={22} fill={star <= rating ? "currentColor" : "none"} />
                     </button>
                   ))}
-                  <span className="ml-2 text-xs font-bold text-slate-500">
-                    {rating}/5 Sao
-                  </span>
+                  <span className={styles.label4}>{rating}/5 Sao</span>
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold tracking-wider text-slate-600 uppercase">
-                  Nội dung bình luận
-                </label>
+              <div className={styles.stack5}>
+                <label className={styles.fieldLabel}>Nội dung bình luận</label>
                 <textarea
                   required
                   rows={4}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="Nhập nhận xét tối thiểu 10 ký tự về khóa học..."
-                  className="w-full resize-none rounded-xl border border-slate-200 px-3 py-2.5 text-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                  className={styles.textarea}
                 />
               </div>
 
               {/* Modal Footer */}
-              <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-2">
+              <div className={styles.row9}>
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                  className={styles.button7}
                 >
                   Hủy bỏ
                 </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="rounded-xl bg-blue-600 px-5 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
-                >
+                <button type="submit" disabled={submitting} className={styles.button8}>
                   {submitting ? "Đang lưu..." : "Lưu thay đổi"}
                 </button>
               </div>

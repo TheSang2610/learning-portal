@@ -1,0 +1,551 @@
+// File nay do script sinh ra tu class Tailwind cu.
+// Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
+.label {
+  margin-inline: calc(var(--spacing) * 2);
+  color: var(--color-slate-400);
+}
+
+.label2 {
+  --tw-font-weight: var(--font-weight-normal);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-slate-500);
+}
+
+.box {
+  text-transform: capitalize;
+  transition-property:
+    color, background-color, border-color, outline-color, text-decoration-color, fill,
+    stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-indigo-400);
+    }
+  }
+}
+
+.row2 {
+  display: flex;
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background-color: #1e293b;
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-slate-500);
+}
+
+.page {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  color: var(--color-slate-900);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.aside {
+  position: sticky;
+  top: calc(var(--spacing) * 0);
+  z-index: 20;
+  display: flex;
+  height: 100vh;
+  width: calc(var(--spacing) * 64);
+  flex-direction: column;
+  background-color: #1e2530;
+  color: #b1b7c1;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.row3 {
+  display: flex;
+  height: calc(var(--spacing) * 14);
+  align-items: center;
+  border-bottom-style: var(--tw-border-style);
+  border-bottom-width: 1px;
+  border-color: #2a323d;
+  background-color: #181d26;
+  padding-inline: calc(var(--spacing) * 4);
+}
+
+.row4 {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2.5);
+}
+
+.card {
+  border-radius: var(--radius-lg);
+  background-color: var(--color-indigo-600);
+  padding: calc(var(--spacing) * 1.5);
+  color: var(--color-white);
+  --tw-shadow:
+    0 1px 3px 0 var(--tw-shadow-color, #0000001a),
+    0 1px 2px -1px var(--tw-shadow-color, #0000001a);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+.box2 {
+  stroke-width: 2.5px;
+}
+
+.title {
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+  --tw-tracking: var(--tracking-wide);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-white);
+  text-transform: uppercase;
+}
+
+.nav {
+  flex: 1;
+  overflow-y: auto;
+  padding-block: calc(var(--spacing) * 3);
+  font-size: 13.5px;
+
+  :where(& > :not(:last-child)) {
+    --tw-space-y-reverse: 0;
+    margin-block-start: calc(calc(var(--spacing) * 0.5) * var(--tw-space-y-reverse));
+    margin-block-end: calc(
+      calc(var(--spacing) * 0.5) * calc(1 - var(--tw-space-y-reverse))
+    );
+  }
+}
+
+.box3 {
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 2);
+  font-size: 11px;
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+  --tw-tracking: var(--tracking-wider);
+  letter-spacing: var(--tracking-wider);
+  color: #6a7686;
+  text-transform: uppercase;
+}
+
+.stack {
+  :where(& > :not(:last-child)) {
+    --tw-space-y-reverse: 0;
+    margin-block-start: calc(1px * var(--tw-space-y-reverse));
+    margin-block-end: calc(1px * calc(1 - var(--tw-space-y-reverse)));
+  }
+}
+
+.button {
+  background-color: #0000;
+  color: var(--color-white);
+}
+
+.button2 {
+  @media (hover: hover) {
+    &:hover {
+      background-color: #252d3a;
+      color: var(--color-white);
+    }
+  }
+}
+
+.row5 {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+}
+
+.box4 {
+  color: var(--color-indigo-400);
+}
+
+.box5 {
+  color: #7c8796;
+
+  @media (hover: hover) {
+    &:is(:where(:global(.group)):hover *) {
+      color: var(--color-white);
+    }
+  }
+}
+
+.box6 {
+  rotate: 180deg;
+}
+
+.box7 {
+  background-color: #181d26;
+  padding-block: calc(var(--spacing) * 1);
+  transition-property: all;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+}
+
+.box8 {
+  background-color: #2a323d;
+  --tw-font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-white);
+}
+
+.box9 {
+  color: #b1b7c1;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: #252d3a80;
+      background-color: lab(18.1402% -0.711545 -9.54741/0.5);
+      color: var(--color-white);
+    }
+  }
+}
+
+.box10 {
+  color: #7c8796;
+}
+
+.box11 {
+  background-color: #252d3a;
+  --tw-font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-white);
+}
+
+.row6 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top-style: var(--tw-border-style);
+  border-top-width: 1px;
+  border-color: #2a323d;
+  background-color: #181d26;
+  padding: calc(var(--spacing) * 3);
+}
+
+.col {
+  display: flex;
+  min-width: calc(var(--spacing) * 0);
+  flex-direction: column;
+}
+
+.label3 {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  --tw-font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-white);
+}
+
+.label4 {
+  margin-top: calc(var(--spacing) * 0.5);
+  font-size: 10px;
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  --tw-tracking: var(--tracking-wider);
+  letter-spacing: var(--tracking-wider);
+  color: var(--color-slate-500);
+  text-transform: uppercase;
+}
+
+.button3 {
+  border-radius: var(--radius-lg);
+  padding: calc(var(--spacing) * 1.5);
+  color: var(--color-slate-400);
+  transition-property:
+    color, background-color, border-color, outline-color, text-decoration-color, fill,
+    stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: #fb2c361a;
+      color: var(--color-red-400);
+    }
+  }
+
+  @media (hover: hover) {
+    @supports (color: color-mix(in lab, red, red)) {
+      &:hover {
+        background-color: color-mix(in oklab, var(--color-red-500) 10%, transparent);
+      }
+    }
+  }
+}
+
+.col2 {
+  display: flex;
+  min-width: calc(var(--spacing) * 0);
+  flex: 1;
+  flex-direction: column;
+}
+
+.header {
+  position: sticky;
+  top: calc(var(--spacing) * 0);
+  z-index: 10;
+  display: flex;
+  height: calc(var(--spacing) * 14);
+  align-items: center;
+  justify-content: space-between;
+  border-bottom-style: var(--tw-border-style);
+  border-bottom-width: 1px;
+  border-color: var(--color-slate-200);
+  background-color: var(--color-white);
+  padding-inline: calc(var(--spacing) * 6);
+  --tw-shadow:
+    0 1px 3px 0 var(--tw-shadow-color, #0000001a),
+    0 1px 2px -1px var(--tw-shadow-color, #0000001a);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+  --tw-shadow-color: #f1f5f980;
+
+  @supports (color: color-mix(in lab, red, red)) {
+    --tw-shadow-color: color-mix(
+      in oklab,
+      color-mix(in oklab, var(--color-slate-100) 50%, transparent) var(--tw-shadow-alpha),
+      transparent
+    );
+  }
+}
+
+.row7 {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 4);
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  --tw-font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-slate-600);
+}
+
+.button4 {
+  color: var(--color-slate-500);
+  transition-property:
+    color, background-color, border-color, outline-color, text-decoration-color, fill,
+    stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-slate-800);
+    }
+  }
+}
+
+.box12 {
+  transition-property:
+    color, background-color, border-color, outline-color, text-decoration-color, fill,
+    stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-indigo-600);
+    }
+  }
+}
+
+.row8 {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 4);
+  color: var(--color-slate-500);
+}
+
+.button5 {
+  padding: calc(var(--spacing) * 1);
+  transition-property:
+    color, background-color, border-color, outline-color, text-decoration-color, fill,
+    stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+  position: relative;
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-indigo-600);
+    }
+  }
+}
+
+.floating {
+  position: absolute;
+  top: calc(var(--spacing) * 1);
+  right: calc(var(--spacing) * 1);
+  width: calc(var(--spacing) * 1.5);
+  height: calc(var(--spacing) * 1.5);
+  background-color: var(--color-red-500);
+  border-radius: 3.40282e38px;
+}
+
+.button6 {
+  padding: calc(var(--spacing) * 1);
+  transition-property:
+    color, background-color, border-color, outline-color, text-decoration-color, fill,
+    stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-indigo-600);
+    }
+  }
+}
+
+.box13 {
+  height: calc(var(--spacing) * 4);
+  width: 1px;
+  background-color: var(--color-slate-200);
+  margin-block: auto;
+  margin-inline: calc(var(--spacing) * 1);
+}
+
+.row9 {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  cursor: pointer;
+}
+
+.row10 {
+  width: calc(var(--spacing) * 8);
+  height: calc(var(--spacing) * 8);
+  border-radius: 3.40282e38px;
+  background-color: var(--color-indigo-100);
+  color: var(--color-indigo-700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width))
+    var(--tw-ring-color, currentcolor);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+  --tw-ring-color: var(--color-slate-100);
+  overflow: hidden;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: calc(var(--spacing) * 6);
+}
+
+/* Cac lop con ket trong template literal, va bo sung. */
+.button7 {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 2.5);
+  transition-property:
+    color, background-color, border-color, outline-color, text-decoration-color, fill,
+    stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+  --tw-duration: 0.15s;
+  transition-duration: 0.15s;
+}
+.box14 {
+  transition-property:
+    color, background-color, border-color, outline-color, text-decoration-color, fill,
+    stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+}
+.box15 {
+  color: #7c8796;
+  transition-property: transform, translate, scale, rotate;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+  --tw-duration: 0.2s;
+  transition-duration: 0.2s;
+}
+.row11 {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+  padding-block: calc(var(--spacing) * 2);
+  padding-right: calc(var(--spacing) * 4);
+  padding-left: calc(var(--spacing) * 8);
+  transition-property:
+    color, background-color, border-color, outline-color, text-decoration-color, fill,
+    stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+}
+.row12 {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 2.5);
+  transition-property:
+    color, background-color, border-color, outline-color, text-decoration-color, fill,
+    stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+}
+
+/* Thanh cuon mong cho danh sach menu o thanh ben.
+   Truoc day o file .tsx ghi "custom-scrollbar" - lop nay CHUA BAO GIO co luat
+   CSS nao, ke ca truoc khi go Tailwind (da soat ban o HEAD: khong file
+   .css/.scss nao trong kho dinh nghia no). Thanh ben van dung thanh cuon mac
+   dinh cua he dieu hanh suot tu dau.
+
+   Mau thumb dung mau xam nua trong: thanh ben co the doi nen sang hay toi ma
+   thanh cuon van doc duoc, khong phai chon lai mau theo tung khu. */
+.thanhCuonGon {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(100 116 139 / 0.35) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background-color: rgb(100 116 139 / 0.35);
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(100 116 139 / 0.55);
+  }
+}

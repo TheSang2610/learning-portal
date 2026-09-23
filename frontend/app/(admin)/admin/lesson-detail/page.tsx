@@ -5,6 +5,7 @@ import { getErrorMessage } from "@/src/services/apiHelper";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getLessonById, updateLesson, deleteLesson } from "@/src/services/lesson.api";
 
+import styles from "./page.module.scss";
 function AdminEditLessonPageContent() {
   const params = useSearchParams();
   const router = useRouter();
@@ -136,29 +137,23 @@ function AdminEditLessonPageContent() {
   };
 
   if (loading) {
-    return (
-      <div className="p-20 text-center font-medium text-slate-500">
-        Loading lesson details...
-      </div>
-    );
+    return <div className={styles.box}>Loading lesson details...</div>;
   }
 
   return (
-    <div className="mx-auto max-w-3xl py-10">
+    <div className={styles.container}>
       <button
         onClick={() => router.push(`/admin/course-detail?courseId=${courseId}`)}
-        className="mb-5 flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-800"
+        className={styles.button}
       >
         ← Back to Course Structure
       </button>
 
-      <div className="rounded-3xl border bg-white p-8 shadow-sm">
-        <div className="mb-6 flex items-start justify-between">
+      <div className={styles.card}>
+        <div className={styles.row}>
           <div>
-            <h1 className="mb-1 text-3xl font-bold text-slate-800">
-              Edit Lesson Content
-            </h1>
-            <p className="text-sm text-slate-500">
+            <h1 className={styles.title}>Edit Lesson Content</h1>
+            <p className={styles.text}>
               Modify details, video pathways, and course documentation.
             </p>
           </div>
@@ -167,36 +162,32 @@ function AdminEditLessonPageContent() {
             type="button"
             disabled={deleting || submitting}
             onClick={deleteHandler}
-            className="rounded-xl bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100 disabled:bg-slate-100 disabled:text-slate-400"
+            className={styles.button2}
           >
             {deleting ? "Deleting..." : "Delete Lesson"}
           </button>
         </div>
 
-        <form onSubmit={saveHandler} className="space-y-5">
-          <div className="grid grid-cols-4 gap-5">
-            <div className="col-span-3">
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Lesson Title
-              </label>
+        <form onSubmit={saveHandler} className={styles.form}>
+          <div className={styles.grid}>
+            <div className={styles.box2}>
+              <label className={styles.fieldLabel}>Lesson Title</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full rounded-2xl border p-4 transition outline-none focus:border-blue-500"
+                className={styles.input}
                 required
               />
             </div>
 
-            <div className="col-span-1">
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Order Position
-              </label>
+            <div className={styles.box3}>
+              <label className={styles.fieldLabel}>Order Position</label>
               <input
                 type="number"
                 value={order}
                 onChange={(e) => setOrder(Number(e.target.value))}
-                className="w-full rounded-2xl border p-4 transition outline-none focus:border-blue-500"
+                className={styles.input}
                 min={1}
                 required
               />
@@ -204,47 +195,39 @@ function AdminEditLessonPageContent() {
           </div>
 
           {/* 🎯 PHẦN UPLOAD/DÁN LINK VIDEO */}
-          <div className="rounded-2xl border-2 border-dashed border-blue-300 bg-blue-50 p-6">
-            <div className="mb-5">
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
+          <div className={styles.box4}>
+            <div className={styles.box5}>
+              <label className={styles.fieldLabel}>
                 📹 Video Resource (Upload or Paste Link)
               </label>
-              <p className="mb-4 text-xs text-slate-500">
+              <p className={styles.text2}>
                 Choose one: Upload MP4 file directly OR paste video URL
               </p>
 
               {/* 🎯 UPLOAD VIDEO FILE */}
-              <div className="mb-4 rounded-xl border border-blue-200 bg-white p-4">
-                <label className="mb-3 block text-sm font-semibold text-slate-700">
-                  📁 Upload Video File
-                </label>
+              <div className={styles.card2}>
+                <label className={styles.fieldLabel2}>📁 Upload Video File</label>
                 <input
                   type="file"
                   accept="video/mp4,video/webm,video/ogg,video/quicktime"
                   onChange={handleVideoFileChange}
                   disabled={submitting || deleting}
-                  className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-xl file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-blue-700 disabled:opacity-50"
+                  className={styles.input2}
                 />
-                <p className="mt-2 text-xs text-slate-500">
+                <p className={styles.text3}>
                   ✓ Supported: MP4, WebM, OGG, MOV (Max 500MB)
                 </p>
               </div>
 
               {/* 🎯 PREVIEW VIDEO FILE */}
               {videoPreview && (
-                <div className="mb-4 rounded-xl border border-green-200 bg-green-50 p-4">
-                  <p className="mb-3 text-sm font-semibold text-green-700">
-                    ✓ Video Selected
-                  </p>
-                  <video
-                    src={videoPreview}
-                    controls
-                    className="max-h-48 w-full rounded-lg bg-black object-cover"
-                  />
+                <div className={styles.card3}>
+                  <p className={styles.text4}>✓ Video Selected</p>
+                  <video src={videoPreview} controls className={styles.video} />
                   <button
                     type="button"
                     onClick={clearVideoFile}
-                    className="mt-3 text-sm font-semibold text-red-600 underline hover:text-red-700"
+                    className={styles.button3}
                   >
                     ✕ Remove this video
                   </button>
@@ -252,29 +235,25 @@ function AdminEditLessonPageContent() {
               )}
 
               {/* 🎯 DÁN LINK VIDEO */}
-              <div className="rounded-xl border border-amber-200 bg-white p-4">
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  🔗 Or Paste Video URL
-                </label>
+              <div className={styles.card4}>
+                <label className={styles.fieldLabel}>🔗 Or Paste Video URL</label>
                 <input
                   type="text"
                   value={videoUrl}
                   onChange={(e) => setVideoUrl(e.target.value)}
                   disabled={videoFile ? true : false}
                   placeholder="e.g. https://www.youtube.com/watch?v=... or https://vimeo.com/..."
-                  className={`w-full rounded-xl border p-3 font-mono text-sm transition outline-none focus:border-blue-500 ${
-                    videoFile
-                      ? "cursor-not-allowed bg-slate-100 text-slate-500"
-                      : "text-slate-600"
+                  className={`${styles.input5} ${
+                    videoFile ? styles.input3 : styles.input4
                   }`}
                 />
                 {videoFile && (
-                  <p className="mt-2 text-xs text-amber-600">
+                  <p className={styles.text5}>
                     💡 URL field disabled (file upload takes priority)
                   </p>
                 )}
                 {!videoFile && videoUrl && (
-                  <p className="mt-2 text-xs text-green-600">✓ URL will be saved</p>
+                  <p className={styles.text6}>✓ URL will be saved</p>
                 )}
               </div>
             </div>
@@ -282,32 +261,30 @@ function AdminEditLessonPageContent() {
 
           {/* TEXT CONTENT */}
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Text Content / Study Guide
-            </label>
+            <label className={styles.fieldLabel}>Text Content / Study Guide</label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={8}
               placeholder="Write lesson notes, markdown guidelines, or text exercises here..."
-              className="w-full rounded-2xl border p-4 leading-relaxed text-slate-700 transition outline-none focus:border-blue-500"
+              className={styles.textarea}
             />
           </div>
 
           {/* BUTTONS */}
-          <div className="flex justify-end gap-4 border-t pt-4">
+          <div className={styles.row2}>
             <button
               type="button"
               disabled={submitting || deleting}
               onClick={() => router.push(`/admin/course-detail?courseId=${courseId}`)}
-              className="rounded-2xl border px-6 py-3.5 font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+              className={styles.button4}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting || deleting}
-              className="rounded-2xl bg-blue-600 px-8 py-3.5 font-semibold text-white shadow-md shadow-blue-600/10 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+              className={styles.button5}
             >
               {submitting ? "💾 Saving..." : "✓ Save Changes"}
             </button>
@@ -324,8 +301,8 @@ export default function AdminEditLessonPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-600" />
+        <div className={styles.row3}>
+          <div className={styles.spinner} />
         </div>
       }
     >

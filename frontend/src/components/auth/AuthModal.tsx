@@ -1,9 +1,11 @@
 "use client";
 
-import { datNguoiDung, yeuCauNapLai } from "@/src/hooks/nguoiDungLuu";
+import { datNguoiDung, yeuCauNapLai } from "@/src/hooks/userStore";
 import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { getErrorMessage } from "@/src/services/apiHelper";
 import Image from "next/image";
+
+import styles from "./AuthModal.module.scss";
 import {
   loginUser,
   registerUser,
@@ -20,7 +22,7 @@ import {
   kiemTen,
   loiMatKhauMoi,
   chuanHoaSoDienThoai,
-} from "@/src/services/quyDinh";
+} from "@/src/services/rules";
 
 interface AuthModalProps {
   open: boolean;
@@ -30,7 +32,7 @@ interface AuthModalProps {
 }
 
 // So chu so cua ma dat lai. Khop voi SO_CHU_SO trong
-// backend/src/utils/maOtp.js - lech la nut xac nhan khong bao gio bat len.
+// backend/src/utils/otpCode.js - lech la nut xac nhan khong bao gio bat len.
 const SO_CHU_SO_MA = 6;
 
 // Ba buoc cua luong quen mat khau. Chuoi rong = khong o trong luong nay.
@@ -122,7 +124,7 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
   /* ------------------------- Quen mat khau ------------------------------ */
   //
   // Ba buoc, ba man hinh, mot hop. Toan bo chinh sach nam o may chu - xem
-  // src/services/api.ts va backend/src/controllers/quenMatKhauController.js.
+  // src/services/api.ts va backend/src/controllers/passwordResetController.js.
   //
   // KHONG duoc them bo dem nguoc "thu lai sau N phut" o day. May chu co y
   // khong noi con bao lau nua thi mo lai, va nguoi dung duoc bao bang mot la
@@ -278,7 +280,7 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
 
       // Dang nhap nhan CA dia chi day du lan ten tai khoan ngan ("thesang"
       // thay cho "thesang@gmail.com"). Quy tac tra cuu o may chu - xem
-      // backend/src/utils/dinhDanhDangNhap.js.
+      // backend/src/utils/loginIdentifier.js.
       if (!dinhDanhDangNhapHopLe(email)) {
         setError("Email hoặc tên tài khoản không hợp lệ");
         setLoading(false);
@@ -290,7 +292,7 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
 
       // Token nam trong cookie httpOnly do may chu dat, khong con trong than
       // phan hoi. localStorage chi giu phan thong tin de hien thi.
-      // Danh tinh giu trong RAM (xem src/hooks/nguoiDungLuu.ts).
+      // Danh tinh giu trong RAM (xem src/hooks/userStore.ts).
       // datNguoiDung() da tu ban su kien "userInfoChanged".
       datNguoiDung(data);
       yeuCauNapLai();
@@ -355,7 +357,7 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
         return;
       }
 
-      // Dung chung ham voi backend (xem services/quyDinh.ts). Truoc day cho
+      // Dung chung ham voi backend (xem services/rules.ts). Truoc day cho
       // nay chi kiem do dai TOI THIEU, khong kiem toi da - ma bcrypt bo lang
       // moi byte tu 73 tro di, nen nguoi dung dat mat khau that dai roi tin
       // rang ca chuoi deu duoc tinh.
@@ -378,7 +380,7 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
       // luc voi buoc xac minh o may chu - email gio chi dung de doi mat khau
       // va de quan tri gui thong bao.
 
-      // Danh tinh giu trong RAM (xem src/hooks/nguoiDungLuu.ts).
+      // Danh tinh giu trong RAM (xem src/hooks/userStore.ts).
       // datNguoiDung() da tu ban su kien "userInfoChanged".
       datNguoiDung(data);
       yeuCauNapLai();
@@ -427,7 +429,7 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
           // Khong con nhan token qua postMessage: cua so bat len da dang nhap
           // voi may chu roi, va cookie httpOnly duoc dat cho ca mien nay nen
           // tab chinh dung duoc ngay.
-          // Danh tinh giu trong RAM (xem src/hooks/nguoiDungLuu.ts).
+          // Danh tinh giu trong RAM (xem src/hooks/userStore.ts).
           datNguoiDung(user);
           yeuCauNapLai();
           window.removeEventListener("message", messageHandler);
@@ -476,45 +478,43 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
     // hinh cao thi bang nam duoi dai header nen khong ai thay; tren dien thoai
     // xoay ngang thi dinh bang chui vao dung dai do, va cu bam nut dong la
     // trung link tren header. Do duoc: bam "dong" nhay sang /gpa-calculator.
-    <div className="fixed inset-0 z-[60] flex justify-center overflow-y-auto overscroll-contain bg-black/50 p-4">
-      <div className="absolute inset-0" onClick={onClose} />
+    <div className={styles.overlay}>
+      <div className={styles.floating} onClick={onClose} />
 
-      <div className="relative my-auto w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl ring-1 ring-slate-200 sm:p-8">
+      <div className={styles.card}>
         <button
           type="button"
           onClick={onClose}
           // h-11 w-11: 44px la kich thuoc vung cham toi thieu Apple khuyen
           // nghi. Ban cu la 25x40 - hut mot nut nho nhu vay tren dien thoai
           // rat de truot tay.
-          className="absolute top-3 right-3 flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-xl leading-none text-slate-600 transition hover:bg-slate-200"
+          className={styles.button}
           aria-label="Close auth modal"
         >
           ×
         </button>
 
-        <h2 className="mb-2 text-center text-3xl font-bold">
+        <h2 className={styles.heading}>
           {quenBuoc ? "Quên mật khẩu" : isLogin ? "Đăng nhập" : "Đăng ký"}
         </h2>
 
         {/* Vi sao hop nay hien ra. Khach bam "Vào học" roi thay mot o dang
             nhap khong loi giai thich se tuong minh bam nham. */}
-        {loiNhan && !quenBuoc && (
-          <p className="mb-4 text-center text-xs text-slate-500">{loiNhan}</p>
-        )}
+        {loiNhan && !quenBuoc && <p className={styles.text}>{loiNhan}</p>}
 
         {/* Trong luong quen mat khau thi KHONG hien hai tab: dang o giua mot
             viec co ba buoc, bam sang "Đăng ký" la mat het cong da lam ma
             khong ai bao truoc. */}
         {!quenBuoc && (
-          <div className="mt-4 mb-6 flex rounded-2xl bg-slate-100 p-1">
+          <div className={styles.row}>
             <button
               type="button"
               onClick={() => {
                 setIsLogin(true);
                 donDep();
               }}
-              className={`flex-1 rounded-2xl py-2 text-sm font-semibold transition ${
-                isLogin ? "bg-blue-600 text-white" : "text-slate-600 hover:text-slate-900"
+              className={`${styles.button10} ${
+                isLogin ? styles.button2 : styles.button3
               }`}
             >
               Đăng nhập
@@ -526,10 +526,8 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
                 setIsLogin(false);
                 donDep();
               }}
-              className={`flex-1 rounded-2xl py-2 text-sm font-semibold transition ${
-                !isLogin
-                  ? "bg-blue-600 text-white"
-                  : "text-slate-600 hover:text-slate-900"
+              className={`${styles.button10} ${
+                !isLogin ? styles.button2 : styles.button3
               }`}
             >
               Đăng ký
@@ -538,42 +536,38 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
         )}
 
         {error && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-600">
+          <div className={styles.card2}>
             {error}
             {goiYGoogle && (
-              <p className="mt-1 text-slate-600">
+              <p className={styles.text2}>
                 Nếu bạn đã đăng ký bằng Google, hãy dùng nút “Tiếp tục với Google” ở trên.
               </p>
             )}
           </div>
         )}
 
-        {thongBao && (
-          <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-700">
-            {thongBao}
-          </div>
-        )}
+        {thongBao && <div className={styles.card3}>{thongBao}</div>}
 
         {!quenBuoc && (
           <button
             type="button"
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="mb-4 flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+            className={styles.button4}
           >
             <Image
               src="https://www.svgrepo.com/show/355037/google.svg"
               alt="Google logo"
               width={20}
               height={20}
-              className="h-5 w-5"
+              className={styles.box}
             />
             Tiếp tục với Google
           </button>
         )}
 
         {quenBuoc === "email" ? (
-          <form onSubmit={guiMa} className="space-y-4">
+          <form onSubmit={guiMa} className={styles.form}>
             {/* Nói rõ là phải có EMAIL, không nhận số điện thoại.
                 Đăng ký chỉ bắt buộc số điện thoại, nên có tài khoản không có
                 email — và chưa gắn nhà cung cấp SMS nào thì không có chỗ nào
@@ -583,11 +577,11 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
                 Máy chủ vẫn trả đúng một câu cho mọi trường hợp, kể cả tài
                 khoản không có email — nói riêng ra là biến đường này thành
                 máy trả lời câu hỏi ai có email ai không. */}
-            <p className="text-xs leading-relaxed text-slate-600">
+            <p className={styles.text3}>
               Nhập email của tài khoản. Chúng tôi sẽ gửi một mã gồm {SO_CHU_SO_MA} chữ số
               tới hộp thư đó.
             </p>
-            <p className="rounded-xl bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">
+            <p className={styles.text4}>
               Tài khoản đăng ký bằng số điện thoại mà chưa thêm email thì chưa tự lấy lại
               mật khẩu được — nhắn quản trị viên để được đặt lại.
             </p>
@@ -601,27 +595,19 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
               autoFocus
               autoComplete="username"
               maxLength={DAI_EMAIL_TOI_DA}
-              className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
+              className={styles.input}
             />
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-2xl bg-blue-600 py-3 text-white transition hover:bg-blue-700 disabled:opacity-50"
-            >
+            <button type="submit" disabled={loading} className={styles.button5}>
               {loading ? "Đang gửi..." : "Gửi mã"}
             </button>
-            <button
-              type="button"
-              onClick={thoatLuongQuen}
-              className="w-full text-center text-xs font-semibold text-slate-500 hover:text-slate-800"
-            >
+            <button type="button" onClick={thoatLuongQuen} className={styles.button6}>
               Quay lại đăng nhập
             </button>
           </form>
         ) : quenBuoc === "ma" ? (
-          <form onSubmit={xacNhanMa} className="space-y-4">
-            <p className="text-xs leading-relaxed text-slate-600">
-              Mở hộp thư <span className="font-semibold">{quenEmail}</span> và nhập mã vào
+          <form onSubmit={xacNhanMa} className={styles.form}>
+            <p className={styles.text3}>
+              Mở hộp thư <span className={styles.label}>{quenEmail}</span> và nhập mã vào
               ô dưới. Nhớ xem cả mục Spam.
             </p>
             <input
@@ -638,16 +624,16 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
               required
               autoFocus
               maxLength={SO_CHU_SO_MA}
-              className="w-full rounded-2xl border border-slate-300 p-3 text-center font-mono text-2xl tracking-[0.5em] text-black transition outline-none placeholder:text-slate-300 focus:border-blue-600"
+              className={styles.input2}
             />
             <button
               type="submit"
               disabled={loading || quenMa.length !== SO_CHU_SO_MA}
-              className="w-full rounded-2xl bg-blue-600 py-3 text-white transition hover:bg-blue-700 disabled:opacity-50"
+              className={styles.button5}
             >
               {loading ? "Đang kiểm tra..." : "Xác nhận"}
             </button>
-            <div className="flex items-center justify-between text-xs font-semibold">
+            <div className={styles.row2}>
               {/* Gui lai ma. May chu tu dem so lan gui va tu chan khi du -
                   giao dien khong khoa nut nay va khong dem nguoc, vi lam vay
                   la noi cho nguoi ta biet con bao nhieu lan va bao lau. */}
@@ -655,24 +641,20 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
                 type="button"
                 onClick={() => guiMa()}
                 disabled={loading}
-                className="text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                className={styles.button7}
               >
                 Gửi lại mã
               </button>
-              <button
-                type="button"
-                onClick={thoatLuongQuen}
-                className="text-slate-500 hover:text-slate-800"
-              >
+              <button type="button" onClick={thoatLuongQuen} className={styles.button8}>
                 Quay lại đăng nhập
               </button>
             </div>
           </form>
         ) : quenBuoc === "matKhau" ? (
-          <form onSubmit={doiMatKhau} className="space-y-4">
-            <p className="text-xs leading-relaxed text-slate-600">
+          <form onSubmit={doiMatKhau} className={styles.form}>
+            <p className={styles.text3}>
               Mã hợp lệ. Đặt mật khẩu mới cho tài khoản{" "}
-              <span className="font-semibold">{quenEmail}</span>.
+              <span className={styles.label}>{quenEmail}</span>.
             </p>
             <input
               type="password"
@@ -683,7 +665,7 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
               autoFocus
               autoComplete="new-password"
               minLength={DAI_MAT_KHAU_TOI_THIEU}
-              className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
+              className={styles.input}
             />
             <input
               type="password"
@@ -693,20 +675,16 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
               required
               autoComplete="new-password"
               minLength={DAI_MAT_KHAU_TOI_THIEU}
-              className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
+              className={styles.input}
             />
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-2xl bg-blue-600 py-3 text-white transition hover:bg-blue-700 disabled:opacity-50"
-            >
+            <button type="submit" disabled={loading} className={styles.button5}>
               {loading ? "Đang đổi..." : "Đổi mật khẩu"}
             </button>
           </form>
         ) : isLogin ? (
           <form
             onSubmit={handleLoginSubmit}
-            className="space-y-4"
+            className={styles.form}
             onClick={(e) => e.stopPropagation()}
           >
             {/* type="text" chu KHONG phai "email": trinh duyet tu chan
@@ -721,7 +699,7 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
               required
               autoComplete="username"
               maxLength={DAI_EMAIL_TOI_DA}
-              className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
+              className={styles.input}
             />
             <input
               type="password"
@@ -731,13 +709,9 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
               onChange={handleLoginChange}
               required
               autoComplete="current-password"
-              className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
+              className={styles.input}
             />
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-2xl bg-blue-600 py-3 text-white transition hover:bg-blue-700 disabled:opacity-50"
-            >
+            <button type="submit" disabled={loading} className={styles.button5}>
               {loading ? "Đang xử lý..." : "Đăng nhập"}
             </button>
             <button
@@ -749,7 +723,7 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
                 setQuenEmail(loginData.email.trim().toLowerCase());
                 setQuenBuoc("email");
               }}
-              className="w-full text-center text-xs font-semibold text-blue-600 hover:text-blue-800"
+              className={styles.button9}
             >
               Quên mật khẩu?
             </button>
@@ -757,7 +731,7 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
         ) : (
           <form
             onSubmit={handleRegisterSubmit}
-            className="space-y-4"
+            className={styles.form}
             onClick={(e) => e.stopPropagation()}
           >
             <input
@@ -769,7 +743,7 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
               required
               autoComplete="name"
               maxLength={DAI_TEN_TOI_DA}
-              className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
+              className={styles.input}
             />
             {/* inputMode="tel" mở bàn phím số trên điện thoại. type vẫn là
                 "tel" chứ không phải "number": "number" cắt mất số 0 ở đầu ở
@@ -784,7 +758,7 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
               required
               autoComplete="tel"
               maxLength={15}
-              className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
+              className={styles.input}
             />
 
             <input
@@ -795,7 +769,7 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
               onChange={handleRegisterChange}
               autoComplete="email"
               maxLength={DAI_EMAIL_TOI_DA}
-              className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
+              className={styles.input}
             />
 
             <input
@@ -807,13 +781,9 @@ export default function AuthModal({ open, onClose, loiNhan }: AuthModalProps) {
               required
               autoComplete="new-password"
               minLength={DAI_MAT_KHAU_TOI_THIEU}
-              className="w-full rounded-2xl border border-slate-300 p-3 text-black transition outline-none placeholder:text-slate-500 focus:border-blue-600"
+              className={styles.input}
             />
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-2xl bg-blue-600 py-3 text-white transition hover:bg-blue-700 disabled:opacity-50"
-            >
+            <button type="submit" disabled={loading} className={styles.button5}>
               {loading ? "Đang xử lý..." : "Đăng ký"}
             </button>
           </form>

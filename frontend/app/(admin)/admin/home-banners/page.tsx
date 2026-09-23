@@ -6,6 +6,7 @@ import { bannerService, BannerData } from "@/src/services/banner";
 import { apiRequest } from "@/src/services/apiHelper";
 import { Search, SlidersHorizontal, Loader2 } from "lucide-react";
 
+import styles from "./page.module.scss";
 export default function HomepageBannersTogglePage() {
   const [banners, setBanners] = useState<BannerData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,114 +69,101 @@ export default function HomepageBannersTogglePage() {
 
   if (loading) {
     return (
-      <div className="flex h-96 items-center justify-center text-slate-500">
-        <Loader2 className="mr-2 animate-spin" size={24} /> Đang tải cấu hình hiển thị
+      <div className={styles.row}>
+        <Loader2 className={styles.spinner} size={24} /> Đang tải cấu hình hiển thị
         banner...
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className={styles.stack}>
       {/* HEADER SECTION TƯƠNG ĐỒNG MẪU */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-indigo-100 p-3 text-indigo-600">
+      <div className={styles.card}>
+        <div className={styles.row2}>
+          <div className={styles.box}>
             <SlidersHorizontal size={24} />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-800">Homepage Banners</h1>
-            <p className="mt-0.5 text-xs text-slate-500">
+            <h1 className={styles.title}>Homepage Banners</h1>
+            <p className={styles.text}>
               Bật hoặc tắt nhanh trạng thái hiển thị của các Khung quảng cáo (Banner) hiển
               thị tại Trang Chủ Client.
             </p>
           </div>
         </div>
-        <div className="relative w-full sm:w-72">
-          <Search
-            className="absolute top-1/2 left-3.5 -translate-y-1/2 text-slate-500"
-            size={18}
-          />
+        <div className={styles.box2}>
+          <Search className={styles.floating} size={18} />
           <input
             type="text"
             placeholder="Tìm kiếm tiêu đề banner..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pr-4 pl-10 text-sm transition-all focus:border-blue-500 focus:outline-none"
+            className={styles.input}
           />
         </div>
       </div>
 
       {/* DATA TABLE CONTROL */}
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className={styles.card2}>
         {filteredBanners.length === 0 ? (
-          <div className="p-12 text-center text-slate-500">
-            Không tìm thấy bản ghi banner nào của HOME.
-          </div>
+          <div className={styles.box3}>Không tìm thấy bản ghi banner nào của HOME.</div>
         ) : (
-          <table className="w-full border-collapse text-left">
+          <table className={styles.table}>
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/70 text-xs font-bold tracking-wider text-slate-500 uppercase">
-                <th className="px-6 py-4">Nội dung Banner</th>
-                <th className="px-6 py-4">Phân Loại / Vị Trí</th>
-                <th className="px-6 py-4 text-center">Thứ tự ưu tiên</th>
-                <th className="px-6 py-4 text-center">Trạng Thái Kích Hoạt</th>
+              <tr className={styles.row3}>
+                <th className={styles.headCell}>Nội dung Banner</th>
+                <th className={styles.headCell}>Phân Loại / Vị Trí</th>
+                <th className={styles.headCell2}>Thứ tự ưu tiên</th>
+                <th className={styles.headCell2}>Trạng Thái Kích Hoạt</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-sm text-slate-600">
+            <tbody className={styles.tbody}>
               {filteredBanners.map((banner) => (
-                <tr key={banner._id} className="transition-colors hover:bg-slate-50/50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
+                <tr key={banner._id} className={styles.row4}>
+                  <td className={styles.headCell}>
+                    <div className={styles.row2}>
                       {banner.displayType === "IMAGE" && banner.imageUrl ? (
                         <SafeImage
                           src={banner.imageUrl}
                           alt={banner.title}
                           width={56}
                           height={36}
-                          className="h-9 w-14 rounded-lg border border-slate-100 object-cover"
+                          className={styles.box4}
                         />
                       ) : (
                         <div
                           style={{ backgroundColor: banner.backgroundColor }}
-                          className="flex h-9 w-14 items-center justify-center rounded-lg border border-slate-200 text-xs font-bold text-white"
+                          className={styles.row5}
                         >
                           {banner.discountText || "%"}
                         </div>
                       )}
                       <div>
-                        <span className="line-clamp-1 font-semibold text-slate-800">
-                          {banner.title}
-                        </span>
-                        <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">
-                          {banner.description}
-                        </p>
+                        <span className={styles.label}>{banner.title}</span>
+                        <p className={styles.text2}>{banner.description}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <p className="text-xs font-medium tracking-wider text-slate-800 uppercase">
-                      {banner.displayType}
-                    </p>
-                    <p className="mt-0.5 text-xs font-semibold text-indigo-500">
-                      Trang: {banner.page}
-                    </p>
+                  <td className={styles.headCell}>
+                    <p className={styles.text3}>{banner.displayType}</p>
+                    <p className={styles.text4}>Trang: {banner.page}</p>
                   </td>
-                  <td className="px-6 py-4 text-center font-bold text-slate-700">
+                  <td className={styles.cell}>
                     Sắp xếp: {banner.backgroundColor ? "Thứ tự " + banner.order : "0"}
                   </td>
-                  <td className="px-6 py-4 text-center">
+                  <td className={styles.headCell2}>
                     <button
                       type="button"
                       disabled={updatingId === banner._id}
                       onClick={() => handleToggleActive(banner._id, !!banner.isActive)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                        banner.isActive ? "bg-emerald-500" : "bg-slate-200"
-                      } ${updatingId === banner._id ? "cursor-not-allowed opacity-50" : ""}`}
+                      className={`${styles.button4} ${
+                        banner.isActive ? styles.button : styles.button2
+                      } ${updatingId === banner._id ? styles.button3 : ""}`}
                     >
                       <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          banner.isActive ? "translate-x-6" : "translate-x-1"
+                        className={`${styles.label4} ${
+                          banner.isActive ? styles.label2 : styles.label3
                         }`}
                       />
                     </button>

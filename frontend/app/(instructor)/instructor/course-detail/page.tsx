@@ -20,6 +20,7 @@ import { getCourseById, updateCourse, layIdChuDe } from "@/src/services/course";
 import { getCategories, Category } from "@/src/services/categoryService";
 import { getProviders, ProviderData } from "@/src/services/provider";
 
+import styles from "./page.module.scss";
 function InstructorCourseDetailsPageContent() {
   const params = useSearchParams();
   const courseId = params.get("courseId") || "";
@@ -140,96 +141,79 @@ function InstructorCourseDetailsPageContent() {
   };
 
   if (loading)
-    return (
-      <div className="animate-pulse py-20 text-center text-slate-500">
-        Đang tải cấu trúc dữ liệu khóa học...
-      </div>
-    );
+    return <div className={styles.box}>Đang tải cấu trúc dữ liệu khóa học...</div>;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-4">
+    <div className={styles.container}>
       {/* HEADER */}
-      <div className="flex flex-col gap-4 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className={styles.col}>
         <div>
-          <Link
-            href="/instructor/courses"
-            className="mb-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-800"
-          >
+          <Link href="/instructor/courses" className={styles.box2}>
             <ArrowLeft size={16} /> Quay lại danh sách
           </Link>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            Thiết Kế Khóa Học
-          </h1>
+          <h1 className={styles.title}>Thiết Kế Khóa Học</h1>
         </div>
 
         {/* HIỂN THỊ TRẠNG THÁI KHÔNG CHO PHÉP ĐỔI TỰ DO */}
-        <div className="rounded-xl border border-slate-200 bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600">
+        <div className={styles.card}>
           Trạng thái:{" "}
-          <span className={isPublished ? "text-emerald-600" : "text-amber-600"}>
+          <span className={isPublished ? styles.label : styles.label2}>
             {isPublished ? "Đang Công Khai" : "Bản Nháp (Chờ duyệt)"}
           </span>
         </div>
       </div>
 
       {/* BANNER CẢNH BÁO */}
-      <div className="flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800">
-        <AlertTriangle size={16} className="shrink-0 text-amber-600" />
+      <div className={styles.card2}>
+        <AlertTriangle size={16} className={styles.box3} />
         <span>
           Bạn có quyền chỉnh sửa toàn bộ nội dung khóa học và bài giảng. Trạng thái hiển
           thị chính thức trên website sẽ do <strong>Admin kiểm duyệt</strong>.
         </span>
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <form onSubmit={updateCourseHandler} className="space-y-5">
+      <div className={styles.card3}>
+        <form onSubmit={updateCourseHandler} className={styles.form}>
           {/* UPLOAD THUMBNAIL */}
-          <div className="max-w-md">
-            <label className="mb-2 block flex items-center gap-1.5 text-xs font-bold text-slate-600">
-              <ImageIcon size={14} className="text-blue-500" /> Ảnh đại diện (Thumbnail)
+          <div className={styles.box4}>
+            <label className={styles.fieldLabel}>
+              <ImageIcon size={14} className={styles.box5} /> Ảnh đại diện (Thumbnail)
             </label>
-            <div className="relative mb-3 flex h-[180px] items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+            <div className={styles.card4}>
               {previewUrl ? (
-                <img
-                  src={previewUrl}
-                  alt="Thumbnail"
-                  className="h-full w-full object-cover"
-                />
+                <img src={previewUrl} alt="Thumbnail" className={styles.image} />
               ) : (
-                <div className="text-xs text-slate-500">Chưa có ảnh đại diện</div>
+                <div className={styles.box6}>Chưa có ảnh đại diện</div>
               )}
             </div>
             <input
               type="file"
               accept="image/*"
               onChange={handleFileChange}
-              className="w-full cursor-pointer text-xs text-slate-500 file:mr-3 file:rounded-xl file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-blue-700"
+              className={styles.input}
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className={styles.grid}>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-slate-600">
-                Tiêu đề khóa học
-              </label>
+              <label className={styles.fieldLabel2}>Tiêu đề khóa học</label>
               <input
                 type="text"
                 name="title"
                 value={formData.title}
                 onChange={changeHandler}
-                className="w-full rounded-xl border border-slate-200 p-3 text-sm transition outline-none focus:border-blue-500"
+                className={styles.input2}
                 required
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-slate-600">
-                Giá bán (VND)
-              </label>
+              <label className={styles.fieldLabel2}>Giá bán (VND)</label>
               <input
                 type="number"
                 name="price"
                 value={formData.price}
                 onChange={changeHandler}
-                className="w-full rounded-xl border border-slate-200 p-3 text-sm transition outline-none focus:border-blue-500"
+                className={styles.input2}
                 min={0}
                 required
               />
@@ -237,29 +221,25 @@ function InstructorCourseDetailsPageContent() {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-semibold text-slate-600">
-              Mô tả khóa học
-            </label>
+            <label className={styles.fieldLabel2}>Mô tả khóa học</label>
             <textarea
               name="description"
               value={formData.description}
               onChange={changeHandler}
               rows={4}
-              className="w-full rounded-xl border border-slate-200 p-3 text-sm outline-none focus:border-blue-500"
+              className={styles.textarea}
               required
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className={styles.grid}>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-slate-600">
-                Trình độ
-              </label>
+              <label className={styles.fieldLabel2}>Trình độ</label>
               <select
                 name="level"
                 value={formData.level}
                 onChange={changeHandler}
-                className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm"
+                className={styles.select}
               >
                 <option value="beginner">Cơ bản (Beginner)</option>
                 <option value="intermediate">Trung cấp (Intermediate)</option>
@@ -268,15 +248,15 @@ function InstructorCourseDetailsPageContent() {
             </div>
 
             <div>
-              <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-600">
-                <Building2 size={14} className="text-violet-500" /> Đơn vị cấp chứng chỉ
-                liên kết
+              <label className={styles.fieldLabel3}>
+                <Building2 size={14} className={styles.box7} /> Đơn vị cấp chứng chỉ liên
+                kết
               </label>
               <select
                 name="providerId"
                 value={formData.providerId}
                 onChange={changeHandler}
-                className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm"
+                className={styles.select}
               >
                 <option value="">-- Hệ thống LMS cấp độc lập --</option>
                 {providers.map((p) => (
@@ -289,11 +269,11 @@ function InstructorCourseDetailsPageContent() {
           </div>
 
           {/* CHỌN DANH MỤC */}
-          <div className="border-t pt-4">
-            <label className="mb-2 flex items-center gap-1.5 text-xs font-bold text-slate-600">
-              <Tag size={14} className="text-emerald-500" /> Danh mục phân loại
+          <div className={styles.box8}>
+            <label className={styles.fieldLabel4}>
+              <Tag size={14} className={styles.box9} /> Danh mục phân loại
             </label>
-            <div className="flex flex-wrap gap-2 rounded-xl border border-slate-100 bg-slate-50 p-3">
+            <div className={styles.card5}>
               {categories.map((cat) => {
                 const active = formData.category.includes(cat._id);
                 return (
@@ -301,7 +281,7 @@ function InstructorCourseDetailsPageContent() {
                     type="button"
                     key={cat._id}
                     onClick={() => handleCategoryToggle(cat._id)}
-                    className={`flex items-center gap-1 rounded-lg border px-3.5 py-2 text-xs font-semibold transition-all ${active ? "border-emerald-600 bg-emerald-600 text-white shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-100"}`}
+                    className={`${styles.button4} ${active ? styles.button : styles.button2}`}
                   >
                     {cat.name} {active && <Check size={12} />}
                   </button>
@@ -311,18 +291,15 @@ function InstructorCourseDetailsPageContent() {
           </div>
 
           {/* HÀNH ĐỘNG ĐIỀU HƯỚNG */}
-          <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row">
-            <button
-              type="submit"
-              className="rounded-xl bg-blue-600 px-6 py-3.5 text-xs font-bold text-white shadow-md transition hover:bg-blue-700"
-            >
+          <div className={styles.col2}>
+            <button type="submit" className={styles.button3}>
               Lưu thay đổi khóa học
             </button>
 
             {/* NÚT SANG TRANG QUẢN LÝ BÀI HỌC CỦA INSTRUCTOR */}
             <Link
               href={`/instructor/lessons?courseId=${courseId}`}
-              className="flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3.5 text-xs font-bold text-white shadow-md transition hover:bg-slate-800"
+              className={styles.card6}
             >
               <Video size={14} /> Quản lý giáo trình bài học & Quiz
             </Link>
@@ -339,8 +316,8 @@ export default function InstructorCourseDetailsPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-600" />
+        <div className={styles.row}>
+          <div className={styles.spinner} />
         </div>
       }
     >

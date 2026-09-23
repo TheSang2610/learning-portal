@@ -1,0 +1,137 @@
+// File nay do script sinh ra tu class Tailwind cu.
+// Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 6);
+  padding-right: calc(var(--spacing) * 6);
+
+  @media (min-width: 48rem) {
+    gap: calc(var(--spacing) * 12);
+    padding-right: calc(var(--spacing) * 12);
+  }
+}
+
+.row2 {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 6);
+
+  @media (min-width: 48rem) {
+    gap: calc(var(--spacing) * 12);
+  }
+}
+
+.label {
+  font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+  color: #0b0c1e;
+  font-size: clamp(1.1rem, 2.4vw, 1.7rem);
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+  --tw-tracking: -0.03em;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.label2 {
+  color: #4f2bff;
+}
+
+.section {
+  border-block-style: var(--tw-border-style);
+  border-block-width: 1px;
+  border-color: var(--color-slate-200);
+  background-color: var(--color-slate-50);
+  padding-block: calc(var(--spacing) * 5);
+
+  @media (min-width: 48rem) {
+    padding-block: calc(var(--spacing) * 8);
+  }
+}
+
+.box {
+  position: relative;
+  overflow: hidden;
+}
+
+.floating {
+  pointer-events: none;
+  position: absolute;
+  inset-block: calc(var(--spacing) * 0);
+  left: calc(var(--spacing) * 0);
+  z-index: 2;
+  width: calc(var(--spacing) * 12);
+  --tw-gradient-position: to right;
+  background-image: linear-gradient(var(--tw-gradient-stops));
+  --tw-gradient-from: var(--color-slate-50);
+  --tw-gradient-stops: var(
+    --tw-gradient-via-stops,
+    var(--tw-gradient-position),
+    var(--tw-gradient-from) var(--tw-gradient-from-position),
+    var(--tw-gradient-to) var(--tw-gradient-to-position)
+  );
+  --tw-gradient-to: transparent;
+
+  @supports (background-image: linear-gradient(in lab, red, red)) {
+    --tw-gradient-position: to right in oklab;
+  }
+
+  @media (min-width: 48rem) {
+    width: calc(var(--spacing) * 36);
+  }
+}
+
+.floating2 {
+  pointer-events: none;
+  position: absolute;
+  inset-block: calc(var(--spacing) * 0);
+  right: calc(var(--spacing) * 0);
+  z-index: 2;
+  width: calc(var(--spacing) * 12);
+  --tw-gradient-position: to left;
+  background-image: linear-gradient(var(--tw-gradient-stops));
+  --tw-gradient-from: var(--color-slate-50);
+  --tw-gradient-stops: var(
+    --tw-gradient-via-stops,
+    var(--tw-gradient-position),
+    var(--tw-gradient-from) var(--tw-gradient-from-position),
+    var(--tw-gradient-to) var(--tw-gradient-to-position)
+  );
+  --tw-gradient-to: transparent;
+
+  @supports (background-image: linear-gradient(in lab, red, red)) {
+    --tw-gradient-position: to left in oklab;
+  }
+
+  @media (min-width: 48rem) {
+    width: calc(var(--spacing) * 36);
+  }
+}
+
+.row3 {
+  display: flex;
+  width: max-content;
+  animation: troi-ngang var(--nhip) linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Khung hinh phai dat NGAY TRONG file module nay, khong de o globals.css.
+   CSS module bam ten @keyframes y het nhu bam ten class, nen mot luat trong
+   module viet `animation: troi-ngang ...` se di tim mot khung hinh da bi bam
+   ten - khong thay thi hieu ung dung im, va khong co loi nao duoc bao ra.
+   Day dung la ly do dai ten don vi dao tao o trang chu tung dung yen.
+   --------------------------------------------------------------------------- */
+
+@keyframes troi-ngang {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}

@@ -2,7 +2,7 @@ const Review = require('../models/Review');
 const Course = require('../models/Course');
 const User = require('../models/User');
 const Enrollment = require('../models/Enrollment'); // 🔥 Import thêm model Enrollment để kiểm tra tiến độ
-const { phanTrang } = require('../utils/truyVan');
+const { phanTrang } = require('../utils/queryParams');
 
 // @desc    Tạo review mới cho khóa học (Chống Seeding & Review rác)
 // @route   POST /api/reviews

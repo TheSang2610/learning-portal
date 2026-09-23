@@ -4,7 +4,7 @@
 // Cac test duoi day kiem ca hai chieu: co chan ke tan cong that khong, va co
 // chan nham nguoi dung binh thuong khong.
 //
-// Khong mo ket noi CSDL: khi mongoose chua ket noi, utils/khoGioiHan.js tu lui
+// Khong mo ket noi CSDL: khi mongoose chua ket noi, utils/rateLimitStore.js tu lui
 // ve bo dem trong bo nho tien trinh - dung nhanh do la test van thuan.
 
 const test = require('node:test');
@@ -18,7 +18,7 @@ const {
     MAX_FAILS_IP,
     MAX_FAILS_TAI_KHOAN,
 } = require('./loginRateLimit');
-const { _resetForTest } = require('../utils/khoGioiHan');
+const { _resetForTest } = require('../utils/rateLimitStore');
 
 // Gia lap mot luot dang nhap. Tra ve { chan, ma, keys }.
 const thu = async (ip, email) => {

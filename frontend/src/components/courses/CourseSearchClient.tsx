@@ -5,9 +5,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { layDanhSachKhoa, Course } from "@/src/services/course";
 import { getCategories, Category } from "@/src/services/categoryService";
-import TieuDeMuc from "@/src/components/home/TieuDeMuc";
-import TheKhoaHoc from "@/src/components/home/TheKhoaHoc";
+import TieuDeMuc from "@/src/components/home/SectionHeading";
+import TheKhoaHoc from "@/src/components/home/CourseCard";
 
+import styles from "./CourseSearchClient.module.scss";
 interface Props {
   /**
    * Du lieu lay san tu may chu (xem app/(portal)/courses/page.tsx).
@@ -132,19 +133,16 @@ export default function CourseSearchClient({ initialCourses, initialCategories }
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f5f7fa]">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
+      <div className={styles.page}>
+        <div className={styles.spinner}></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f7fa] pb-16">
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-        <button
-          onClick={() => router.push("/")}
-          className="mb-6 inline-flex items-center gap-2 py-2 text-xs font-semibold text-gray-500 transition hover:text-blue-600"
-        >
+    <div className={styles.page2}>
+      <div className={styles.container}>
+        <button onClick={() => router.push("/")} className={styles.button}>
           <ArrowLeft size={14} /> VỀ TRANG CHỦ
         </button>
 
@@ -167,14 +165,14 @@ export default function CourseSearchClient({ initialCourses, initialCategories }
         />
 
         {courses.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center text-sm text-slate-500">
+          <div className={styles.card}>
             {/* Khong con noi cung mot cau cho moi truong hop: tim khong ra va
                 danh muc rong la hai chuyen khac nhau, ma cau cu luon chen tu
                 khoa vao - vao tu danh muc thi hien ra cap nhay rong. */}
             {searchKeyword ? (
               <>
                 Không tìm thấy khoá học nào cho{" "}
-                <strong className="text-slate-700">&quot;{searchKeyword}&quot;</strong>.
+                <strong className={styles.strong}>&quot;{searchKeyword}&quot;</strong>.
               </>
             ) : (
               "Danh mục này chưa có khoá học nào."
@@ -182,7 +180,7 @@ export default function CourseSearchClient({ initialCourses, initialCategories }
           </div>
         ) : (
           <>
-            <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <div className={styles.grid}>
               {courses.map((course) => (
                 <TheKhoaHoc
                   key={course._id}
@@ -193,12 +191,12 @@ export default function CourseSearchClient({ initialCourses, initialCategories }
             </div>
 
             {conNua && (
-              <div className="mt-10 flex justify-center">
+              <div className={styles.row}>
                 <button
                   type="button"
                   onClick={taiThem}
                   disabled={dangTaiThem}
-                  className="h-12 rounded-xl border border-slate-300 bg-white px-8 text-sm font-semibold text-slate-700 transition hover:border-blue-500 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
+                  className={styles.button2}
                 >
                   {dangTaiThem ? "Đang tải…" : `Xem thêm (còn ${tong - courses.length})`}
                 </button>

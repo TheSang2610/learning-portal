@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { ListTree } from "lucide-react";
 import { layMucLuc, phanTichNoiDung } from "./articleOutline";
-import { laHtml, neoHoaTieuDe } from "./htmlBaiViet";
+import { laHtml, neoHoaTieuDe } from "./postHtml";
 
+import styles from "./ArticleWithOutline.module.scss";
 // Bo cuc hai o dung chung cho tai lieu chia se va bai viet blog:
 // o trai la muc luc dinh theo man hinh, o giua la toan bo bai.
 
@@ -77,25 +78,22 @@ export default function ArticleWithOutline({ content, goiYKhiTrong }: Props) {
   };
 
   return (
-    <div className="mt-6 grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+    <div className={styles.grid}>
       {/* O TRAI - muc luc */}
-      <aside className="lg:sticky lg:top-[120px] lg:self-start">
-        <nav
-          aria-label="Mục lục"
-          className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-        >
-          <p className="flex items-center gap-2 text-sm font-bold text-slate-900">
-            <ListTree size={16} className="text-blue-600" />
+      <aside className={styles.aside}>
+        <nav aria-label="Mục lục" className={styles.nav}>
+          <p className={styles.text}>
+            <ListTree size={16} className={styles.box} />
             Nội dung bài
           </p>
 
           {mucLuc.length === 0 ? (
-            <p className="mt-3 text-xs leading-relaxed text-slate-500">
+            <p className={styles.text2}>
               {goiYKhiTrong ??
                 "Bài này chưa chia mục. Thêm dòng dạng Chương 1: ... hoặc ## Tiêu đề để tạo mục lục."}
             </p>
           ) : (
-            <ul className="mt-3 max-h-[60vh] space-y-0.5 overflow-y-auto pr-1">
+            <ul className={styles.list}>
               {mucLuc.map((m) => {
                 const dangDoc = dangXem === m.id;
                 return (
@@ -105,12 +103,10 @@ export default function ArticleWithOutline({ content, goiYKhiTrong }: Props) {
                       onClick={nhayToi(m.id)}
                       aria-current={dangDoc ? "location" : undefined}
                       className={[
-                        "block rounded-lg px-2.5 py-1.5 text-sm leading-snug transition",
-                        m.level === 1 ? "font-semibold" : "font-normal",
-                        m.level === 2 ? "pl-5" : m.level === 3 ? "pl-8" : "",
-                        dangDoc
-                          ? "bg-blue-50 text-blue-700"
-                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+                        styles.link,
+                        m.level === 1 ? styles.link2 : styles.link3,
+                        m.level === 2 ? styles.link4 : m.level === 3 ? styles.link5 : "",
+                        dangDoc ? styles.link6 : styles.link7,
                       ].join(" ")}
                     >
                       {m.text}
@@ -124,42 +120,38 @@ export default function ArticleWithOutline({ content, goiYKhiTrong }: Props) {
       </aside>
 
       {/* O GIUA - toan bo bai, trinh bay nhu trang van ban */}
-      <article className="rounded-2xl border border-slate-200 bg-white px-6 py-8 shadow-sm sm:px-10 sm:py-12">
+      <article className={styles.article}>
         {/* max-w theo do dai DONG CHU (ch) chu khong theo pixel: khoang 78 ky tu
             moi dong la vung de doc nhat cho van ban dai. */}
-        <div className="mx-auto max-w-[78ch]">
+        <div className={styles.container}>
           {bai.laHtml ? (
             // Noi dung nay da qua bo loc danh sach trang o may chu
-            // (backend/src/utils/htmlBaiViet.js) truoc khi vao co so du lieu:
+            // (backend/src/utils/postHtml.js) truoc khi vao co so du lieu:
             // khong con script, khung nhung, thuoc tinh su kien hay dia chi
             // javascript:. Cach trinh bay do lop .bai-html trong globals.css lo.
-            <div className="bai-html" dangerouslySetInnerHTML={{ __html: bai.html }} />
+            <div className={styles.box2} dangerouslySetInnerHTML={{ __html: bai.html }} />
           ) : blocks.length === 0 ? (
-            <p className="text-sm text-slate-500 italic">Bài này chưa có nội dung.</p>
+            <p className={styles.text3}>Bài này chưa có nội dung.</p>
           ) : (
             blocks.map((b, i) => {
               if (b.kind === "heading") {
-                const chung = "scroll-mt-32 font-bold text-slate-900";
+                const chung = styles.box5;
                 if (b.level === 1) {
                   return (
-                    <h2
-                      key={i}
-                      id={b.id}
-                      className={`${chung} mt-10 border-b border-slate-200 pb-2 text-xl first:mt-0`}
-                    >
+                    <h2 key={i} id={b.id} className={`${chung} ${styles.heading}`}>
                       {b.text}
                     </h2>
                   );
                 }
                 if (b.level === 2) {
                   return (
-                    <h3 key={i} id={b.id} className={`${chung} mt-7 text-lg first:mt-0`}>
+                    <h3 key={i} id={b.id} className={`${chung} ${styles.subheading}`}>
                       {b.text}
                     </h3>
                   );
                 }
                 return (
-                  <h4 key={i} id={b.id} className={`${chung} mt-6 text-base first:mt-0`}>
+                  <h4 key={i} id={b.id} className={`${chung} ${styles.minorHeading}`}>
                     {b.text}
                   </h4>
                 );
@@ -170,10 +162,9 @@ export default function ArticleWithOutline({ content, goiYKhiTrong }: Props) {
                 return (
                   <Tag
                     key={i}
-                    className={[
-                      "mt-3 space-y-1.5 pl-6 text-[15px] leading-[1.85] text-slate-700",
-                      b.ordered ? "list-decimal" : "list-disc",
-                    ].join(" ")}
+                    className={[styles.stack, b.ordered ? styles.box3 : styles.box4].join(
+                      " ",
+                    )}
                   >
                     {b.items.map((it, j) => (
                       <li key={j}>{it}</li>
@@ -183,10 +174,7 @@ export default function ArticleWithOutline({ content, goiYKhiTrong }: Props) {
               }
 
               return (
-                <p
-                  key={i}
-                  className="mt-4 text-[15px] leading-[1.85] text-slate-700 first:mt-0"
-                >
+                <p key={i} className={styles.text4}>
                   {b.text}
                 </p>
               );

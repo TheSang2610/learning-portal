@@ -23,7 +23,7 @@ const mongoose = require('mongoose');
 //
 // expiresAt mang index TTL: Mongo tu xoa ban ghi het han, khong can cron don
 // rac. TTL chay moi ~60 giay nen khong chinh xac tuyet doi - vi vay moi phep
-// doc/ghi o utils/khoGioiHan.js van tu kiem han bang tay, ban ghi qua han chi
+// doc/ghi o utils/rateLimitStore.js van tu kiem han bang tay, ban ghi qua han chi
 // la rac cho xoa chu khong bao gio duoc tinh.
 const rateLimitCounterSchema = new mongoose.Schema(
     {

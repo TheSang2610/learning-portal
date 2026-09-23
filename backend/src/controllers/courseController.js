@@ -1,14 +1,14 @@
 const mongoose = require('mongoose');
 
 const Course = require('../models/Course');
-const { taoGhiDanh } = require('../utils/ghiDanh');
+const { taoGhiDanh } = require('../utils/enrollment');
 const User = require('../models/User');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
-const { duocXemNoiDung, catNoiDung } = require('../utils/quyenNoiDung');
+const { duocXemNoiDung, catNoiDung } = require('../utils/contentAccess');
 const Enrollment = require('../models/Enrollment');
 const Category = require('../models/categoryModel');
-const { xepHangGoiY } = require('../utils/xepHangGoiY');
-const { phanTrang, timGan } = require('../utils/truyVan');
+const { xepHangGoiY } = require('../utils/rankSuggestions');
+const { phanTrang, timGan } = require('../utils/queryParams');
 
 // Tra khoa hoc ve cho nguoi goi, cat video/bai viet neu ho chua co quyen.
 //
@@ -544,7 +544,7 @@ const getAdminNewReleasesCourses = async (req, res) => {
 // @route   GET /api/courses/goi-y?soLuong=6
 // @access  cong khai (dang nhap thi goi y ca nhan hoa, khong thi tra khoa pho bien)
 //
-// Phan cham diem nam o utils/xepHangGoiY.js - ham thuan, co test. O day chi lo
+// Phan cham diem nam o utils/rankSuggestions.js - ham thuan, co test. O day chi lo
 // viec gom du lieu, va gom co GIOI HAN: moi truy van deu co .limit().
 //
 // Vi sao phai gioi han: ba buoc duoi day la mot phep lan theo do thi (nguoi ->

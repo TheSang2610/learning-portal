@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { getCourseById } from "@/src/services/course";
 import { deleteLesson } from "@/src/services/lesson.api";
+
+import styles from "./page.module.scss";
 import {
   getCourseQuizzes,
   deleteQuiz,
@@ -123,60 +125,42 @@ function AdminLessonsPageContent() {
     }
   };
 
-  if (loading)
-    return (
-      <div className="animate-pulse py-20 text-center text-slate-500">
-        Đang tải giáo trình bài học...
-      </div>
-    );
+  if (loading) return <div className={styles.box}>Đang tải giáo trình bài học...</div>;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-4">
+    <div className={styles.container}>
       {/* HEADER */}
-      <div className="flex flex-col gap-4 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className={styles.col}>
         <div>
           <Link
             href={`/admin/course-detail?courseId=${courseId}`}
-            className="mb-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-800"
+            className={styles.box2}
           >
             <ArrowLeft size={16} /> Quay lại chi tiết khóa học
           </Link>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            Quản Lý Bài Học
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Khóa học: <span className="font-semibold text-blue-600">{courseTitle}</span>
+          <h1 className={styles.title}>Quản Lý Bài Học</h1>
+          <p className={styles.text}>
+            Khóa học: <span className={styles.label}>{courseTitle}</span>
           </p>
         </div>
 
-        <Link
-          href={`/admin/lesson-create?courseId=${courseId}`}
-          className="flex w-fit items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700"
-        >
+        <Link href={`/admin/lesson-create?courseId=${courseId}`} className={styles.card}>
           <Plus size={16} /> Thêm bài học mới
         </Link>
       </div>
 
       {/* DANH SÁCH BẢNG */}
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
-        <table className="w-full border-collapse text-left">
-          <thead className="border-b border-slate-200 bg-slate-50/80">
+      <div className={styles.card2}>
+        <table className={styles.table}>
+          <thead className={styles.thead}>
             <tr>
-              <th className="p-5 text-xs font-bold tracking-wider text-slate-500 uppercase">
-                Tên bài học
-              </th>
-              <th className="p-5 text-xs font-bold tracking-wider text-slate-500 uppercase">
-                Thời lượng
-              </th>
-              <th className="p-5 text-xs font-bold tracking-wider text-slate-500 uppercase">
-                Trạng thái bài tập (Quiz)
-              </th>
-              <th className="p-5 text-right text-xs font-bold tracking-wider text-slate-500 uppercase">
-                Hành động
-              </th>
+              <th className={styles.headCell}>Tên bài học</th>
+              <th className={styles.headCell}>Thời lượng</th>
+              <th className={styles.headCell}>Trạng thái bài tập (Quiz)</th>
+              <th className={styles.headCell2}>Hành động</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className={styles.tbody}>
             {lessons.length > 0 ? (
               lessons.map((lesson, index) => {
                 // 🔎 Tìm kiếm bài kiểm tra tương ứng với bài học hiện tại
@@ -187,60 +171,52 @@ function AdminLessonsPageContent() {
                 });
 
                 return (
-                  <tr key={lesson._id} className="transition hover:bg-slate-50/50">
+                  <tr key={lesson._id} className={styles.row}>
                     {/* TÊN BÀI HỌC */}
-                    <td className="flex items-center gap-3 p-5 font-medium text-slate-900">
-                      <span className="font-mono text-sm text-slate-500">
-                        #{index + 1}
-                      </span>
-                      <div className="rounded-lg bg-blue-50 p-2 text-blue-600">
+                    <td className={styles.cell}>
+                      <span className={styles.label2}>#{index + 1}</span>
+                      <div className={styles.box3}>
                         <Video size={16} />
                       </div>
-                      <span className="max-w-xs truncate md:max-w-md">
-                        {lesson.title}
-                      </span>
+                      <span className={styles.label3}>{lesson.title}</span>
                     </td>
 
                     {/* THỜI LƯỢNG */}
-                    <td className="p-5 text-sm text-slate-600">
+                    <td className={styles.cell2}>
                       {lesson.duration
                         ? `${Math.round(Number(lesson.duration) / 60)} phút`
                         : "--:--"}
                     </td>
 
                     {/* TRẠNG THÁI QUIZ */}
-                    <td className="p-5">
+                    <td className={styles.cell3}>
                       {matchingQuiz ? (
-                        <div className="flex items-center gap-2">
+                        <div className={styles.row2}>
                           <span
-                            className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${
-                              matchingQuiz.isPublished
-                                ? "border border-green-100 bg-green-50 text-green-700"
-                                : "border border-amber-100 bg-amber-50 text-amber-700"
+                            className={`${styles.row4} ${
+                              matchingQuiz.isPublished ? styles.label4 : styles.label5
                             }`}
                           >
                             <FileQuestion size={12} />
                             {matchingQuiz.isPublished ? "Đang Công Bố" : "Bản Nháp (Ẩn)"}
                           </span>
-                          <span className="text-xs text-slate-500">
+                          <span className={styles.label6}>
                             ({matchingQuiz.questions?.length || 0} câu hỏi)
                           </span>
                         </div>
                       ) : (
-                        <span className="text-xs text-slate-500 italic">
-                          Chưa có bài tập
-                        </span>
+                        <span className={styles.label7}>Chưa có bài tập</span>
                       )}
                     </td>
 
                     {/* HÀNH ĐỘNG DÀNH CHO LESSON & QUIZ */}
-                    <td className="block space-y-2 p-5 text-right lg:table-cell lg:space-y-0 lg:space-x-2">
+                    <td className={styles.cell4}>
                       {/* --- PHẦN QUẢN LÝ QUIZ --- */}
                       {!matchingQuiz ? (
                         // Nút Tạo nếu chưa có Quiz
                         <Link
                           href={`/admin/quiz-create?courseId=${courseId}&lessonId=${lesson._id}`}
-                          className="inline-flex items-center gap-1 rounded-xl border border-blue-200 px-3 py-1.5 text-xs font-bold text-blue-600 transition hover:bg-blue-50 hover:text-blue-800"
+                          className={styles.box4}
                         >
                           <Plus size={12} /> Thêm Quiz
                         </Link>
@@ -249,7 +225,7 @@ function AdminLessonsPageContent() {
                         <>
                           <Link
                             href={`/admin/quiz-edit?courseId=${courseId}&lessonId=${lesson._id}`}
-                            className="inline-flex items-center gap-1 rounded-xl border border-amber-200 px-3 py-1.5 text-xs font-bold text-amber-600 transition hover:bg-amber-50 hover:text-amber-800"
+                            className={styles.box5}
                           >
                             <Edit2 size={12} /> Sửa Quiz
                           </Link>
@@ -257,10 +233,8 @@ function AdminLessonsPageContent() {
                           <button
                             type="button"
                             onClick={() => handleTogglePublishQuiz(matchingQuiz._id)}
-                            className={`inline-flex items-center gap-1 rounded-xl border px-3 py-1.5 text-xs font-bold transition ${
-                              matchingQuiz.isPublished
-                                ? "border-slate-200 text-slate-600 hover:bg-slate-100"
-                                : "border-green-200 text-green-600 hover:bg-green-50"
+                            className={`${styles.button5} ${
+                              matchingQuiz.isPublished ? styles.button : styles.button2
                             }`}
                           >
                             {matchingQuiz.isPublished ? (
@@ -274,7 +248,7 @@ function AdminLessonsPageContent() {
                           <button
                             type="button"
                             onClick={() => handleDeleteQuiz(matchingQuiz._id)}
-                            className="inline-flex items-center gap-1 rounded-xl border border-purple-200 px-3 py-1.5 text-xs font-bold text-purple-600 transition hover:bg-purple-50 hover:text-purple-800"
+                            className={styles.button3}
                           >
                             <Trash2 size={12} /> Xóa Quiz
                           </button>
@@ -282,18 +256,18 @@ function AdminLessonsPageContent() {
                       )}
 
                       {/* Vạch chia nhẹ phân biệt giữa cấu hình Quiz và cấu hình cốt lõi Lesson */}
-                      <span className="mx-1 hidden text-slate-400 lg:inline">|</span>
+                      <span className={styles.label8}>|</span>
 
                       {/* --- PHẦN QUẢN LÝ LESSON --- */}
                       <Link
                         href={`/admin/lesson-detail?courseId=${courseId}&lessonId=${lesson._id}`}
-                        className="inline-flex items-center gap-1 rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
+                        className={styles.box6}
                       >
                         Sửa Bài
                       </Link>
                       <button
                         onClick={() => handleDeleteLesson(lesson._id)}
-                        className="inline-flex items-center gap-1 rounded-xl border border-red-200 px-3 py-1.5 text-xs font-bold text-red-600 transition hover:bg-red-50 hover:text-red-800"
+                        className={styles.button4}
                       >
                         Xóa Bài
                       </button>
@@ -303,7 +277,7 @@ function AdminLessonsPageContent() {
               })
             ) : (
               <tr>
-                <td colSpan={4} className="p-16 text-center text-sm text-slate-500">
+                <td colSpan={4} className={styles.cell5}>
                   📭 Giáo trình trống. Vui lòng bấm nút phía trên để thêm bài giảng đầu
                   tiên!
                 </td>
@@ -322,8 +296,8 @@ export default function AdminLessonsPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-600" />
+        <div className={styles.row3}>
+          <div className={styles.spinner} />
         </div>
       }
     >

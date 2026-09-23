@@ -1,0 +1,14 @@
+// File nay do script sinh ra tu class Tailwind cu.
+// Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
+
+.page {
+  min-height: 100vh;
+  background-color: var(--color-white);
+  padding-block: calc(var(--spacing) * 8);
+}
+
+.container {
+  margin-inline: auto;
+  max-width: var(--container-7xl);
+  padding-inline: calc(var(--spacing) * 6);
+}

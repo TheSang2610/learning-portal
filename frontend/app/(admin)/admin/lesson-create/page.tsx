@@ -17,6 +17,7 @@ import {
 import { addLesson } from "@/src/services/lesson.api";
 import { getCourseById } from "@/src/services/course";
 
+import styles from "./page.module.scss";
 function AdminLessonCreatePageContent() {
   const params = useSearchParams();
   const router = useRouter();
@@ -115,35 +116,29 @@ function AdminLessonCreatePageContent() {
     }
   };
 
-  const oNhap =
-    "w-full rounded-xl border border-slate-200 p-3 text-sm transition outline-none focus:border-blue-500";
-  const oNhan = "mb-1.5 flex items-center gap-1 text-xs font-bold text-slate-600";
+  const oNhap = styles.input3;
+  const oNhan = styles.row4;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-4">
+    <div className={styles.container}>
       {/* HEADER */}
       <div>
-        <Link
-          href={`/admin/lessons?courseId=${courseId}`}
-          className="mb-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-800"
-        >
+        <Link href={`/admin/lessons?courseId=${courseId}`} className={styles.box}>
           <ArrowLeft size={16} /> Quay lại giáo trình
         </Link>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-          Thêm Bài Học Mới
-        </h1>
-        <p className="mt-1 text-xs text-slate-500">
+        <h1 className={styles.title}>Thêm Bài Học Mới</h1>
+        <p className={styles.text}>
           Thiết kế cấu trúc video bài giảng và nội dung đính kèm.
         </p>
       </div>
 
       {/* FORM NHẬP LIỆU */}
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <form onSubmit={submitHandler} className="space-y-5">
+      <div className={styles.card}>
+        <form onSubmit={submitHandler} className={styles.form}>
           {/* Tiêu đề bài học */}
           <div>
             <label className={oNhan}>
-              <FileText size={14} className="text-blue-500" /> Tên bài học / Tiêu đề
+              <FileText size={14} className={styles.box2} /> Tên bài học / Tiêu đề
             </label>
             <input
               type="text"
@@ -157,9 +152,9 @@ function AdminLessonCreatePageContent() {
           </div>
 
           {/* Video: dán link hoặc tải tệp lên */}
-          <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+          <div className={styles.card2}>
             <label className={oNhan}>
-              <Video size={14} className="text-blue-500" /> Video bài học
+              <Video size={14} className={styles.box2} /> Video bài học
             </label>
             <input
               type="text"
@@ -170,24 +165,24 @@ function AdminLessonCreatePageContent() {
               className={oNhap}
               disabled={Boolean(videoFile)}
             />
-            <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-400">
-              <span className="h-px flex-1 bg-slate-200" /> hoặc tải tệp lên
-              <span className="h-px flex-1 bg-slate-200" />
+            <div className={styles.row}>
+              <span className={styles.label} /> hoặc tải tệp lên
+              <span className={styles.label} />
             </div>
             <input
               type="file"
               accept="video/*"
               onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
-              className="w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-600 file:px-3 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-blue-700"
+              className={styles.input}
             />
             {videoFile && (
-              <p className="text-[11px] text-slate-500">
+              <p className={styles.text2}>
                 Đã chọn <b>{videoFile.name}</b> — tệp này sẽ được dùng thay cho ô link ở
                 trên.{" "}
                 <button
                   type="button"
                   onClick={() => setVideoFile(null)}
-                  className="font-bold text-blue-600 underline"
+                  className={styles.button}
                 >
                   Bỏ chọn
                 </button>
@@ -196,10 +191,10 @@ function AdminLessonCreatePageContent() {
           </div>
 
           {/* Tài liệu đính kèm */}
-          <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+          <div className={styles.card2}>
             <label className={oNhan}>
-              <Paperclip size={14} className="text-blue-500" /> Tài liệu đính kèm
-              <span className="font-normal text-slate-400">(không bắt buộc)</span>
+              <Paperclip size={14} className={styles.box2} /> Tài liệu đính kèm
+              <span className={styles.label2}>(không bắt buộc)</span>
             </label>
             <input
               type="text"
@@ -213,15 +208,15 @@ function AdminLessonCreatePageContent() {
             <input
               type="file"
               onChange={(e) => setDocumentFile(e.target.files?.[0] ?? null)}
-              className="w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-600 file:px-3 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-slate-700"
+              className={styles.input2}
             />
             {documentFile && (
-              <p className="text-[11px] text-slate-500">
+              <p className={styles.text2}>
                 Đã chọn <b>{documentFile.name}</b>.{" "}
                 <button
                   type="button"
                   onClick={() => setDocumentFile(null)}
-                  className="font-bold text-blue-600 underline"
+                  className={styles.button}
                 >
                   Bỏ chọn
                 </button>
@@ -230,10 +225,10 @@ function AdminLessonCreatePageContent() {
           </div>
 
           {/* Thời lượng và thứ tự */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className={styles.grid}>
             <div>
               <label className={oNhan}>
-                <Clock size={14} className="text-blue-500" /> Thời lượng (phút)
+                <Clock size={14} className={styles.box2} /> Thời lượng (phút)
               </label>
               <input
                 type="number"
@@ -247,7 +242,7 @@ function AdminLessonCreatePageContent() {
             </div>
             <div>
               <label className={oNhan}>
-                <ListOrdered size={14} className="text-blue-500" /> Thứ tự trong khóa
+                <ListOrdered size={14} className={styles.box2} /> Thứ tự trong khóa
               </label>
               <input
                 type="number"
@@ -263,7 +258,7 @@ function AdminLessonCreatePageContent() {
           {/* Mô tả nội dung bài học */}
           <div>
             <label className={oNhan}>
-              <AlignLeft size={14} className="text-blue-500" /> Tóm tắt nội dung bài học
+              <AlignLeft size={14} className={styles.box2} /> Tóm tắt nội dung bài học
             </label>
             <textarea
               name="description"
@@ -276,18 +271,11 @@ function AdminLessonCreatePageContent() {
           </div>
 
           {/* Nút bấm Submit */}
-          <div className="flex justify-end gap-3 pt-2">
-            <Link
-              href={`/admin/lessons?courseId=${courseId}`}
-              className="rounded-xl border border-slate-200 px-5 py-3 text-xs font-bold text-slate-600 transition hover:bg-slate-50"
-            >
+          <div className={styles.row2}>
+            <Link href={`/admin/lessons?courseId=${courseId}`} className={styles.box3}>
               Hủy bỏ
             </Link>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-xl bg-blue-600 px-6 py-3 text-xs font-bold text-white shadow-md transition hover:bg-blue-700 disabled:bg-blue-400"
-            >
+            <button type="submit" disabled={submitting} className={styles.button2}>
               {submitting ? "Đang tạo..." : "Xác nhận thêm bài học"}
             </button>
           </div>
@@ -303,8 +291,8 @@ export default function AdminLessonCreatePage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-600" />
+        <div className={styles.row3}>
+          <div className={styles.spinner} />
         </div>
       }
     >

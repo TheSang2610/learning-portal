@@ -18,6 +18,7 @@ import SafeImage from "@/src/components/ui/SafeImage";
 import { getErrorMessage } from "@/src/services/apiHelper";
 import { postService, type BlogPost, type Topic } from "@/src/services/post";
 
+import styles from "./page.module.scss";
 type TrangThai = "" | "published" | "draft";
 
 const MOI_TRANG = 20;
@@ -133,52 +134,42 @@ export default function AdminPostsPage() {
 
   const tenChuDe = (slug: string) => topics.find((t) => t.slug === slug)?.name ?? slug;
 
-  const oLoc =
-    "rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 focus:border-blue-500 focus:outline-none";
+  const oLoc = styles.card8;
 
   return (
-    <div className="space-y-6">
+    <div className={styles.stack}>
       {/* HEADER */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className={styles.row}>
         <div>
-          <h3 className="flex items-center gap-2 text-2xl font-bold text-slate-800">
-            <Newspaper className="text-blue-600" size={26} />
+          <h3 className={styles.subheading}>
+            <Newspaper className={styles.box} size={26} />
             Cẩm nang môn học
           </h3>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className={styles.text}>
             Bài viết do Admin biên tập, hiện ở trang <code>/blog</code>. Tài liệu học viên
             tự đăng nằm ở mục khác.
           </p>
         </div>
-        <Link
-          href="/admin/post-create"
-          className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-md shadow-blue-600/10 transition-all hover:bg-blue-700"
-        >
+        <Link href="/admin/post-create" className={styles.card}>
           <Plus size={18} />
           Viết bài mới
         </Link>
       </div>
 
       {/* BỘ LỌC */}
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <form onSubmit={timKiem} className="flex items-center gap-2">
-          <div className="relative">
-            <Search
-              size={16}
-              className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
-            />
+      <div className={styles.card2}>
+        <form onSubmit={timKiem} className={styles.form}>
+          <div className={styles.box2}>
+            <Search size={16} className={styles.floating} />
             <input
               value={tuKhoa}
               onChange={(e) => setTuKhoa(e.target.value)}
               placeholder="Tìm theo tiêu đề"
               aria-label="Tìm bài viết"
-              className={`${oLoc} w-56 pl-9`}
+              className={`${oLoc} ${styles.input}`}
             />
           </div>
-          <button
-            type="submit"
-            className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50"
-          >
+          <button type="submit" className={styles.button}>
             Tìm
           </button>
         </form>
@@ -208,80 +199,71 @@ export default function AdminPostsPage() {
           ))}
         </select>
 
-        <span className="ml-auto text-sm text-slate-500">
+        <span className={styles.label}>
           {tong} bài{tuKhoaDangDung && ` khớp "${tuKhoaDangDung}"`}
         </span>
       </div>
 
       {/* DANH SÁCH */}
       {dangTai ? (
-        <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white text-slate-500">
-          <Loader2 className="animate-spin text-blue-600" size={32} />
-          <p className="text-sm font-medium">Đang tải bài viết...</p>
+        <div className={styles.card3}>
+          <Loader2 className={styles.spinner} size={32} />
+          <p className={styles.text2}>Đang tải bài viết...</p>
         </div>
       ) : loi ? (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-rose-100 bg-rose-50 p-6 text-center text-rose-700">
+        <div className={styles.card4}>
           <AlertCircle size={32} />
-          <p className="font-semibold">Đã xảy ra lỗi dữ liệu</p>
-          <p className="text-sm">{loi}</p>
+          <p className={styles.text3}>Đã xảy ra lỗi dữ liệu</p>
+          <p className={styles.text4}>{loi}</p>
         </div>
       ) : posts.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-slate-500">
-          <FileText className="mx-auto mb-3 text-slate-400" size={48} />
-          <p className="font-medium text-slate-600">
+        <div className={styles.card5}>
+          <FileText className={styles.box3} size={48} />
+          <p className={styles.text5}>
             {tuKhoaDangDung || trangThai || chuDe
               ? "Không có bài nào khớp bộ lọc"
               : "Chưa có bài viết nào"}
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className={styles.text6}>
             Bấm &quot;Viết bài mới&quot; ở góc trên để bắt đầu.
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className={styles.stack2}>
           {posts.map((p) => (
-            <div
-              key={p._id}
-              className="group flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-slate-300"
-            >
-              <div className="relative h-[68px] w-[120px] flex-shrink-0 overflow-hidden rounded-xl bg-slate-100">
+            <div key={p._id} className={styles.card6}>
+              <div className={styles.box4}>
                 {p.thumbnail ? (
                   <SafeImage
                     src={p.thumbnail}
                     alt=""
                     fill
                     sizes="120px"
-                    className="object-cover"
+                    className={styles.box5}
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-slate-300">
+                  <div className={styles.row2}>
                     <ImageOff size={20} />
                   </div>
                 )}
               </div>
 
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
+              <div className={styles.box6}>
+                <div className={styles.row3}>
                   <span
-                    className={`rounded-lg px-2 py-0.5 text-xs font-bold ${
-                      p.isPublished === false
-                        ? "bg-amber-50 text-amber-700"
-                        : "bg-emerald-50 text-emerald-700"
+                    className={`${styles.label7} ${
+                      p.isPublished === false ? styles.label2 : styles.label3
                     }`}
                   >
                     {p.isPublished === false ? "Bản nháp" : "Đã đăng"}
                   </span>
-                  <span className="rounded-lg bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-                    {tenChuDe(p.topic)}
-                  </span>
+                  <span className={styles.label4}>{tenChuDe(p.topic)}</span>
                 </div>
 
-                <h4 className="mt-1.5 truncate text-[16px] font-bold text-slate-800">
-                  {p.title}
-                </h4>
-                <p className="mt-0.5 truncate text-sm text-slate-500">{p.excerpt}</p>
+                <h4 className={styles.minorHeading}>{p.title}</h4>
+                <p className={styles.text7}>{p.excerpt}</p>
 
-                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+                <div className={styles.row4}>
                   <span>{p.author?.name || "Ẩn danh"}</span>
                   <span>
                     {new Date(p.createdAt).toLocaleDateString("vi-VN", {
@@ -290,20 +272,20 @@ export default function AdminPostsPage() {
                       year: "numeric",
                     })}
                   </span>
-                  <span className="inline-flex items-center gap-1">
+                  <span className={styles.label5}>
                     <Eye size={13} />
                     {p.views} lượt xem
                   </span>
                 </div>
               </div>
 
-              <div className="flex flex-shrink-0 items-center gap-1">
+              <div className={styles.row5}>
                 {p.isPublished !== false && (
                   <Link
                     href={`/blog/${p.slug}`}
                     target="_blank"
                     title="Xem trang thật"
-                    className="rounded-xl p-2 text-slate-500 transition-all hover:bg-slate-100 hover:text-slate-800"
+                    className={styles.box7}
                   >
                     <Eye size={18} />
                   </Link>
@@ -311,7 +293,7 @@ export default function AdminPostsPage() {
                 <Link
                   href={`/admin/post-create?id=${p._id}`}
                   title="Sửa bài viết"
-                  className="rounded-xl p-2 text-slate-500 transition-all hover:bg-blue-50 hover:text-blue-600"
+                  className={styles.box8}
                 >
                   <PenLine size={18} />
                 </Link>
@@ -319,7 +301,7 @@ export default function AdminPostsPage() {
                   type="button"
                   onClick={() => xoa(p)}
                   title="Xóa bài viết"
-                  className="rounded-xl p-2 text-slate-500 transition-all hover:bg-red-50 hover:text-red-600"
+                  className={styles.button2}
                 >
                   <Trash2 size={18} />
                 </button>
@@ -330,23 +312,23 @@ export default function AdminPostsPage() {
       )}
 
       {tongTrang > 1 && (
-        <div className="flex items-center justify-center gap-2">
+        <div className={styles.row6}>
           <button
             type="button"
             disabled={trang <= 1 || dangTai}
             onClick={() => tai(trang - 1, trangThai, chuDe, tuKhoaDangDung)}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+            className={styles.card7}
           >
             Trước
           </button>
-          <span className="px-2 text-sm text-slate-500">
+          <span className={styles.label6}>
             Trang {trang}/{tongTrang}
           </span>
           <button
             type="button"
             disabled={trang >= tongTrang || dangTai}
             onClick={() => tai(trang + 1, trangThai, chuDe, tuKhoaDangDung)}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+            className={styles.card7}
           >
             Sau
           </button>

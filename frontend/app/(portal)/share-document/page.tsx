@@ -1,5 +1,5 @@
 import ShareDocumentClient from "@/src/components/document/ShareDocumentClient";
-import TieuDeMuc from "@/src/components/home/TieuDeMuc";
+import TieuDeMuc from "@/src/components/home/SectionHeading";
 import type { DocumentListResponse } from "@/src/services/document";
 import { GOC_API } from "@/src/services/serverFetch";
 
@@ -14,6 +14,7 @@ export const metadata = {
 // tai lai sau khi dang xong), con nguoi vao xem thi dung ban da dung san.
 export const revalidate = 30;
 
+import styles from "./page.module.scss";
 const RONG: DocumentListResponse = { documents: [], total: 0, page: 1, totalPages: 1 };
 
 // Lay san trang dau ngay tren may chu, thay vi de trinh duyet goi sau khi
@@ -40,8 +41,8 @@ export default async function ShareDocumentPage() {
   return (
     // Nen trang va tieu de dat cung mot khung max-w-7xl px-6 voi
     // ShareDocumentHeader, giong het trang /blog.
-    <div className="min-h-screen bg-white py-8">
-      <div className="mx-auto max-w-7xl px-6">
+    <div className={styles.page}>
+      <div className={styles.container}>
         <TieuDeMuc
           nhu="h1"
           tieuDe="Chia sẻ tài liệu"

@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { xoaPhien } from "@/src/services/apiHelper";
-import { useNguoiDungLuu, useDangTaiNguoiDung } from "@/src/hooks/nguoiDungLuu";
+import { useNguoiDungLuu, useDangTaiNguoiDung } from "@/src/hooks/userStore";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import styles from "./page.module.scss";
 import {
   BookOpen,
   Video,
@@ -68,7 +69,7 @@ const instructorMenuItems = [
   // roi khong ai tra loi.
   {
     label: "Student Q&A",
-    href: "/instructor/hoi-dap",
+    href: "/instructor/questions",
     icon: MessageCircleQuestion,
   },
 ];
@@ -82,7 +83,7 @@ export default function InstructorPanelLayout({
   const pathname = usePathname();
 
   // Doc localStorage bang useSyncExternalStore thay vi useEffect + setState,
-  // xem src/hooks/nguoiDungLuu.ts. Effect ben duoi chi con lo viec chuyen huong.
+  // xem src/hooks/userStore.ts. Effect ben duoi chi con lo viec chuyen huong.
   const nguoiDung = useNguoiDungLuu();
   const dangTaiNguoiDung = useDangTaiNguoiDung();
   const instructorName = nguoiDung?.name ?? "";
@@ -159,15 +160,12 @@ export default function InstructorPanelLayout({
       const isLast = index === paths.length - 1;
 
       return (
-        <span key={href} className="flex items-center">
-          <span className="mx-2 text-slate-400">/</span>
+        <span key={href} className={styles.row}>
+          <span className={styles.label}>/</span>
           {isLast ? (
-            <span className="font-normal text-slate-500">{label}</span>
+            <span className={styles.label2}>{label}</span>
           ) : (
-            <Link
-              href={href}
-              className="capitalize transition-colors hover:text-indigo-400"
-            >
+            <Link href={href} className={styles.box}>
               {label}
             </Link>
           )}
@@ -177,36 +175,28 @@ export default function InstructorPanelLayout({
   };
 
   if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-[#1e293b] text-sm font-medium text-slate-500">
-        Loading Instructor Panel...
-      </div>
-    );
+    return <div className={styles.row2}>Loading Instructor Panel...</div>;
   }
 
   return (
-    <div className="flex min-h-screen bg-[#f8fafc] text-slate-900 antialiased">
+    <div className={styles.page}>
       {/* 1. SIDEBAR NAVIGATION (CoreUI Dark Theme) */}
-      <aside className="sticky top-0 z-20 flex h-screen w-64 flex-col bg-[#1e2530] text-[#b1b7c1] select-none">
+      <aside className={styles.aside}>
         {/* LOGO AREA */}
-        <div className="flex h-14 items-center border-b border-[#2a323d] bg-[#181d26] px-4">
-          <Link href="/instructor/courses" className="flex items-center gap-2.5">
-            <div className="rounded-lg bg-indigo-600 p-1.5 text-white shadow-sm">
-              <GraduationCap size={18} className="stroke-[2.5]" />
+        <div className={styles.row3}>
+          <Link href="/instructor/courses" className={styles.row4}>
+            <div className={styles.card}>
+              <GraduationCap size={18} className={styles.box2} />
             </div>
             <div>
-              <h1 className="text-sm font-bold tracking-wide text-white uppercase">
-                INSTRUCTOR
-              </h1>
+              <h1 className={styles.title}>INSTRUCTOR</h1>
             </div>
           </Link>
         </div>
 
         {/* LIST MENU ITEMS */}
-        <nav className="custom-scrollbar flex-1 space-y-0.5 overflow-y-auto py-3 text-[13.5px]">
-          <div className="px-4 py-2 text-[11px] font-bold tracking-wider text-[#6a7686] uppercase">
-            Workspace
-          </div>
+        <nav className={`${styles.thanhCuonGon} ${styles.nav}`}>
+          <div className={styles.box3}>Workspace</div>
 
           {instructorMenuItems.map((item, _index) => {
             const Icon = item.icon;
@@ -214,32 +204,32 @@ export default function InstructorPanelLayout({
             return (
               <div key={item.label}>
                 {item.submenu ? (
-                  <div className="space-y-px">
+                  <div className={styles.stack}>
                     <button
                       onClick={() => setMenuKhoaTuBam(!isCourseMenuOpen)}
-                      className={`group flex w-full items-center justify-between px-4 py-2.5 transition-colors duration-150 ${
+                      className={`group ${styles.button7} ${
                         COURSE_ROUTES.includes(pathname) ||
                         LESSON_ROUTES.includes(pathname)
-                          ? "bg-transparent text-white"
-                          : "hover:bg-[#252d3a] hover:text-white"
+                          ? styles.button
+                          : styles.button2
                       }`}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className={styles.row5}>
                         <Icon
                           size={16}
-                          className={`transition-colors ${COURSE_ROUTES.includes(pathname) || LESSON_ROUTES.includes(pathname) ? "text-indigo-400" : "text-[#7c8796] group-hover:text-white"}`}
+                          className={`${styles.box14} ${COURSE_ROUTES.includes(pathname) || LESSON_ROUTES.includes(pathname) ? styles.box4 : styles.box5}`}
                         />
                         <span>{item.label}</span>
                       </div>
                       <ChevronDown
                         size={14}
-                        className={`text-[#7c8796] transition-transform duration-200 ${isCourseMenuOpen ? "rotate-180" : ""}`}
+                        className={`${styles.box15} ${isCourseMenuOpen ? styles.box6 : ""}`}
                       />
                     </button>
 
                     {/* SUBMENU DROP-DOWN */}
                     {isCourseMenuOpen && (
-                      <div className="bg-[#181d26] py-1 transition-all">
+                      <div className={styles.box7}>
                         {item.submenu.map((subItem) => {
                           const SubIcon = subItem.icon;
 
@@ -260,17 +250,13 @@ export default function InstructorPanelLayout({
                             <Link
                               key={subItem.href || "lesson-indicator"}
                               href={subItem.href || "#"}
-                              className={`flex items-center gap-3 py-2 pr-4 pl-8 transition-colors ${
-                                isChildActive
-                                  ? "bg-[#2a323d] font-medium text-white"
-                                  : "text-[#b1b7c1] hover:bg-[#252d3a]/50 hover:text-white"
+                              className={`${styles.row11} ${
+                                isChildActive ? styles.box8 : styles.box9
                               }`}
                             >
                               <SubIcon
                                 size={14}
-                                className={
-                                  isChildActive ? "text-indigo-400" : "text-[#7c8796]"
-                                }
+                                className={isChildActive ? styles.box4 : styles.box10}
                               />
                               <span>
                                 {subItem.label} {subItem.isIndicatorOnly && "(Editing)"}
@@ -284,15 +270,13 @@ export default function InstructorPanelLayout({
                 ) : (
                   <Link
                     href={item.href}
-                    className={`group flex items-center gap-3 px-4 py-2.5 transition-colors ${
-                      pathname === item.href
-                        ? "bg-[#252d3a] font-medium text-white"
-                        : "hover:bg-[#252d3a] hover:text-white"
+                    className={`group ${styles.row12} ${
+                      pathname === item.href ? styles.box11 : styles.button2
                     }`}
                   >
                     <Icon
                       size={16}
-                      className={`transition-colors ${pathname === item.href ? "text-indigo-400" : "text-[#7c8796] group-hover:text-white"}`}
+                      className={`${styles.box14} ${pathname === item.href ? styles.box4 : styles.box5}`}
                     />
                     <span>{item.label}</span>
                   </Link>
@@ -303,39 +287,28 @@ export default function InstructorPanelLayout({
         </nav>
 
         {/* SIDEBAR FOOTER (USER INFO) */}
-        <div className="flex items-center justify-between border-t border-[#2a323d] bg-[#181d26] p-3">
-          <div className="flex min-w-0 flex-col">
-            <span className="truncate text-xs font-medium text-white">
-              {instructorName || "Instructor"}
-            </span>
-            <span className="mt-0.5 text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
-              Faculty Member
-            </span>
+        <div className={styles.row6}>
+          <div className={styles.col}>
+            <span className={styles.label3}>{instructorName || "Instructor"}</span>
+            <span className={styles.label4}>Faculty Member</span>
           </div>
-          <button
-            onClick={logoutHandler}
-            title="Đăng xuất"
-            className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-400"
-          >
+          <button onClick={logoutHandler} title="Đăng xuất" className={styles.button3}>
             <LogOut size={16} />
           </button>
         </div>
       </aside>
 
       {/* 2. MAIN VIEWPORT */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className={styles.col2}>
         {/* WHITE HEADER WITH BREADCRUMBS */}
-        <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-6 shadow-sm shadow-slate-100/50">
+        <header className={styles.header}>
           {/* BREADCRUMBS & HAMBURGER */}
-          <div className="flex items-center gap-4 text-xs font-medium text-slate-600">
-            <button className="text-slate-500 transition-colors hover:text-slate-800">
+          <div className={styles.row7}>
+            <button className={styles.button4}>
               <Menu size={18} />
             </button>
-            <div className="flex items-center">
-              <Link
-                href="/instructor"
-                className="transition-colors hover:text-indigo-600"
-              >
+            <div className={styles.row}>
+              <Link href="/instructor" className={styles.box12}>
                 Home
               </Link>
               {generateBreadcrumbs()}
@@ -343,26 +316,26 @@ export default function InstructorPanelLayout({
           </div>
 
           {/* ACTION UTILITIES */}
-          <div className="flex items-center gap-4 text-slate-500">
-            {/* <button className="p-1 hover:text-indigo-600 transition-colors relative">
+          <div className={styles.row8}>
+            {/* <button className={styles.button5}>
               <Bell size={18} />
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+              <span className={styles.floating}></span>
             </button>
-            <button className="p-1 hover:text-indigo-600 transition-colors">
+            <button className={styles.button6}>
               <Settings size={18} />
             </button>
-            <button className="p-1 hover:text-indigo-600 transition-colors">
+            <button className={styles.button6}>
               <Sun size={18} />
             </button>
             
-            <div className="h-4 w-px bg-slate-200 my-auto mx-1"></div> */}
+            <div className={styles.box13}></div> */}
 
-            {/* <div className="flex items-center gap-2 group cursor-pointer">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs ring-2 ring-slate-100 overflow-hidden">
+            {/* <div className={`group ${styles.row9}`}>
+              <div className={styles.row10}>
                 <img 
                   src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&h=150&q=80" 
                   alt="Instructor Portrait" 
-                  className="w-full h-full object-cover"
+                  className={styles.image}
                 />
               </div>
             </div> */}
@@ -370,7 +343,7 @@ export default function InstructorPanelLayout({
         </header>
 
         {/* PAGE CONTENT */}
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        <main className={styles.main}>{children}</main>
       </div>
 
       {/* CUSTOM INTERNAL SCROLLBAR FOR SIDEBAR */}

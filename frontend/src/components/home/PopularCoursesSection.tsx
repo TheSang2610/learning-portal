@@ -6,6 +6,7 @@ import { ArrowRight, BookOpen, Building2 } from "lucide-react";
 import Link from "next/link";
 import { getHomeSections, Course } from "@/src/services/course";
 
+import styles from "./PopularCoursesSection.module.scss";
 export interface HomeSectionsState {
   mostPopular: Course[];
   trendingNow: Course[];
@@ -17,52 +18,46 @@ export interface HomeSectionsState {
 // ==========================================
 function PopularCoursesSkeleton() {
   return (
-    <section className="animate-pulse bg-[#f5f7fa] py-10">
-      <div className="mx-auto max-w-7xl px-6">
+    <section className={styles.section}>
+      <div className={styles.container}>
         {/* Tiêu đề & mô tả giả lập */}
-        <div className="space-y-2">
-          <div className="h-6 w-64 rounded bg-slate-200 md:w-80"></div>
-          <div className="h-4 w-96 max-w-full rounded bg-slate-200"></div>
+        <div className={styles.stack}>
+          <div className={styles.box}></div>
+          <div className={styles.box2}></div>
         </div>
 
         {/* Khung lưới Grid 3 cột tương thích layout thực tế */}
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className={styles.grid}>
           {[1, 2, 3].map((colIndex) => (
-            <div
-              key={colIndex}
-              className="flex flex-col gap-4 rounded-2xl border border-blue-50/50 bg-[#ebf3ff]/60 p-4"
-            >
+            <div key={colIndex} className={styles.card}>
               {/* Header cột giả lập */}
-              <div className="my-1 h-5 w-36 rounded bg-slate-200"></div>
+              <div className={styles.box3}></div>
 
               {/* Danh sách các thẻ bài học dọc bên trong */}
-              <div className="flex flex-col gap-3">
+              <div className={styles.col}>
                 {[1, 2, 3].map((cardIndex) => (
-                  <div
-                    key={cardIndex}
-                    className="flex gap-4 rounded-xl border border-slate-100 bg-white p-3 shadow-sm"
-                  >
+                  <div key={cardIndex} className={styles.card2}>
                     {/* Trái: Ảnh Thumbnail giả lập */}
-                    <div className="h-16 w-16 flex-shrink-0 rounded-lg bg-slate-200"></div>
+                    <div className={styles.box4}></div>
 
                     {/* Phải: Thông tin chi tiết */}
-                    <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
-                      <div className="space-y-2">
+                    <div className={styles.col2}>
+                      <div className={styles.stack}>
                         {/* Hàng logo đối tác / Tổ chức cấp phát */}
-                        <div className="flex items-center gap-1.5">
-                          <div className="h-3.5 w-3.5 rounded-sm bg-slate-200"></div>
-                          <div className="h-3 w-20 rounded bg-slate-200"></div>
+                        <div className={styles.row}>
+                          <div className={styles.box5}></div>
+                          <div className={styles.box6}></div>
                         </div>
                         {/* Tiêu đề khóa học (2 dòng giả lập lệch chiều dài) */}
-                        <div className="h-4 w-11/12 rounded bg-slate-200"></div>
-                        <div className="h-4 w-3/4 rounded bg-slate-200"></div>
+                        <div className={styles.box7}></div>
+                        <div className={styles.box8}></div>
                       </div>
 
                       {/* Hàng Badge cấp độ, số bài học và giá tiền */}
-                      <div className="mt-2 flex items-center gap-2">
-                        <div className="h-3.5 w-12 rounded bg-slate-200"></div>
-                        <div className="h-3 w-16 rounded bg-slate-200"></div>
-                        <div className="ml-auto h-3 w-14 rounded bg-slate-200"></div>
+                      <div className={styles.row2}>
+                        <div className={styles.box9}></div>
+                        <div className={styles.box10}></div>
+                        <div className={styles.box11}></div>
                       </div>
                     </div>
                   </div>
@@ -130,47 +125,39 @@ export default function PopularCoursesSection({ initialData }: Props) {
   const hasData = categoriesColumns.some((col) => col.data.length > 0);
 
   return (
-    <section className="bg-[#f5f7fa] py-10">
-      <div className="mx-auto max-w-7xl px-6">
+    <section className={styles.section2}>
+      <div className={styles.container}>
         {/* TITLE */}
         <div>
-          <h2 className="text-xl font-bold text-[#1f1f1f] md:text-2xl">
-            Khoá học mới và phổ biến
-          </h2>
-          <p className="mt-1 text-sm text-gray-500">
+          <h2 className={styles.heading}>Khoá học mới và phổ biến</h2>
+          <p className={styles.text}>
             Khám phá các khóa học trực tuyến và bài học riêng lẻ mới nhất của chúng tôi.
           </p>
         </div>
 
         {!hasData ? (
-          <div className="mt-6 rounded-2xl border border-dashed bg-white py-16 text-center text-gray-500">
+          <div className={styles.card3}>
             Không có khóa học nào được Admin kích hoạt hiển thị lên trang chủ vào lúc này.
           </div>
         ) : (
           /* 3 COLUMNS GRID CONTAINER */
-          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className={styles.grid}>
             {categoriesColumns.map((column) => {
               if (column.data.length === 0) return null;
 
               return (
-                <div
-                  key={column.id}
-                  className="flex flex-col gap-4 rounded-2xl bg-[#ebf3ff] p-4"
-                >
+                <div key={column.id} className={styles.col3}>
                   {/* CATEGORY HEADER */}
                   <Link
                     href={`/collection?slug=${column.id}-courses`}
-                    className="group/title inline-flex w-fit cursor-pointer items-center gap-1 text-base font-bold text-[#1f1f1f] transition hover:text-blue-600"
+                    className={`group/title ${styles.box12}`}
                   >
                     {column.title}
-                    <ArrowRight
-                      size={16}
-                      className="mt-0.5 ml-1 text-blue-600 transition-transform group-hover/title:translate-x-1"
-                    />
+                    <ArrowRight size={16} className={styles.box13} />
                   </Link>
 
                   {/* COURSE LIST (VERTICAL) */}
-                  <div className="flex flex-col gap-3">
+                  <div className={styles.col}>
                     {column.data.map((course) => {
                       const rawProvider = course.provider;
                       let providerLogo: string | null = null;
@@ -185,71 +172,62 @@ export default function PopularCoursesSection({ initialData }: Props) {
                         <Link
                           href={`/course?slug=${course.slug}`}
                           key={course._id}
-                          className="group flex cursor-pointer gap-4 rounded-xl border border-transparent bg-white p-3 shadow-sm transition duration-200 hover:border-blue-100 hover:shadow-md"
+                          className={`group ${styles.card4}`}
                         >
                           {/* LEFT: THUMBNAIL */}
-                          <div className="relative flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
+                          <div className={styles.row3}>
                             {course.thumbnail ? (
                               <SafeImage
                                 src={course.thumbnail}
                                 alt={course.title}
                                 fill
                                 sizes="64px"
-                                className="object-cover transition duration-300 group-hover:scale-105"
+                                className={styles.box14}
                               />
                             ) : (
-                              <BookOpen size={24} className="text-slate-500" />
+                              <BookOpen size={24} className={styles.box15} />
                             )}
                           </div>
 
                           {/* RIGHT: INFO */}
-                          <div className="flex min-w-0 flex-1 flex-col justify-between">
+                          <div className={styles.col4}>
                             <div>
                               {/* PROVIDER ROW */}
-                              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                              <div className={styles.row4}>
                                 <div
-                                  className="flex min-w-0 items-center gap-1"
+                                  className={styles.row5}
                                   title={`Cấp bởi: ${providerName}`}
                                 >
                                   {providerLogo ? (
-                                    <div className="flex h-4 w-4 flex-shrink-0 items-center justify-center overflow-hidden rounded border bg-gray-50">
+                                    <div className={styles.card5}>
                                       <SafeImage
                                         src={providerLogo}
                                         alt={providerName}
                                         width={16}
                                         height={16}
-                                        className="h-full w-full object-contain"
+                                        className={styles.box16}
                                       />
                                     </div>
                                   ) : (
-                                    <Building2
-                                      size={12}
-                                      className="flex-shrink-0 text-violet-400"
-                                    />
+                                    <Building2 size={12} className={styles.box17} />
                                   )}
-                                  <p className="max-w-[90px] truncate text-[11px] font-medium text-violet-600">
-                                    {providerName}
-                                  </p>
+                                  <p className={styles.text2}>{providerName}</p>
                                 </div>
                               </div>
 
                               {/* COURSE TITLE */}
-                              <h4 className="mt-1 line-clamp-2 text-sm leading-snug font-bold text-gray-900 transition group-hover:text-blue-600">
-                                {course.title}
-                              </h4>
+                              <h4 className={styles.minorHeading}>{course.title}</h4>
                             </div>
 
                             {/* BADGE LEVEL & LESSONS COUNT */}
-                            <div className="mt-2 flex items-center gap-2 text-[11px] font-medium text-gray-500">
-                              <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-600 capitalize">
-                                {course.level}
-                              </span>
+                            <div className={styles.row6}>
+                              <span className={styles.label}>{course.level}</span>
                               <span>•</span>
-                              <span className="flex items-center gap-0.5 text-blue-600">
+                              <span className={styles.row7}>
                                 {course.lessons?.length || 0} bài học
                               </span>
                               <span>•</span>
-                              <span className="font-bold text-slate-800">
+                              <span className={styles.label2}>
                                 {course.price === 0
                                   ? "Miễn phí"
                                   : `${course.price.toLocaleString("vi-VN")}đ`}

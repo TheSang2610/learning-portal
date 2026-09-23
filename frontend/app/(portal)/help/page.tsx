@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { HelpCircle, Mail, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
 
+import styles from "./page.module.scss";
 export default function HelpPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -26,84 +27,66 @@ export default function HelpPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-4xl space-y-8">
+    <div className={styles.page}>
+      <div className={styles.container}>
         {/* Banner Tìm kiếm */}
-        <div className="space-y-4 rounded-3xl bg-blue-600 p-8 text-center text-white shadow-md md:p-12">
-          <div className="flex justify-center">
-            <HelpCircle size={48} className="text-blue-200" />
+        <div className={styles.card}>
+          <div className={styles.row}>
+            <HelpCircle size={48} className={styles.box} />
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight">
-            Trung tâm trợ giúp LearningPortal
-          </h1>
-          <p className="mx-auto max-w-xl text-sm text-blue-100 md:text-base">
+          <h1 className={styles.title}>Trung tâm trợ giúp LearningPortal</h1>
+          <p className={styles.text}>
             Tìm kiếm giải pháp nhanh cho các câu hỏi thường gặp hoặc kết nối trực tiếp với
             đội ngũ chăm sóc học viên.
           </p>
         </div>
 
         {/* Khối FAQs */}
-        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm md:p-8">
-          <h2 className="mb-6 text-xl font-bold text-slate-800">Câu hỏi thường gặp</h2>
-          <div className="space-y-4">
+        <div className={styles.card2}>
+          <h2 className={styles.heading}>Câu hỏi thường gặp</h2>
+          <div className={styles.stack}>
             {faqs.map((faq, index) => (
-              <div
-                key={index}
-                className="rounded-xl border border-slate-100 bg-slate-50/50 transition-all"
-              >
+              <div key={index} className={styles.card3}>
                 <button
                   onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                  className="flex w-full items-center justify-between p-4 text-left font-semibold text-slate-700 transition hover:text-blue-600"
+                  className={styles.button}
                 >
-                  <span className="text-sm md:text-base">{faq.q}</span>
+                  <span className={styles.label}>{faq.q}</span>
                   {openFaq === index ? (
                     <ChevronUp size={18} />
                   ) : (
                     <ChevronDown size={18} />
                   )}
                 </button>
-                {openFaq === index && (
-                  <div className="border-t border-slate-100/60 px-4 pt-3 pb-4 text-sm leading-relaxed text-slate-500">
-                    {faq.a}
-                  </div>
-                )}
+                {openFaq === index && <div className={styles.box2}>{faq.a}</div>}
               </div>
             ))}
           </div>
         </div>
 
         {/* Khối Liên hệ Hỗ trợ */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-            <div className="rounded-xl bg-blue-50 p-3 text-blue-600">
+        <div className={styles.grid}>
+          <div className={styles.card4}>
+            <div className={styles.box3}>
               <Mail size={24} />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-800">Gửi Email hỗ trợ</h3>
-              <p className="mt-1 text-xs text-slate-500">
-                Phản hồi trong vòng 24 giờ làm việc.
-              </p>
-              <a
-                href="mailto:support@learningportal.com"
-                className="mt-2 block text-sm font-semibold text-blue-600 hover:underline"
-              >
+              <h3 className={styles.subheading}>Gửi Email hỗ trợ</h3>
+              <p className={styles.text2}>Phản hồi trong vòng 24 giờ làm việc.</p>
+              <a href="mailto:support@learningportal.com" className={styles.link}>
                 support@learningportal.com
               </a>
             </div>
           </div>
 
-          <div className="flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-            <div className="rounded-xl bg-purple-50 p-3 text-blue-600">
+          <div className={styles.card4}>
+            <div className={styles.box4}>
               <MessageSquare size={24} />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-800">Hotline kỹ thuật</h3>
-              <p className="mt-1 text-xs text-slate-500">
-                Hỗ trợ khẩn cấp từ 8:00 đến 22:00 hằng ngày.
-              </p>
-              <span className="mt-2 block text-sm font-semibold text-blue-600">
-                1900 xxxx (Miễn phí)
-              </span>
+              <h3 className={styles.subheading}>Hotline kỹ thuật</h3>
+              <p className={styles.text2}>Hỗ trợ khẩn cấp từ 8:00 đến 22:00 hằng ngày.</p>
+              <span className={styles.label2}>1900 xxxx (Miễn phí)</span>
             </div>
           </div>
         </div>

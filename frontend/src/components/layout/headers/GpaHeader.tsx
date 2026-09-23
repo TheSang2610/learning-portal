@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import HeaderUserMenu from "./HeaderUserMenu";
 
+import styles from "./GpaHeader.module.scss";
 // Ba cong cu diem dung chung header nay, nen dieu huong giua chung ngay tren
 // thanh dau trang. Muc dang xem duoc to dam de biet minh dang o dau.
 const TOOLS = [
@@ -16,18 +17,15 @@ export default function GpaHeader() {
   const pathname = usePathname();
 
   return (
-    <div className="border-b bg-white">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:gap-6 sm:px-6">
-        <div className="flex items-center gap-10">
+    <div className={styles.box}>
+      <div className={styles.container}>
+        <div className={styles.row}>
           {/* Cung kieu chu voi logo o IndividualsHeader de dong bo toan trang */}
-          <Link
-            href="/"
-            className="shrink-0 text-[20px] font-bold tracking-tight whitespace-nowrap text-blue-600 sm:text-[26px]"
-          >
+          <Link href="/" className={styles.box2}>
             Learning Portal
           </Link>
 
-          <nav className="hidden items-center gap-8 text-[15px] lg:flex">
+          <nav className={styles.nav}>
             {TOOLS.map((t) => {
               const active = pathname === t.href;
               return (
@@ -35,11 +33,7 @@ export default function GpaHeader() {
                   key={t.href}
                   href={t.href}
                   aria-current={active ? "page" : undefined}
-                  className={
-                    active
-                      ? "font-bold text-blue-600"
-                      : "text-slate-700 transition hover:text-blue-600"
-                  }
+                  className={active ? styles.box3 : styles.box4}
                 >
                   {t.label}
                 </Link>

@@ -33,8 +33,9 @@ import {
   Bell,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useNguoiDungLuu, useDangTaiNguoiDung } from "@/src/hooks/nguoiDungLuu";
+import { useNguoiDungLuu, useDangTaiNguoiDung } from "@/src/hooks/userStore";
 
+import styles from "./layout.module.scss";
 interface SubMenuItem {
   label: string;
   href: string;
@@ -164,12 +165,12 @@ const menuItems: MenuItem[] = [
   // bang duong nao, va duoc giam bao nhieu.
   {
     label: "Mã giảm giá",
-    href: "/admin/ma-giam-gia",
+    href: "/admin/vouchers",
     icon: BadgePercent,
   },
   {
     label: "Thông báo hệ thống",
-    href: "/admin/thong-bao",
+    href: "/admin/notifications",
     icon: Bell,
   },
   {
@@ -220,7 +221,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
 
   // Doc localStorage bang useSyncExternalStore thay vi useEffect + setState,
-  // xem src/hooks/nguoiDungLuu.ts. Effect ben duoi chi con lo viec chuyen huong.
+  // xem src/hooks/userStore.ts. Effect ben duoi chi con lo viec chuyen huong.
   const nguoiDung = useNguoiDungLuu();
   const dangTaiNguoiDung = useDangTaiNguoiDung();
   const adminName = nguoiDung?.name ?? "";
@@ -314,15 +315,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       // key" va co the ve thieu hoac ve trung mot chang. rawHref thi moi chang
       // moi khac vi no dai dan theo tung doan duong dan.
       return (
-        <span key={rawHref} className="flex items-center">
-          <span className="mx-2 text-slate-400">/</span>
+        <span key={rawHref} className={styles.row}>
+          <span className={styles.label}>/</span>
           {isLast ? (
-            <span className="font-normal text-slate-500">{label}</span>
+            <span className={styles.label2}>{label}</span>
           ) : (
-            <Link
-              href={href}
-              className="capitalize transition-colors hover:text-indigo-600"
-            >
+            <Link href={href} className={styles.box}>
               {label}
             </Link>
           )}
@@ -332,31 +330,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-[#1e293b] text-sm font-medium text-slate-500">
-        Loading Admin Panel...
-      </div>
-    );
+    return <div className={styles.row2}>Loading Admin Panel...</div>;
   }
 
   return (
-    <div className="flex min-h-screen bg-[#f8fafc] text-slate-900 antialiased">
+    <div className={styles.page}>
       {/* 1. SIDEBAR NAVIGATION */}
-      <aside className="sticky top-0 z-20 flex h-screen w-64 flex-col bg-[#1e2530] text-[#b1b7c1] select-none">
+      <aside className={styles.aside}>
         {/* BRANDING LOGO ZONE */}
-        <div className="flex h-14 items-center border-b border-[#2a323d] bg-[#181d26] px-4">
-          <Link href="/admin/dashboard" className="flex items-center gap-2.5">
-            <h1 className="text-sm font-bold tracking-wide text-white uppercase">
-              ADMIN PAGE
-            </h1>
+        <div className={styles.row3}>
+          <Link href="/admin/dashboard" className={styles.row4}>
+            <h1 className={styles.title}>ADMIN PAGE</h1>
           </Link>
         </div>
 
         {/* RENDER LIST MENU ITEMS */}
-        <nav className="custom-scrollbar flex-1 space-y-0.5 overflow-y-auto py-3 text-[13.5px]">
-          <div className="px-4 py-2 text-[11px] font-bold tracking-wider text-[#6a7686] uppercase">
-            Theme Features
-          </div>
+        <nav className={`${styles.thanhCuonGon} ${styles.nav}`}>
+          <div className={styles.box2}>Theme Features</div>
 
           {menuItems.map((item, index) => {
             const Icon = item.icon;
@@ -364,11 +354,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             return (
               <div key={item.label}>
-                {renderGroupHeader && (
-                  <div className="px-4 pt-4 pb-2 text-[11px] font-bold tracking-wider text-[#6a7686] uppercase">
-                    Components List
-                  </div>
-                )}
+                {renderGroupHeader && <div className={styles.box3}>Components List</div>}
 
                 {item.submenu
                   ? (() => {
@@ -386,31 +372,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         : () => setMenuKhoaTuBam(!isCourseMenuOpen);
 
                       return (
-                        <div className="space-y-px">
+                        <div className={styles.stack}>
                           <button
                             onClick={toggleMenu}
-                            className={`group flex w-full items-center justify-between px-4 py-2.5 transition-colors duration-150 ${
-                              isGroupActive
-                                ? "bg-transparent text-white"
-                                : "hover:bg-[#252d3a] hover:text-white"
+                            className={`group ${styles.button5} ${
+                              isGroupActive ? styles.button : styles.button2
                             }`}
                           >
-                            <div className="flex items-center gap-3">
+                            <div className={styles.row5}>
                               <Icon
                                 size={16}
-                                className={`transition-colors ${isGroupActive ? "text-indigo-400" : "text-[#7c8796] group-hover:text-white"}`}
+                                className={`${styles.box13} ${isGroupActive ? styles.box4 : styles.box5}`}
                               />
                               <span>{item.label}</span>
                             </div>
                             <ChevronDown
                               size={14}
-                              className={`text-[#7c8796] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                              className={`${styles.box14} ${isOpen ? styles.box6 : ""}`}
                             />
                           </button>
 
                           {/* SUBMENU DROP-DOWN ACCORDION */}
                           {isOpen && (
-                            <div className="bg-[#181d26] py-1 transition-all">
+                            <div className={styles.box7}>
                               {item.submenu.map((subItem) => {
                                 const SubIcon = subItem.icon;
 
@@ -441,18 +425,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                   <Link
                                     key={subItem.href || "indicator"}
                                     href={subItem.href || "#"}
-                                    className={`flex items-center gap-3 py-2 pr-4 pl-8 transition-colors ${
-                                      isChildActive
-                                        ? "bg-[#2a323d] font-medium text-white"
-                                        : "text-[#b1b7c1] hover:bg-[#252d3a]/50 hover:text-white"
+                                    className={`${styles.row9} ${
+                                      isChildActive ? styles.box8 : styles.box9
                                     }`}
                                   >
                                     <SubIcon
                                       size={14}
                                       className={
-                                        isChildActive
-                                          ? "text-indigo-400"
-                                          : "text-[#7c8796]"
+                                        isChildActive ? styles.box4 : styles.box10
                                       }
                                     />
                                     <span>
@@ -477,15 +457,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       return (
                         <Link
                           href={item.href}
-                          className={`group flex items-center gap-3 px-4 py-2.5 transition-colors ${
-                            isFlatActive
-                              ? "bg-[#252d3a] font-medium text-white"
-                              : "hover:bg-[#252d3a] hover:text-white"
+                          className={`group ${styles.row10} ${
+                            isFlatActive ? styles.box11 : styles.button2
                           }`}
                         >
                           <Icon
                             size={16}
-                            className={`transition-colors ${isFlatActive ? "text-indigo-400" : "text-[#7c8796] group-hover:text-white"}`}
+                            className={`${styles.box13} ${isFlatActive ? styles.box4 : styles.box5}`}
                           />
                           <span>{item.label}</span>
                         </Link>
@@ -497,19 +475,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
 
         {/* SIDEBAR FOOTER & USER PROFILE */}
-        <div className="flex items-center justify-between border-t border-[#2a323d] bg-[#181d26] p-3">
-          <div className="flex min-w-0 flex-col">
-            <span className="truncate text-xs font-medium text-white">
-              {adminName || "Administrator"}
-            </span>
-            <span className="mt-0.5 text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
-              Super Admin
-            </span>
+        <div className={styles.row6}>
+          <div className={styles.col}>
+            <span className={styles.label3}>{adminName || "Administrator"}</span>
+            <span className={styles.label4}>Super Admin</span>
           </div>
           <button
             onClick={logoutHandler}
             title="Sign out of system"
-            className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-400"
+            className={styles.button3}
           >
             <LogOut size={16} />
           </button>
@@ -517,26 +491,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* 2. MAIN VIEWPORT SYSTEM PANEL */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-6 shadow-sm shadow-slate-100/50">
-          <div className="flex items-center gap-4 text-xs font-medium text-slate-600">
-            <button className="text-slate-500 transition-colors hover:text-slate-800">
+      <div className={styles.col2}>
+        <header className={styles.header}>
+          <div className={styles.row7}>
+            <button className={styles.button4}>
               <Menu size={18} />
             </button>
-            <div className="flex items-center">
-              <Link
-                href="/admin/dashboard"
-                className="transition-colors hover:text-indigo-600"
-              >
+            <div className={styles.row}>
+              <Link href="/admin/dashboard" className={styles.box12}>
                 Home
               </Link>
               {generateBreadcrumbs()}
             </div>
           </div>
-          <div className="flex items-center gap-4 text-slate-500"></div>
+          <div className={styles.row8}></div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        <main className={styles.main}>{children}</main>
       </div>
 
       {/* Styles Custom Scrollbar */}

@@ -1,0 +1,337 @@
+// File nay do script sinh ra tu class Tailwind cu.
+// Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
+
+.list {
+  margin-top: calc(var(--spacing) * 6);
+  display: flex;
+  list-style-type: none;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 3);
+  padding: calc(var(--spacing) * 0);
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--spacing) * 3);
+  font-size: 0.95rem;
+}
+
+.grid {
+  background-color: #00bfb3;
+  margin-top: calc(var(--spacing) * 0.5);
+  display: grid;
+  width: calc(var(--spacing) * 5.5);
+  height: calc(var(--spacing) * 5.5);
+  flex: none;
+  place-items: center;
+  border-radius: 3.40282e38px;
+  font-size: 0.72rem;
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+  color: #04231f;
+  font-style: normal;
+}
+
+.card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-3xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-200);
+  background-color: var(--color-slate-50);
+  padding: calc(var(--spacing) * 5);
+
+  @media (min-width: 48rem) {
+    padding: calc(var(--spacing) * 8);
+  }
+}
+
+.floating {
+  position: absolute;
+  inset: calc(var(--spacing) * 0);
+}
+
+.section {
+  padding-block: calc(var(--spacing) * 18);
+
+  @media (min-width: 48rem) {
+    padding-block: calc(var(--spacing) * 28);
+  }
+}
+
+.col {
+  margin-inline: auto;
+  display: flex;
+  width: min(76rem, 100% - 2.5rem);
+  flex-direction: column;
+  gap: calc(var(--spacing) * 18);
+
+  @media (min-width: 48rem) {
+    gap: calc(var(--spacing) * 28);
+  }
+}
+
+.grid2 {
+  display: grid;
+  align-items: center;
+  gap: calc(var(--spacing) * 10);
+
+  @media (min-width: 48rem) {
+    gap: calc(var(--spacing) * 16);
+  }
+
+  @media (min-width: 64rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.card2 {
+  position: relative;
+  border-radius: var(--radius-2xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-200);
+  background-color: var(--color-white);
+  padding: calc(var(--spacing) * 2);
+  --tw-shadow: 0 24px 40px -30px var(--tw-shadow-color, #0b0c1e8c);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+.box {
+  border-top-style: var(--tw-border-style);
+  border-top-width: 1px;
+  border-color: var(--color-slate-200);
+}
+
+.box2 {
+  background-color: #4f2bff12;
+  background-color: lab(36.9917% 60.7279 -99.5356/0.07);
+}
+
+.box3 {
+  color: var(--color-slate-500);
+}
+
+.label {
+  background-color: #00bfb3;
+  color: #04231f;
+}
+
+.label2 {
+  background-color: #4f2bff;
+  color: var(--color-white);
+}
+
+.label3 {
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-200);
+  background-color: var(--color-slate-50);
+  color: var(--color-slate-500);
+}
+
+.label4 {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-slate-500);
+}
+
+.box4 {
+  margin-top: calc(var(--spacing) * 3);
+  padding-inline: calc(var(--spacing) * 3);
+  padding-bottom: calc(var(--spacing) * 1);
+}
+
+.row {
+  margin-bottom: calc(var(--spacing) * 1.5);
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-slate-500);
+}
+
+.box5 {
+  height: calc(var(--spacing) * 1.5);
+  overflow: hidden;
+  border-radius: 3.40282e38px;
+  background-color: var(--color-slate-200);
+}
+
+.box6 {
+  --tw-gradient-from: #4f2bff;
+  --tw-gradient-stops: var(
+    --tw-gradient-via-stops,
+    var(--tw-gradient-position),
+    var(--tw-gradient-from) var(--tw-gradient-from-position),
+    var(--tw-gradient-to) var(--tw-gradient-to-position)
+  );
+  --tw-gradient-to: #00bfb3;
+  display: block;
+  height: 100%;
+  width: 50%;
+  border-radius: 3.40282e38px;
+  --tw-gradient-position: to right;
+  background-image: linear-gradient(var(--tw-gradient-stops));
+
+  @supports (background-image: linear-gradient(in lab, red, red)) {
+    --tw-gradient-position: to right in oklab;
+  }
+}
+
+.heading {
+  font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+  color: #0b0c1e;
+  font-size: clamp(1.8rem, 3.6vw, 2.6rem);
+  --tw-leading: 1.1;
+  line-height: 1.1;
+  --tw-font-weight: var(--font-weight-extrabold);
+  font-weight: var(--font-weight-extrabold);
+  --tw-tracking: -0.035em;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.text {
+  margin-top: calc(var(--spacing) * 4);
+  max-width: 56ch;
+  color: var(--color-slate-500);
+}
+
+.box7 {
+  @media (min-width: 64rem) {
+    order: 1;
+  }
+}
+
+.box8 {
+  @media (min-width: 64rem) {
+    order: 2;
+  }
+}
+
+.card3 {
+  position: relative;
+  border-radius: var(--radius-2xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-200);
+  background-color: var(--color-white);
+  padding-inline: calc(var(--spacing) * 6);
+  padding-block: calc(var(--spacing) * 7);
+  text-align: center;
+  --tw-shadow: 0 24px 40px -30px var(--tw-shadow-color, #0b0c1e8c);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+.card4 {
+  margin-inline: auto;
+  margin-bottom: calc(var(--spacing) * 4);
+  display: grid;
+  width: calc(var(--spacing) * 13);
+  height: calc(var(--spacing) * 13);
+  place-items: center;
+  border-radius: 3.40282e38px;
+  --tw-gradient-position: to bottom right;
+  background-image: linear-gradient(var(--tw-gradient-stops));
+  --tw-gradient-from: #ffc93c;
+  --tw-gradient-stops: var(
+    --tw-gradient-via-stops,
+    var(--tw-gradient-position),
+    var(--tw-gradient-from) var(--tw-gradient-from-position),
+    var(--tw-gradient-to) var(--tw-gradient-to-position)
+  );
+  --tw-gradient-to: #e89400;
+  font-size: var(--text-2xl);
+  line-height: var(--tw-leading, var(--text-2xl--line-height));
+  color: #2a1c00;
+  --tw-shadow: 0 10px 22px -10px var(--tw-shadow-color, #e89400cc);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+
+  @supports (background-image: linear-gradient(in lab, red, red)) {
+    --tw-gradient-position: to bottom right in oklab;
+  }
+}
+
+.subheading {
+  font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+  color: #0b0c1e;
+  font-size: var(--text-lg);
+  line-height: var(--tw-leading, var(--text-lg--line-height));
+  --tw-font-weight: var(--font-weight-extrabold);
+  font-weight: var(--font-weight-extrabold);
+  --tw-tracking: -0.02em;
+  letter-spacing: -0.02em;
+}
+
+.box9 {
+  font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+  color: #0b0c1e;
+  margin-top: calc(var(--spacing) * 3);
+  font-size: var(--text-2xl);
+  line-height: var(--tw-leading, var(--text-2xl--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+  --tw-tracking: -0.03em;
+  letter-spacing: -0.03em;
+}
+
+.box10 {
+  font-size: 0.92rem;
+  color: var(--color-slate-500);
+}
+
+.row2 {
+  margin-top: calc(var(--spacing) * 5);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: calc(var(--spacing) * 3);
+  border-top-style: var(--tw-border-style);
+  border-top-width: 1px;
+  --tw-border-style: dashed;
+  border-style: dashed;
+  border-color: var(--color-slate-200);
+  padding-top: calc(var(--spacing) * 4);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--color-slate-500);
+}
+
+.box11 {
+  color: #0b0c1e;
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Cac lop con ket trong template literal, va bo sung. */
+.row3 {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+  border-radius: var(--radius-xl);
+  padding-inline: calc(var(--spacing) * 3);
+  padding-block: calc(var(--spacing) * 3);
+  font-size: 0.92rem;
+}
+.grid3 {
+  display: grid;
+  width: calc(var(--spacing) * 6);
+  height: calc(var(--spacing) * 6);
+  flex: none;
+  place-items: center;
+  border-radius: 3.40282e38px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+}

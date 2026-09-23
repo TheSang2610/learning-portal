@@ -1,13 +1,13 @@
 import HeroSection from "@/src/components/home/HeroSection";
-import DaiDonVi from "@/src/components/home/DaiDonVi";
-import TrinhBay from "@/src/components/home/TrinhBay";
+import DaiDonVi from "@/src/components/home/PartnerMarquee";
+import TrinhBay from "@/src/components/home/FeatureShowcase";
 import CategoriesSection from "@/src/components/home/CategoriesSection";
 import PopularCoursesSection from "@/src/components/home/PopularCoursesSection";
 import FaqSection from "@/src/components/home/FaqSection";
 import TestimonialsSection from "@/src/components/home/TestimonialsSection";
 import CourseSection from "@/src/components/home/CourseSection";
-import GoiYKhoaHoc from "@/src/components/courses/GoiYKhoaHoc";
-import { locKhoaDaDang } from "@/src/components/home/locKhoaHoc";
+import GoiYKhoaHoc from "@/src/components/courses/CourseSuggestions";
+import { locKhoaDaDang } from "@/src/components/home/filterCourses";
 import { layIdChuDe } from "@/src/services/course";
 
 import type { Category } from "@/src/services/categoryService";
@@ -76,8 +76,9 @@ export default async function HomePage() {
           khu hoc vien deu can mo duoc hop dang nhap, khong rieng trang chu. */}
       <div>
         <HeroSection soKhoa={khoaDaDang.length} soMienPhi={soMienPhi} />
-        {/* Dai nay thay cho PartnersSection cu - cung mot noi dung (don vi
-            dao tao), nhung gon trong mot dai thay vi mot luoi the. */}
+        {/* Dai chay ngang nay thay cho luoi the doi tac hoi truoc - cung mot
+            noi dung (don vi dao tao), nhung gon trong mot dai. Ban luoi the cu
+            da duoc go han khoi ma nguon. */}
         <DaiDonVi donVi={donVi} />
         <TrinhBay />
         <CategoriesSection

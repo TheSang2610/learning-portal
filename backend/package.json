@@ -12,8 +12,8 @@
     "check:cloudinary": "node src/utils/checkCloudinary.js",
     "check:db": "node src/utils/checkDb.js",
     "check:mail": "node src/utils/checkMail.js",
-    "check:gioihan": "node src/utils/checkGioiHan.js",
-    "seed:truong": "node src/utils/donViTruong.js"
+    "check:ratelimit": "node src/utils/checkRateLimitDb.js",
+    "seed:schools": "node src/utils/seedSchools.js"
   },
   "keywords": [
     "lms",

@@ -13,8 +13,9 @@ import {
   type ThongTinVi,
 } from "@/src/services/coin.api";
 import { getErrorMessage } from "@/src/services/apiHelper";
-import DongGiaoDichCoin from "@/src/components/common/DongGiaoDichCoin";
+import DongGiaoDichCoin from "@/src/components/common/CoinTransactionRow";
 
+import styles from "./page.module.scss";
 const dinhDang = (n: number) => n.toLocaleString("vi-VN");
 
 export default function AdminCoinPage() {
@@ -120,59 +121,52 @@ export default function AdminCoinPage() {
   const soHopLe = Number.isInteger(Number(soCoin)) && Number(soCoin) !== 0;
 
   return (
-    <div className="space-y-6">
+    <div className={styles.stack}>
       <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
-          <Coins className="text-amber-500" size={26} />
+        <h1 className={styles.title}>
+          <Coins className={styles.box} size={26} />
           Coin &amp; Quà tặng
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className={styles.text}>
           Nạp coin hoặc tặng thẳng khoá học cho học viên. 1 coin = 1.000đ.
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+      <div className={styles.grid}>
         {/* ------------------------- Chọn học viên ------------------------- */}
-        <div className="rounded-2xl border border-slate-200 bg-white">
-          <div className="border-b border-slate-100 p-4">
-            <div className="relative">
-              <Search
-                size={16}
-                className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
-              />
+        <div className={styles.card}>
+          <div className={styles.box2}>
+            <div className={styles.box3}>
+              <Search size={16} className={styles.floating} />
               <input
                 value={tuKhoa}
                 onChange={(e) => setTuKhoa(e.target.value)}
                 placeholder="Tìm theo tên hoặc email"
-                className="w-full rounded-xl border border-slate-200 py-2.5 pr-3 pl-9 text-sm focus:border-blue-500 focus:outline-none"
+                className={styles.input}
               />
             </div>
           </div>
 
-          <div className="max-h-[28rem] overflow-y-auto">
+          <div className={styles.scroller}>
             {dangTimNguoi && dsNguoi.length === 0 ? (
-              <p className="p-4 text-sm text-slate-400">Đang tìm…</p>
+              <p className={styles.text2}>Đang tìm…</p>
             ) : dsNguoi.length === 0 ? (
-              <p className="p-4 text-sm text-slate-400">Không có ai khớp.</p>
+              <p className={styles.text2}>Không có ai khớp.</p>
             ) : (
               dsNguoi.map((u) => (
                 <button
                   key={u._id}
                   onClick={() => moVi(u)}
-                  className={`flex w-full items-center gap-3 border-b border-slate-50 px-4 py-3 text-left transition hover:bg-slate-50 ${
-                    chon?._id === u._id ? "bg-blue-50/70" : ""
+                  className={`${styles.button4} ${
+                    chon?._id === u._id ? styles.button : ""
                   }`}
                 >
-                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-slate-100 text-sm font-bold text-slate-500">
+                  <span className={styles.grid2}>
                     {u.name?.[0]?.toUpperCase() ?? "?"}
                   </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold text-slate-900">
-                      {u.name}
-                    </span>
-                    <span className="block truncate text-xs text-slate-500">
-                      {u.email}
-                    </span>
+                  <span className={styles.label}>
+                    <span className={styles.label2}>{u.name}</span>
+                    <span className={styles.label3}>{u.email}</span>
                   </span>
                 </button>
               ))
@@ -182,21 +176,21 @@ export default function AdminCoinPage() {
 
         {/* ---------------------------- Ví + thao tác ---------------------- */}
         {!chon ? (
-          <div className="grid place-items-center rounded-2xl border border-dashed border-slate-300 bg-white p-16 text-center text-sm text-slate-500">
+          <div className={styles.card2}>
             Chọn một học viên ở cột bên trái để xem ví và nạp coin.
           </div>
         ) : (
-          <div className="space-y-5">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <p className="text-sm font-semibold text-slate-900">{chon.name}</p>
-              <p className="text-xs text-slate-500">{chon.email}</p>
+          <div className={styles.stack2}>
+            <div className={styles.card3}>
+              <p className={styles.text3}>{chon.name}</p>
+              <p className={styles.text4}>{chon.email}</p>
 
               {dangTaiVi ? (
-                <p className="mt-4 flex items-center gap-2 text-sm text-slate-400">
-                  <Loader2 size={15} className="animate-spin" /> Đang đọc ví…
+                <p className={styles.text5}>
+                  <Loader2 size={15} className={styles.spinner} /> Đang đọc ví…
                 </p>
               ) : vi ? (
-                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div className={styles.grid3}>
                   <ODem
                     nhan="Số dư"
                     chinh={`${dinhDang(vi.soDuCoin)} coin`}
@@ -211,21 +205,19 @@ export default function AdminCoinPage() {
 
             {bao && (
               <p
-                className={`rounded-xl px-4 py-3 text-sm font-medium ${
-                  bao.loai === "ok"
-                    ? "bg-emerald-50 text-emerald-800"
-                    : "bg-rose-50 text-rose-800"
+                className={`${styles.text13} ${
+                  bao.loai === "ok" ? styles.text6 : styles.text7
                 }`}
               >
                 {bao.chu}
               </p>
             )}
 
-            <div className="grid gap-5 md:grid-cols-2">
+            <div className={styles.grid4}>
               {/* Nạp / thu hồi coin */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900">
-                  <Coins size={16} className="text-amber-500" />
+              <div className={styles.card3}>
+                <h2 className={styles.heading}>
+                  <Coins size={16} className={styles.box} />
                   Nạp / thu hồi coin
                 </h2>
 
@@ -235,9 +227,9 @@ export default function AdminCoinPage() {
                   value={soCoin}
                   onChange={(e) => setSoCoin(e.target.value)}
                   placeholder="Ví dụ 500"
-                  className="mt-3 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none"
+                  className={styles.input2}
                 />
-                <p className="mt-1.5 text-xs text-slate-500">
+                <p className={styles.text8}>
                   {soHopLe ? (
                     Number(soCoin) > 0 ? (
                       <>
@@ -259,29 +251,29 @@ export default function AdminCoinPage() {
                   onChange={(e) => setGhiChuCoin(e.target.value)}
                   placeholder="Ghi chú (không bắt buộc)"
                   maxLength={300}
-                  className="mt-3 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none"
+                  className={styles.input2}
                 />
 
                 <button
                   onClick={guiNapCoin}
                   disabled={!soHopLe || dangGui}
-                  className="mt-4 w-full rounded-xl bg-blue-600 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+                  className={styles.button2}
                 >
                   {dangGui ? "Đang xử lý…" : "Xác nhận"}
                 </button>
               </div>
 
               {/* Tặng khoá học */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900">
-                  <Gift size={16} className="text-violet-500" />
+              <div className={styles.card3}>
+                <h2 className={styles.heading}>
+                  <Gift size={16} className={styles.box4} />
                   Tặng khoá học
                 </h2>
 
                 <select
                   value={khoaTang}
                   onChange={(e) => setKhoaTang(e.target.value)}
-                  className="mt-3 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none"
+                  className={styles.input2}
                 >
                   <option value="">— Chọn khoá học —</option>
                   {dsKhoa.map((k) => (
@@ -292,14 +284,14 @@ export default function AdminCoinPage() {
                   ))}
                 </select>
 
-                <p className="mt-1.5 text-xs text-slate-500">
+                <p className={styles.text8}>
                   Mở khoá thẳng, <b>không trừ coin</b> của học viên.
                 </p>
 
                 <button
                   onClick={guiTangKhoa}
                   disabled={!khoaTang || dangGui}
-                  className="mt-4 w-full rounded-xl bg-violet-600 py-2.5 text-sm font-bold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+                  className={styles.button3}
                 >
                   {dangGui ? "Đang xử lý…" : "Tặng khoá này"}
                 </button>
@@ -307,17 +299,13 @@ export default function AdminCoinPage() {
             </div>
 
             {/* Sổ nhật ký */}
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-              <h2 className="border-b border-slate-100 px-5 py-4 text-sm font-bold text-slate-900">
-                Lịch sử giao dịch
-              </h2>
+            <div className={styles.card4}>
+              <h2 className={styles.heading2}>Lịch sử giao dịch</h2>
 
               {!vi || vi.nhatKy.length === 0 ? (
-                <p className="px-5 py-10 text-center text-sm text-slate-400">
-                  Chưa có giao dịch nào.
-                </p>
+                <p className={styles.text9}>Chưa có giao dịch nào.</p>
               ) : (
-                <div className="divide-y divide-slate-50">
+                <div className={styles.box5}>
                   {vi.nhatKy.map((g) => (
                     // hienNguoiTao bat: quan tri can biet dong nghiep nao vua
                     // nap coin cho nguoi nay.
@@ -345,16 +333,10 @@ function ODem({
   noiBat?: boolean;
 }) {
   return (
-    <div
-      className={`rounded-xl border p-3 ${
-        noiBat ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-slate-50"
-      }`}
-    >
-      <p className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
-        {nhan}
-      </p>
-      <p className="mt-1 text-lg font-bold text-slate-900 tabular-nums">{chinh}</p>
-      {phu && <p className="text-xs text-slate-500 tabular-nums">{phu}</p>}
+    <div className={`${styles.box8} ${noiBat ? styles.box6 : styles.box7}`}>
+      <p className={styles.text10}>{nhan}</p>
+      <p className={styles.text11}>{chinh}</p>
+      {phu && <p className={styles.text12}>{phu}</p>}
     </div>
   );
 }

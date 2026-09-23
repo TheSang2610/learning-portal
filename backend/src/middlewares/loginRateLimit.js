@@ -26,7 +26,7 @@
 // Bo dem KHONG con nam trong bo nho tien trinh nua - xem models/RateLimitCounter.js
 // de biet vi sao Map trong RAM gan nhu vo tac dung tren Vercel.
 
-const { conBiKhoa, ghiNhanSai, xoaKhoa } = require('../utils/khoGioiHan');
+const { conBiKhoa, ghiNhanSai, xoaKhoa } = require('../utils/rateLimitStore');
 
 const WINDOW_MS = 15 * 60 * 1000; // 15 phut
 const MAX_FAILS_EMAIL = 5;        // sai qua 5 lan tren CUNG mot email, tu CUNG mot IP
@@ -41,7 +41,7 @@ const ipOf = (req) => req.ip || req.socket?.remoteAddress || 'unknown';
  * Khoa dem theo RIENG mot tai khoan.
  *
  * Tach ra thanh ham xuat khau vi tu khi dang nhap nhan CA ten tai khoan ngan
- * (xem utils/dinhDanhDangNhap.js), middleware nay khong con biet chac nguoi
+ * (xem utils/loginIdentifier.js), middleware nay khong con biet chac nguoi
  * dung dang noi den tai khoan nao: no chi thay chuoi ho go.
  *
  * LO HONG NEU KHONG CO HAM NAY: "thesang" va "thesang@gmail.com" la hai chuoi

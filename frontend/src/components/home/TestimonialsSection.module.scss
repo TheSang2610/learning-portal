@@ -1,0 +1,112 @@
+// File nay do script sinh ra tu class Tailwind cu.
+// Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
+
+.section {
+  background-color: #f5f7fa;
+}
+
+.container {
+  margin-inline: auto;
+  max-width: var(--container-7xl);
+  padding-inline: calc(var(--spacing) * 6);
+  padding-block: calc(var(--spacing) * 14);
+
+  @media (min-width: 48rem) {
+    padding-block: calc(var(--spacing) * 16);
+  }
+}
+
+.grid {
+  margin-top: calc(var(--spacing) * 8);
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: calc(var(--spacing) * 5);
+
+  @media (min-width: 64rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-2xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: #e2e8f0b3;
+  background-color: var(--color-white);
+  padding: calc(var(--spacing) * 6);
+
+  @supports (color: color-mix(in lab, red, red)) {
+    border-color: color-mix(in oklab, var(--color-slate-200) 70%, transparent);
+  }
+
+  @media (min-width: 48rem) {
+    padding: calc(var(--spacing) * 7);
+  }
+}
+
+.floating {
+  pointer-events: none;
+  position: absolute;
+  top: calc(var(--spacing) * -2);
+  right: calc(var(--spacing) * 2);
+  color: var(--color-blue-50);
+}
+
+.box {
+  position: relative;
+  font-size: 16px;
+  --tw-leading: 1.7;
+  line-height: 1.7;
+  color: var(--color-slate-700);
+}
+
+.row {
+  margin-top: calc(var(--spacing) * 5);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+  border-top-style: var(--tw-border-style);
+  border-top-width: 1px;
+  border-color: var(--color-slate-100);
+  padding-top: calc(var(--spacing) * 5);
+}
+
+.label {
+  position: relative;
+  height: calc(var(--spacing) * 11);
+  width: calc(var(--spacing) * 11);
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 3.40282e38px;
+  background-color: var(--color-slate-100);
+}
+
+.box2 {
+  object-fit: cover;
+}
+
+.label2 {
+  min-width: calc(var(--spacing) * 0);
+}
+
+.label3 {
+  display: block;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: 15px;
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-900);
+}
+
+.label4 {
+  display: block;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: 13px;
+  color: var(--color-slate-500);
+}

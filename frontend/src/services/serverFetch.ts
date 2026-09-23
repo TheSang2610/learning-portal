@@ -8,9 +8,9 @@
 // Doi dia chi backend ma quen mot cho la trang do im lang tra ve rong.
 
 // Xuat lai de ba trang dang dung `import { GOC_API } from ".../serverFetch"`
-// khong phai sua. Dinh nghia that nam trong diaChiApi.ts.
-export { GOC_API } from "./diaChiApi";
-import { GOC_API } from "./diaChiApi";
+// khong phai sua. Dinh nghia that nam trong apiBase.ts.
+export { GOC_API } from "./apiBase";
+import { GOC_API } from "./apiBase";
 
 /**
  * Goi mot duong API cong khai tu may chu.

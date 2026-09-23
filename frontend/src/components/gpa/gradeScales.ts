@@ -197,12 +197,22 @@ export function suggestImprovements(
   return { bySubject, enough: deficit <= 1e-9 };
 }
 
-/** Xep loai hoc luc theo diem he 4 */
-export function classify(gpa4: number): { label: string; cls: string } {
-  if (gpa4 >= 3.6) return { label: "Xuất sắc", cls: "bg-emerald-50 text-emerald-800" };
-  if (gpa4 >= 3.2) return { label: "Giỏi", cls: "bg-red-50 text-red-800" };
-  if (gpa4 >= 2.5) return { label: "Khá", cls: "bg-amber-50 text-amber-900" };
-  if (gpa4 >= 2.0) return { label: "Trung bình", cls: "bg-orange-50 text-orange-900" };
-  if (gpa4 >= 1.0) return { label: "Yếu", cls: "bg-rose-50 text-rose-900" };
-  return { label: "Kém", cls: "bg-red-100 text-red-900" };
+/** Cac muc xep loai hoc luc. Ben hien thi tu chon mau cho tung muc. */
+export type RankKey = "xuatSac" | "gioi" | "kha" | "trungBinh" | "yeu" | "kem";
+
+/**
+ * Xep loai hoc luc theo diem he 4.
+ *
+ * Tra ve MA MUC chu khong phai ten lop CSS: day la file tinh toan thuan, khong
+ * biet gi ve giao dien. Ban cu tra thang chuoi lop Tailwind ("bg-emerald-50
+ * text-emerald-800") - go Tailwind xong thi cai nhan xep loai mat mau, va cho
+ * hong lai nam trong mot file khong lien quan gi den hien thi nen rat kho lan ra.
+ */
+export function classify(gpa4: number): { label: string; muc: RankKey } {
+  if (gpa4 >= 3.6) return { label: "Xuất sắc", muc: "xuatSac" };
+  if (gpa4 >= 3.2) return { label: "Giỏi", muc: "gioi" };
+  if (gpa4 >= 2.5) return { label: "Khá", muc: "kha" };
+  if (gpa4 >= 2.0) return { label: "Trung bình", muc: "trungBinh" };
+  if (gpa4 >= 1.0) return { label: "Yếu", muc: "yeu" };
+  return { label: "Kém", muc: "kem" };
 }

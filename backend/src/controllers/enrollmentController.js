@@ -1,6 +1,6 @@
 const Enrollment = require('../models/Enrollment');
 const Course = require('../models/Course');
-const { taoGhiDanh } = require('../utils/ghiDanh');
+const { taoGhiDanh } = require('../utils/enrollment');
 const Lesson = require('../models/Lesson');
 const User = require('../models/User');
 const Quiz = require('../models/Quiz');

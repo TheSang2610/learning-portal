@@ -8,6 +8,7 @@ import { getCourses, Course } from "@/src/services/course";
 import { getCategories, Category } from "@/src/services/categoryService";
 import HeaderUserMenu from "./HeaderUserMenu";
 
+import styles from "./IndividualsHeader.module.scss";
 export default function IndividualsHeader() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -86,46 +87,39 @@ export default function IndividualsHeader() {
   });
 
   return (
-    <div className="sticky top-0 z-50 border-b bg-white">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:gap-6 sm:px-6">
+    <div className={styles.sticky}>
+      <div className={styles.container}>
         {/* LEFT */}
-        <div className="flex min-w-0 items-center gap-3 sm:gap-6">
+        <div className={styles.row}>
           {/* Co chu nho lai tren dien thoai. O 26px logo chiem 190px trong
               tong 390px cua iPhone 12 Pro, khong con cho cho hai nut dang
               nhap - do chinh la canh logo de len chu "Dang nhap". */}
-          <Link
-            href="/"
-            className="text-[20px] font-bold tracking-tight whitespace-nowrap text-blue-600 sm:text-[26px]"
-          >
+          <Link href="/" className={styles.box}>
             Learning Portal
           </Link>
 
           {/* 🌟 EXPLORE DROPDOWN MENU */}
-          <div className="relative" ref={exploreRef}>
+          <div className={styles.box2} ref={exploreRef}>
             <button
               onClick={() => setOpenExplore(!openExplore)}
-              className={`hidden items-center gap-1 rounded-full px-4 py-2.5 text-sm font-medium transition md:flex ${
-                openExplore
-                  ? "bg-blue-600 text-white"
-                  : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+              className={`${styles.button7} ${
+                openExplore ? styles.button : styles.button2
               }`}
             >
               Khám phá{" "}
               <ChevronDown
                 size={16}
-                className={`transition-transform duration-200 ${openExplore ? "rotate-180" : ""}`}
+                className={`${styles.box13} ${openExplore ? styles.box3 : ""}`}
               />
             </button>
 
             {/* MEGA MENU CONTAINER */}
             {openExplore && categories.length > 0 && (
-              <div className="animate-in fade-in slide-in-from-top-2 absolute top-12 left-0 z-50 flex w-[680px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl duration-200">
+              <div className={`${styles.hienTruotXuong} ${styles.floating}`}>
                 {/* CỘT TRÁI: DANH MỤC (CATEGORIES) */}
-                <div className="w-2/5 border-r border-gray-100 bg-gray-50 py-3">
-                  <div className="px-4 py-2 text-xs font-bold tracking-wider text-gray-500 uppercase">
-                    Danh mục ngành học
-                  </div>
-                  <div className="max-h-[380px] overflow-y-auto">
+                <div className={styles.box4}>
+                  <div className={styles.box5}>Danh mục ngành học</div>
+                  <div className={styles.scroller}>
                     {categories.map((cat) => (
                       <button
                         key={cat._id}
@@ -134,50 +128,41 @@ export default function IndividualsHeader() {
                           router.push(`/courses?category=${cat.slug}`);
                           setOpenExplore(false);
                         }}
-                        className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold transition-colors ${
-                          activeCategory === cat._id
-                            ? "border-l-4 border-blue-600 bg-white text-blue-600"
-                            : "text-gray-700 hover:bg-gray-100"
+                        className={`${styles.button8} ${
+                          activeCategory === cat._id ? styles.button3 : styles.button4
                         }`}
                       >
-                        <span className="truncate">{cat.name}</span>
-                        <span className="text-xs text-gray-500">→</span>
+                        <span className={styles.label}>{cat.name}</span>
+                        <span className={styles.label2}>→</span>
                       </button>
                     ))}
                   </div>
                 </div>
 
                 {/* CỘT PHẢI: KHÓA HỌC TƯƠNG ỨNG (COURSES) */}
-                <div className="flex w-3/5 flex-col justify-between p-4">
+                <div className={styles.col}>
                   <div>
-                    <div className="mb-3 text-xs font-bold tracking-wider text-gray-500 uppercase">
-                      Khóa học phổ biến
-                    </div>
-                    <div className="max-h-[300px] space-y-1 overflow-y-auto pr-1">
+                    <div className={styles.box6}>Khóa học phổ biến</div>
+                    <div className={styles.scroller2}>
                       {filteredCourses.length > 0 ? (
                         filteredCourses.map((course) => (
                           <Link
                             key={course._id}
                             href={`/course?slug=${course.slug}`}
                             onClick={() => setOpenExplore(false)}
-                            className="group flex items-start gap-2.5 rounded-xl p-2 text-left transition hover:bg-blue-50/70"
+                            className={`group ${styles.row2}`}
                           >
-                            <BookOpen
-                              size={16}
-                              className="mt-0.5 flex-shrink-0 text-gray-500 group-hover:text-blue-500"
-                            />
-                            <div className="min-w-0">
-                              <p className="line-clamp-1 text-sm font-medium text-gray-800 group-hover:text-blue-600">
-                                {course.title}
-                              </p>
-                              <p className="text-xs text-gray-500 capitalize">
+                            <BookOpen size={16} className={styles.box7} />
+                            <div className={styles.box8}>
+                              <p className={styles.text}>{course.title}</p>
+                              <p className={styles.text2}>
                                 Trình độ: {course.level || "Tất cả"}
                               </p>
                             </div>
                           </Link>
                         ))
                       ) : (
-                        <div className="py-4 text-center text-sm text-gray-500 italic">
+                        <div className={styles.box9}>
                           Chưa có khóa học nào thuộc nhóm này.
                         </div>
                       )}
@@ -186,7 +171,7 @@ export default function IndividualsHeader() {
 
                   {/* NÚT XEM TẤT CẢ PHÍA DƯỚI */}
                   {activeCategory && (
-                    <div className="mt-2 border-t border-gray-100 pt-3">
+                    <div className={styles.box10}>
                       <button
                         onClick={() => {
                           const activeCatSlug = categories.find(
@@ -195,7 +180,7 @@ export default function IndividualsHeader() {
                           router.push(`/courses?category=${activeCatSlug}`);
                           setOpenExplore(false);
                         }}
-                        className="w-full rounded-xl bg-blue-50/50 py-2.5 text-center text-xs font-bold text-blue-600 transition hover:bg-blue-600 hover:text-white"
+                        className={styles.button5}
                       >
                         Xem tất cả khóa học của nhóm này
                       </button>
@@ -206,32 +191,29 @@ export default function IndividualsHeader() {
             )}
           </div>
 
-          {/* <Link href="/degrees" className="hidden md:block text-sm hover:text-blue-600 transition">
+          {/* <Link href="/degrees" className={styles.box11}>
             Degrees
           </Link> */}
         </div>
 
         {/* SEARCH BAR */}
-        <div className="hidden flex-1 lg:flex">
-          <form onSubmit={handleSearchSubmit} className="relative w-full max-w-2xl">
+        <div className={styles.box12}>
+          <form onSubmit={handleSearchSubmit} className={styles.form}>
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Bạn muốn học gì?"
-              className="w-full rounded-full border border-gray-300 py-3 pr-14 pl-5 text-sm outline-none focus:border-blue-600"
+              className={styles.input}
             />
-            <button
-              type="submit"
-              className="absolute top-1 right-1 flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white transition hover:bg-blue-700"
-            >
+            <button type="submit" className={styles.button6}>
               <Search size={20} />
             </button>
           </form>
         </div>
 
         {/* RIGHT */}
-        <div className="flex items-center gap-5">
+        <div className={styles.row3}>
           <HeaderUserMenu />
         </div>
       </div>

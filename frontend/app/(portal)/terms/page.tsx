@@ -2,25 +2,22 @@
 
 import { AlertTriangle } from "lucide-react";
 
+import styles from "./page.module.scss";
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-3xl rounded-2xl border border-slate-100 bg-white p-8 shadow-sm md:p-12">
+    <div className={styles.page}>
+      <div className={styles.container}>
         {/* Header */}
-        <div className="mb-8 border-b border-slate-100 pb-6 text-center md:text-left">
-          <div className="mb-2 flex items-center justify-center gap-3 text-blue-600 md:justify-start">
-            <span className="text-xs font-bold tracking-wider uppercase">
-              Pháp lý & Quy định
-            </span>
+        <div className={styles.box}>
+          <div className={styles.row}>
+            <span className={styles.label}>Pháp lý & Quy định</span>
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900">Điều khoản dịch vụ</h1>
-          <p className="mt-2 text-sm text-slate-500">
-            Cập nhật lần cuối: Ngày 01 tháng 01 năm 2026
-          </p>
+          <h1 className={styles.title}>Điều khoản dịch vụ</h1>
+          <p className={styles.text}>Cập nhật lần cuối: Ngày 01 tháng 01 năm 2026</p>
         </div>
 
         {/* Content */}
-        <div className="space-y-8 text-sm leading-relaxed text-slate-600 md:text-base">
+        <div className={styles.stack}>
           <p>
             Chào mừng bạn đến với <strong>LearningPortal</strong>. Bằng cách đăng ký tài
             khoản và sử dụng dịch vụ của chúng tôi, bạn đã đồng ý tuân thủ và chịu sự ràng
@@ -28,11 +25,9 @@ export default function TermsPage() {
             đầu.
           </p>
 
-          <section className="space-y-3">
-            <h2 className="flex items-center gap-2 text-xl font-bold text-slate-800">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-50 text-xs font-bold text-blue-600">
-                1
-              </span>
+          <section className={styles.section}>
+            <h2 className={styles.heading}>
+              <span className={styles.row2}>1</span>
               Tài khoản người dùng
             </h2>
             <p>
@@ -43,11 +38,9 @@ export default function TermsPage() {
             </p>
           </section>
 
-          <section className="space-y-3">
-            <h2 className="flex items-center gap-2 text-xl font-bold text-slate-800">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-50 text-xs font-bold text-blue-600">
-                2
-              </span>
+          <section className={styles.section}>
+            <h2 className={styles.heading}>
+              <span className={styles.row2}>2</span>
               Quyền sở hữu trí tuệ
             </h2>
             <p>
@@ -59,11 +52,9 @@ export default function TermsPage() {
             </p>
           </section>
 
-          <section className="space-y-3">
-            <h2 className="flex items-center gap-2 text-xl font-bold text-slate-800">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-50 text-xs font-bold text-blue-600">
-                3
-              </span>
+          <section className={styles.section}>
+            <h2 className={styles.heading}>
+              <span className={styles.row2}>3</span>
               Chính sách hoàn tiền
             </h2>
             <p>
@@ -74,12 +65,12 @@ export default function TermsPage() {
             </p>
           </section>
 
-          <section className="space-y-3 rounded-xl border border-amber-100 bg-amber-50/50 p-4">
-            <h2 className="flex items-center gap-2 text-base font-bold text-amber-800">
+          <section className={styles.section2}>
+            <h2 className={styles.heading2}>
               <AlertTriangle size={18} />
               Trách nhiệm và Giới hạn
             </h2>
-            <p className="mt-1 text-xs text-amber-900/80 md:text-sm">
+            <p className={styles.text2}>
               LearningPortal liên tục nỗ lực cung cấp dịch vụ tốt nhất nhưng không đảm bảo
               rằng hệ thống sẽ hoàn toàn không có lỗi kỹ thuật gián đoạn. Chúng tôi có
               quyền tạm ngừng dịch vụ để bảo trì hoặc cập nhật hệ thống định kỳ.

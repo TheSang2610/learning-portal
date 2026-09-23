@@ -1,14 +1,14 @@
-import { datNguoiDung, yeuCauNapLai } from "@/src/hooks/nguoiDungLuu";
-import { GOC_API_TRINH_DUYET as GOC_API } from "./diaChiApi";
+import { datNguoiDung, yeuCauNapLai } from "@/src/hooks/userStore";
+import { GOC_API_TRINH_DUYET as GOC_API } from "./apiBase";
 import { clearApiCache, xoaPhien } from "./apiHelper";
 
 // Dung chung GOC_API voi apiHelper va serverFetch. Truoc day file nay tu doc
-// bien moi truong theo thu tu NGUOC lai - xem ghi chu trong diaChiApi.ts.
+// bien moi truong theo thu tu NGUOC lai - xem ghi chu trong apiBase.ts.
 const API_URL = `${GOC_API}/api/users`;
 
 interface RegisterUserData {
   name: string;
-  /** Dang chuan 0XXXXXXXXX - xem chuanHoaSoDienThoai trong quyDinh.ts. */
+  /** Dang chuan 0XXXXXXXXX - xem chuanHoaSoDienThoai trong rules.ts. */
   phone: string;
   /** Tuy chon. Chuoi rong = khong nhap; may chu se bo han truong nay. */
   email?: string;
@@ -96,7 +96,7 @@ export const registerUser = async (
   // may chu dat. O day chi luu phan thong tin hien thi.
   if (data && data._id) {
     // Danh tinh giu trong RAM, khong ghi xuong localStorage nua (xem
-    // src/hooks/nguoiDungLuu.ts). Dat tam bon truong tu than phan hoi cho
+    // src/hooks/userStore.ts). Dat tam bon truong tu than phan hoi cho
     // giao dien hien ngay, roi nho nap lai ho so day du.
     datNguoiDung(data);
     yeuCauNapLai();
@@ -128,7 +128,7 @@ export const loginUser = async (userData: LoginUserData): Promise<LoginResponse>
   // may chu dat. O day chi luu phan thong tin hien thi.
   if (data && data._id) {
     // Danh tinh giu trong RAM, khong ghi xuong localStorage nua (xem
-    // src/hooks/nguoiDungLuu.ts). Dat tam bon truong tu than phan hoi cho
+    // src/hooks/userStore.ts). Dat tam bon truong tu than phan hoi cho
     // giao dien hien ngay, roi nho nap lai ho so day du.
     datNguoiDung(data);
     yeuCauNapLai();
@@ -160,7 +160,7 @@ export const googleLogin = async (credential: string): Promise<GoogleLoginRespon
   // may chu dat. O day chi luu phan thong tin hien thi.
   if (data && data._id) {
     // Danh tinh giu trong RAM, khong ghi xuong localStorage nua (xem
-    // src/hooks/nguoiDungLuu.ts). Dat tam bon truong tu than phan hoi cho
+    // src/hooks/userStore.ts). Dat tam bon truong tu than phan hoi cho
     // giao dien hien ngay, roi nho nap lai ho so day du.
     datNguoiDung(data);
     yeuCauNapLai();
@@ -178,7 +178,7 @@ export const googleLogin = async (credential: string): Promise<GoogleLoginRespon
 //
 // Ba buoc: xin ma -> nhap ma lay "phieu" -> dung phieu dat mat khau moi.
 // Toan bo chinh sach (ma song bao lau, sai may lan thi khoa) nam o may chu -
-// xem backend/src/controllers/quenMatKhauController.js.
+// xem backend/src/controllers/passwordResetController.js.
 //
 // HAI DIEU GIAO DIEN PHAI TON TRONG, dung "sua lai cho than thien":
 //

@@ -5,9 +5,10 @@ import { Suspense, useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getHomeSections, Course } from "@/src/services/course";
-import TieuDeMuc from "@/src/components/home/TieuDeMuc";
-import TheKhoaHoc from "@/src/components/home/TheKhoaHoc";
+import TieuDeMuc from "@/src/components/home/SectionHeading";
+import TheKhoaHoc from "@/src/components/home/CourseCard";
 
+import styles from "./page.module.scss";
 // Ba muc nay chinh la ba cot o trang chu (PopularCoursesSection).
 //
 // Ten phai TRUNG voi ten cot ben do. Truoc day nguoi dung bam "Phổ biến nhất"
@@ -71,33 +72,30 @@ function CourseCollectionPageContent() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f5f7fa]">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
+      <div className={styles.page}>
+        <div className={styles.spinner}></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f7fa] pb-16">
-      <div className="mx-auto max-w-7xl px-6 py-10">
+    <div className={styles.page2}>
+      <div className={styles.container}>
         {/* NÚT QUAY LẠI & BREADCRUMB */}
-        <button
-          onClick={() => router.back()}
-          className="mb-6 inline-flex items-center gap-2 text-xs font-semibold text-gray-500 transition hover:text-blue-600"
-        >
+        <button onClick={() => router.back()} className={styles.button}>
           <ArrowLeft size={14} /> QUAY LẠI
         </button>
 
         <TieuDeMuc nhu="h1" tieuDe={muc?.ten ?? "Danh sách khoá học"} moTa={muc?.moTa} />
 
         {courses.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center text-sm text-slate-500">
+          <div className={styles.card}>
             {muc
               ? "Mục này chưa có khoá học nào được hiển thị."
               : "Không có mục nào ứng với đường dẫn này."}
           </div>
         ) : (
-          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <div className={styles.grid}>
             {courses.map((course, thuTu) => (
               // Co thuHang vi day DUNG la mot bang xep hang - trang chu cung
               // danh so cho ba cot nay. Con /courses thi khong, vi do la ket
@@ -122,8 +120,8 @@ export default function CourseCollectionPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-[#f5f7fa]">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
+        <div className={styles.page}>
+          <div className={styles.spinner} />
         </div>
       }
     >

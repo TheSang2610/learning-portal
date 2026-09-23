@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { getErrorMessage } from "@/src/services/apiHelper";
-import AnhDaiDien from "@/src/components/ui/AnhDaiDien";
+import AnhDaiDien from "@/src/components/ui/Avatar";
 import { Users, Flame, Clock, Loader2 } from "lucide-react";
 import ActivityHeatmap from "@/src/components/profile/ActivityHeatmap";
-import ViCoinCuaToi from "@/src/components/common/ViCoinCuaToi";
+import ViCoinCuaToi from "@/src/components/common/MyCoinWallet";
+
+import styles from "./page.module.scss";
 import {
   getMyProfile,
   getMyActivity,
@@ -43,16 +45,16 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 size={24} className="animate-spin text-slate-500" />
+      <div className={styles.row}>
+        <Loader2 size={24} className={styles.spinner} />
       </div>
     );
   }
 
   if (error || !user) {
     return (
-      <div className="mx-auto max-w-md px-4 py-20 text-center">
-        <p className="text-sm font-medium text-red-700">
+      <div className={styles.container}>
+        <p className={styles.text}>
           {error || "Vui lòng đăng nhập để xem trang cá nhân."}
         </p>
       </div>
@@ -67,47 +69,39 @@ export default function ProfilePage() {
     typeof user.provider === "object" && user.provider ? user.provider.name : null;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] py-8">
-      <div className="mx-auto max-w-6xl px-4">
-        <div className="grid gap-6 lg:grid-cols-12">
+    <div className={styles.page}>
+      <div className={styles.container2}>
+        <div className={styles.grid}>
           {/* ============ COT TRAI: danh tinh + thong ke ============ */}
-          <aside className="lg:col-span-4 xl:col-span-3">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex flex-col items-center text-center">
+          <aside className={styles.aside}>
+            <div className={styles.card}>
+              <div className={styles.col}>
                 <AnhDaiDien
                   src={avatarSrc}
                   ten={user.name}
                   size={96}
-                  nenChuCai="bg-blue-600 text-white"
+                  nenChuCai={styles.box4}
                 />
 
-                <h1 className="mt-4 text-xl font-extrabold text-slate-900">
-                  {user.fullname || user.name}
-                </h1>
-                <p className="mt-0.5 text-sm text-blue-600">@{user.name}</p>
+                <h1 className={styles.title}>{user.fullname || user.name}</h1>
+                <p className={styles.text2}>@{user.name}</p>
 
-                <div className="mt-3 flex flex-wrap justify-center gap-2">
-                  <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 capitalize">
-                    {user.role}
-                  </span>
-                  {providerName && (
-                    <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
-                      {providerName}
-                    </span>
-                  )}
+                <div className={styles.row2}>
+                  <span className={styles.label}>{user.role}</span>
+                  {providerName && <span className={styles.label2}>{providerName}</span>}
                 </div>
               </div>
 
-              <div className="mt-6 space-y-3 border-t border-slate-100 pt-5 text-sm">
+              <div className={styles.stack}>
                 {activity && (
-                  <div className="flex items-start gap-2.5">
-                    <Flame size={16} className="mt-0.5 shrink-0 text-orange-500" />
-                    <span className="text-slate-700">
-                      <strong className="text-slate-900">{activity.currentStreak}</strong>{" "}
+                  <div className={styles.row3}>
+                    <Flame size={16} className={styles.box} />
+                    <span className={styles.label3}>
+                      <strong className={styles.strong}>{activity.currentStreak}</strong>{" "}
                       ngày học liên tiếp
-                      <span className="mx-1.5 text-slate-400">·</span>
+                      <span className={styles.label4}>·</span>
                       Dài nhất:{" "}
-                      <strong className="text-slate-900">
+                      <strong className={styles.strong}>
                         {activity.longestStreak}
                       </strong>{" "}
                       ngày
@@ -116,44 +110,40 @@ export default function ProfilePage() {
                 )}
 
                 {activity && (
-                  <div className="flex items-start gap-2.5">
-                    <Users size={16} className="mt-0.5 shrink-0 text-slate-500" />
-                    <span className="text-slate-700">
-                      <strong className="text-slate-900">{activity.activeDays}</strong>{" "}
+                  <div className={styles.row3}>
+                    <Users size={16} className={styles.box2} />
+                    <span className={styles.label3}>
+                      <strong className={styles.strong}>{activity.activeDays}</strong>{" "}
                       ngày có hoạt động
-                      <span className="mx-1.5 text-slate-400">·</span>
-                      <strong className="text-slate-900">{activity.total}</strong> hoạt
+                      <span className={styles.label4}>·</span>
+                      <strong className={styles.strong}>{activity.total}</strong> hoạt
                       động
                     </span>
                   </div>
                 )}
 
-                <div className="flex items-start gap-2.5">
-                  <Clock size={16} className="mt-0.5 shrink-0 text-slate-500" />
-                  <span className="text-slate-700">Tham gia {joinedAgo}</span>
+                <div className={styles.row3}>
+                  <Clock size={16} className={styles.box2} />
+                  <span className={styles.label3}>Tham gia {joinedAgo}</span>
                 </div>
               </div>
             </div>
           </aside>
 
           {/* ============ COT PHAI: heatmap + thong tin tai khoan ============ */}
-          <section className="space-y-6 lg:col-span-8 xl:col-span-9">
+          <section className={styles.section}>
             {activity ? (
               <ActivityHeatmap days={activity.days} total={activity.total} />
             ) : (
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
-                Chưa tải được dữ liệu hoạt động.
-              </div>
+              <div className={styles.card2}>Chưa tải được dữ liệu hoạt động.</div>
             )}
 
             <ViCoinCuaToi />
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="mb-5 text-base font-bold text-slate-900">
-                Thông tin tài khoản
-              </h2>
+            <div className={styles.card}>
+              <h2 className={styles.heading}>Thông tin tài khoản</h2>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className={styles.grid2}>
                 <Field label="Tên hiển thị" value={user.name} />
                 <Field
                   label="Họ và tên đầy đủ"
@@ -164,7 +154,7 @@ export default function ProfilePage() {
                 {user.phone && <Field label="Số điện thoại" value={user.phone} />}
                 {providerName && <Field label="Đơn vị công tác" value={providerName} />}
                 {user.bio && (
-                  <div className="md:col-span-2">
+                  <div className={styles.box3}>
                     <Field label="Giới thiệu" value={user.bio} />
                   </div>
                 )}
@@ -193,10 +183,8 @@ function describeJoined(v?: string) {
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-semibold text-slate-600">{label}</label>
-      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900">
-        {value}
-      </div>
+      <label className={styles.fieldLabel}>{label}</label>
+      <div className={styles.card3}>{value}</div>
     </div>
   );
 }

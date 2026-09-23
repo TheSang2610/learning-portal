@@ -131,7 +131,7 @@ export const layDanhSachKhoa = async (tham: {
 };
 
 // Khoa hoc kem ly do duoc goi y. `viSaoGoiY` do may chu sinh (xem
-// backend/src/utils/xepHangGoiY.js) chu khong phai chu co dinh o giao dien:
+// backend/src/utils/rankSuggestions.js) chu khong phai chu co dinh o giao dien:
 // ly do doi theo tin hieu nao da lam khoa do len hang.
 export interface KhoaGoiY extends Course {
   diemGoiY: number;

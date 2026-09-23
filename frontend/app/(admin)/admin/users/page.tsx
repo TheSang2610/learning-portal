@@ -30,11 +30,12 @@ import {
   updateUserStatusAdmin,
 } from "@/src/services/adminService";
 import type { User } from "@/src/services/userApi";
-import { useNguoiDungLuu } from "@/src/hooks/nguoiDungLuu";
-import AnhDaiDien from "@/src/components/ui/AnhDaiDien";
+import { useNguoiDungLuu } from "@/src/hooks/userStore";
+import AnhDaiDien from "@/src/components/ui/Avatar";
 import SafeImage from "@/src/components/ui/SafeImage";
-import { DAI_MAT_KHAU_TOI_THIEU, loiMatKhauMoi } from "@/src/services/quyDinh";
+import { DAI_MAT_KHAU_TOI_THIEU, loiMatKhauMoi } from "@/src/services/rules";
 
+import styles from "./page.module.scss";
 // Truoc day cho nay khai lai mot ban AdminUser rieng, gan trung voi User cua
 // tang service nhung khai status la bat buoc. Dung chung mot kieu de khi backend
 // doi hinh dang thi chi phai sua mot noi.
@@ -43,9 +44,9 @@ type AdminUser = User;
 const ROLES = ["student", "instructor", "admin"] as const;
 
 const ROLE_STYLE: Record<string, { cls: string; Icon: LucideIcon }> = {
-  admin: { cls: "bg-violet-50 text-violet-700 border-violet-200", Icon: ShieldCheck },
-  instructor: { cls: "bg-blue-50 text-blue-700 border-blue-200", Icon: GraduationCap },
-  student: { cls: "bg-slate-100 text-slate-700 border-slate-200", Icon: UserIcon },
+  admin: { cls: styles.nhanAdmin, Icon: ShieldCheck },
+  instructor: { cls: styles.nhanGiangVien, Icon: GraduationCap },
+  student: { cls: styles.nhanHocVien, Icon: UserIcon },
 };
 
 const PAGE_SIZE = 10;
@@ -70,10 +71,10 @@ function AnhPhongTo({ src, ten }: { src: string; ten?: string }) {
 
   if (loi) {
     return (
-      <div className="flex w-full flex-col items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-12 text-slate-600">
+      <div className={styles.col}>
         <ImageOff size={32} />
-        <p className="text-sm font-semibold">Không tải được ảnh</p>
-        <p className="max-w-full truncate text-xs text-slate-500">{src}</p>
+        <p className={styles.text}>Không tải được ảnh</p>
+        <p className={styles.text2}>{src}</p>
       </div>
     );
   }
@@ -85,7 +86,7 @@ function AnhPhongTo({ src, ten }: { src: string; ten?: string }) {
       width={512}
       height={512}
       onError={() => setLoi(true)}
-      className="max-h-[55vh] w-auto max-w-full rounded-xl object-contain"
+      className={styles.box}
     />
   );
 }
@@ -202,7 +203,7 @@ export default function AdminUsersPage() {
     }
     // Tao moi thi bat buoc co mat khau; sua thi de trong nghia la khong doi.
     // Ca hai truong hop, khi CO mat khau thi phai qua dung bo quy tac ma backend
-    // dung (services/quyDinh.ts) - truoc day cho nay chi kiem do dai toi thieu.
+    // dung (services/rules.ts) - truoc day cho nay chi kiem do dai toi thieu.
     if (!editingId || form.password) {
       const loiMk = loiMatKhauMoi(form.password);
       if (loiMk) {
@@ -273,40 +274,32 @@ export default function AdminUsersPage() {
     }
   };
 
-  const inputCls =
-    "w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 " +
-    "placeholder:text-slate-500 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10";
+  const inputCls = styles.input2;
 
   return (
-    <div className="space-y-6">
+    <div className={styles.stack}>
       {/* HEADER */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className={styles.row}>
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900">Người dùng</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className={styles.title}>Người dùng</h1>
+          <p className={styles.text3}>
             {fetching ? "Đang tải..." : `${total} tài khoản`}
           </p>
         </div>
-        <button
-          onClick={openCreate}
-          className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
-        >
+        <button onClick={openCreate} className={styles.button}>
           <Plus size={16} /> Thêm người dùng
         </button>
       </div>
 
       {/* BO LOC */}
-      <div className="flex flex-wrap gap-3">
-        <div className="relative min-w-[240px] flex-1">
-          <Search
-            size={16}
-            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-slate-500"
-          />
+      <div className={styles.row2}>
+        <div className={styles.box2}>
+          <Search size={16} className={styles.floating} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Tìm theo tên, email hoặc mã user..."
-            className={inputCls + " pl-9"}
+            className={`${inputCls} ${styles.input}`}
           />
         </div>
         <select
@@ -315,7 +308,7 @@ export default function AdminUsersPage() {
             setRoleFilter(e.target.value);
             setPage(1);
           }}
-          className={inputCls + " w-auto"}
+          className={`${inputCls} ${styles.select}`}
         >
           <option value="">Mọi quyền</option>
           {ROLES.map((r) => (
@@ -330,7 +323,7 @@ export default function AdminUsersPage() {
             setStatusFilter(e.target.value);
             setPage(1);
           }}
-          className={inputCls + " w-auto"}
+          className={`${inputCls} ${styles.select}`}
         >
           <option value="">Mọi trạng thái</option>
           <option value="active">Đang hoạt động</option>
@@ -338,38 +331,31 @@ export default function AdminUsersPage() {
         </select>
       </div>
 
-      {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-          {error}
-        </div>
-      )}
+      {error && <div className={styles.card}>{error}</div>}
 
       {/* BANG */}
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px]">
-            <thead className="bg-slate-50 text-left text-xs font-bold tracking-wider text-slate-600 uppercase">
+      <div className={styles.card2}>
+        <div className={styles.scroller}>
+          <table className={styles.table}>
+            <thead className={styles.thead}>
               <tr>
-                <th className="px-4 py-3">Người dùng</th>
-                <th className="px-4 py-3">Quyền</th>
-                <th className="px-4 py-3">Trạng thái</th>
-                <th className="px-4 py-3">Ngày tạo</th>
-                <th className="px-4 py-3 text-right">Thao tác</th>
+                <th className={styles.headCell}>Người dùng</th>
+                <th className={styles.headCell}>Quyền</th>
+                <th className={styles.headCell}>Trạng thái</th>
+                <th className={styles.headCell}>Ngày tạo</th>
+                <th className={styles.headCell2}>Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className={styles.tbody}>
               {fetching ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-16 text-center text-slate-500">
-                    <Loader2 size={20} className="mx-auto animate-spin" />
+                  <td colSpan={5} className={styles.cell}>
+                    <Loader2 size={20} className={styles.spinner} />
                   </td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-16 text-center text-sm text-slate-500"
-                  >
+                  <td colSpan={5} className={styles.cell2}>
                     Không tìm thấy người dùng nào.
                   </td>
                 </tr>
@@ -379,62 +365,56 @@ export default function AdminUsersPage() {
                   const isSelf = u._id === myId;
                   const busy = busyId === u._id;
                   return (
-                    <tr key={u._id} className="transition hover:bg-slate-50/60">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
+                    <tr key={u._id} className={styles.row3}>
+                      <td className={styles.headCell}>
+                        <div className={styles.row4}>
                           {u.avatar ? (
                             <button
                               type="button"
                               onClick={() => setXemAnh(u)}
                               title="Xem ảnh đại diện"
-                              className="rounded-full transition hover:opacity-80 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 focus:outline-none"
+                              className={styles.button2}
                             >
                               <AnhDaiDien src={u.avatar} ten={u.name} size={36} />
                             </button>
                           ) : (
                             <AnhDaiDien ten={u.name} size={36} />
                           )}
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-slate-900">
+                          <div className={styles.box3}>
+                            <p className={styles.text4}>
                               {u.name}
-                              {isSelf && (
-                                <span className="ml-2 rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-700">
-                                  BẠN
-                                </span>
-                              )}
+                              {isSelf && <span className={styles.label}>BẠN</span>}
                             </p>
-                            <p className="truncate text-xs text-slate-500">{u.email}</p>
+                            <p className={styles.text5}>{u.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs font-semibold capitalize ${cls}`}
-                        >
+                      <td className={styles.headCell}>
+                        <span className={`${styles.label6} ${cls}`}>
                           <Icon size={12} /> {u.role}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className={styles.headCell}>
                         <span
-                          className={`inline-flex items-center gap-1.5 text-xs font-semibold ${(u.status ?? true) ? "text-emerald-700" : "text-red-700"}`}
+                          className={`${styles.label7} ${(u.status ?? true) ? styles.label2 : styles.label3}`}
                         >
                           <span
-                            className={`h-1.5 w-1.5 rounded-full ${u.status ? "bg-emerald-500" : "bg-red-500"}`}
+                            className={`${styles.label8} ${u.status ? styles.label4 : styles.label5}`}
                           />
                           {u.status ? "Hoạt động" : "Đã khóa"}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-600">
+                      <td className={styles.cell3}>
                         {u.createdAt
                           ? new Date(u.createdAt).toLocaleDateString("vi-VN")
                           : "--"}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1.5">
+                      <td className={styles.headCell}>
+                        <div className={styles.row5}>
                           <button
                             onClick={() => openEdit(u)}
                             title="Sửa"
-                            className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                            className={styles.button3}
                           >
                             <Edit3 size={16} />
                           </button>
@@ -448,7 +428,7 @@ export default function AdminUsersPage() {
                                   ? "Khóa"
                                   : "Mở khóa"
                             }
-                            className="rounded-lg p-2 text-amber-700 transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:text-slate-400 disabled:hover:bg-transparent"
+                            className={styles.button4}
                           >
                             {u.status ? <Lock size={16} /> : <Unlock size={16} />}
                           </button>
@@ -456,7 +436,7 @@ export default function AdminUsersPage() {
                             onClick={() => remove(u)}
                             disabled={isSelf || busy}
                             title={isSelf ? "Không thể tự xóa chính mình" : "Xóa"}
-                            className="rounded-lg p-2 text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:text-slate-400 disabled:hover:bg-transparent"
+                            className={styles.button5}
                           >
                             <Trash2 size={16} />
                           </button>
@@ -472,22 +452,22 @@ export default function AdminUsersPage() {
 
         {/* PHAN TRANG */}
         {pages > 1 && (
-          <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
-            <p className="text-xs text-slate-600">
+          <div className={styles.row6}>
+            <p className={styles.text6}>
               Trang {page} / {pages}
             </p>
-            <div className="flex gap-2">
+            <div className={styles.row7}>
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400"
+                className={styles.box4}
               >
                 <ChevronLeft size={14} /> Trước
               </button>
               <button
                 onClick={() => setPage((p) => Math.min(pages, p + 1))}
                 disabled={page >= pages}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400"
+                className={styles.box4}
               >
                 Sau <ChevronRight size={14} />
               </button>
@@ -498,43 +478,32 @@ export default function AdminUsersPage() {
 
       {/* KHUNG XEM ANH DAI DIEN */}
       {xemAnh?.avatar && (
-        <div
-          onClick={() => setXemAnh(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white shadow-2xl"
-          >
-            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-              <div className="min-w-0">
-                <h2 className="truncate text-base font-bold text-slate-900">
-                  {xemAnh.name}
-                </h2>
-                <p className="truncate text-xs text-slate-500">{xemAnh.email}</p>
+        <div onClick={() => setXemAnh(null)} className={styles.overlay}>
+          <div onClick={(e) => e.stopPropagation()} className={styles.card3}>
+            <div className={styles.row8}>
+              <div className={styles.box3}>
+                <h2 className={styles.heading}>{xemAnh.name}</h2>
+                <p className={styles.text5}>{xemAnh.email}</p>
               </div>
-              <button
-                onClick={() => setXemAnh(null)}
-                className="rounded-lg p-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
-              >
+              <button onClick={() => setXemAnh(null)} className={styles.button6}>
                 <X size={18} />
               </button>
             </div>
 
-            <div className="flex justify-center bg-slate-50 px-5 py-6">
+            <div className={styles.row9}>
               <AnhPhongTo key={xemAnh._id} src={xemAnh.avatar} ten={xemAnh.name} />
             </div>
 
-            <div className="space-y-2 border-t border-slate-100 px-5 py-4">
-              <p className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+            <div className={styles.stack2}>
+              <p className={styles.text7}>
                 {xemAnh.avatarPublicId ? (
                   <>
-                    <UploadCloud size={14} className="text-emerald-600" />
+                    <UploadCloud size={14} className={styles.box5} />
                     Người dùng tự tải ảnh này lên
                   </>
                 ) : (
                   <>
-                    <Link2 size={14} className="text-slate-500" />
+                    <Link2 size={14} className={styles.box6} />
                     Ảnh dẫn từ liên kết ngoài, không phải người dùng tải lên
                   </>
                 )}
@@ -543,7 +512,7 @@ export default function AdminUsersPage() {
                 href={xemAnh.avatar}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block truncate text-xs text-blue-600 underline-offset-2 hover:underline"
+                className={styles.link}
               >
                 {xemAnh.avatar}
               </a>
@@ -554,19 +523,19 @@ export default function AdminUsersPage() {
 
       {/* MODAL TAO / SUA */}
       {editingId !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-              <div className="flex min-w-0 items-center gap-3">
+        <div className={styles.overlay2}>
+          <div className={styles.card4}>
+            <div className={styles.row8}>
+              <div className={styles.row10}>
                 {editingId && dangSua && (
                   <AnhDaiDien src={dangSua.avatar} ten={dangSua.name} size={40} />
                 )}
-                <div className="min-w-0">
-                  <h2 className="text-base font-bold text-slate-900">
+                <div className={styles.box3}>
+                  <h2 className={styles.heading2}>
                     {editingId ? "Sửa người dùng" : "Thêm người dùng"}
                   </h2>
                   {editingId && dangSua && (
-                    <p className="truncate text-xs text-slate-500">
+                    <p className={styles.text5}>
                       {dangSua.avatar
                         ? dangSua.avatarPublicId
                           ? "Ảnh do người dùng tự tải lên"
@@ -576,25 +545,16 @@ export default function AdminUsersPage() {
                   )}
                 </div>
               </div>
-              <button
-                onClick={() => setEditingId(null)}
-                className="rounded-lg p-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
-              >
+              <button onClick={() => setEditingId(null)} className={styles.button6}>
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={submit} className="space-y-4 px-5 py-5">
-              {formError && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">
-                  {formError}
-                </div>
-              )}
+            <form onSubmit={submit} className={styles.form}>
+              {formError && <div className={styles.card5}>{formError}</div>}
 
               <div>
-                <label className="mb-1.5 block text-xs font-bold text-slate-700">
-                  Tên *
-                </label>
+                <label className={styles.fieldLabel}>Tên *</label>
                 <input
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -604,9 +564,7 @@ export default function AdminUsersPage() {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-bold text-slate-700">
-                  Email *
-                </label>
+                <label className={styles.fieldLabel}>Email *</label>
                 <input
                   type="email"
                   value={form.email}
@@ -617,7 +575,7 @@ export default function AdminUsersPage() {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-bold text-slate-700">
+                <label className={styles.fieldLabel}>
                   Mật khẩu {editingId ? "(để trống nếu không đổi)" : "*"}
                 </label>
                 <input
@@ -632,9 +590,7 @@ export default function AdminUsersPage() {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-bold text-slate-700">
-                  Số điện thoại
-                </label>
+                <label className={styles.fieldLabel}>Số điện thoại</label>
                 <input
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
@@ -643,18 +599,16 @@ export default function AdminUsersPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className={styles.grid}>
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold text-slate-700">
-                    Quyền
-                  </label>
+                  <label className={styles.fieldLabel}>Quyền</label>
                   <select
                     value={form.role}
                     onChange={(e) =>
                       setForm({ ...form, role: e.target.value as AdminUser["role"] })
                     }
                     disabled={editingId === myId && editingId !== ""}
-                    className={inputCls + " disabled:bg-slate-50 disabled:text-slate-500"}
+                    className={`${inputCls} ${styles.select2}`}
                   >
                     {ROLES.map((r) => (
                       <option key={r} value={r}>
@@ -664,16 +618,14 @@ export default function AdminUsersPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold text-slate-700">
-                    Trạng thái
-                  </label>
+                  <label className={styles.fieldLabel}>Trạng thái</label>
                   <select
                     value={form.status ? "active" : "banned"}
                     onChange={(e) =>
                       setForm({ ...form, status: e.target.value === "active" })
                     }
                     disabled={editingId === myId && editingId !== ""}
-                    className={inputCls + " disabled:bg-slate-50 disabled:text-slate-500"}
+                    className={`${inputCls} ${styles.select2}`}
                   >
                     <option value="active">Hoạt động</option>
                     <option value="banned">Khóa</option>
@@ -682,25 +634,21 @@ export default function AdminUsersPage() {
               </div>
 
               {editingId === myId && editingId !== "" && (
-                <p className="text-xs text-slate-600">
+                <p className={styles.text6}>
                   Không thể tự đổi quyền hoặc tự khóa tài khoản của chính bạn.
                 </p>
               )}
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className={styles.row11}>
                 <button
                   type="button"
                   onClick={() => setEditingId(null)}
-                  className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                  className={styles.button7}
                 >
                   Hủy
                 </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:bg-slate-400"
-                >
-                  {saving && <Loader2 size={14} className="animate-spin" />}
+                <button type="submit" disabled={saving} className={styles.button8}>
+                  {saving && <Loader2 size={14} className={styles.spinner2} />}
                   {editingId ? "Lưu thay đổi" : "Tạo người dùng"}
                 </button>
               </div>

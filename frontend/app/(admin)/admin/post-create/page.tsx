@@ -17,11 +17,12 @@ import {
 } from "lucide-react";
 import SafeImage from "@/src/components/ui/SafeImage";
 import { layMucLuc, phanTichNoiDung } from "@/src/components/common/articleOutline";
-import { laHtml, neoHoaTieuDe } from "@/src/components/common/htmlBaiViet";
-import TrinhSoanBai from "@/src/components/admin/TrinhSoanBai";
+import { laHtml, neoHoaTieuDe } from "@/src/components/common/postHtml";
+import TrinhSoanBai from "@/src/components/admin/PostEditor";
 import { getErrorMessage } from "@/src/services/apiHelper";
 import { postService, type Topic } from "@/src/services/post";
 
+import styles from "./page.module.scss";
 const MAX_TIEU_DE = 200;
 const MAX_MO_TA = 400;
 // Con so nay do phan NGUOI VIET GO VAO, khong phai phan duoc luu.
@@ -155,56 +156,44 @@ function AdminPostEditor() {
 
   if (dangNap) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white text-slate-500">
-        <Loader2 className="animate-spin text-blue-600" size={32} />
-        <p className="text-sm font-medium">Đang mở bài viết...</p>
+      <div className={styles.card}>
+        <Loader2 className={styles.spinner} size={32} />
+        <p className={styles.text}>Đang mở bài viết...</p>
       </div>
     );
   }
 
-  const oNhap =
-    "w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition-all focus:border-blue-500 focus:bg-white focus:outline-none";
+  const oNhap = styles.input2;
 
   return (
-    <form onSubmit={luu} className="space-y-6">
+    <form onSubmit={luu} className={styles.form}>
       {/* HEADER */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className={styles.row}>
         <div>
-          <Link
-            href="/admin/posts"
-            className="mb-1 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-blue-600"
-          >
+          <Link href="/admin/posts" className={styles.box}>
             <ArrowLeft size={15} />
             Về danh sách bài viết
           </Link>
-          <h3 className="flex items-center gap-2 text-2xl font-bold text-slate-800">
-            <PenLine className="text-blue-600" size={26} />
+          <h3 className={styles.subheading}>
+            <PenLine className={styles.box2} size={26} />
             {laSua ? "Sửa bài viết" : "Viết bài mới"}
           </h3>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className={styles.text2}>
             Bài đăng ở đây hiện trên trang Cẩm nang môn học (/blog) cho tất cả mọi người
             đọc.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className={styles.row2}>
           {laSua && daDang && slug && (
-            <Link
-              href={`/blog/${slug}`}
-              target="_blank"
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 transition-all hover:bg-slate-50"
-            >
+            <Link href={`/blog/${slug}`} target="_blank" className={styles.box3}>
               <ExternalLink size={16} />
               Xem trang thật
             </Link>
           )}
-          <button
-            type="submit"
-            disabled={dangLuu}
-            className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-md shadow-blue-600/10 transition-all hover:bg-blue-700 disabled:bg-blue-400"
-          >
+          <button type="submit" disabled={dangLuu} className={styles.button}>
             {dangLuu ? (
-              <Loader2 className="animate-spin" size={16} />
+              <Loader2 className={styles.spinner2} size={16} />
             ) : (
               <Save size={16} />
             )}
@@ -214,27 +203,24 @@ function AdminPostEditor() {
       </div>
 
       {thanhCong && (
-        <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
-          <CheckCircle className="flex-shrink-0 text-emerald-500" size={20} />
-          <span className="text-sm font-medium">{thanhCong}</span>
+        <div className={styles.card2}>
+          <CheckCircle className={styles.box4} size={20} />
+          <span className={styles.text}>{thanhCong}</span>
         </div>
       )}
       {loi && (
-        <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-800">
-          <AlertCircle className="mt-0.5 flex-shrink-0 text-rose-500" size={20} />
-          <span className="text-sm font-medium">{loi}</span>
+        <div className={styles.card3}>
+          <AlertCircle className={styles.box5} size={20} />
+          <span className={styles.text}>{loi}</span>
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className={styles.grid}>
         {/* ============================ CỘT TRÁI ============================ */}
-        <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className={styles.card4}>
           <div>
-            <label
-              htmlFor="tieu-de"
-              className="mb-1.5 block text-sm font-semibold text-slate-700"
-            >
-              Tiêu đề <span className="text-red-500">*</span>
+            <label htmlFor="tieu-de" className={styles.fieldLabel}>
+              Tiêu đề <span className={styles.label}>*</span>
             </label>
             <input
               id="tieu-de"
@@ -242,19 +228,16 @@ function AdminPostEditor() {
               onChange={(e) => setTieuDe(e.target.value)}
               maxLength={MAX_TIEU_DE}
               placeholder="VD: React 19: Server Components, hooks mới và cách tối ưu app web"
-              className={`${oNhap} text-base font-semibold`}
+              className={`${oNhap} ${styles.input}`}
             />
-            <p className="mt-1 text-right text-xs text-slate-400">
+            <p className={styles.text3}>
               {tieuDe.length}/{MAX_TIEU_DE}
             </p>
           </div>
 
           <div>
-            <label
-              htmlFor="mo-ta"
-              className="mb-1.5 block text-sm font-semibold text-slate-700"
-            >
-              Mô tả ngắn <span className="text-red-500">*</span>
+            <label htmlFor="mo-ta" className={styles.fieldLabel}>
+              Mô tả ngắn <span className={styles.label}>*</span>
             </label>
             <textarea
               id="mo-ta"
@@ -263,19 +246,16 @@ function AdminPostEditor() {
               maxLength={MAX_MO_TA}
               rows={3}
               placeholder="Hai đến ba câu tóm tắt. Đoạn này hiện ở thẻ ngoài danh sách, nên đừng chép câu mở đầu của bài vào."
-              className={`${oNhap} resize-none leading-relaxed`}
+              className={`${oNhap} ${styles.textarea}`}
             />
-            <p className="mt-1 text-right text-xs text-slate-400">
+            <p className={styles.text3}>
               {moTa.length}/{MAX_MO_TA}
             </p>
           </div>
 
           <div>
-            <label
-              htmlFor="noi-dung"
-              className="mb-1.5 block text-sm font-semibold text-slate-700"
-            >
-              Nội dung bài <span className="text-red-500">*</span>
+            <label htmlFor="noi-dung" className={styles.fieldLabel}>
+              Nội dung bài <span className={styles.label}>*</span>
             </label>
             <TrinhSoanBai
               id="noi-dung"
@@ -283,12 +263,12 @@ function AdminPostEditor() {
               doiGiaTri={setNoiDung}
               toiDa={MAX_NOI_DUNG}
             />
-            <p className="mt-1 flex items-center justify-between gap-4 text-xs text-slate-400">
+            <p className={styles.text4}>
               <span>
                 Gõ chữ thường vẫn chạy như cũ. Dán HTML vào thì máy chủ chỉ giữ lại thẻ
                 bài viết — script và khung quảng cáo bị bỏ.
               </span>
-              <span className="shrink-0">
+              <span className={styles.label2}>
                 {noiDung.length.toLocaleString("vi-VN")} ký tự
               </span>
             </p>
@@ -296,14 +276,11 @@ function AdminPostEditor() {
         </div>
 
         {/* ============================ CỘT PHẢI ============================ */}
-        <div className="space-y-5">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h4 className="mb-3 text-sm font-bold text-slate-800">Xuất bản</h4>
+        <div className={styles.stack}>
+          <div className={styles.card5}>
+            <h4 className={styles.minorHeading}>Xuất bản</h4>
 
-            <label
-              htmlFor="trang-thai"
-              className="mb-1.5 block text-xs font-semibold text-slate-600"
-            >
+            <label htmlFor="trang-thai" className={styles.fieldLabel2}>
               Trạng thái
             </label>
             <select
@@ -317,8 +294,8 @@ function AdminPostEditor() {
             </select>
 
             {laSua && slug && (
-              <p className="mt-3 text-xs leading-relaxed break-all text-slate-500">
-                Đường dẫn: <code className="rounded bg-slate-100 px-1">/blog/{slug}</code>
+              <p className={styles.text5}>
+                Đường dẫn: <code className={styles.code}>/blog/{slug}</code>
                 {daDang && (
                   <>
                     <br />
@@ -330,13 +307,10 @@ function AdminPostEditor() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h4 className="mb-3 text-sm font-bold text-slate-800">Phân loại</h4>
+          <div className={styles.card5}>
+            <h4 className={styles.minorHeading}>Phân loại</h4>
 
-            <label
-              htmlFor="chu-de"
-              className="mb-1.5 block text-xs font-semibold text-slate-600"
-            >
+            <label htmlFor="chu-de" className={styles.fieldLabel2}>
               Chủ đề
             </label>
             <select
@@ -353,14 +327,8 @@ function AdminPostEditor() {
               ))}
             </select>
 
-            <label
-              htmlFor="tags"
-              className="mt-4 mb-1.5 block text-xs font-semibold text-slate-600"
-            >
-              Tags{" "}
-              <span className="font-normal text-slate-400">
-                (cách nhau bằng dấu phẩy)
-              </span>
+            <label htmlFor="tags" className={styles.fieldLabel3}>
+              Tags <span className={styles.label3}>(cách nhau bằng dấu phẩy)</span>
             </label>
             <input
               id="tags"
@@ -369,13 +337,13 @@ function AdminPostEditor() {
               placeholder="React 19, hooks"
               className={oNhap}
             />
-            <p className="mt-1 text-xs text-slate-400">
+            <p className={styles.text6}>
               Tối đa 5 tag. Tag đầu tiên hiện trên thẻ ngoài danh sách.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h4 className="mb-3 text-sm font-bold text-slate-800">Ảnh đại diện</h4>
+          <div className={styles.card5}>
+            <h4 className={styles.minorHeading}>Ảnh đại diện</h4>
             <input
               value={anh}
               onChange={(e) => setAnh(e.target.value)}
@@ -383,63 +351,53 @@ function AdminPostEditor() {
               aria-label="Đường dẫn ảnh đại diện"
               className={oNhap}
             />
-            <div className="relative mt-3 aspect-[16/9] w-full overflow-hidden rounded-xl bg-slate-100">
+            <div className={styles.box6}>
               {anh.trim() ? (
                 <SafeImage
                   src={anh.trim()}
                   alt="Xem trước ảnh đại diện"
                   fill
                   sizes="320px"
-                  className="object-cover"
+                  className={styles.box7}
                 />
               ) : (
-                <div className="flex h-full flex-col items-center justify-center gap-1.5 text-slate-400">
+                <div className={styles.col}>
                   <ImageOff size={24} />
-                  <span className="text-xs">Chưa có ảnh</span>
+                  <span className={styles.label4}>Chưa có ảnh</span>
                 </div>
               )}
             </div>
           </div>
 
           {/* Kiem tra muc luc */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h4 className="mb-1 flex items-center gap-2 text-sm font-bold text-slate-800">
-              <ListTree size={16} className="text-blue-600" />
+          <div className={styles.card5}>
+            <h4 className={styles.minorHeading2}>
+              <ListTree size={16} className={styles.box2} />
               Mục lục nhận ra được
-              <span className="ml-auto text-xs font-semibold text-slate-400">
-                {mucLuc.length}
-              </span>
+              <span className={styles.label5}>{mucLuc.length}</span>
             </h4>
-            <p className="mb-3 text-xs leading-relaxed text-slate-500">
+            <p className={styles.text7}>
               Đây đúng là menu bên trái mà người đọc sẽ thấy.
             </p>
 
             {mucLuc.length === 0 ? (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">
+              <div className={styles.card6}>
                 Chưa dòng nào thành đề mục. Bấm <b>Tiêu đề lớn</b> để bọc dòng đang chọn
-                trong{" "}
-                <code className="rounded bg-amber-100 px-1 font-semibold">
-                  &lt;h2&gt;
-                </code>
-                . Nếu gõ chữ thường thì mở đầu dòng bằng{" "}
-                <code className="rounded bg-amber-100 px-1 font-semibold">Chương 1:</code>
-                , <code className="rounded bg-amber-100 px-1 font-semibold">Mục 1.1</code>{" "}
-                hoặc{" "}
-                <code className="rounded bg-amber-100 px-1 font-semibold">
-                  ## Tiêu đề
-                </code>
-                .
+                trong <code className={styles.code2}>&lt;h2&gt;</code>. Nếu gõ chữ thường
+                thì mở đầu dòng bằng <code className={styles.code2}>Chương 1:</code>,{" "}
+                <code className={styles.code2}>Mục 1.1</code> hoặc{" "}
+                <code className={styles.code2}>## Tiêu đề</code>.
               </div>
             ) : (
-              <ul className="space-y-1.5 text-sm">
+              <ul className={styles.list}>
                 {mucLuc.map((m, i) => (
                   <li
                     key={`${m.id}-${i}`}
-                    className="truncate text-slate-700"
+                    className={styles.item}
                     style={{ paddingLeft: (m.level - 1) * 12 }}
                     title={m.text}
                   >
-                    <span className="mr-1.5 text-slate-300">
+                    <span className={styles.label6}>
                       {m.level === 1 ? "●" : m.level === 2 ? "○" : "–"}
                     </span>
                     {m.text}
@@ -449,12 +407,12 @@ function AdminPostEditor() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5">
-            <p className="flex items-center gap-2 text-sm font-bold text-slate-900">
-              <Eye size={16} className="text-blue-700" />
+          <div className={styles.card7}>
+            <p className={styles.text8}>
+              <Eye size={16} className={styles.box8} />
               Bài phải qua bộ lọc nội dung
             </p>
-            <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
+            <p className={styles.text9}>
               Cả tiêu đề, mô tả ngắn lẫn nội dung đều bị kiểm. Bài chửi thề, kỳ thị chủng
               tộc hoặc kích động sẽ bị máy chủ từ chối, kèm thông báo nói rõ trường nào vi
               phạm.
@@ -471,8 +429,8 @@ export default function AdminPostCreatePage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
+        <div className={styles.row3}>
+          <div className={styles.spinner3} />
         </div>
       }
     >

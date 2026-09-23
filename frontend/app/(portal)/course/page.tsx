@@ -3,10 +3,10 @@
 import { Suspense, useEffect, useState } from "react";
 import { getErrorMessage } from "@/src/services/apiHelper";
 import { taoDonHang, dinhDangTien } from "@/src/services/order";
-import AnhDaiDien from "@/src/components/ui/AnhDaiDien";
+import AnhDaiDien from "@/src/components/ui/Avatar";
 import SafeImage from "@/src/components/ui/SafeImage";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { duongDanDangNhap, doiDiaChi } from "@/src/components/auth/duongDanDangNhap";
+import { duongDanDangNhap, doiDiaChi } from "@/src/components/auth/loginUrl";
 import {
   ArrowLeft,
   BookOpen,
@@ -30,94 +30,95 @@ import {
   useDaGanVaoTrinhDuyet,
   useNguoiDungLuu,
   useDangTaiNguoiDung,
-} from "@/src/hooks/nguoiDungLuu";
+} from "@/src/hooks/userStore";
 import type { Lesson } from "@/src/services/lesson.api";
 import {
   getEnrollmentByCourse,
   enrollInCourse,
   getProgressStats,
 } from "@/src/services/enrollment.api";
-import NutMuaBangCoin from "@/src/components/common/NutMuaBangCoin";
-import ONhapMaGiamGia from "@/src/components/magiamgia/ONhapMaGiamGia";
+import NutMuaBangCoin from "@/src/components/common/BuyWithCoinButton";
+import ONhapMaGiamGia from "@/src/components/vouchers/VoucherInput";
 import { giaRaCoin } from "@/src/services/coin.api";
-import GoiYKhoaHoc from "@/src/components/courses/GoiYKhoaHoc";
-import { useGioHang } from "@/src/hooks/gioHang";
+import GoiYKhoaHoc from "@/src/components/courses/CourseSuggestions";
+import { useGioHang } from "@/src/hooks/cart";
 import { ShoppingCart, Check } from "lucide-react";
 import { reviewService, Review, ReviewStats } from "@/src/services/review";
 import { faqService, FaqItem } from "@/src/services/faq";
 
+import styles from "./page.module.scss";
 function CourseDetailSkeleton() {
   return (
-    <div className="min-h-screen animate-pulse bg-white pb-24 antialiased">
+    <div className={styles.page}>
       {/* 1. Hero Banner Skeleton */}
-      <div className="border-b border-slate-200 bg-[#FBFCFD] py-16">
-        <div className="mx-auto grid max-w-[1400px] grid-cols-1 items-center gap-12 px-6 md:px-12 lg:grid-cols-12">
-          <div className="space-y-6 lg:col-span-7">
-            <div className="h-4 w-32 rounded bg-slate-200"></div>
-            <div className="space-y-3">
-              <div className="h-10 w-11/12 rounded bg-slate-200 md:w-3/4"></div>
-              <div className="h-4 w-full rounded bg-slate-200"></div>
-              <div className="h-4 w-5/6 rounded bg-slate-200"></div>
+      <div className={styles.box}>
+        <div className={styles.container}>
+          <div className={styles.stack}>
+            <div className={styles.box2}></div>
+            <div className={styles.stack2}>
+              <div className={styles.box3}></div>
+              <div className={styles.box4}></div>
+              <div className={styles.box5}></div>
             </div>
-            <div className="flex gap-4 pt-2">
-              <div className="h-4 w-40 rounded bg-slate-200"></div>
-              <div className="h-4 w-40 rounded bg-slate-200"></div>
+            <div className={styles.row}>
+              <div className={styles.box6}></div>
+              <div className={styles.box6}></div>
             </div>
-            <div className="flex items-center gap-4 pt-4">
-              <div className="h-14 w-52 rounded-lg bg-slate-200"></div>
-              <div className="h-4 w-48 rounded bg-slate-200"></div>
+            <div className={styles.row2}>
+              <div className={styles.box7}></div>
+              <div className={styles.box8}></div>
             </div>
           </div>
-          <div className="order-first aspect-video w-full rounded-xl bg-slate-200 lg:order-last lg:col-span-5"></div>
+          <div className={styles.box9}></div>
         </div>
       </div>
 
       {/* 2. Sticky Sub-Navbar Skeleton */}
-      <div className="hidden border-b border-slate-200 bg-white md:block">
-        <div className="mx-auto flex max-w-[1400px] gap-8 px-12 py-4">
+      <div className={styles.box10}>
+        <div className={styles.container2}>
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-5 w-24 rounded bg-slate-200"></div>
+            <div key={i} className={styles.box11}></div>
           ))}
         </div>
       </div>
 
       {/* 3. Main Content Skeleton */}
-      <div className="mx-auto mt-12 max-w-[1400px] px-6 md:px-12">
+      <div className={styles.container3}>
         {/* Grid 4 thông số */}
-        <div className="mb-12 grid grid-cols-2 gap-6 rounded-xl border border-slate-200 bg-slate-50/50 p-6 md:grid-cols-4">
+        <div className={styles.card}>
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="space-y-2">
-              <div className="h-3 w-16 rounded bg-slate-200"></div>
-              <div className="h-4 w-32 rounded bg-slate-200"></div>
+            <div key={i} className={styles.stack3}>
+              <div className={styles.box12}></div>
+              <div className={styles.box2}></div>
             </div>
           ))}
         </div>
 
         {/* Cột trái & Cột phải */}
-        <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-12">
+        <div className={styles.grid}>
           {/* Cột trái (70%) */}
-          <div className="space-y-16 lg:col-span-8">
+          <div className={styles.stack4}>
             {/* Về khóa học */}
-            <div className="space-y-4">
-              <div className="h-6 w-48 rounded bg-slate-200"></div>
-              <div className="space-y-2">
-                <div className="h-4 w-full rounded bg-slate-200"></div>
-                <div className="h-4 w-full rounded bg-slate-200"></div>
-                <div className="h-4 w-4/5 rounded bg-slate-200"></div>
+            <div className={styles.stack5}>
+              <div className={styles.box13}></div>
+              <div className={styles.stack3}>
+                <div className={styles.box4}></div>
+                <div className={styles.box4}></div>
+                <div className={styles.box14}></div>
               </div>
             </div>
 
             {/* Chương trình học */}
-            <div className="space-y-4">
-              <div className="h-6 w-56 rounded bg-slate-200"></div>
-              <div className="divide-y divide-slate-100 rounded-xl border border-slate-200">
+            <div className={styles.stack5}>
+              <div className={styles.box15}></div>
+              <div className={styles.box16}>
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center justify-between p-5">
-                    <div className="flex w-2/3 items-center gap-4">
-                      <div className="h-4 w-6 rounded bg-slate-200"></div>
-                      <div className="h-4 w-full rounded bg-slate-200"></div>
+                  <div key={i} className={styles.row3}>
+                    <div className={styles.row4}>
+                      <div className={styles.box17}></div>
+                      <div className={styles.box4}></div>
                     </div>
-                    <div className="h-5 w-20 rounded-full bg-slate-200"></div>
+                    <div className={styles.box18}></div>
                   </div>
                 ))}
               </div>
@@ -125,16 +126,16 @@ function CourseDetailSkeleton() {
           </div>
 
           {/* Cột phải (30%) */}
-          <div className="space-y-4 lg:col-span-4">
-            <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="space-y-2">
-                <div className="h-3 w-24 rounded bg-slate-200"></div>
-                <div className="h-8 w-32 rounded bg-slate-200"></div>
+          <div className={styles.stack6}>
+            <div className={styles.card2}>
+              <div className={styles.stack3}>
+                <div className={styles.box19}></div>
+                <div className={styles.box20}></div>
               </div>
-              <div className="h-12 w-full rounded-lg bg-slate-200"></div>
-              <div className="space-y-3 border-t border-slate-100 pt-4">
-                <div className="h-4 w-3/4 rounded bg-slate-200"></div>
-                <div className="h-4 w-5/6 rounded bg-slate-200"></div>
+              <div className={styles.box21}></div>
+              <div className={styles.stack7}>
+                <div className={styles.box22}></div>
+                <div className={styles.box5}></div>
               </div>
             </div>
           </div>
@@ -451,16 +452,13 @@ function CourseDetailPageContent() {
 
   if (!course) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4">
-        <div className="max-w-sm rounded-2xl border bg-white p-8 text-center shadow-sm">
-          <p className="text-base font-bold text-red-500">Không tìm thấy dữ liệu</p>
-          <p className="mt-1 text-xs text-slate-500">
+      <div className={styles.page2}>
+        <div className={styles.card3}>
+          <p className={styles.text}>Không tìm thấy dữ liệu</p>
+          <p className={styles.text2}>
             {error || "Khóa học không tồn tại hoặc chưa được xuất bản."}
           </p>
-          <button
-            onClick={() => router.push("/")}
-            className="mt-4 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
-          >
+          <button onClick={() => router.push("/")} className={styles.button}>
             Quay về trang chủ
           </button>
         </div>
@@ -474,60 +472,51 @@ function CourseDetailPageContent() {
       : course.instructor || "Expert Instructor";
 
   return (
-    <div className="min-h-screen bg-white pb-24 antialiased">
+    <div className={styles.page3}>
       {/* 1. HERO BANNER - FULL WIDTH CHUẨN COURSERA */}
-      <div className="border-b border-slate-200 bg-[#FBFCFD] py-16 text-slate-900">
-        <div className="mx-auto grid max-w-[1400px] grid-cols-1 items-center gap-12 px-6 md:px-12 lg:grid-cols-12">
+      <div className={styles.box23}>
+        <div className={styles.container}>
           {/* Thông tin khóa học */}
-          <div className="space-y-6 lg:col-span-7">
+          <div className={styles.stack}>
             {/* -my-2 py-2: noi cao vung cham len 40px cho ngon tay ma khong
                 day chu xuong. Ban cu cao dung 16px - tren dien thoai bam
                 truot la chuyen binh thuong. */}
-            <button
-              onClick={() => router.back()}
-              className="-my-2 inline-flex items-center gap-2 py-2 text-xs font-bold tracking-wider text-blue-600 transition hover:underline"
-            >
+            <button onClick={() => router.back()} className={styles.button2}>
               <ArrowLeft size={14} /> QUAY LẠI DANH MỤC
             </button>
 
-            <div className="space-y-4">
-              <h1 className="text-3xl leading-[1.15] font-semibold tracking-tight text-slate-900 md:text-5xl">
-                {course.title}
-              </h1>
-              <p className="max-w-2xl text-lg leading-relaxed font-normal text-slate-600">
+            <div className={styles.stack5}>
+              <h1 className={styles.title}>{course.title}</h1>
+              <p className={styles.text3}>
                 {course.description?.split(".")[0]}. Học cách thiết kế hệ thống thực
                 chiến, tăng tư duy logic cốt lõi.
               </p>
             </div>
 
             {/* Khối Đánh giá nhanh dưới Title */}
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-2 text-sm text-slate-700">
+            <div className={styles.row5}>
               {stats && (
-                <div className="flex items-center gap-1">
-                  <Star size={16} className="fill-amber-500 text-amber-500" />
-                  <span className="font-bold text-slate-900">
+                <div className={styles.row6}>
+                  <Star size={16} className={styles.box24} />
+                  <span className={styles.label}>
                     {Number(stats.averageRating).toFixed(1)}
                   </span>
-                  <span className="text-slate-500">({stats.totalReviews} đánh giá)</span>
+                  <span className={styles.label2}>({stats.totalReviews} đánh giá)</span>
                 </div>
               )}
-              <div className="hidden h-4 w-px bg-slate-300 sm:block"></div>
-              <div className="flex items-center gap-1.5">
-                <User size={16} className="text-slate-500" />
+              <div className={styles.box25}></div>
+              <div className={styles.row7}>
+                <User size={16} className={styles.label2} />
                 <span>
-                  Giảng viên:{" "}
-                  <strong className="font-medium text-slate-950">{instructorName}</strong>
+                  Giảng viên: <strong className={styles.strong}>{instructorName}</strong>
                 </span>
               </div>
             </div>
 
             {/* Nút Đăng ký To bự trên Banner (Khác biệt lớn nhất của Coursera) */}
-            <div className="flex flex-col items-start gap-4 pt-4 sm:flex-row sm:items-center">
+            <div className={styles.col}>
               {isEnrolled ? (
-                <Link
-                  href={`/learn?slug=${courseSlug}`}
-                  className="rounded-lg bg-blue-700 px-8 py-4 text-center text-base font-bold tracking-wide text-white shadow-sm transition hover:bg-blue-800"
-                >
+                <Link href={`/learn?slug=${courseSlug}`} className={styles.card4}>
                   Vào lớp học ngay
                 </Link>
               ) : (
@@ -547,20 +536,20 @@ function CourseDetailPageContent() {
                     void handleEnrollCourse();
                   }}
                   disabled={submitting}
-                  className="flex items-center gap-3 rounded-lg bg-blue-700 px-10 py-4 text-center text-base font-bold tracking-wide text-white shadow-md transition hover:bg-blue-800 disabled:bg-blue-400"
+                  className={styles.button3}
                 >
                   {submitting
                     ? "Đang xử lý..."
                     : (course.price ?? 0) > 0
                       ? `Mua khóa học - ${dinhDangTien(course.price ?? 0)}`
                       : "Đăng ký học miễn phí"}
-                  <span className="text-xs font-normal opacity-80">
+                  <span className={styles.label3}>
                     {(course.price ?? 0) > 0 ? "Coin hoặc chuyển khoản" : "Bắt đầu ngay"}
                   </span>
                 </button>
               )}
-              <div className="text-xs text-slate-500">
-                <span className="font-bold text-slate-900">
+              <div className={styles.box26}>
+                <span className={styles.label}>
                   {(course.studentsCount || 0).toLocaleString()}
                 </span>{" "}
                 học viên đã tham gia khóa học này.
@@ -569,18 +558,18 @@ function CourseDetailPageContent() {
           </div>
 
           {/* Hình ảnh/Thumbnail bên phải chuẩn Coursera */}
-          <div className="relative order-first aspect-video w-full overflow-hidden rounded-xl border border-slate-200/60 shadow-2xl lg:order-last lg:col-span-5">
+          <div className={styles.box27}>
             {course.thumbnail ? (
               <SafeImage
                 src={course.thumbnail}
                 alt={course.title}
                 fill
                 sizes="(max-width: 1024px) 100vw, 40vw"
-                className="object-cover"
+                className={styles.box28}
               />
             ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center bg-slate-100 text-slate-500">
-                <BookOpen size={48} className="stroke-[1.2]" />
+              <div className={styles.col2}>
+                <BookOpen size={48} className={styles.box29} />
               </div>
             )}
           </div>
@@ -588,8 +577,8 @@ function CourseDetailPageContent() {
       </div>
 
       {/* 2. SUB-NAVBAR CHỈ MỤC (STICKY SUB-HEADER) */}
-      <div className="sticky top-0 z-40 hidden border-b border-slate-200 bg-white shadow-sm md:block">
-        <div className="mx-auto flex max-w-[1400px] gap-8 px-12">
+      <div className={styles.sticky}>
+        <div className={styles.container4}>
           {[
             { id: "about", label: "Tổng quan" },
             { id: "curriculum", label: "Chương trình học" },
@@ -604,10 +593,8 @@ function CourseDetailPageContent() {
                   .getElementById(tab.id)
                   ?.scrollIntoView({ behavior: "smooth", block: "center" });
               }}
-              className={`border-b-2 py-4 text-sm font-medium transition-all ${
-                activeTab === tab.id
-                  ? "border-blue-700 font-bold text-blue-700"
-                  : "border-transparent text-slate-600 hover:text-slate-900"
+              className={`${styles.button12} ${
+                activeTab === tab.id ? styles.button4 : styles.button5
               }`}
             >
               {tab.label}
@@ -617,95 +604,75 @@ function CourseDetailPageContent() {
       </div>
 
       {/* 3. NỘI DUNG CHÍNH - 3 THÔNG SỐ SƠ LƯỢC KẾ HOẠCH */}
-      <div className="mx-auto mt-12 max-w-[1400px] px-6 md:px-12">
+      <div className={styles.container3}>
         {/* Khối Grid 4 cột tổng quan thông số kĩ thuật */}
-        <div className="mb-12 grid grid-cols-2 gap-6 rounded-xl border border-slate-200 bg-slate-50/50 p-6 md:grid-cols-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-              <Award size={14} className="text-blue-600" /> Tiến độ học
+        <div className={styles.card}>
+          <div className={styles.stack8}>
+            <div className={styles.row8}>
+              <Award size={14} className={styles.box30} /> Tiến độ học
             </div>
-            <p className="text-sm font-bold text-slate-800">Cấp chứng chỉ hoàn thành</p>
+            <p className={styles.text4}>Cấp chứng chỉ hoàn thành</p>
           </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-              <Clock size={14} className="text-blue-600" /> Thời gian học
+          <div className={styles.stack8}>
+            <div className={styles.row8}>
+              <Clock size={14} className={styles.box30} /> Thời gian học
             </div>
-            <p className="text-sm font-bold text-slate-800">
-              Khoảng 4 tháng (Tự điều chỉnh)
-            </p>
+            <p className={styles.text4}>Khoảng 4 tháng (Tự điều chỉnh)</p>
           </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-              <Sliders size={14} className="text-blue-600" /> Cấp độ chuyên môn
+          <div className={styles.stack8}>
+            <div className={styles.row8}>
+              <Sliders size={14} className={styles.box30} /> Cấp độ chuyên môn
             </div>
-            <p className="text-sm font-bold text-slate-800 capitalize">
-              {course.level || "Beginner level"}
-            </p>
+            <p className={styles.text5}>{course.level || "Beginner level"}</p>
           </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-              <Calendar size={14} className="text-blue-600" /> Lịch trình học
+          <div className={styles.stack8}>
+            <div className={styles.row8}>
+              <Calendar size={14} className={styles.box30} /> Lịch trình học
             </div>
-            <p className="text-sm font-bold text-slate-800">100% Linh hoạt theo ý bạn</p>
+            <p className={styles.text4}>100% Linh hoạt theo ý bạn</p>
           </div>
         </div>
 
         {/* Bố cục Grid chính: Cột trái (70%) - Cột phải (30%) */}
-        <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-12">
+        <div className={styles.grid}>
           {/* CỘT TRÁI CHỨA NỘI DUNG CHI TIẾT */}
-          <div className="space-y-16 lg:col-span-8">
+          <div className={styles.stack4}>
             {/* Tab 1: About */}
-            <section id="about" className="scroll-mt-20 space-y-4">
-              <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-                Giới thiệu về khóa học này
-              </h2>
-              <div className="pr-4 text-base leading-relaxed font-normal whitespace-pre-line text-slate-700">
+            <section id="about" className={styles.section}>
+              <h2 className={styles.heading}>Giới thiệu về khóa học này</h2>
+              <div className={styles.box31}>
                 {course.description ||
                   "Chưa có bài viết mô tả chi tiết cho chương trình đào tạo này."}
               </div>
             </section>
 
             {/* Tab 2: Curriculum */}
-            <section id="curriculum" className="scroll-mt-20 space-y-6">
-              <div className="flex items-end justify-between border-b border-slate-200 pb-3">
-                <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-                  Nội dung chương trình đào tạo
-                </h2>
-                <span className="rounded bg-slate-100 px-2.5 py-1 text-xs font-bold tracking-wide text-slate-500 uppercase">
+            <section id="curriculum" className={styles.section2}>
+              <div className={styles.row9}>
+                <h2 className={styles.heading}>Nội dung chương trình đào tạo</h2>
+                <span className={styles.label4}>
                   {course.lessons?.length || 0} Học phần bài giảng
                 </span>
               </div>
 
-              <div className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+              <div className={styles.box32}>
                 {course.lessons && course.lessons.length > 0 ? (
                   [...(course.lessons as Lesson[])]
                     .sort((a, b) => (a.order || 0) - (b.order || 0))
                     .map((lesson, index: number) => (
-                      <div
-                        key={lesson._id || index}
-                        className="group flex items-center justify-between bg-white p-4 transition hover:bg-slate-50/60 md:p-5"
-                      >
-                        <div className="flex min-w-0 items-center gap-4">
-                          <span className="w-6 text-center text-sm font-bold text-slate-500 group-hover:text-blue-600">
-                            {index + 1}
-                          </span>
-                          <CheckCircle
-                            size={16}
-                            className="flex-shrink-0 text-slate-400 transition-colors group-hover:text-blue-600"
-                          />
-                          <span className="truncate text-sm font-medium text-slate-800 md:text-base">
-                            {lesson.title}
-                          </span>
+                      <div key={lesson._id || index} className={`group ${styles.row10}`}>
+                        <div className={styles.row11}>
+                          <span className={styles.label5}>{index + 1}</span>
+                          <CheckCircle size={16} className={styles.box33} />
+                          <span className={styles.label6}>{lesson.title}</span>
                         </div>
                         {lesson.videoUrl && (
-                          <span className="flex-shrink-0 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-600">
-                            Bài học Video
-                          </span>
+                          <span className={styles.card5}>Bài học Video</span>
                         )}
                       </div>
                     ))
                 ) : (
-                  <p className="bg-slate-50/50 py-8 text-center text-sm text-slate-500 italic">
+                  <p className={styles.text6}>
                     Nội dung bài học hiện tại đang được xây dựng.
                   </p>
                 )}
@@ -713,50 +680,42 @@ function CourseDetailPageContent() {
             </section>
 
             {/* Tab 3: FAQs */}
-            <section id="faqs" className="scroll-mt-20 space-y-6">
+            <section id="faqs" className={styles.section2}>
               {(loadingFaqs || faqs.length > 0) && (
-                <div className="space-y-4">
-                  <h2 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-slate-900">
-                    Các câu hỏi thường gặp hệ thống
-                  </h2>
+                <div className={styles.stack5}>
+                  <h2 className={styles.heading2}>Các câu hỏi thường gặp hệ thống</h2>
 
                   {loadingFaqs ? (
-                    <div className="flex items-center gap-2 py-4 text-xs text-slate-500">
-                      <Loader2 className="animate-spin text-blue-600" size={16} />
+                    <div className={styles.row12}>
+                      <Loader2 className={styles.spinner} size={16} />
                       <span>Đang kết nối hệ thống giải đáp...</span>
                     </div>
                   ) : (
-                    <div className="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                    <div className={styles.card6}>
                       {faqs.map((faq, index) => {
                         const isOpen = openFaqIndex === index;
                         return (
-                          <div key={faq._id || index} className="p-1">
+                          <div key={faq._id || index} className={styles.box34}>
                             <button
                               onClick={() => setOpenFaqIndex(isOpen ? null : index)}
-                              className="group flex w-full items-center justify-between p-4 text-left select-none"
+                              className={`group ${styles.button6}`}
                             >
-                              <span className="pr-4 text-base font-semibold text-slate-800 transition-colors group-hover:text-blue-700">
-                                {faq.question}
-                              </span>
+                              <span className={styles.label7}>{faq.question}</span>
                               <ChevronDown
                                 size={18}
-                                className={`flex-shrink-0 text-slate-500 transition-transform duration-300 ${
-                                  isOpen ? "rotate-180 text-blue-700" : ""
+                                className={`${styles.box45} ${
+                                  isOpen ? styles.box35 : ""
                                 }`}
                               />
                             </button>
 
                             <div
-                              className={`grid transition-all duration-200 ease-in-out ${
-                                isOpen
-                                  ? "grid-rows-[1fr] opacity-100"
-                                  : "grid-rows-[0fr] opacity-0"
+                              className={`${styles.grid2} ${
+                                isOpen ? styles.box36 : styles.box37
                               }`}
                             >
-                              <div className="overflow-hidden">
-                                <p className="mx-4 mt-1 mb-4 rounded-lg border border-slate-100 bg-slate-50 p-4 text-sm leading-relaxed text-slate-600">
-                                  {faq.answer}
-                                </p>
+                              <div className={styles.box38}>
+                                <p className={styles.text7}>{faq.answer}</p>
                               </div>
                             </div>
                           </div>
@@ -769,18 +728,16 @@ function CourseDetailPageContent() {
             </section>
 
             {/* Tab 4: Reviews */}
-            <section id="reviews" className="scroll-mt-20 space-y-6">
-              <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-                Ý kiến từ cộng đồng học viên
-              </h2>
+            <section id="reviews" className={styles.section2}>
+              <h2 className={styles.heading}>Ý kiến từ cộng đồng học viên</h2>
 
               {stats && (
-                <div className="grid grid-cols-1 items-center gap-6 rounded-xl border border-slate-200 bg-slate-50/50 p-6 md:grid-cols-12">
-                  <div className="border-slate-200 py-2 text-center md:col-span-4 md:border-r">
-                    <p className="text-5xl font-black tracking-tight text-slate-900">
+                <div className={styles.card7}>
+                  <div className={styles.box39}>
+                    <p className={styles.text8}>
                       {Number(stats.averageRating).toFixed(1)}
                     </p>
-                    <div className="my-2 flex justify-center text-amber-500">
+                    <div className={styles.row13}>
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
@@ -793,34 +750,25 @@ function CourseDetailPageContent() {
                         />
                       ))}
                     </div>
-                    <p className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                      {stats.totalReviews} xếp hạng thực tế
-                    </p>
+                    <p className={styles.text9}>{stats.totalReviews} xếp hạng thực tế</p>
                   </div>
 
-                  <div className="space-y-2 px-2 md:col-span-8">
+                  <div className={styles.stack9}>
                     {Object.entries(stats.ratingDistribution)
                       .reverse()
                       .map(([star, count]) => (
-                        <div
-                          key={star}
-                          className="flex items-center gap-3 text-xs font-semibold text-slate-700"
-                        >
-                          <span className="w-3 text-right">{star}</span>
-                          <Star
-                            size={12}
-                            fill="currentColor"
-                            className="flex-shrink-0 text-amber-500"
-                          />
-                          <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200">
+                        <div key={star} className={styles.row14}>
+                          <span className={styles.label8}>{star}</span>
+                          <Star size={12} fill="currentColor" className={styles.box40} />
+                          <div className={styles.box41}>
                             <div
-                              className="h-full rounded-full bg-amber-500"
+                              className={styles.box42}
                               style={{
                                 width: `${stats.totalReviews > 0 ? (count / stats.totalReviews) * 100 : 0}%`,
                               }}
                             ></div>
                           </div>
-                          <span className="w-8 text-right text-slate-500">{count}</span>
+                          <span className={styles.label9}>{count}</span>
                         </div>
                       ))}
                   </div>
@@ -829,19 +777,19 @@ function CourseDetailPageContent() {
 
               {/* KHU VỰC THÊM ĐÁNH GIÁ CỦA BẢN THÂN */}
               {isEnrolled && userProgress >= 25 ? (
-                <div className="space-y-4 rounded-xl border border-blue-100 bg-blue-50/40 p-5 shadow-sm">
-                  <h4 className="flex items-center gap-2 text-sm font-bold text-slate-800">
-                    <Star size={16} className="fill-amber-500 text-amber-500" />
+                <div className={styles.card8}>
+                  <h4 className={styles.minorHeading}>
+                    <Star size={16} className={styles.box24} />
                     Chia sẻ trải nghiệm học của bạn (Tiến độ: {userProgress}%)
                   </h4>
 
-                  <div className="flex gap-1">
+                  <div className={styles.row15}>
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
                         type="button"
                         onClick={() => setNewRating(star)}
-                        className="text-amber-500 transition hover:scale-110"
+                        className={styles.button7}
                       >
                         <Star
                           size={20}
@@ -851,14 +799,14 @@ function CourseDetailPageContent() {
                     ))}
                   </div>
 
-                  <div className="space-y-3">
+                  <div className={styles.stack2}>
                     <textarea
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
                       placeholder="Nội dung kiến thức có sát với thực chiến không? Hãy đánh giá trung thực để cải thiện hệ thống nhé..."
-                      className="min-h-[90px] w-full resize-none rounded-xl border border-slate-200 bg-white p-4 text-sm shadow-inner focus:border-blue-600 focus:outline-none"
+                      className={styles.textarea}
                     />
-                    <div className="flex justify-end">
+                    <div className={styles.row16}>
                       <button
                         onClick={async () => {
                           if (!newComment.trim()) return alert("Vui lòng nhập phản hồi!");
@@ -879,7 +827,7 @@ function CourseDetailPageContent() {
                           }
                         }}
                         disabled={isSubmittingReview}
-                        className="rounded-lg bg-blue-700 px-5 py-2.5 text-xs font-bold tracking-wider text-white uppercase transition hover:bg-blue-800 disabled:bg-slate-300"
+                        className={styles.button8}
                       >
                         {isSubmittingReview ? "Đang gửi đi..." : "Đăng tải phản hồi"}
                       </button>
@@ -887,43 +835,36 @@ function CourseDetailPageContent() {
                   </div>
                 </div>
               ) : isEnrolled ? (
-                <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-center">
-                  <p className="text-xs font-semibold text-slate-500">
+                <div className={styles.card9}>
+                  <p className={styles.text10}>
                     🔒 Bạn cần tích lũy học tập tối thiểu{" "}
-                    <strong className="text-slate-900">25%</strong> tổng thời lượng khóa
+                    <strong className={styles.strong2}>25%</strong> tổng thời lượng khóa
                     học để mở khóa tính năng viết bình luận.
                   </p>
-                  <p className="mt-1 text-[11px] text-slate-500">
+                  <p className={styles.text11}>
                     Tiến trình lớp học hiện tại của bạn: {userProgress}%
                   </p>
                 </div>
               ) : null}
 
               {/* LIST HIỂN THỊ ĐÁNH GIÁ */}
-              <div className="space-y-4">
+              <div className={styles.stack5}>
                 {loadingReviews ? (
-                  <p className="py-4 text-center text-xs text-slate-500">
-                    Đang đồng bộ bình luận...
-                  </p>
+                  <p className={styles.text12}>Đang đồng bộ bình luận...</p>
                 ) : reviews.length > 0 ? (
                   reviews.map((review) => (
-                    <div
-                      key={review._id}
-                      className="space-y-3 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                    <div key={review._id} className={styles.card10}>
+                      <div className={styles.row17}>
+                        <div className={styles.row18}>
                           <AnhDaiDien
                             src={review.student?.avatar}
                             ten={review.student?.name}
                             size={36}
-                            nenChuCai="bg-blue-100 text-blue-700"
+                            nenChuCai={styles.box46}
                           />
                           <div>
-                            <p className="text-sm font-bold text-slate-800">
-                              {review.student?.name}
-                            </p>
-                            <div className="mt-0.5 flex gap-0.5 text-amber-500">
+                            <p className={styles.text4}>{review.student?.name}</p>
+                            <div className={styles.row19}>
                               {[...Array(5)].map((_, i) => (
                                 <Star
                                   key={i}
@@ -934,25 +875,23 @@ function CourseDetailPageContent() {
                             </div>
                           </div>
                         </div>
-                        <span className="text-[11px] font-medium text-slate-500">
+                        <span className={styles.label10}>
                           {new Date(review.createdAt).toLocaleDateString("vi-VN")}
                         </span>
                       </div>
 
-                      <p className="pl-1 text-sm leading-relaxed font-normal text-slate-600">
-                        {review.comment}
-                      </p>
+                      <p className={styles.text13}>{review.comment}</p>
 
-                      <div className="flex items-center gap-4 pt-1 pl-1">
+                      <div className={styles.row20}>
                         <button
                           onClick={() => handleMarkHelpful(review._id)}
-                          className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 transition hover:text-blue-700"
+                          className={styles.button9}
                         >
                           <ThumbsUp size={13} />
                           <span>Bình luận hữu ích ({review.helpful})</span>
                         </button>
                         {review.isVerifiedPurchase && (
-                          <span className="rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                          <span className={styles.card11}>
                             Tài khoản đã được xác thực
                           </span>
                         )}
@@ -960,7 +899,7 @@ function CourseDetailPageContent() {
                     </div>
                   ))
                 ) : (
-                  <p className="rounded-xl border border-dashed py-6 text-center text-sm text-slate-500 italic">
+                  <p className={styles.text14}>
                     Khóa học này hiện chưa nhận được phản hồi.
                   </p>
                 )}
@@ -969,18 +908,13 @@ function CourseDetailPageContent() {
           </div>
 
           {/* CỘT PHẢI: BANNER BOX PHỤ (TRÁNH BỊ TRỐNG KHI CUỘN) */}
-          <div
-            id="mua-khoa-hoc"
-            className="scroll-mt-24 space-y-4 lg:sticky lg:top-24 lg:col-span-4"
-          >
-            <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-md">
-              <div className="space-y-1">
-                <span className="block text-xs font-bold tracking-widest text-slate-500 uppercase">
-                  Mức giá chương trình
-                </span>
-                <div className="text-3xl font-bold tracking-tight text-slate-900">
+          <div id="mua-khoa-hoc" className={styles.stack10}>
+            <div className={styles.card12}>
+              <div className={styles.stack8}>
+                <span className={styles.label11}>Mức giá chương trình</span>
+                <div className={styles.box43}>
                   {(course.price ?? 0) === 0 ? (
-                    <span className="font-bold text-emerald-600">Miễn phí</span>
+                    <span className={styles.label12}>Miễn phí</span>
                   ) : (
                     <span>{(course.price ?? 0).toLocaleString("vi-VN")}đ</span>
                   )}
@@ -988,20 +922,17 @@ function CourseDetailPageContent() {
               </div>
 
               {error && !isEnrolled && (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-                  <p className="text-xs font-medium text-red-600">{error}</p>
+                <div className={styles.card13}>
+                  <p className={styles.text15}>{error}</p>
                 </div>
               )}
 
               {isEnrolled ? (
-                <Link
-                  href={`/learn?slug=${courseSlug}`}
-                  className="block w-full rounded-lg bg-blue-700 px-4 py-3 text-center text-sm font-bold tracking-wider text-white uppercase shadow-md transition hover:bg-blue-800"
-                >
+                <Link href={`/learn?slug=${courseSlug}`} className={styles.card14}>
                   Tiếp tục học tập
                 </Link>
               ) : (
-                <div className="space-y-3">
+                <div className={styles.stack2}>
                   {/* O nhap ma dat TREN ca hai nut mua: nguoi dung phai ap ma
                       xong roi moi bam mua, khong phai bam mua roi moi phat
                       hien ra minh quen nhap ma. */}
@@ -1016,11 +947,11 @@ function CourseDetailPageContent() {
                   )}
 
                   {soTienGiam > 0 && (
-                    <p className="text-sm text-slate-600">
-                      <span className="text-slate-400 line-through">
+                    <p className={styles.text16}>
+                      <span className={styles.label13}>
                         {(course.price ?? 0).toLocaleString("vi-VN")}đ
                       </span>{" "}
-                      <span className="font-bold text-emerald-700 tabular-nums">
+                      <span className={styles.label14}>
                         {Math.max(0, (course.price ?? 0) - soTienGiam).toLocaleString(
                           "vi-VN",
                         )}
@@ -1056,10 +987,7 @@ function CourseDetailPageContent() {
                       lai thanh toan la bat nguoi ta di duong vong. */}
                   {(course.price ?? 0) > 0 &&
                     (coTrongGio(course._id) ? (
-                      <Link
-                        href="/cart"
-                        className="flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-emerald-500 bg-emerald-50 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100"
-                      >
+                      <Link href="/cart" className={styles.card15}>
                         <Check size={16} /> Đã có trong giỏ — Xem giỏ hàng
                       </Link>
                     ) : (
@@ -1074,7 +1002,7 @@ function CourseDetailPageContent() {
                             gia: course.price ?? 0,
                           })
                         }
-                        className="flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white text-sm font-bold text-slate-700 transition hover:border-blue-500 hover:text-blue-600"
+                        className={styles.button10}
                       >
                         <ShoppingCart size={16} /> Thêm vào giỏ
                       </button>
@@ -1083,7 +1011,7 @@ function CourseDetailPageContent() {
                   <button
                     onClick={handleEnrollCourse}
                     disabled={submitting}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-3 text-center text-sm font-bold tracking-wider text-white uppercase shadow-md transition hover:bg-slate-800 disabled:bg-slate-500"
+                    className={styles.button11}
                   >
                     <CreditCard size={15} />
                     {submitting
@@ -1095,13 +1023,13 @@ function CourseDetailPageContent() {
                 </div>
               )}
 
-              <div className="space-y-3 border-t border-slate-100 pt-4 text-xs font-medium text-slate-600">
-                <div className="flex items-center gap-2.5">
-                  <ShieldCheck size={16} className="flex-shrink-0 text-emerald-500" />
+              <div className={styles.stack11}>
+                <div className={styles.row21}>
+                  <ShieldCheck size={16} className={styles.box44} />
                   <span>Quyền sở hữu chương trình vô thời hạn</span>
                 </div>
-                <div className="flex items-center gap-2.5">
-                  <ShieldCheck size={16} className="flex-shrink-0 text-emerald-500" />
+                <div className={styles.row21}>
+                  <ShieldCheck size={16} className={styles.box44} />
                   <span>Tự động nhận bài tập & giáo trình mới nhất</span>
                 </div>
               </div>
@@ -1126,8 +1054,8 @@ export default function CourseDetailPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-[#f8fafc]">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
+        <div className={styles.page4}>
+          <div className={styles.spinner2} />
         </div>
       }
     >

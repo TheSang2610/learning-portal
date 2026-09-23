@@ -7,6 +7,7 @@ import { AlertCircle, ArrowLeft, Trash2, Save, X } from "lucide-react";
 // 🎯 Giữ nguyên các hàm xử lý dữ liệu từ Service chung
 import { getLessonById, updateLesson, deleteLesson } from "@/src/services/lesson.api";
 
+import styles from "./page.module.scss";
 function InstructorEditLessonPageContent() {
   const params = useSearchParams();
   const router = useRouter();
@@ -99,21 +100,17 @@ function InstructorEditLessonPageContent() {
   };
 
   if (loading) {
-    return (
-      <div className="animate-pulse p-20 text-center text-sm font-medium text-slate-500">
-        Đang tải thông tin bài học...
-      </div>
-    );
+    return <div className={styles.box}>Đang tải thông tin bài học...</div>;
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-4">
+    <div className={styles.container}>
       {/* BANNER CẢNH BÁO CHẾ ĐỘ INSTRUCTOR */}
-      <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-800">
-        <AlertCircle size={18} className="mt-0.5 shrink-0 text-amber-600" />
-        <div className="text-xs">
-          <p className="font-bold">Chế độ Giảng viên (Instructor Mode)</p>
-          <p className="mt-0.5 text-amber-600">
+      <div className={styles.card}>
+        <AlertCircle size={18} className={styles.box2} />
+        <div className={styles.box3}>
+          <p className={styles.text}>Chế độ Giảng viên (Instructor Mode)</p>
+          <p className={styles.text2}>
             Mọi chỉnh sửa hoặc xóa bài học tại đây sẽ trực tiếp thay đổi nội dung học liệu
             bản nháp của bạn.
           </p>
@@ -124,26 +121,23 @@ function InstructorEditLessonPageContent() {
       <div>
         <button
           onClick={() => router.push(`/instructor/lessons?courseId=${courseId}`)}
-          className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-800"
+          className={styles.button}
         >
           <ArrowLeft size={16} /> Quay lại giáo trình
         </button>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-          Chỉnh Sửa Bài Học
-        </h1>
-        <p className="mt-1 text-xs text-slate-500">
+        <h1 className={styles.title}>Chỉnh Sửa Bài Học</h1>
+        <p className={styles.text3}>
           Cập nhật chi tiết nội dung, thứ tự xuất hiện và luồng video.
         </p>
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className={styles.card2}>
         {/* KHU VỰC THÔNG TIN TIÊU ĐỀ & NÚT XÓA */}
-        <div className="mb-5 flex flex-col justify-between gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-center">
+        <div className={styles.col}>
           <div>
-            <h3 className="text-sm font-bold text-slate-800">Thông tin bài học</h3>
-            <p className="text-xs text-slate-500">
-              ID bài học hiện tại:{" "}
-              <span className="font-mono text-slate-500">{lessonId}</span>
+            <h3 className={styles.subheading}>Thông tin bài học</h3>
+            <p className={styles.text4}>
+              ID bài học hiện tại: <span className={styles.label}>{lessonId}</span>
             </p>
           </div>
 
@@ -152,7 +146,7 @@ function InstructorEditLessonPageContent() {
             type="button"
             disabled={deleting || submitting}
             onClick={deleteHandler}
-            className="inline-flex items-center justify-center gap-2 self-start rounded-xl bg-red-50 px-4 py-2.5 text-xs font-bold text-red-600 transition hover:bg-red-100 disabled:bg-slate-100 disabled:text-slate-400 sm:self-auto"
+            className={styles.button2}
           >
             <Trash2 size={14} />
             {deleting ? "Đang xóa..." : "Xóa bài học"}
@@ -160,30 +154,26 @@ function InstructorEditLessonPageContent() {
         </div>
 
         {/* FORM BIỂU MẪU CHỈNH SỬA */}
-        <form onSubmit={saveHandler} className="space-y-5">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <div className="md:col-span-3">
-              <label className="mb-1.5 block text-xs font-bold text-slate-600">
-                Tên bài học / Tiêu đề
-              </label>
+        <form onSubmit={saveHandler} className={styles.form}>
+          <div className={styles.grid}>
+            <div className={styles.box4}>
+              <label className={styles.fieldLabel}>Tên bài học / Tiêu đề</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 p-3 text-sm transition outline-none focus:border-blue-500"
+                className={styles.input}
                 required
               />
             </div>
 
-            <div className="md:col-span-1">
-              <label className="mb-1.5 block text-xs font-bold text-slate-600">
-                Thứ tự hiển thị
-              </label>
+            <div className={styles.box5}>
+              <label className={styles.fieldLabel}>Thứ tự hiển thị</label>
               <input
                 type="number"
                 value={order}
                 onChange={(e) => setOrder(Number(e.target.value))}
-                className="w-full rounded-xl border border-slate-200 p-3 text-sm transition outline-none focus:border-blue-500"
+                className={styles.input}
                 min={1}
                 required
               />
@@ -191,38 +181,34 @@ function InstructorEditLessonPageContent() {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-slate-600">
-              Đường dẫn Video bài học (URL)
-            </label>
+            <label className={styles.fieldLabel}>Đường dẫn Video bài học (URL)</label>
             <input
               type="text"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
               placeholder="Ví dụ: https://www.youtube.com/watch?v=..."
-              className="w-full rounded-xl border border-slate-200 p-3 font-mono text-sm text-slate-600 transition outline-none focus:border-blue-500"
+              className={styles.input2}
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-slate-600">
-              Tóm tắt nội dung bài học
-            </label>
+            <label className={styles.fieldLabel}>Tóm tắt nội dung bài học</label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={6}
               placeholder="Ghi chú nội dung cốt lõi, tài liệu đính kèm hoặc văn bản hướng dẫn bài học..."
-              className="w-full rounded-xl border border-slate-200 p-3 text-sm leading-relaxed text-slate-700 transition outline-none focus:border-blue-500"
+              className={styles.textarea}
             />
           </div>
 
           {/* NHÓM NÚT ĐIỀU HƯỚNG FORM */}
-          <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
+          <div className={styles.row}>
             <button
               type="button"
               disabled={submitting || deleting}
               onClick={() => router.push(`/instructor/lessons?courseId=${courseId}`)}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-5 py-3 text-xs font-bold text-slate-600 transition hover:bg-slate-50"
+              className={styles.button3}
             >
               <X size={14} /> Hủy bỏ
             </button>
@@ -230,7 +216,7 @@ function InstructorEditLessonPageContent() {
             <button
               type="submit"
               disabled={submitting || deleting}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-6 py-3 text-xs font-bold text-white shadow-md transition hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400"
+              className={styles.button4}
             >
               <Save size={14} />
               {submitting ? "Đang lưu..." : "Lưu thay đổi"}
@@ -248,8 +234,8 @@ export default function InstructorEditLessonPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-600" />
+        <div className={styles.row2}>
+          <div className={styles.spinner} />
         </div>
       }
     >

@@ -7,7 +7,7 @@
  */
 
 const schemas = require("./schemas");
-const { banhRa } = require("./duongDan");
+const { banhRa } = require("./paths");
 
 // May chu duoc liet ke trong tai lieu. Doc tu bien moi truong de ban tren
 // Render/Railway khong hien dia chi localhost cua may lap trinh.
@@ -89,7 +89,7 @@ const spec = {
     schemas,
   },
   // Mac dinh moi endpoint deu can phien; endpoint cong khai tu ghi de bang
-  // `security: []` trong duongDan.js.
+  // `security: []` trong paths.js.
   security: [{ cookiePhien: [] }],
   paths: banhRa(),
 };

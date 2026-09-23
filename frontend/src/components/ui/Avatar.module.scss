@@ -1,0 +1,28 @@
+// Anh dai dien.
+
+.base {
+  flex-shrink: 0;
+  border-radius: 9999px;
+  object-fit: cover;
+}
+
+// Vong tron chu cai khi khong co anh.
+.fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+}
+
+// Mau nen mac dinh cua vong tron chu cai. Cho goi tu ngoai vao qua prop
+// nenChuCai, nen day chi la duong lui khi khong ai truyen gi.
+.defaultBg {
+  background-color: var(--color-indigo-600);
+  color: var(--color-white);
+}
+
+.image {
+  border: 1px solid var(--color-slate-200);
+  background-color: var(--color-slate-100);
+}

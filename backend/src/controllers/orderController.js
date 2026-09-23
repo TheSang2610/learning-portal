@@ -3,12 +3,12 @@ const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
-const { thongTinChuyenKhoan } = require('../config/thanhToan');
-const { phanTrang } = require('../utils/truyVan');
+const { thongTinChuyenKhoan } = require('../config/payment');
+const { phanTrang } = require('../utils/queryParams');
 const { guiMail, daCauHinh: mailDaCauHinh } = require('../config/mail');
-const { soanMailBaoChuyenKhoan } = require('../utils/mailDonHang');
-const LuotDungMa = require('../models/LuotDungMa');
-const { datChoLuotDung, hoanLuotDungMa } = require('./maGiamGiaController');
+const { soanMailBaoChuyenKhoan } = require('../utils/orderMail');
+const LuotDungMa = require('../models/VoucherUsage');
+const { datChoLuotDung, hoanLuotDungMa } = require('./voucherController');
 
 const { sinhMa, HAN_GIU_DON_MS } = Order;
 

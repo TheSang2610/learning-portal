@@ -5,6 +5,7 @@ import { GOC_API } from "@/src/services/serverFetch";
 
 export const revalidate = 30;
 
+import styles from "./page.module.scss";
 async function layTaiLieu(id: string): Promise<SharedDocument | null> {
   try {
     const res = await fetch(`${GOC_API}/api/documents/${id}`, {
@@ -40,7 +41,7 @@ export default async function DocumentDetailPage({
   if (!doc) notFound();
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] py-8">
+    <div className={styles.page}>
       <DocumentDetailClient doc={doc} />
     </div>
   );

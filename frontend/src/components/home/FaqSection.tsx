@@ -3,20 +3,18 @@
 import { useEffect, useState } from "react";
 import { HelpCircle, Minus, Plus } from "lucide-react";
 import { faqService, FaqItem } from "@/src/services/faq";
-import TieuDeMuc from "./TieuDeMuc";
+import TieuDeMuc from "./SectionHeading";
 
+import styles from "./FaqSection.module.scss";
 function FaqAccordionSkeleton() {
   return (
-    <div className="mt-2 animate-pulse border-t border-gray-200">
+    <div className={styles.box}>
       {[1, 2, 3, 4].map((index) => (
-        <div
-          key={index}
-          className="flex items-center justify-between border-b border-gray-200 py-5"
-        >
+        <div key={index} className={styles.row}>
           {/* Thanh câu hỏi dài giả lập */}
-          <div className="h-4 w-3/4 rounded bg-slate-200 md:w-1/2"></div>
+          <div className={styles.box2}></div>
           {/* Vòng tròn icon mũi tên giả lập */}
-          <div className="h-5 w-5 flex-shrink-0 rounded-full bg-slate-200"></div>
+          <div className={styles.box3}></div>
         </div>
       ))}
     </div>
@@ -54,8 +52,8 @@ export default function FaqSection({ initialData }: Props) {
   };
 
   return (
-    <section className="bg-white">
-      <div className="mx-auto max-w-7xl px-6 py-14 md:py-16">
+    <section className={styles.section}>
+      <div className={styles.container}>
         <TieuDeMuc
           tieuDe="Câu hỏi thường gặp"
           moTa="Những thắc mắc hay gặp nhất về học phí, chứng nhận và cách khoá học vận hành."
@@ -64,7 +62,7 @@ export default function FaqSection({ initialData }: Props) {
         {loading ? (
           <FaqAccordionSkeleton />
         ) : faqs.length === 0 ? (
-          <div className="mt-8 flex items-center gap-2 rounded-2xl border border-dashed border-slate-300 px-5 py-10 text-sm text-slate-500">
+          <div className={styles.row2}>
             <HelpCircle size={18} />
             <span>Chưa có câu hỏi thường gặp nào được thiết lập cho Trang chủ.</span>
           </div>
@@ -72,26 +70,21 @@ export default function FaqSection({ initialData }: Props) {
           // Cot hep hon phan con lai cua trang: cau hoi va cau tra loi la van
           // ban chay, doc de nhat trong khoang 70-75 ky tu moi dong. De tran
           // ra 1280px thi mat phai luot ca man hinh moi het mot dong.
-          <div className="mt-8 max-w-4xl overflow-hidden rounded-2xl border border-slate-200/70 bg-white">
+          <div className={styles.card}>
             {faqs.map((faq, index) => {
               const isOpen = openIndex === index;
 
               return (
-                <div
-                  key={faq._id || index}
-                  className="border-b border-slate-100 last:border-b-0"
-                >
+                <div key={faq._id || index} className={styles.box4}>
                   <h3>
                     <button
                       onClick={() => toggleFaq(index)}
                       aria-expanded={isOpen}
-                      className="group flex w-full items-start justify-between gap-4 px-5 py-5 text-left transition select-none hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none focus-visible:ring-inset md:px-6"
+                      className={`group ${styles.button}`}
                     >
                       <span
-                        className={`text-[16px] leading-snug font-semibold transition-colors md:text-[17px] ${
-                          isOpen
-                            ? "text-blue-700"
-                            : "text-slate-900 group-hover:text-blue-700"
+                        className={`${styles.label5} ${
+                          isOpen ? styles.label : styles.label2
                         }`}
                       >
                         {faq.question}
@@ -103,10 +96,8 @@ export default function FaqSection({ initialData }: Props) {
                           doc man hinh. */}
                       <span
                         aria-hidden="true"
-                        className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition ${
-                          isOpen
-                            ? "bg-blue-600 text-white"
-                            : "bg-slate-100 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-600"
+                        className={`${styles.row3} ${
+                          isOpen ? styles.label3 : styles.label4
                         }`}
                       >
                         {isOpen ? <Minus size={15} /> : <Plus size={15} />}
@@ -114,15 +105,9 @@ export default function FaqSection({ initialData }: Props) {
                     </button>
                   </h3>
 
-                  <div
-                    className={`grid transition-all duration-300 ease-in-out ${
-                      isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-                    }`}
-                  >
-                    <div className="overflow-hidden">
-                      <p className="max-w-[72ch] px-5 pb-5 text-[15px] leading-[1.75] text-slate-600 md:px-6">
-                        {faq.answer}
-                      </p>
+                  <div className={`${styles.grid} ${isOpen ? styles.box5 : styles.box6}`}>
+                    <div className={styles.box7}>
+                      <p className={styles.text}>{faq.answer}</p>
                     </div>
                   </div>
                 </div>

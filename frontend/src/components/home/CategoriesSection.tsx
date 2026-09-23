@@ -16,8 +16,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { getCategories, Category } from "@/src/services/categoryService";
-import TieuDeMuc from "./TieuDeMuc";
+import TieuDeMuc from "./SectionHeading";
 
+import styles from "./CategoriesSection.module.scss";
 // Bieu tuong chon theo TU KHOA trong ten danh muc, khong theo truong icon cua
 // ban ghi: truong do la o nhap tu do trong trang quan tri, admin go gi cung
 // duoc, nen khong the dua vao no de chon dung mot component.
@@ -41,20 +42,17 @@ function chonBieuTuong(ten: string): LucideIcon {
 
 function CategoriesSkeleton() {
   return (
-    <section className="animate-pulse bg-white">
-      <div className="mx-auto max-w-7xl px-6 py-14 md:py-16">
-        <div className="h-8 w-64 rounded bg-slate-200" />
-        <div className="mt-3 h-4 w-96 max-w-full rounded bg-slate-200" />
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <section className={styles.section}>
+      <div className={styles.container}>
+        <div className={styles.box} />
+        <div className={styles.box2} />
+        <div className={styles.grid}>
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div
-              key={i}
-              className="flex items-center gap-4 rounded-2xl border border-slate-200/70 bg-white p-5"
-            >
-              <div className="h-12 w-12 shrink-0 rounded-xl bg-slate-200" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 w-2/3 rounded bg-slate-200" />
-                <div className="h-3 w-20 rounded bg-slate-200" />
+            <div key={i} className={styles.card}>
+              <div className={styles.box3} />
+              <div className={styles.stack}>
+                <div className={styles.box4} />
+                <div className={styles.box5} />
               </div>
             </div>
           ))}
@@ -100,8 +98,8 @@ export default function CategoriesSection({ initialData, soKhoaTheoDanhMuc }: Pr
   if (categories.length === 0) return null;
 
   return (
-    <section className="bg-white">
-      <div className="mx-auto max-w-7xl px-6 py-14 md:py-16">
+    <section className={styles.section2}>
+      <div className={styles.container}>
         <TieuDeMuc
           tieuDe="Khám phá danh mục"
           moTa="Chọn lĩnh vực bạn muốn theo đuổi. Mỗi danh mục là một lộ trình từ khoá nhập môn tới khoá nâng cao."
@@ -109,7 +107,7 @@ export default function CategoriesSection({ initialData, soKhoaTheoDanhMuc }: Pr
           chuXemTatCa="Xem toàn bộ khoá học"
         />
 
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className={styles.grid}>
           {categories.map((category) => {
             const catSlug =
               category.slug || category.name.toLowerCase().replace(/ /g, "-");
@@ -120,17 +118,15 @@ export default function CategoriesSection({ initialData, soKhoaTheoDanhMuc }: Pr
               <Link
                 href={`/courses?category=${catSlug}`}
                 key={category._id}
-                className="group flex items-center gap-4 rounded-2xl border border-slate-200/70 bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_8px_24px_-12px_rgba(0,86,210,.35)] focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
+                className={`group ${styles.card2}`}
               >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700 transition group-hover:bg-blue-600 group-hover:text-white">
+                <span className={styles.row}>
                   <Icon size={22} strokeWidth={1.75} />
                 </span>
 
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-semibold text-slate-900">
-                    {category.name}
-                  </span>
-                  <span className="mt-0.5 block text-[13px] text-slate-500">
+                <span className={styles.label}>
+                  <span className={styles.label2}>{category.name}</span>
+                  <span className={styles.label3}>
                     {soKhoa === undefined
                       ? "Xem khoá học"
                       : soKhoa === 0
@@ -139,10 +135,7 @@ export default function CategoriesSection({ initialData, soKhoaTheoDanhMuc }: Pr
                   </span>
                 </span>
 
-                <ArrowUpRight
-                  size={18}
-                  className="shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-blue-600"
-                />
+                <ArrowUpRight size={18} className={styles.box6} />
               </Link>
             );
           })}

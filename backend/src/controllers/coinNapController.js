@@ -1,11 +1,11 @@
 const CoinTopUp = require('../models/CoinTopUp');
 const User = require('../models/User');
-const { congCoin } = require('../utils/viCoin');
+const { congCoin } = require('../utils/coinWallet');
 const { coinRaDong, kiemSoCoinNap } = require('../utils/coin');
-const { thongTinChuyenKhoan } = require('../config/thanhToan');
-const { phanTrang } = require('../utils/truyVan');
+const { thongTinChuyenKhoan } = require('../config/payment');
+const { phanTrang } = require('../utils/queryParams');
 const { guiMail, daCauHinh: mailDaCauHinh } = require('../config/mail');
-const { soanMailBaoNapCoin } = require('../utils/mailNapCoin');
+const { soanMailBaoNapCoin } = require('../utils/coinTopUpMail');
 
 /**
  * Nap coin cho hoc vien: dat yeu cau -> chuyen khoan -> ngan hang bao co ->
@@ -15,7 +15,7 @@ const { soanMailBaoNapCoin } = require('../utils/mailNapCoin');
  * nap. Luong o day lam giong het luong mua khoa hoc de nguoi dung khong phai
  * hoc them mot cach thao tac moi.
  *
- * Phan CONG COIN TU DONG nam o controllers/webhookNganHangController.js. Cac
+ * Phan CONG COIN TU DONG nam o controllers/bankWebhookController.js. Cac
  * ham xac nhan/tu choi trong tep nay la duong tay, chi dung cho nhung khoan
  * webhook khong tu khop duoc.
  */

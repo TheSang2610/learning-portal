@@ -14,8 +14,9 @@ import {
   taoDonHang,
 } from "@/src/services/order";
 import { getErrorMessage } from "@/src/services/apiHelper";
-import NutMuaBangCoin from "@/src/components/common/NutMuaBangCoin";
+import NutMuaBangCoin from "@/src/components/common/BuyWithCoinButton";
 
+import styles from "./page.module.scss";
 // Bao lau hoi lai may chu mot lan xem don da duoc xac nhan chua.
 //
 // 10 giay: du nhanh de nguoi vua chuyen khoan thay khoa mo ra gan nhu ngay,
@@ -55,7 +56,7 @@ function NutChep({ giaTri, nhan }: { giaTri: string; nhan: string }) {
       type="button"
       onClick={chep}
       aria-label={`Sao chép ${nhan}`}
-      className="ml-2 rounded px-2 py-0.5 text-xs font-medium text-blue-600 transition hover:bg-blue-50"
+      className={styles.button}
     >
       {daChep ? "Đã chép" : "Chép"}
     </button>
@@ -203,12 +204,9 @@ function NoiDungThanhToan() {
 
   if (!ma) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-20 text-center">
-        <p className="mb-6 text-slate-700">Thiếu mã đơn hàng.</p>
-        <Link
-          href="/courses"
-          className="rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
-        >
+      <div className={styles.container}>
+        <p className={styles.text}>Thiếu mã đơn hàng.</p>
+        <Link href="/courses" className={styles.box}>
           Về danh sách khóa học
         </Link>
       </div>
@@ -216,21 +214,14 @@ function NoiDungThanhToan() {
   }
 
   if (dangTai) {
-    return (
-      <div className="mx-auto max-w-3xl px-4 py-20 text-center text-slate-500">
-        Đang tải đơn hàng…
-      </div>
-    );
+    return <div className={styles.container2}>Đang tải đơn hàng…</div>;
   }
 
   if (loi && !don) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-20 text-center">
-        <p className="mb-6 text-slate-700">{loi}</p>
-        <Link
-          href="/courses"
-          className="rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
-        >
+      <div className={styles.container}>
+        <p className={styles.text}>{loi}</p>
+        <Link href="/courses" className={styles.box}>
           Về danh sách khóa học
         </Link>
       </div>
@@ -242,17 +233,15 @@ function NoiDungThanhToan() {
   // --- Đơn đã thanh toán -----------------------------------------------
   if (don.status === "paid") {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <div className="mb-5 inline-flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-3xl text-green-600">
-          ✓
-        </div>
-        <h1 className="mb-3 text-2xl font-bold text-slate-900">Thanh toán thành công</h1>
-        <p className="mb-8 text-slate-600">
+      <div className={styles.container3}>
+        <div className={styles.box2}>✓</div>
+        <h1 className={styles.title}>Thanh toán thành công</h1>
+        <p className={styles.text2}>
           Khóa học <strong>{don.course?.title}</strong> đã được mở cho tài khoản của bạn.
         </p>
         <Link
           href={don.course ? `/learn?slug=${don.course.slug}` : "/courses"}
-          className="rounded-2xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+          className={styles.box3}
         >
           Vào học ngay
         </Link>
@@ -264,30 +253,26 @@ function NoiDungThanhToan() {
   if (don.status === "cancelled" || don.status === "expired") {
     const daHuy = don.status === "cancelled";
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <h1 className="mb-3 text-2xl font-bold text-slate-900">
+      <div className={styles.container3}>
+        <h1 className={styles.title}>
           {daHuy ? "Đơn hàng đã hủy" : "Đơn hàng đã hết hạn"}
         </h1>
-        <p className="mb-8 text-slate-600">
+        <p className={styles.text2}>
           {daHuy
             ? "Đơn này đã được hủy. Bạn có thể đặt lại đơn mới bất cứ lúc nào."
             : "Mã này đã quá hạn 15 phút nên không dùng để chuyển khoản được nữa — hãy lấy mã mới. Nếu bạn LỠ chuyển theo mã cũ rồi thì đừng chuyển lại: nhắn cho ban quản trị kèm mã đó, tiền vẫn đối chiếu và mở khoá được."}
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-3">
+        <div className={styles.row}>
           {/* Tao thang ma moi ngay tai day. Truoc day chi co duong quay ve
               trang khoa hoc roi bam Mua lai - ba buoc cho mot viec. */}
           {don.course && (
-            <button
-              onClick={taoMaMoi}
-              disabled={dangTaoLai}
-              className="rounded-2xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:bg-slate-300"
-            >
+            <button onClick={taoMaMoi} disabled={dangTaoLai} className={styles.button2}>
               {dangTaoLai ? "Đang tạo mã mới…" : "Lấy mã chuyển khoản mới"}
             </button>
           )}
           <Link
             href={don.course ? `/course?slug=${don.course.slug}` : "/courses"}
-            className="rounded-2xl border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400"
+            className={styles.box4}
           >
             Quay lại khóa học
           </Link>
@@ -301,13 +286,11 @@ function NoiDungThanhToan() {
   const hetGio = conLai <= 0;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
+    <div className={styles.container4}>
       {/* Đồng hồ giữ đơn */}
       <div
         aria-live="polite"
-        className={`mb-6 flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm ${
-          hetGio ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-800"
-        }`}
+        className={`${styles.row5} ${hetGio ? styles.box5 : styles.box6}`}
       >
         {hetGio ? (
           // Hai cau khac han nhau tuy da bao chuyen khoan hay chua.
@@ -331,39 +314,30 @@ function NoiDungThanhToan() {
         ) : (
           <span>
             Giữ đơn cho bạn trong{" "}
-            <strong className="tabular-nums">{dangDongHo(conLai)}</strong>
+            <strong className={styles.strong}>{dangDongHo(conLai)}</strong>
           </span>
         )}
       </div>
 
-      <h1 className="mb-2 text-3xl font-bold text-slate-900">Thanh toán đơn hàng</h1>
-      <p className="mb-8 text-slate-600">
+      <h1 className={styles.title2}>Thanh toán đơn hàng</h1>
+      <p className={styles.text2}>
         Bạn cần chuyển <strong>{dinhDangTien(don.amount)}</strong>. Quét mã QR bên dưới
         thì mọi thông tin tự điền sẵn. Nếu tự gõ, nhớ ghi nội dung{" "}
-        <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono font-semibold text-slate-900">
-          {don.code}
-        </span>
-        .
+        <span className={styles.label}>{don.code}</span>.
       </p>
 
       {/* Các mục trong đơn */}
-      <section className="mb-8" aria-labelledby="muc-don-hang">
-        <h2 id="muc-don-hang" className="mb-3 text-sm font-semibold text-slate-500">
+      <section className={styles.section} aria-labelledby="muc-don-hang">
+        <h2 id="muc-don-hang" className={styles.heading}>
           Các mục trong đơn hàng
         </h2>
-        <div className="flex items-center gap-4 rounded-2xl border border-slate-200 p-4">
-          <div className="flex h-14 w-14 flex-none items-center justify-center rounded-xl bg-slate-100 text-xs font-semibold text-slate-500">
-            KH
+        <div className={styles.row2}>
+          <div className={styles.row3}>KH</div>
+          <div className={styles.box7}>
+            <h3 className={styles.subheading}>{don.course?.title ?? "Khóa học"}</h3>
+            <p className={styles.text3}>Khóa học</p>
           </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="truncate font-semibold text-slate-900">
-              {don.course?.title ?? "Khóa học"}
-            </h3>
-            <p className="text-sm text-slate-500">Khóa học</p>
-          </div>
-          <p className="flex-none font-semibold text-slate-900">
-            {dinhDangTien(don.amount)}
-          </p>
+          <p className={styles.text4}>{dinhDangTien(don.amount)}</p>
         </div>
       </section>
 
@@ -373,14 +347,9 @@ function NoiDungThanhToan() {
           doi soat. Nut mua bang coin von chi nam o the ben phai trang khoa hoc,
           ma nut to tren banner lai di thang sang day nen khong may ai thay no. */}
       {don.status === "pending" && don.course?._id && (
-        <section
-          className="mb-8 rounded-2xl border border-amber-200 bg-amber-50/60 p-5"
-          aria-label="Thanh toán bằng coin"
-        >
-          <h2 className="mb-1 text-sm font-semibold text-slate-900">
-            Trả bằng coin — mở khóa ngay
-          </h2>
-          <p className="mb-3 text-xs text-slate-600">
+        <section className={styles.section2} aria-label="Thanh toán bằng coin">
+          <h2 className={styles.heading2}>Trả bằng coin — mở khóa ngay</h2>
+          <p className={styles.text5}>
             Không phải chuyển khoản, không phải chờ ban quản trị đối soát.
           </p>
           <NutMuaBangCoin
@@ -396,7 +365,7 @@ function NoiDungThanhToan() {
 
       {/* Chưa khai báo tài khoản nhận tiền */}
       {ck && !ck.daCauHinh && (
-        <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <div className={styles.card}>
           Máy chủ chưa được khai báo tài khoản nhận tiền, nên chưa sinh được mã QR. Đơn
           hàng và mã <strong>{don.code}</strong> vẫn hợp lệ — liên hệ ban quản trị để lấy
           thông tin chuyển khoản.
@@ -404,12 +373,9 @@ function NoiDungThanhToan() {
       )}
 
       {ck?.daCauHinh && (
-        <section
-          className="mb-8 grid gap-6 rounded-2xl border border-slate-200 p-5 md:grid-cols-2"
-          aria-label="Mã QR và thông tin chuyển khoản"
-        >
+        <section className={styles.section3} aria-label="Mã QR và thông tin chuyển khoản">
           {/* Cột QR */}
-          <div className="flex flex-col items-center gap-3">
+          <div className={styles.col}>
             {ck.anhQR && (
               <Image
                 src={ck.anhQR}
@@ -418,7 +384,7 @@ function NoiDungThanhToan() {
                 height={380}
                 unoptimized
                 referrerPolicy="no-referrer"
-                className="h-auto w-full max-w-[280px] rounded-xl border border-slate-200"
+                className={styles.box8}
               />
             )}
             {ck.anhQR && (
@@ -427,12 +393,12 @@ function NoiDungThanhToan() {
                 download={`QR-${don.code}.jpg`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-2xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                className={styles.link}
               >
                 Tải mã QR
               </a>
             )}
-            <p className="text-center text-xs leading-relaxed text-slate-500">
+            <p className={styles.text6}>
               Đang xem trên điện thoại? Bấm <strong>Tải mã QR</strong> rồi mở app ngân
               hàng, chọn quét mã từ ảnh trong thư viện. Hoặc dùng{" "}
               <strong>Sao chép thông tin</strong> rồi dán vào app — không cần quét.
@@ -440,46 +406,40 @@ function NoiDungThanhToan() {
           </div>
 
           {/* Cột thông tin */}
-          <div className="flex flex-col gap-3">
-            <dl className="divide-y divide-slate-100 rounded-xl bg-slate-50 px-4">
-              <div className="flex items-baseline justify-between gap-3 py-3">
-                <dt className="text-sm text-slate-500">Ngân hàng</dt>
-                <dd className="font-medium text-slate-900">{ck.nganHang}</dd>
+          <div className={styles.col2}>
+            <dl className={styles.box9}>
+              <div className={styles.row4}>
+                <dt className={styles.text3}>Ngân hàng</dt>
+                <dd className={styles.box10}>{ck.nganHang}</dd>
               </div>
-              <div className="flex items-baseline justify-between gap-3 py-3">
-                <dt className="text-sm text-slate-500">Số tài khoản</dt>
-                <dd className="font-medium text-slate-900">
-                  <span className="font-mono">{ck.soTaiKhoan}</span>
+              <div className={styles.row4}>
+                <dt className={styles.text3}>Số tài khoản</dt>
+                <dd className={styles.box10}>
+                  <span className={styles.label2}>{ck.soTaiKhoan}</span>
                   <NutChep giaTri={ck.soTaiKhoan} nhan="số tài khoản" />
                 </dd>
               </div>
-              <div className="flex items-baseline justify-between gap-3 py-3">
-                <dt className="text-sm text-slate-500">Tên tài khoản</dt>
-                <dd className="text-right font-medium text-slate-900">
-                  {ck.tenTaiKhoan}
-                </dd>
+              <div className={styles.row4}>
+                <dt className={styles.text3}>Tên tài khoản</dt>
+                <dd className={styles.box11}>{ck.tenTaiKhoan}</dd>
               </div>
-              <div className="flex items-baseline justify-between gap-3 py-3">
-                <dt className="text-sm text-slate-500">Số tiền</dt>
-                <dd className="font-medium text-slate-900">
-                  <span className="tabular-nums">{dinhDangTien(ck.soTien)}</span>
+              <div className={styles.row4}>
+                <dt className={styles.text3}>Số tiền</dt>
+                <dd className={styles.box10}>
+                  <span className={styles.strong}>{dinhDangTien(ck.soTien)}</span>
                   <NutChep giaTri={String(ck.soTien)} nhan="số tiền" />
                 </dd>
               </div>
-              <div className="flex items-baseline justify-between gap-3 py-3">
-                <dt className="text-sm text-slate-500">Nội dung</dt>
-                <dd className="font-semibold text-slate-900">
-                  <span className="font-mono">{ck.noiDung}</span>
+              <div className={styles.row4}>
+                <dt className={styles.text3}>Nội dung</dt>
+                <dd className={styles.box12}>
+                  <span className={styles.label2}>{ck.noiDung}</span>
                   <NutChep giaTri={ck.noiDung} nhan="nội dung" />
                 </dd>
               </div>
             </dl>
 
-            <button
-              type="button"
-              onClick={chepThongTin}
-              className="rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
-            >
+            <button type="button" onClick={chepThongTin} className={styles.button3}>
               {daChepHet ? "Đã sao chép" : "Sao chép thông tin"}
             </button>
           </div>
@@ -492,19 +452,19 @@ function NoiDungThanhToan() {
           hình cả ngày, hoặc để người ta chờ. Nút này gửi một mail thẳng vào
           hộp thư quản trị kèm mã đơn để tra sao kê. */}
       {don.daBaoChuyenKhoanLuc ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-          <p className="font-semibold">
+        <div className={styles.card2}>
+          <p className={styles.text7}>
             Đã báo ban quản trị lúc{" "}
             {new Date(don.daBaoChuyenKhoanLuc).toLocaleString("vi-VN")}
           </p>
-          <p className="mt-1 text-emerald-800">
+          <p className={styles.text8}>
             Bên mình đang đối chiếu sao kê ngân hàng. Trang này tự kiểm tra lại — khoá học
             mở ra là thấy ngay, không phải tải lại.
           </p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <p className="text-sm text-slate-600">
+        <div className={styles.card3}>
+          <p className={styles.text9}>
             Chuyển khoản xong thì bấm nút này để báo cho ban quản trị đối chiếu. Đơn được
             xác nhận thủ công nên có thể mất vài phút.
           </p>
@@ -512,7 +472,7 @@ function NoiDungThanhToan() {
             type="button"
             onClick={bamDaChuyen}
             disabled={dangBao}
-            className="mt-3 w-full rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:bg-slate-300 sm:w-auto"
+            className={styles.button4}
           >
             {dangBao ? "Đang gửi…" : "Tôi đã chuyển khoản"}
           </button>
@@ -521,10 +481,8 @@ function NoiDungThanhToan() {
 
       {ketQuaBao && (
         <p
-          className={`mt-4 rounded-2xl p-3 text-sm ${
-            ketQuaBao.mailHong
-              ? "border border-amber-200 bg-amber-50 text-amber-900"
-              : "border border-emerald-200 bg-emerald-50 text-emerald-900"
+          className={`${styles.text13} ${
+            ketQuaBao.mailHong ? styles.text10 : styles.text11
           }`}
         >
           {ketQuaBao.chu}
@@ -532,25 +490,16 @@ function NoiDungThanhToan() {
             <>
               {" "}
               Tuy nhiên mail báo chưa gửi được, nên bạn nhắn thêm cho ban quản trị kèm mã{" "}
-              <strong className="font-mono">{don.code}</strong> cho chắc.
+              <strong className={styles.label2}>{don.code}</strong> cho chắc.
             </>
           )}
         </p>
       )}
 
-      {loi && (
-        <p className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          {loi}
-        </p>
-      )}
+      {loi && <p className={styles.text12}>{loi}</p>}
 
-      <div className="mt-6 text-center">
-        <button
-          type="button"
-          onClick={huy}
-          disabled={dangHuy}
-          className="text-sm text-slate-500 underline transition hover:text-slate-800 disabled:opacity-50"
-        >
+      <div className={styles.box13}>
+        <button type="button" onClick={huy} disabled={dangHuy} className={styles.button5}>
           {dangHuy ? "Đang hủy…" : "Hủy đơn hàng"}
         </button>
       </div>
@@ -562,13 +511,7 @@ export default function TrangThanhToan() {
   // useSearchParams bắt buộc phải nằm trong Suspense, nếu không Next từ chối
   // build trang này ở chế độ tĩnh.
   return (
-    <Suspense
-      fallback={
-        <div className="mx-auto max-w-3xl px-4 py-20 text-center text-slate-500">
-          Đang tải…
-        </div>
-      }
-    >
+    <Suspense fallback={<div className={styles.container2}>Đang tải…</div>}>
       <NoiDungThanhToan />
     </Suspense>
   );

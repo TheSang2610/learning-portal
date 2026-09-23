@@ -20,6 +20,7 @@ import {
 } from "@/src/services/adminService";
 import { duongDanPdfChungChi } from "@/src/services/certificate";
 
+import styles from "./page.module.scss";
 interface Certificate {
   _id: string;
   certificateNumber?: string;
@@ -107,20 +108,18 @@ export default function AdminCertificatesPage() {
     }
   };
 
-  const selectCls =
-    "rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 outline-none " +
-    "transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10";
+  const selectCls = styles.box3;
 
   return (
-    <div className="space-y-6">
+    <div className={styles.stack}>
       <div>
-        <h1 className="text-2xl font-extrabold text-slate-900">Chứng chỉ</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className={styles.title}>Chứng chỉ</h1>
+        <p className={styles.text}>
           {fetching ? "Đang tải..." : `${total} chứng chỉ đã cấp`}
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className={styles.row}>
         <select
           value={validFilter}
           onChange={(e) => {
@@ -135,39 +134,32 @@ export default function AdminCertificatesPage() {
         </select>
       </div>
 
-      {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-          {error}
-        </div>
-      )}
+      {error && <div className={styles.card}>{error}</div>}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px]">
-            <thead className="bg-slate-50 text-left text-xs font-bold tracking-wider text-slate-600 uppercase">
+      <div className={styles.card2}>
+        <div className={styles.scroller}>
+          <table className={styles.table}>
+            <thead className={styles.thead}>
               <tr>
-                <th className="px-4 py-3">Học viên</th>
-                <th className="px-4 py-3">Khóa học</th>
-                <th className="px-4 py-3">Số hiệu / Mã xác thực</th>
-                <th className="px-4 py-3">Điểm</th>
-                <th className="px-4 py-3">Ngày cấp</th>
-                <th className="px-4 py-3">Bản PDF</th>
-                <th className="px-4 py-3 text-right">Trạng thái</th>
+                <th className={styles.headCell}>Học viên</th>
+                <th className={styles.headCell}>Khóa học</th>
+                <th className={styles.headCell}>Số hiệu / Mã xác thực</th>
+                <th className={styles.headCell}>Điểm</th>
+                <th className={styles.headCell}>Ngày cấp</th>
+                <th className={styles.headCell}>Bản PDF</th>
+                <th className={styles.headCell2}>Trạng thái</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className={styles.tbody}>
               {fetching ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-16 text-center text-slate-500">
-                    <Loader2 size={20} className="mx-auto animate-spin" />
+                  <td colSpan={7} className={styles.cell}>
+                    <Loader2 size={20} className={styles.spinner} />
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="px-4 py-16 text-center text-sm text-slate-500"
-                  >
+                  <td colSpan={7} className={styles.cell2}>
                     Chưa có chứng chỉ nào được cấp.
                   </td>
                 </tr>
@@ -176,53 +168,47 @@ export default function AdminCertificatesPage() {
                   const valid = c.isValid !== false;
                   const code = c.verificationCode;
                   return (
-                    <tr key={c._id} className="transition hover:bg-slate-50/60">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                    <tr key={c._id} className={styles.row2}>
+                      <td className={styles.headCell}>
+                        <div className={styles.row3}>
+                          <div className={styles.row4}>
                             <Award size={16} />
                           </div>
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-slate-900">
+                          <div className={styles.box}>
+                            <p className={styles.text2}>
                               {c.student?.name || "(đã xóa)"}
                             </p>
-                            <p className="truncate text-xs text-slate-500">
-                              {c.student?.email || "--"}
-                            </p>
+                            <p className={styles.text3}>{c.student?.email || "--"}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3">
-                        <p className="max-w-[220px] truncate text-sm text-slate-700">
+                      <td className={styles.headCell}>
+                        <p className={styles.text4}>
                           {c.course?.title || c.courseName || "(đã xóa)"}
                         </p>
                         {c.instructorName && (
-                          <p className="truncate text-xs text-slate-500">
-                            GV: {c.instructorName}
-                          </p>
+                          <p className={styles.text3}>GV: {c.instructorName}</p>
                         )}
                       </td>
-                      <td className="px-4 py-3">
-                        <p className="font-mono text-xs text-slate-700">
-                          {c.certificateNumber || "--"}
-                        </p>
+                      <td className={styles.headCell}>
+                        <p className={styles.text5}>{c.certificateNumber || "--"}</p>
                         {code && (
                           <button
                             onClick={() => copyCode(code)}
                             title="Sao chép mã xác thực"
-                            className="mt-0.5 inline-flex items-center gap-1 font-mono text-xs text-indigo-600 transition hover:text-indigo-800"
+                            className={styles.button}
                           >
                             {copied === code ? <Check size={11} /> : <Copy size={11} />}
                             {code}
                           </button>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-700">
+                      <td className={styles.cell3}>
                         {c.scorePercentage != null
                           ? `${c.scorePercentage}%`
                           : (c.finalScore ?? "--")}
                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-600">
+                      <td className={styles.cell4}>
                         {c.issuedAt || c.completionDate
                           ? new Date(
                               (c.issuedAt || c.completionDate) as string,
@@ -233,25 +219,23 @@ export default function AdminCertificatesPage() {
                           Dung dung tep ma hoc vien tai ve - truoc day chung
                           nhan chi ton tai duoi dang HTML in tu trinh duyet nen
                           quan tri khong co gi de doi chieu khi co khieu nai. */}
-                      <td className="px-4 py-3">
+                      <td className={styles.headCell}>
                         <a
                           href={duongDanPdfChungChi(c._id)}
                           target="_blank"
                           rel="noopener noreferrer"
                           title="Mở bản PDF của chứng nhận này"
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
+                          className={styles.link}
                         >
                           <FileText size={13} />
                           Xem PDF
                         </a>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className={styles.headCell}>
+                        <div className={styles.row5}>
                           <span
-                            className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs font-semibold ${
-                              valid
-                                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                : "border-red-200 bg-red-50 text-red-700"
+                            className={`${styles.label3} ${
+                              valid ? styles.label : styles.label2
                             }`}
                           >
                             {valid ? <ShieldCheck size={12} /> : <Ban size={12} />}
@@ -261,7 +245,7 @@ export default function AdminCertificatesPage() {
                             onClick={() => revoke(c)}
                             disabled={!valid || busyId === c._id}
                             title={valid ? "Thu hồi chứng chỉ" : "Đã thu hồi rồi"}
-                            className="rounded-lg p-2 text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:text-slate-400 disabled:hover:bg-transparent"
+                            className={styles.button2}
                           >
                             <Ban size={16} />
                           </button>
@@ -276,22 +260,22 @@ export default function AdminCertificatesPage() {
         </div>
 
         {pages > 1 && (
-          <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
-            <p className="text-xs text-slate-600">
+          <div className={styles.row6}>
+            <p className={styles.text6}>
               Trang {page} / {pages}
             </p>
-            <div className="flex gap-2">
+            <div className={styles.row7}>
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400"
+                className={styles.box2}
               >
                 <ChevronLeft size={14} /> Trước
               </button>
               <button
                 onClick={() => setPage((p) => Math.min(pages, p + 1))}
                 disabled={page >= pages}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400"
+                className={styles.box2}
               >
                 Sau <ChevronRight size={14} />
               </button>

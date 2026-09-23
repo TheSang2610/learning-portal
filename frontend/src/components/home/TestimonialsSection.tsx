@@ -2,7 +2,9 @@
 
 import { Quote } from "lucide-react";
 import SafeImage from "@/src/components/ui/SafeImage";
-import TieuDeMuc from "./TieuDeMuc";
+import TieuDeMuc from "./SectionHeading";
+
+import styles from "./TestimonialsSection.module.scss";
 const testimonials = [
   {
     name: "Jessica Wong",
@@ -36,8 +38,8 @@ const testimonials = [
 
 export default function TestimonialsSection() {
   return (
-    <section className="bg-[#f5f7fa]">
-      <div className="mx-auto max-w-7xl px-6 py-14 md:py-16">
+    <section className={styles.section}>
+      <div className={styles.container}>
         <TieuDeMuc
           tieuDe="Học viên nói gì"
           moTa="Bốn người đã học xong và đi làm, kể lại thứ họ mang theo được sau khoá học."
@@ -47,42 +49,33 @@ export default function TestimonialsSection() {
             Ban cu xep bon the ngang mot hang: moi the con khoang 290px, doan
             trich phai xuong bay dong voi co chu 13px - dai va kho doc. Hai cot
             cho moi the gap doi be ngang, doan trich ve ba dong o co chu 16px. */}
-        <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <div className={styles.grid}>
           {testimonials.map((item, index) => (
-            <figure
-              key={index}
-              className="relative overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-6 md:p-7"
-            >
+            <figure key={index} className={styles.card}>
               {/* Dau nhay la trang tri -> aria-hidden de trinh doc man hinh
                   khong doc no thanh mot tu vo nghia truoc moi doan trich. */}
               <Quote
                 size={64}
                 aria-hidden="true"
-                className="pointer-events-none absolute -top-2 right-2 text-blue-50"
+                className={styles.floating}
                 strokeWidth={1.5}
               />
 
-              <blockquote className="relative text-[16px] leading-[1.7] text-slate-700">
-                {item.review}
-              </blockquote>
+              <blockquote className={styles.box}>{item.review}</blockquote>
 
-              <figcaption className="mt-5 flex items-center gap-3 border-t border-slate-100 pt-5">
-                <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-slate-100">
+              <figcaption className={styles.row}>
+                <span className={styles.label}>
                   <SafeImage
                     src={item.image}
                     alt={item.name}
                     fill
                     sizes="44px"
-                    className="object-cover"
+                    className={styles.box2}
                   />
                 </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-[15px] font-semibold text-slate-900">
-                    {item.name}
-                  </span>
-                  <span className="block truncate text-[13px] text-slate-500">
-                    {item.role}
-                  </span>
+                <span className={styles.label2}>
+                  <span className={styles.label3}>{item.name}</span>
+                  <span className={styles.label4}>{item.role}</span>
                 </span>
               </figcaption>
             </figure>

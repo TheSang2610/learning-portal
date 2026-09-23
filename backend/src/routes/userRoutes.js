@@ -1,9 +1,9 @@
 const express = require('express');
 const multer = require('multer');
 const router = express.Router();
-const { capIdHopLe } = require('../middlewares/idHopLe');
+const { capIdHopLe } = require('../middlewares/validObjectId');
 
-// Chan id sai dinh dang -> 404 thay vi 500. Xem middlewares/idHopLe.js
+// Chan id sai dinh dang -> 404 thay vi 500. Xem middlewares/validObjectId.js
 capIdHopLe(router);
 const {
     getUsers,
@@ -55,7 +55,7 @@ const gioiHanGoogle = gioiHan({
 // Quen mat khau: ba duong, ba tran theo IP khac nhau.
 //
 // Bo dem CHINH cua luong nay dem theo EMAIL va nam trong controller (xem
-// quenMatKhauController.js) - do moi la cai chan do ma va chan bom thu. Ba
+// passwordResetController.js) - do moi la cai chan do ma va chan bom thu. Ba
 // tran duoi day dem theo IP, chan mot thu khac han: mot may quet HANG NGHIN
 // dia chi email khac nhau. Tran theo email khong thay gi trong truong hop do
 // vi moi dia chi la mot bo dem moi tinh - dung bai hoc cua khoa `dangnhap:ip:`
@@ -83,7 +83,7 @@ const {
     yeuCauMa,
     kiemMa,
     datLaiMatKhau,
-} = require('../controllers/quenMatKhauController');
+} = require('../controllers/passwordResetController');
 
 const { getMyProfile, getMyActivity } = require('../controllers/activityController');
 
@@ -93,7 +93,7 @@ router.route('/').get(protect, admin, getUsers).post(gioiHanDangKy, registerUser
 router.post('/login', loginRateLimit, loginUser);
 
 // Quen mat khau. Ba duong nay deu KHONG can dang nhap - do la ca van de: xem
-// hai nguyen tac o dau controllers/quenMatKhauController.js.
+// hai nguyen tac o dau controllers/passwordResetController.js.
 router.post('/quen-mat-khau', gioiHanQuenMk, yeuCauMa);
 router.post('/quen-mat-khau/kiem-ma', gioiHanKiemMa, kiemMa);
 router.post('/quen-mat-khau/dat-lai', gioiHanKiemMa, datLaiMatKhau);

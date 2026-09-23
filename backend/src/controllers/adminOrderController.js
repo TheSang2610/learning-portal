@@ -1,12 +1,12 @@
 const Order = require('../models/Order');
-const { taoGhiDanh } = require('../utils/ghiDanh');
-const { phanTrang, timGan } = require('../utils/truyVan');
+const { taoGhiDanh } = require('../utils/enrollment');
+const { phanTrang, timGan } = require('../utils/queryParams');
 const { capNhatNeuHetHan } = require('./orderController');
 const Course = require('../models/Course');
 const User = require('../models/User');
 const { guiMail } = require('../config/mail');
-const { soanMailDonDaXacNhan } = require('../utils/mailDonHang');
-const { guiThongBao } = require('./thongBaoController');
+const { soanMailDonDaXacNhan } = require('../utils/orderMail');
+const { guiThongBao } = require('./notificationController');
 
 const TRANG_THAI_HOP_LE = new Set(['pending', 'paid', 'cancelled', 'expired']);
 

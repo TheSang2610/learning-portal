@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const { daCauHinh, guiMail, MAIL_ADMIN } = require('../config/mail');
-const { soanMailBaoChuyenKhoan } = require('./mailDonHang');
+const { soanMailBaoChuyenKhoan } = require('./orderMail');
 
 /**
  * Gui thu mot mail de kiem cau hinh Gmail.

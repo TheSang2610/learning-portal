@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { getErrorMessage } from "@/src/services/apiHelper";
 import { faqService, FaqItem } from "@/src/services/faq";
+
+import styles from "./page.module.scss";
 import {
   Plus,
   Trash2,
@@ -115,23 +117,20 @@ export default function AdminFaqsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className={styles.stack}>
       {/* HEADER TÍNH NĂNG */}
-      <div className="flex items-center justify-between">
+      <div className={styles.row}>
         <div>
-          <h3 className="flex items-center gap-2 text-2xl font-bold text-slate-800">
-            <HelpCircle className="text-blue-600" size={26} />
+          <h3 className={styles.subheading}>
+            <HelpCircle className={styles.box} size={26} />
             Homepage FAQs Management
           </h3>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className={styles.text}>
             Quản lý các câu hỏi thường gặp hiển thị công khai ở khu vực Trang chủ hệ
             thống.
           </p>
         </div>
-        <button
-          onClick={handleOpenCreateModal}
-          className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-md shadow-blue-600/10 transition-all hover:bg-blue-700"
-        >
+        <button onClick={handleOpenCreateModal} className={styles.button}>
           <Plus size={18} />
           Add New FAQ
         </button>
@@ -139,66 +138,57 @@ export default function AdminFaqsPage() {
 
       {/* TOAST THÔNG BÁO THÀNH CÔNG */}
       {successMsg && (
-        <div className="animate-fadeIn flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
-          <CheckCircle className="flex-shrink-0 text-emerald-500" size={20} />
-          <span className="text-sm font-medium">{successMsg}</span>
+        <div className={`${styles.hienDan} ${styles.card}`}>
+          <CheckCircle className={styles.box2} size={20} />
+          <span className={styles.label}>{successMsg}</span>
         </div>
       )}
 
       {/* TRẠNG THÁI LOADING / LỖI / DANH SÁCH DỮ LIỆU */}
       {isLoading ? (
-        <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm">
-          <Loader2 className="animate-spin text-blue-600" size={32} />
-          <p className="text-sm font-medium">Fetching FAQ collections...</p>
+        <div className={styles.card2}>
+          <Loader2 className={styles.spinner} size={32} />
+          <p className={styles.label}>Fetching FAQ collections...</p>
         </div>
       ) : error ? (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-rose-100 bg-rose-50 p-6 text-center text-rose-700">
+        <div className={styles.card3}>
           <AlertCircle size={32} />
-          <p className="font-semibold">Đã xảy ra lỗi dữ liệu</p>
-          <p className="text-sm">{error}</p>
+          <p className={styles.text2}>Đã xảy ra lỗi dữ liệu</p>
+          <p className={styles.text3}>{error}</p>
         </div>
       ) : faqs.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-slate-500">
-          <HelpCircle className="mx-auto mb-3 text-slate-400" size={48} />
-          <p className="font-medium text-slate-600">Chưa có câu hỏi nào được tạo</p>
-          <p className="mt-1 text-xs text-slate-500">
+        <div className={styles.card4}>
+          <HelpCircle className={styles.box3} size={48} />
+          <p className={styles.text4}>Chưa có câu hỏi nào được tạo</p>
+          <p className={styles.text5}>
             Bấm nút &quot;Add New FAQ&quot; ở góc trên để bắt đầu thêm câu hỏi đầu tiên.
           </p>
         </div>
       ) : (
         /* DANH SÁCH FAQ DẠNG GRID/LIST */
-        <div className="space-y-4">
+        <div className={styles.stack2}>
           {faqs.map((faq, index) => (
-            <div
-              key={faq._id}
-              className="group flex items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-slate-300"
-            >
-              <div className="flex-1 space-y-2">
-                <div className="flex items-start gap-2.5">
-                  <span className="mt-0.5 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">
-                    Q{index + 1}
-                  </span>
-                  <h4 className="text-[16px] leading-snug font-bold text-slate-800">
-                    {faq.question}
-                  </h4>
+            <div key={faq._id} className={`group ${styles.card5}`}>
+              <div className={styles.stack3}>
+                <div className={styles.row2}>
+                  <span className={styles.label2}>Q{index + 1}</span>
+                  <h4 className={styles.minorHeading}>{faq.question}</h4>
                 </div>
-                <div className="ml-4 border-l-2 border-slate-100 pl-9 text-[15px] leading-relaxed text-slate-600">
-                  {faq.answer}
-                </div>
+                <div className={styles.box4}>{faq.answer}</div>
               </div>
 
               {/* HÀNH ĐỘNG ĐIỀU KHIỂN (SỬA / XÓA) */}
-              <div className="flex flex-shrink-0 items-center gap-1 opacity-80 transition-opacity group-hover:opacity-100">
+              <div className={styles.row3}>
                 <button
                   onClick={() => handleOpenEditModal(faq)}
-                  className="rounded-xl p-2 text-slate-500 transition-all hover:bg-blue-50 hover:text-blue-600"
+                  className={styles.button2}
                   title="Sửa câu hỏi"
                 >
                   <Edit3 size={18} />
                 </button>
                 <button
                   onClick={() => handleDelete(faq._id!)}
-                  className="rounded-xl p-2 text-slate-500 transition-all hover:bg-red-50 hover:text-red-600"
+                  className={styles.button3}
                   title="Xóa câu hỏi"
                 >
                   <Trash2 size={18} />
@@ -211,26 +201,23 @@ export default function AdminFaqsPage() {
 
       {/* MODAL DIALOG: THÊM VÀ SỬA (OVERLAY) */}
       {isOpenModal && (
-        <div className="animate-fadeIn fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
-          <div className="animate-scaleUp w-full max-w-xl overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-2xl">
+        <div className={`${styles.hienDan} ${styles.overlay}`}>
+          <div className={`${styles.phongTo} ${styles.card6}`}>
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4">
-              <h4 className="text-lg font-bold text-slate-800">
+            <div className={styles.row4}>
+              <h4 className={styles.minorHeading2}>
                 {editingId ? "Edit Homepage FAQ" : "Create New Homepage FAQ"}
               </h4>
-              <button
-                onClick={() => setIsOpenModal(false)}
-                className="rounded-lg p-1 text-slate-500 transition-all hover:bg-slate-200 hover:text-slate-600"
-              >
+              <button onClick={() => setIsOpenModal(false)} className={styles.button4}>
                 <X size={18} />
               </button>
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleSubmit} className="space-y-4 p-6">
+            <form onSubmit={handleSubmit} className={styles.form}>
               <div>
-                <label className="mb-1.5 block text-sm font-semibold text-slate-700">
-                  Question (Câu hỏi) <span className="text-red-500">*</span>
+                <label className={styles.fieldLabel}>
+                  Question (Câu hỏi) <span className={styles.label3}>*</span>
                 </label>
                 <input
                   type="text"
@@ -238,13 +225,13 @@ export default function AdminFaqsPage() {
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   placeholder="Ví dụ: Chính sách hoàn trả học phí như thế nào?"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition-all focus:border-blue-500 focus:bg-white focus:outline-none"
+                  className={styles.input}
                 />
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-semibold text-slate-700">
-                  Answer (Câu trả lời ngắn gọn) <span className="text-red-500">*</span>
+                <label className={styles.fieldLabel}>
+                  Answer (Câu trả lời ngắn gọn) <span className={styles.label3}>*</span>
                 </label>
                 <textarea
                   required
@@ -252,25 +239,21 @@ export default function AdminFaqsPage() {
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
                   placeholder="Nhập nội dung câu trả lời hiển thị chi tiết tại đây..."
-                  className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-relaxed text-slate-800 transition-all focus:border-blue-500 focus:bg-white focus:outline-none"
+                  className={styles.textarea}
                 />
               </div>
 
               {/* Modal Actions */}
-              <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-2">
+              <div className={styles.row5}>
                 <button
                   type="button"
                   onClick={() => setIsOpenModal(false)}
-                  className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 transition-all hover:bg-slate-50"
+                  className={styles.button5}
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-md shadow-blue-600/10 transition-all hover:bg-blue-700 disabled:bg-blue-400"
-                >
-                  {isSubmitting && <Loader2 className="animate-spin" size={16} />}
+                <button type="submit" disabled={isSubmitting} className={styles.button6}>
+                  {isSubmitting && <Loader2 className={styles.spinner2} size={16} />}
                   {editingId ? "Save Changes" : "Create Now"}
                 </button>
               </div>

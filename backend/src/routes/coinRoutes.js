@@ -21,14 +21,14 @@ const {
 const {
     nhanBaoCoNganHang,
     danhSachBaoCo
-} = require('../controllers/webhookNganHangController');
+} = require('../controllers/bankWebhookController');
 
 // --------------------------------------------------------------------------
 // Webhook ngan hang - KHONG co protect.
 //
 // Ngan hang khong cam duoc cookie phien cua ai, nen khong the di qua protect.
 // Danh tinh dua vao khoa bi mat trong header, kiem trong chinh controller
-// (config/webhookNganHang.js). Chua dat khoa thi controller tu choi tat ca -
+// (config/bankWebhook.js). Chua dat khoa thi controller tu choi tat ca -
 // khong bao gio "chua cau hinh thi cho qua".
 //
 // Dat TRUOC moi duong khac de khoi bi cac mau ':code' ben duoi nuot mat.

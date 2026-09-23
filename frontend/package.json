@@ -23,7 +23,6 @@
     "recharts": "^3.10.1"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -32,8 +31,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.4.1",
     "prettier": "^3.9.6",
-    "prettier-plugin-tailwindcss": "^0.8.1",
-    "tailwindcss": "^4",
+    "sass": "^1.104.1",
     "typescript": "^5"
   },
   "description": "Giao dien cong hoc truc tuyen aLMS, dung Next.js App Router.",

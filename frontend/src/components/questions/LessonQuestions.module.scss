@@ -1,0 +1,447 @@
+// File nay do script sinh ra tu class Tailwind cu.
+// Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
+
+.section {
+  margin-top: calc(var(--spacing) * 8);
+  border-radius: var(--radius-2xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-200);
+  background-color: var(--color-white);
+  padding: calc(var(--spacing) * 4);
+
+  @media (min-width: 40rem) {
+    padding: calc(var(--spacing) * 6);
+  }
+}
+
+.row {
+  margin-bottom: calc(var(--spacing) * 4);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+}
+
+.box {
+  color: var(--color-blue-600);
+}
+
+.heading {
+  font-size: var(--text-lg);
+  line-height: var(--tw-leading, var(--text-lg--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-slate-900);
+}
+
+.text {
+  margin-bottom: calc(var(--spacing) * 5);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-slate-500);
+}
+
+.box2 {
+  margin-bottom: calc(var(--spacing) * 6);
+}
+
+.textarea {
+  width: 100%;
+  resize: vertical;
+  border-radius: var(--radius-xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-300);
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 3);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-outline-style: none;
+  outline-style: none;
+
+  &:focus {
+    border-color: var(--color-blue-500);
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width))
+      var(--tw-ring-color, currentcolor);
+    box-shadow:
+      var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+      var(--tw-ring-shadow), var(--tw-shadow);
+    --tw-ring-color: var(--color-blue-100);
+  }
+}
+
+.row2 {
+  margin-top: calc(var(--spacing) * 2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--spacing) * 3);
+}
+
+.label {
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  color: var(--color-slate-400);
+  --tw-numeric-spacing: tabular-nums;
+  font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,)
+    var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);
+}
+
+.row3 {
+  display: flex;
+  height: calc(var(--spacing) * 11);
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  border-radius: var(--radius-xl);
+  background-color: var(--color-blue-600);
+  padding-inline: calc(var(--spacing) * 5);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-white);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-blue-700);
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    background-color: var(--color-slate-300);
+  }
+}
+
+.text2 {
+  margin-bottom: calc(var(--spacing) * 4);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-red-50);
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 3);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-red-700);
+}
+
+.text3 {
+  padding-block: calc(var(--spacing) * 6);
+  text-align: center;
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-slate-500);
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 5);
+}
+
+.article {
+  border-top-style: var(--tw-border-style);
+  border-top-width: 1px;
+  border-color: var(--color-slate-100);
+  padding-top: calc(var(--spacing) * 5);
+}
+
+.row4 {
+  display: flex;
+  gap: calc(var(--spacing) * 3);
+}
+
+.box3 {
+  min-width: calc(var(--spacing) * 0);
+  flex: 1;
+}
+
+.row5 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: calc(var(--spacing) * 2);
+  row-gap: calc(var(--spacing) * 1);
+}
+
+.label2 {
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-900);
+}
+
+.label3 {
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  color: var(--color-slate-400);
+}
+
+.row6 {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1);
+  border-radius: 3.40282e38px;
+  background-color: var(--color-emerald-100);
+  padding-inline: calc(var(--spacing) * 2);
+  padding-block: calc(var(--spacing) * 0.5);
+  font-size: 11px;
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-emerald-700);
+}
+
+.text4 {
+  margin-top: calc(var(--spacing) * 1);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  white-space: pre-wrap;
+  color: var(--color-slate-700);
+}
+
+.row7 {
+  margin-top: calc(var(--spacing) * 2);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 4);
+}
+
+.button {
+  padding-block: calc(var(--spacing) * 1);
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-blue-600);
+
+  @media (hover: hover) {
+    &:hover {
+      text-decoration-line: underline;
+    }
+  }
+}
+
+.button2 {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1);
+  padding-block: calc(var(--spacing) * 1);
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-red-600);
+
+  @media (hover: hover) {
+    &:hover {
+      text-decoration-line: underline;
+    }
+  }
+}
+
+.col2 {
+  margin-top: calc(var(--spacing) * 3);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 3);
+  border-left-style: var(--tw-border-style);
+  border-left-width: 2px;
+  border-color: var(--color-slate-100);
+  padding-left: calc(var(--spacing) * 3);
+}
+
+.row8 {
+  display: flex;
+  gap: calc(var(--spacing) * 2);
+}
+
+.text5 {
+  margin-top: calc(var(--spacing) * 0.5);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  white-space: pre-wrap;
+  color: var(--color-slate-700);
+}
+
+.box4 {
+  margin-top: calc(var(--spacing) * 3);
+}
+
+.textarea2 {
+  width: 100%;
+  resize: vertical;
+  border-radius: var(--radius-xl);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-slate-300);
+  padding-inline: calc(var(--spacing) * 3);
+  padding-block: calc(var(--spacing) * 2);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-outline-style: none;
+  outline-style: none;
+
+  &:focus {
+    border-color: var(--color-blue-500);
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width))
+      var(--tw-ring-color, currentcolor);
+    box-shadow:
+      var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+      var(--tw-ring-shadow), var(--tw-shadow);
+    --tw-ring-color: var(--color-blue-100);
+  }
+}
+
+.row9 {
+  margin-top: calc(var(--spacing) * 2);
+  display: flex;
+  justify-content: flex-end;
+  gap: calc(var(--spacing) * 2);
+}
+
+.button3 {
+  height: calc(var(--spacing) * 10);
+  border-radius: var(--radius-lg);
+  padding-inline: calc(var(--spacing) * 4);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-600);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-slate-100);
+    }
+  }
+}
+
+.button4 {
+  height: calc(var(--spacing) * 10);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-blue-600);
+  padding-inline: calc(var(--spacing) * 4);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-white);
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    outline-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    --tw-gradient-from,
+    --tw-gradient-via,
+    --tw-gradient-to,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter,
+    display,
+    content-visibility,
+    overlay,
+    pointer-events;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-blue-700);
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    background-color: var(--color-slate-300);
+  }
+}
+
+/* Cac lop con ket trong template literal, va bo sung. */
+.label4 {
+  border-radius: 3.40282e38px;
+  padding-inline: calc(var(--spacing) * 2);
+  padding-block: calc(var(--spacing) * 0.5);
+  font-size: 11px;
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Cac lop nam trong hang so / prop tu dat ten, va bo sung. */
+.box5 {
+  background-color: var(--color-slate-200);
+  color: var(--color-slate-700);
+}
+
+/* Mau nhan vai tro. Truoc day nam trong bang NHAN_VAI_TRO o file .tsx duoi
+   dang chuoi lop Tailwind - go Tailwind xong thi nhan "Giang vien" va nhan
+   "Quan tri" mat mau, khong con phan biet duoc bang mat. */
+.nhanGiangVien {
+  background-color: var(--color-blue-100);
+  color: var(--color-blue-700);
+}
+
+.nhanQuanTri {
+  background-color: var(--color-purple-100);
+  color: var(--color-purple-700);
+}

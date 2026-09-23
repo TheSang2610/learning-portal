@@ -8,6 +8,7 @@ import BlogHeader from "./headers/BlogHeader";
 import ShareDocumentHeader from "./headers/ShareDocumentHeader";
 import GpaHeader from "./headers/GpaHeader";
 
+import styles from "./Header.module.scss";
 // Ba cong cu diem dung chung mot header de dieu huong qua lai giua chung
 const GPA_ROUTES = ["/gpa-calculator", "/calc-point", "/convert-10-to-4"];
 
@@ -24,7 +25,7 @@ export default function Header() {
   };
 
   return (
-    <header className="fixed top-0 left-0 z-50 w-full">
+    <header className={styles.header}>
       <TopNav />
       {renderHeader()}
     </header>
