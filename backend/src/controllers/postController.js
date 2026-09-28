@@ -1,4 +1,5 @@
 const Post = require('../models/Post');
+const SavedItem = require('../models/SavedItem');
 const { phanTrang } = require('../utils/queryParams');
 const { CHU_DE, TEN_CHU_DE } = require('../models/Post');
 const { checkText } = require('../utils/contentFilter');
@@ -304,6 +305,8 @@ const deletePost = async (req, res) => {
             return res.status(403).json({ message: 'Bạn chỉ có thể xóa bài viết của mình' });
         }
 
+        // Luot "da luu" tro toi bai nay khong con gi de hien - xoa theo.
+        await SavedItem.deleteMany({ loai: 'baiViet', doiTuong: post._id });
         await post.deleteOne();
         res.json({ message: 'Đã xóa bài viết' });
     } catch (error) {

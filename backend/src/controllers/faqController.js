@@ -5,14 +5,28 @@ const Course = require('../models/Course');
 // @route   GET /api/faqs/homepage
 const getHomepageFaqs = async (req, res) => {
     try {
-        // Tìm những câu hỏi mà trường courseId không tồn tại hoặc bằng null
-        const faqs = await Faq.find({ 
+        // Tìm những câu hỏi mà trường courseId không tồn tại hoặc bằng null.
+        // $ne 'taiLieu' chu khong phai = 'trangChu': FAQ tao truoc khi co
+        // truong viTri khong co truong nay, van phai hien o trang chu.
+        const faqs = await Faq.find({
             $or: [
-                { courseId: null }, 
+                { courseId: null },
                 { courseId: { $exists: false } }
-            ] 
+            ],
+            viTri: { $ne: 'taiLieu' }
         }).sort({ createdAt: 1 });
 
+        res.status(200).json({ success: true, count: faqs.length, data: faqs });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// 📄 FAQ của khu Chia sẻ tài liệu (/share-document)
+// @route   GET /api/faqs/tai-lieu
+const getDocumentFaqs = async (req, res) => {
+    try {
+        const faqs = await Faq.find({ courseId: null, viTri: 'taiLieu' }).sort({ createdAt: 1 });
         res.status(200).json({ success: true, count: faqs.length, data: faqs });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -51,7 +65,9 @@ const createFaq = async (req, res) => {
             }
         }
 
-        const faq = new Faq({ courseId: courseId || null, question, answer });
+        // Khu vuc chi co nghia voi FAQ khong gan khoa hoc; chi nhan dung hai gia tri.
+        const viTri = !courseId && req.body.viTri === 'taiLieu' ? 'taiLieu' : 'trangChu';
+        const faq = new Faq({ courseId: courseId || null, question, answer, viTri });
         const savedFaq = await faq.save();
         res.status(201).json({ success: true, data: savedFaq });
     } catch (error) {
@@ -110,4 +126,4 @@ const deleteFaq = async (req, res) => {
     }
 };
 
-module.exports = { getHomepageFaqs, getFaqsByCourse, createFaq, updateFaq, deleteFaq };
+module.exports = { getHomepageFaqs, getDocumentFaqs, getFaqsByCourse, createFaq, updateFaq, deleteFaq };

@@ -11,6 +11,7 @@ const { protect, instructor } = require('../middlewares/authMiddleware');
 
 const {
     getHomepageFaqs,
+    getDocumentFaqs,
     getFaqsByCourse,
     createFaq,
     updateFaq,
@@ -18,7 +19,9 @@ const {
 } = require('../controllers/faqController');
 
 // 🔓 API CÔNG KHAI (Học viên xem)
-router.get('/homepage', datCache(300), getHomepageFaqs);      
+router.get('/homepage', datCache(300), getHomepageFaqs);
+// FAQ khu Chia se tai lieu - giong nhau voi moi nguoi, cache nhu trang chu.
+router.get('/tai-lieu', datCache(300), getDocumentFaqs);
 router.get('/course/:courseId', getFaqsByCourse); 
 
 // 🔒 API BẢO MẬT (Admin/Instructor quản lý)

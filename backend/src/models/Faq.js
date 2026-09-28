@@ -16,6 +16,16 @@ const faqSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true
+    },
+    // Khu vuc hien FAQ khi KHONG gan khoa hoc (courseId rong):
+    //   trangChu - trang chu he thong (mac dinh; FAQ cu khong co truong nay
+    //              cung duoc coi la trang chu)
+    //   taiLieu  - trang chu khu Chia se tai lieu (/share-document)
+    viTri: {
+        type: String,
+        enum: ['trangChu', 'taiLieu'],
+        default: 'trangChu',
+        index: true
     }
 }, { timestamps: true });
 
