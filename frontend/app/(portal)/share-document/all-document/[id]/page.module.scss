@@ -1,0 +1,10 @@
+// Khong dat padding-block o day nua.
+//
+// Dai dau trang (.hero trong DocumentDetailClient) phai tran sat mep tren va
+// sat hai ben; con mot dem 32px o day thi no bi day xuong, lo ra mot vien xam
+// phia tren va trong nhu ke nham. Khoang cach doc gio nam trong chinh hai khoi
+// cua component: .hero va .container.
+.page {
+  min-height: 100vh;
+  background-color: #f8fafc;
+}

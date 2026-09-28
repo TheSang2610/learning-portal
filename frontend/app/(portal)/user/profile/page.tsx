@@ -6,6 +6,9 @@ import AnhDaiDien from "@/src/components/ui/Avatar";
 import { Users, Flame, Clock, Loader2 } from "lucide-react";
 import ActivityHeatmap from "@/src/components/profile/ActivityHeatmap";
 import ViCoinCuaToi from "@/src/components/common/MyCoinWallet";
+import MyDocuments from "@/src/components/profile/MyDocuments";
+import SavedItems from "@/src/components/profile/SavedItems";
+import ProfileTabs, { useTabHoSo } from "@/src/components/profile/ProfileTabs";
 
 import styles from "./page.module.scss";
 import {
@@ -21,6 +24,8 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [joinedAgo, setJoinedAgo] = useState("");
+  // Tab dang mo: Tong quan / Tai lieu cua toi / Da luu - ghi tren ?tab=.
+  const [tab, doiTab] = useTabHoSo();
 
   useEffect(() => {
     (async () => {
@@ -130,35 +135,56 @@ export default function ProfilePage() {
             </div>
           </aside>
 
-          {/* ============ COT PHAI: heatmap + thong tin tai khoan ============ */}
+          {/* ============ COT PHAI: tab kieu mang xa hoi ============ */}
           <section className={styles.section}>
-            {activity ? (
-              <ActivityHeatmap days={activity.days} total={activity.total} />
-            ) : (
-              <div className={styles.card2}>Chưa tải được dữ liệu hoạt động.</div>
-            )}
+            <ProfileTabs tab={tab} doiTab={doiTab} />
 
-            <ViCoinCuaToi />
+            {/* Chi dung noi dung cua tab dang mo: tab Da luu / Tai lieu goi API
+                rieng, khong can goi khi nguoi dung chua bam vao. */}
+            <div
+              role="tabpanel"
+              id={`bang-${tab}`}
+              aria-labelledby={`tab-${tab}`}
+              className={styles.bangTab}
+            >
+              {tab === "tai-lieu" ? (
+                <MyDocuments />
+              ) : tab === "da-luu" ? (
+                <SavedItems />
+              ) : (
+                <>
+                  {activity ? (
+                    <ActivityHeatmap days={activity.days} total={activity.total} />
+                  ) : (
+                    <div className={styles.card2}>Chưa tải được dữ liệu hoạt động.</div>
+                  )}
 
-            <div className={styles.card}>
-              <h2 className={styles.heading}>Thông tin tài khoản</h2>
+                  <ViCoinCuaToi />
 
-              <div className={styles.grid2}>
-                <Field label="Tên hiển thị" value={user.name} />
-                <Field
-                  label="Họ và tên đầy đủ"
-                  value={user.fullname || "Chưa cập nhật"}
-                />
-                <Field label="Ngày sinh" value={fmtDate(user.birthday)} />
-                <Field label="Email" value={user.email} />
-                {user.phone && <Field label="Số điện thoại" value={user.phone} />}
-                {providerName && <Field label="Đơn vị công tác" value={providerName} />}
-                {user.bio && (
-                  <div className={styles.box3}>
-                    <Field label="Giới thiệu" value={user.bio} />
+                  <div className={styles.card}>
+                    <h2 className={styles.heading}>Thông tin tài khoản</h2>
+
+                    <div className={styles.grid2}>
+                      <Field label="Tên hiển thị" value={user.name} />
+                      <Field
+                        label="Họ và tên đầy đủ"
+                        value={user.fullname || "Chưa cập nhật"}
+                      />
+                      <Field label="Ngày sinh" value={fmtDate(user.birthday)} />
+                      <Field label="Email" value={user.email} />
+                      {user.phone && <Field label="Số điện thoại" value={user.phone} />}
+                      {providerName && (
+                        <Field label="Đơn vị công tác" value={providerName} />
+                      )}
+                      {user.bio && (
+                        <div className={styles.box3}>
+                          <Field label="Giới thiệu" value={user.bio} />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
+                </>
+              )}
             </div>
           </section>
         </div>

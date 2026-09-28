@@ -92,6 +92,7 @@ export default async function BlogPage({
                     }
                     tieuDe={p.title}
                     moTa={p.excerpt}
+                    luu={{ loai: "baiViet", id: p._id }}
                     anh={p.thumbnail ? { src: p.thumbnail, alt: p.title } : null}
                     meta={
                       <>

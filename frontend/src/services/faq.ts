@@ -1,8 +1,12 @@
 import { apiRequest } from "./apiHelper";
 
+/** Khu vuc hien FAQ khong gan khoa hoc. */
+export type ViTriFaq = "trangChu" | "taiLieu";
+
 export interface FaqItem {
   _id?: string;
   courseId?: string | null;
+  viTri?: ViTriFaq;
   question: string;
   answer: string;
   createdAt?: string;
@@ -11,6 +15,7 @@ export interface FaqItem {
 
 export interface FaqData {
   courseId?: string | null;
+  viTri?: ViTriFaq;
   question: string;
   answer: string;
 }
@@ -19,6 +24,12 @@ export const faqService = {
   getHomepageFaqs: async (): Promise<FaqItem[]> => {
     const res = await apiRequest("/faqs/homepage", { method: "GET" });
     return res.data; // Vì Backend trả về cấu trúc { success: true, count: ..., data: [...] }
+  },
+
+  /** FAQ cua khu Chia se tai lieu (/share-document). */
+  getDocumentFaqs: async (): Promise<FaqItem[]> => {
+    const res = await apiRequest("/faqs/tai-lieu", { method: "GET" });
+    return res.data;
   },
 
   getFaqsByCourse: async (courseId: string): Promise<FaqItem[]> => {

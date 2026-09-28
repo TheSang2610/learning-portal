@@ -1,0 +1,276 @@
+// Trang danh sach truong - dau trang xam nhat + o tim, than trang: truong pho
+// bien (2 cot) va bang chu cai. Mau theo bang mau tham chieu chu du an gui.
+
+.dau {
+  background-color: #f6f7fb;
+  padding: calc(var(--spacing) * 20) calc(var(--spacing) * 4) calc(var(--spacing) * 24);
+}
+
+.dauNoiDung {
+  margin-inline: auto;
+  max-width: 40rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.minhHoa {
+  width: 120px;
+  height: 120px;
+  background: url("/images/share-document/truong-minh-hoa.svg") center / contain no-repeat;
+}
+
+.tieuDe {
+  margin-top: calc(var(--spacing) * 6);
+  font-size: clamp(1.4rem, 2.6vw, 1.75rem);
+  font-weight: 700;
+  color: #2f3e4e;
+}
+
+.giaiThich {
+  margin-top: calc(var(--spacing) * 5);
+  font-size: 0.9rem;
+  color: #4c5966;
+}
+
+// ---- o tim + goi y
+.oTim {
+  position: relative;
+  width: 100%;
+  margin-top: calc(var(--spacing) * 3);
+}
+
+.nhap {
+  width: 100%;
+  height: 64px;
+  border-radius: 999px;
+  border: 1px solid #d3d9e0;
+  background-color: #fff;
+  padding: 0 calc(var(--spacing) * 16) 0 calc(var(--spacing) * 4);
+  font-size: 1rem;
+  color: #0a0a0a;
+
+  &::placeholder {
+    color: #7a838c;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #3092fa;
+    box-shadow: 0 0 0 4px #d5e9fe;
+  }
+
+  // Bo nut "x" mac dinh cua input type=search tren Chrome - trung voi nut tim.
+  &::-webkit-search-cancel-button {
+    display: none;
+  }
+}
+
+.nutTim {
+  position: absolute;
+  top: 50%;
+  right: calc(var(--spacing) * 3);
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  color: #2f3e4e;
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: #f6f7fb;
+    }
+  }
+}
+
+.goiY {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  max-height: 22rem;
+  overflow-y: auto;
+  border-radius: 16px;
+  border: 1px solid #e6ebef;
+  background-color: #fff;
+  padding: calc(var(--spacing) * 2);
+  box-shadow: 0 8px 28px -4px #0a0a0a33;
+  text-align: left;
+}
+
+.goiYMuc {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+  width: 100%;
+  border-radius: 10px;
+  padding: calc(var(--spacing) * 2.5) calc(var(--spacing) * 3);
+  text-align: left;
+  font-size: 0.95rem;
+  color: #2f3e4e;
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: #f1f7fe;
+    }
+  }
+}
+
+.goiYDangTro {
+  background-color: #e2effd;
+}
+
+.khongCo {
+  padding: calc(var(--spacing) * 3);
+  font-size: 0.9rem;
+  color: #4c5966;
+}
+
+// ---- than trang
+.than {
+  margin-inline: auto;
+  max-width: var(--container-7xl);
+  padding: calc(var(--spacing) * 10) calc(var(--spacing) * 6) calc(var(--spacing) * 16);
+}
+
+.tieuDeMuc {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #2f3e4e;
+}
+
+.luoi {
+  margin-top: calc(var(--spacing) * 4);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(var(--spacing) * 1) calc(var(--spacing) * 6);
+}
+
+.dong {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+  border-radius: 16px;
+  padding: calc(var(--spacing) * 3.5) calc(var(--spacing) * 3);
+  transition: background-color 0.15s;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: #f1f7fe;
+
+      .tenTruong {
+        color: #1168c3;
+      }
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid #3092fa;
+    outline-offset: 2px;
+  }
+}
+
+.bieuTuong {
+  flex-shrink: 0;
+  color: #bd251c;
+}
+
+.logo {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: center / contain no-repeat;
+}
+
+.tenTruong {
+  min-width: 0;
+  font-size: 1rem;
+  color: #5b8def;
+}
+
+.so {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: #7a838c;
+}
+
+// ---- bang chu cai
+.mucChu {
+  margin-top: calc(var(--spacing) * 12);
+}
+
+.phu {
+  margin-top: calc(var(--spacing) * 3);
+  font-size: 1rem;
+  color: #2f3e4e;
+}
+
+.chuCai {
+  margin-top: calc(var(--spacing) * 3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--spacing) * 1);
+}
+
+.chu {
+  display: grid;
+  place-items: center;
+  min-width: 40px;
+  height: 36px;
+  border-radius: 999px;
+  font-size: 1rem;
+  color: #5b8def;
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: #f1f7fe;
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid #3092fa;
+    outline-offset: 2px;
+  }
+}
+
+.chuOn {
+  background-color: #3092fa;
+  color: #fff;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: #0a75e6;
+    }
+  }
+}
+
+.luoiChu {
+  margin-top: calc(var(--spacing) * 5);
+}
+
+@media (max-width: 48rem) {
+  .dau {
+    padding-block: calc(var(--spacing) * 12) calc(var(--spacing) * 16);
+  }
+
+  .luoi {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .than {
+    padding-inline: calc(var(--spacing) * 4);
+  }
+}
+
+.nen {
+  background-color: #fff;
+}

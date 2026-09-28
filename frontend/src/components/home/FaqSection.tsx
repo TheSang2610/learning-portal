@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { HelpCircle, Minus, Plus } from "lucide-react";
-import { faqService, FaqItem } from "@/src/services/faq";
+import { faqService, type FaqItem, type ViTriFaq } from "@/src/services/faq";
 import TieuDeMuc from "./SectionHeading";
 
 import styles from "./FaqSection.module.scss";
@@ -30,9 +30,29 @@ interface Props {
    * Bo trong thi component tu goi nhu cu - de con dung lai duoc o cho khac.
    */
   initialData?: FaqItem[] | null;
+  /** Khu vuc: trang chu he thong (mac dinh) hay trang chu khu Chia se tai lieu. */
+  viTri?: ViTriFaq;
+  tieuDe?: string;
+  moTa?: string;
 }
 
-export default function FaqSection({ initialData }: Props) {
+const MO_TA_MAC_DINH: Record<ViTriFaq, string> = {
+  trangChu:
+    "Những thắc mắc hay gặp nhất về học phí, chứng nhận và cách khoá học vận hành.",
+  taiLieu: "Những thắc mắc hay gặp nhất khi xem, tải và chia sẻ tài liệu học tập.",
+};
+
+const TEN_KHU_VUC: Record<ViTriFaq, string> = {
+  trangChu: "Trang chủ",
+  taiLieu: "Chia sẻ tài liệu",
+};
+
+export default function FaqSection({
+  initialData,
+  viTri = "trangChu",
+  tieuDe = "Câu hỏi thường gặp",
+  moTa,
+}: Props) {
   const [faqs, setFaqs] = useState<FaqItem[]>(initialData ?? []);
   const [loading, setLoading] = useState<boolean>(!initialData);
   const [openIndex, setOpenIndex] = useState<number | null>(0); // Mặc định mở câu đầu tiên
@@ -40,12 +60,11 @@ export default function FaqSection({ initialData }: Props) {
   useEffect(() => {
     if (initialData) return;
 
-    faqService
-      .getHomepageFaqs()
+    (viTri === "taiLieu" ? faqService.getDocumentFaqs() : faqService.getHomepageFaqs())
       .then((data) => setFaqs(data || []))
       .catch((error) => console.error("❌ Error fetching homepage FAQs:", error))
       .finally(() => setLoading(false));
-  }, [initialData]);
+  }, [initialData, viTri]);
 
   const toggleFaq = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -54,22 +73,21 @@ export default function FaqSection({ initialData }: Props) {
   return (
     <section className={styles.section}>
       <div className={styles.container}>
-        <TieuDeMuc
-          tieuDe="Câu hỏi thường gặp"
-          moTa="Những thắc mắc hay gặp nhất về học phí, chứng nhận và cách khoá học vận hành."
-        />
+        <TieuDeMuc tieuDe={tieuDe} moTa={moTa ?? MO_TA_MAC_DINH[viTri]} />
 
         {loading ? (
           <FaqAccordionSkeleton />
         ) : faqs.length === 0 ? (
           <div className={styles.row2}>
             <HelpCircle size={18} />
-            <span>Chưa có câu hỏi thường gặp nào được thiết lập cho Trang chủ.</span>
+            <span>
+              Chưa có câu hỏi thường gặp nào được thiết lập cho {TEN_KHU_VUC[viTri]}.
+            </span>
           </div>
         ) : (
-          // Cot hep hon phan con lai cua trang: cau hoi va cau tra loi la van
-          // ban chay, doc de nhat trong khoang 70-75 ky tu moi dong. De tran
-          // ra 1280px thi mat phai luot ca man hinh moi het mot dong.
+          // Khung rong het be ngang noi dung (truoc day chi 56rem, chua trong
+          // 1-2 cot ben phai). Rieng CAU TRA LOI van gioi han ~80 ky tu moi
+          // dong (.text) - van ban chay doc de nhat o do dai do.
           <div className={styles.card}>
             {faqs.map((faq, index) => {
               const isOpen = openIndex === index;

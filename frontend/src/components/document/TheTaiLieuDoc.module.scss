@@ -1,0 +1,199 @@
+// The tai lieu dung - khung anh xam bo tron, tieu de xanh, vien chan xam.
+
+.the {
+  position: relative;
+  height: 100%;
+}
+
+.lienKet {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: 20px;
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+  transition: background-color 0.15s;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: #f1f7fe;
+
+      .tieuDe {
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+
+      .nenAnh {
+        background-color: #e2effd;
+      }
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid #3092fa;
+    outline-offset: 2px;
+  }
+}
+
+// ---- anh trang
+.nenAnh {
+  position: relative;
+  display: block;
+  aspect-ratio: 178 / 148;
+  border-radius: 16px;
+  background-color: #eef1f5;
+  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 3) 0;
+  overflow: hidden;
+  transition: background-color 0.15s;
+}
+
+.anh {
+  display: block;
+  height: 100%;
+  border-radius: 6px 6px 0 0;
+  background: #fff top center / cover no-repeat;
+  box-shadow: 0 0 0 1px #0a0a0a0f;
+}
+
+// Anh chup man hinh that: giu ti le, can giua thay vi cat sat dinh.
+.anhThat {
+  background-position: center;
+}
+
+.soFile {
+  position: absolute;
+  right: calc(var(--spacing) * 2);
+  bottom: calc(var(--spacing) * 2);
+  min-width: 26px;
+  border-radius: 8px;
+  background-color: #eef1f5;
+  padding: 2px 6px;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #4c5966;
+}
+
+// ---- chu
+.chi {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 2);
+  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 2) 0;
+}
+
+.tieuDe {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  font-size: 0.98rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #3092fa;
+}
+
+.loai {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.82rem;
+  color: #7a838c;
+}
+
+.vien {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--spacing) * 1.5);
+  border-radius: 999px;
+  background-color: #f6f7fb;
+  padding: calc(var(--spacing) * 1) calc(var(--spacing) * 3);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #4c5966;
+
+  svg {
+    color: #7a838c;
+  }
+}
+
+// ---- nut tren anh
+%nutTren {
+  position: absolute;
+  top: calc(var(--spacing) * 4);
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid #d3d9e0;
+  background-color: #fff;
+  color: #4c5966;
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 0.15s,
+    background-color 0.15s;
+
+  &:focus-visible {
+    opacity: 1;
+    outline: 3px solid #3092fa;
+    outline-offset: 1px;
+  }
+}
+
+.nutLuu {
+  @extend %nutTren;
+  left: calc(var(--spacing) * 4);
+}
+
+.nutXoa {
+  @extend %nutTren;
+  right: calc(var(--spacing) * 4);
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: #f5b5b0;
+      color: #bd251c;
+    }
+  }
+}
+
+// Hien nut khi re chuot vao the; da luu thi luon hien.
+.the:hover .nutLuu,
+.the:hover .nutXoa,
+.the:focus-within .nutLuu,
+.the:focus-within .nutXoa,
+.nutLuuOn {
+  opacity: 1;
+}
+
+.nutLuuOn {
+  border-color: #3092fa;
+  background-color: #3092fa;
+  color: #fff;
+}
+
+// Man cam ung khong co hover - luon hien nut.
+@media (hover: none) {
+  .nutLuu,
+  .nutXoa {
+    opacity: 1;
+  }
+}
+
+// Khoang cach giua hai cap bieu tuong + so trong vien "phoBien".
+.cach {
+  margin-left: calc(var(--spacing) * 1.5);
+}
+
+.anChu {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

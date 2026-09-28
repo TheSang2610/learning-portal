@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getErrorMessage } from "@/src/services/apiHelper";
-import { faqService, FaqItem } from "@/src/services/faq";
+import { faqService, type FaqItem, type ViTriFaq } from "@/src/services/faq";
 
 import styles from "./page.module.scss";
 import {
@@ -16,7 +16,18 @@ import {
   CheckCircle,
 } from "lucide-react";
 
+// Hai khu vuc FAQ khong gan khoa hoc. FAQ khoa hoc quan ly o trang khoa hoc.
+const KHU_VUC: { khoa: ViTriFaq; nhan: string; moTa: string }[] = [
+  { khoa: "trangChu", nhan: "Trang chủ", moTa: "Hiển thị ở cuối Trang chủ hệ thống." },
+  {
+    khoa: "taiLieu",
+    nhan: "Chia sẻ tài liệu",
+    moTa: "Hiển thị ở cuối trang Chia sẻ tài liệu (/share-document).",
+  },
+];
+
 export default function AdminFaqsPage() {
+  const [khuVuc, setKhuVuc] = useState<ViTriFaq>("trangChu");
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,18 +43,21 @@ export default function AdminFaqsPage() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // 1. Tải danh sách FAQ Trang chủ khi vào trang
-  const fetchFaqs = async () => {
+  const fetchFaqs = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await faqService.getHomepageFaqs();
+      const data =
+        khuVuc === "taiLieu"
+          ? await faqService.getDocumentFaqs()
+          : await faqService.getHomepageFaqs();
       setFaqs(data || []);
     } catch (err) {
       setError(getErrorMessage(err, "Không thể tải danh sách câu hỏi."));
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [khuVuc]);
 
   useEffect(() => {
     // Goi qua mot vong microtask thay vi goi thang. Ham tai du lieu bat dau
@@ -52,7 +66,7 @@ export default function AdminFaqsPage() {
     // (rule react-hooks/set-state-in-effect canh bao dung cho nay). Hoan mot
     // vong microtask thi mat thuong khong thay khac, ma vong ve thua het.
     void Promise.resolve().then(fetchFaqs);
-  }, []);
+  }, [fetchFaqs]);
 
   // Tự động tắt thông báo thành công sau 3 giây
   useEffect(() => {
@@ -91,8 +105,10 @@ export default function AdminFaqsPage() {
         setSuccessMsg("Cập nhật câu hỏi thành công!");
       } else {
         // Gọi API Thêm (courseId truyền null vì đây là FAQ Trang chủ)
-        await faqService.createFaq({ courseId: null, question, answer });
-        setSuccessMsg("Thêm câu hỏi trang chủ thành công!");
+        await faqService.createFaq({ courseId: null, viTri: khuVuc, question, answer });
+        setSuccessMsg(
+          `Thêm câu hỏi cho ${KHU_VUC.find((k) => k.khoa === khuVuc)?.nhan} thành công!`,
+        );
       }
       setIsOpenModal(false);
       fetchFaqs(); // Tải lại danh sách mới
@@ -123,17 +139,36 @@ export default function AdminFaqsPage() {
         <div>
           <h3 className={styles.subheading}>
             <HelpCircle className={styles.box} size={26} />
-            Homepage FAQs Management
+            FAQs Management
           </h3>
           <p className={styles.text}>
-            Quản lý các câu hỏi thường gặp hiển thị công khai ở khu vực Trang chủ hệ
-            thống.
+            Quản lý các câu hỏi thường gặp hiển thị công khai ở Trang chủ và trang Chia sẻ
+            tài liệu.
           </p>
         </div>
         <button onClick={handleOpenCreateModal} className={styles.button}>
           <Plus size={18} />
           Add New FAQ
         </button>
+      </div>
+
+      {/* CHON KHU VUC: moi khu vuc mot bo FAQ rieng. */}
+      <div className={styles.khuVuc} role="tablist" aria-label="Khu vực hiển thị FAQ">
+        {KHU_VUC.map((k) => (
+          <button
+            key={k.khoa}
+            type="button"
+            role="tab"
+            aria-selected={khuVuc === k.khoa}
+            onClick={() => setKhuVuc(k.khoa)}
+            className={`${styles.tabKhuVuc} ${khuVuc === k.khoa ? styles.tabKhuVucOn : ""}`}
+          >
+            {k.nhan}
+          </button>
+        ))}
+        <span className={styles.moTaKhuVuc}>
+          {KHU_VUC.find((k) => k.khoa === khuVuc)?.moTa}
+        </span>
       </div>
 
       {/* TOAST THÔNG BÁO THÀNH CÔNG */}
@@ -206,7 +241,8 @@ export default function AdminFaqsPage() {
             {/* Modal Header */}
             <div className={styles.row4}>
               <h4 className={styles.minorHeading2}>
-                {editingId ? "Edit Homepage FAQ" : "Create New Homepage FAQ"}
+                {editingId ? "Sửa câu hỏi" : "Thêm câu hỏi"} ·{" "}
+                {KHU_VUC.find((k) => k.khoa === khuVuc)?.nhan}
               </h4>
               <button onClick={() => setIsOpenModal(false)} className={styles.button4}>
                 <X size={18} />

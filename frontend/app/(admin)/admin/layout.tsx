@@ -20,7 +20,9 @@ import {
   Flame,
   Sparkles,
   MessageSquare,
+  FileText,
   HelpCircle,
+  Library,
   Menu,
   Image as ImageIcon,
   SlidersHorizontal,
@@ -208,6 +210,17 @@ const menuItems: MenuItem[] = [
     href: "/admin/posts",
     icon: Newspaper,
     matchRoutes: POST_ROUTES,
+  },
+  {
+    label: "Tài liệu chia sẻ",
+    href: "/admin/documents",
+    icon: FileText,
+  },
+  {
+    // Rieng cho kho tai lieu - khong phai "Categories" cua khoa hoc o tren.
+    label: "Môn học tài liệu",
+    href: "/admin/document-subjects",
+    icon: Library,
   },
   {
     label: "Homepage FAQs",

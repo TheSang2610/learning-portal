@@ -29,25 +29,6 @@
   gap: calc(var(--spacing) * 10);
 }
 
-.row2 {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: calc(var(--spacing) * 2.5);
-}
-
-.box2 {
-  color: var(--color-blue-600);
-}
-
-.label {
-  font-size: var(--text-lg);
-  line-height: var(--tw-leading, var(--text-lg--line-height));
-  --tw-font-weight: var(--font-weight-extrabold);
-  font-weight: var(--font-weight-extrabold);
-  color: var(--color-slate-900);
-}
-
 .nav {
   display: none;
   align-items: center;
@@ -92,5 +73,26 @@
     &:hover {
       color: var(--color-blue-600);
     }
+  }
+}
+
+// Muc menu cua trang dang xem.
+.dangO {
+  font-weight: 600;
+  color: var(--color-blue-600);
+}
+
+// Logo chu - kieu cua logo "Learning Portal" (IndividualsHeader .box), mau
+// tim dam cua dai dau /share-document (ShareDocumentHero .dau).
+.logo {
+  flex-shrink: 0;
+  font-size: 20px;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-tight);
+  white-space: nowrap;
+  color: #2a0316;
+
+  @media (min-width: 40rem) {
+    font-size: 26px;
   }
 }

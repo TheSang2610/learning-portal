@@ -3,6 +3,8 @@ import { CircleCheck } from "lucide-react";
 import SafeImage from "@/src/components/ui/SafeImage";
 import AnhDaiDien from "@/src/components/ui/Avatar";
 import CardActions, { type MucMenu } from "@/src/components/common/CardActions";
+import type { LoaiLuu } from "@/src/services/saved";
+import { tomTatHtml } from "@/src/components/common/postHtml";
 import type { ReactNode } from "react";
 
 import styles from "./FeedCard.module.scss";
@@ -20,12 +22,20 @@ interface Props {
   /** Dau tich xanh canh ten - danh cho giang vien / quan tri */
   daXacThuc?: boolean;
   tieuDe: string;
-  moTa: string;
+  /** Mo ta chu thuong (vd. excerpt cua blog). */
+  moTa?: string;
+  /**
+   * Mo ta la HTML (vd. noi dung TipTap cua tai lieu). The hien doan tom tat
+   * GIU in dam/nghieng - xem tomTatHtml. Truyen cai nay thi bo qua `moTa`.
+   */
+  moTaHtml?: string;
   /** Dong duoi cung: tag, thoi gian, so luot... */
   meta: ReactNode;
   anh?: { src: string; alt: string } | null;
   /** Muc rieng cua tung trang trong menu ba cham, vi du "Xoa" */
   themMuc?: MucMenu[];
+  /** Thu nut luu se luu vao trang ca nhan. Khong truyen thi an nut luu. */
+  luu?: { loai: LoaiLuu; id: string };
 }
 
 export default function FeedCard({
@@ -35,9 +45,11 @@ export default function FeedCard({
   daXacThuc = false,
   tieuDe,
   moTa,
+  moTaHtml,
   meta,
   anh,
   themMuc,
+  luu,
 }: Props) {
   return (
     <article className={styles.article}>
@@ -67,7 +79,7 @@ export default function FeedCard({
         {/* Nam tren lop phu cua tieu de (z-10), neu khong thi bam nut lai
             dieu huong sang trang chi tiet. */}
         <div className={styles.box2}>
-          <CardActions href={href} tieuDe={tieuDe} themMuc={themMuc} />
+          <CardActions href={href} tieuDe={tieuDe} themMuc={themMuc} luu={luu} />
         </div>
       </div>
 
@@ -84,7 +96,16 @@ export default function FeedCard({
             </Link>
           </h2>
 
-          {moTa && <p className={styles.text}>{moTa}</p>}
+          {moTaHtml ? (
+            <p
+              className={styles.text}
+              // tomTatHtml chi de lai 6 the dinh dang tran va doi moi "<" con
+              // lai thanh &lt; - khong chen duoc the nao khac. Xem ham do.
+              dangerouslySetInnerHTML={{ __html: tomTatHtml(moTaHtml) }}
+            />
+          ) : (
+            moTa && <p className={styles.text}>{moTa}</p>
+          )}
 
           <div className={styles.row4}>{meta}</div>
         </div>

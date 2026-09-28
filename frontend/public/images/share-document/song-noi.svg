@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 300" fill="none">
+  <!-- Dai song noi the "tim kiem" ben trai voi the tai lieu ben phai.
+       Ba lop xanh tu nhat toi dam; hep o ben trai, loe rong sang phai. -->
+  <path fill="#D5E9FE" d="M0 84C62 66 108 102 160 90C222 76 268 4 350 12V288C268 296 222 224 160 210C108 198 62 234 0 216Z"/>
+  <path fill="#AAD2FF" d="M0 98C62 82 108 114 160 104C222 92 268 26 350 32V268C268 274 222 208 160 196C108 186 62 218 0 202Z"/>
+  <path fill="#4EA4FF" d="M0 112C62 98 108 128 160 118C222 106 268 44 350 50V250C268 256 222 194 160 182C108 172 62 202 0 188Z"/>
+</svg>

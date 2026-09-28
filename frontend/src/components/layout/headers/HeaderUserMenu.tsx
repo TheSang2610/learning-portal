@@ -17,7 +17,12 @@ import styles from "./HeaderUserMenu.module.scss";
 // Neu de nguyen trong IndividualsHeader thi cac trang dung header rieng se mat
 // duong vao ho so, cai dat va nut dang xuat.
 
-export default function HeaderUserMenu() {
+export default function HeaderUserMenu({
+  coGioHang = true,
+}: {
+  /** false: an nut gio hang - vd. khu tai lieu, noi khong ban gi. */
+  coGioHang?: boolean;
+} = {}) {
   // Truoc day component nay tu doc localStorage.userInfo va tu nghe ba su
   // kien (storage / userInfoChanged / pageshow). Gio danh tinh nam trong kho
   // chung o RAM, <NapNguoiDung /> lo viec nap va dong bo - xem
@@ -83,7 +88,7 @@ export default function HeaderUserMenu() {
         {/* Khach cung xem duoc gio hang: ho them khoa vao gio roi moi dang nhap
             de thanh toan, khong phai nguoc lai. Gio nam o localStorage nen
             khong mat khi dang nhap. */}
-        <NutGioHang />
+        {coGioHang && <NutGioHang />}
 
         <Link href={duongDangNhap} className={styles.box2}>
           Đăng nhập
@@ -113,7 +118,7 @@ export default function HeaderUserMenu() {
     // bam chuong se bi tinh la "bam ben trong menu" nen menu tai khoan dang mo
     // se khong dong - hai bang chong len nhau.
     <div className={styles.row2}>
-      <NutGioHang />
+      {coGioHang && <NutGioHang />}
       <ChuongThongBao />
 
       <div className={styles.box4} ref={ref}>

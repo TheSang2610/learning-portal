@@ -268,3 +268,10 @@
   background-color: var(--color-blue-600);
   color: var(--color-white);
 }
+
+// Noi dung duoi thanh tab - cung nhip cach voi cot phai.
+.bangTab {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 6);
+}

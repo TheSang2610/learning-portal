@@ -73,7 +73,7 @@
 
 .card {
   margin-top: calc(var(--spacing) * 8);
-  max-width: var(--container-4xl);
+  // Rong het khung noi dung - truoc day 56rem, chua trong ben phai.
   overflow: hidden;
   border-radius: var(--radius-2xl);
   border-style: var(--tw-border-style);
@@ -104,7 +104,7 @@
   justify-content: space-between;
   gap: calc(var(--spacing) * 4);
   padding-inline: calc(var(--spacing) * 5);
-  padding-block: calc(var(--spacing) * 5);
+  padding-block: calc(var(--spacing) * 6);
   text-align: left;
   transition-property:
     color,
@@ -154,7 +154,7 @@
   }
 
   @media (min-width: 48rem) {
-    padding-inline: calc(var(--spacing) * 6);
+    padding-inline: calc(var(--spacing) * 8);
   }
 }
 
@@ -204,22 +204,23 @@
 }
 
 .text {
-  max-width: 72ch;
+  max-width: 80ch;
   padding-inline: calc(var(--spacing) * 5);
-  padding-bottom: calc(var(--spacing) * 5);
-  font-size: 15px;
+  padding-bottom: calc(var(--spacing) * 6);
+  font-size: 16px;
   --tw-leading: 1.75;
   line-height: 1.75;
   color: var(--color-slate-600);
 
   @media (min-width: 48rem) {
-    padding-inline: calc(var(--spacing) * 6);
+    padding-inline: calc(var(--spacing) * 8);
+    font-size: 17px;
   }
 }
 
 /* Cac lop con ket trong template literal, va bo sung. */
 .label5 {
-  font-size: 16px;
+  font-size: 17px;
   --tw-leading: var(--leading-snug);
   line-height: var(--leading-snug);
   --tw-font-weight: var(--font-weight-semibold);
@@ -231,14 +232,14 @@
   transition-duration: var(--tw-duration, var(--default-transition-duration));
 
   @media (min-width: 48rem) {
-    font-size: 17px;
+    font-size: 19px;
   }
 }
 .row3 {
   margin-top: calc(var(--spacing) * 0.5);
   display: flex;
-  height: calc(var(--spacing) * 7);
-  width: calc(var(--spacing) * 7);
+  height: calc(var(--spacing) * 8);
+  width: calc(var(--spacing) * 8);
   flex-shrink: 0;
   align-items: center;
   justify-content: center;

@@ -1,0 +1,212 @@
+// "Kham pha theo linh vuc" - dai nen xam nhat tran ngang trang, luoi o trang.
+// Bang mau nhat (nen o bieu tuong / mau chu) lay theo bang mau chu du an gui.
+
+.bang {
+  // Xen ke nen voi section ngay tren ("Kham pha tai lieu" - xam nhat).
+  background-color: #fff;
+  padding-block: calc(var(--spacing) * 16);
+}
+
+.khung {
+  margin-inline: auto;
+  max-width: var(--container-7xl);
+  padding-inline: calc(var(--spacing) * 6);
+}
+
+.dau {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: calc(var(--spacing) * 4);
+  margin-bottom: calc(var(--spacing) * 8);
+}
+
+.tieuDe {
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #0a0a0a;
+}
+
+.moTa {
+  margin-top: calc(var(--spacing) * 2);
+  max-width: 36rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #4c5966;
+}
+
+.xemTatCa {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  border-radius: 999px;
+  border: 1px solid #d3d9e0;
+  background-color: #fff;
+  padding: calc(var(--spacing) * 2.5) calc(var(--spacing) * 5);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2f3e4e;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: #3092fa;
+      color: #1168c3;
+    }
+  }
+}
+
+.trong {
+  color: #7a838c;
+}
+
+.luoi {
+  display: grid;
+  gap: calc(var(--spacing) * 4);
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+}
+
+.o {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: 16px;
+  border: 1px solid #e6ebef;
+  background-color: #f6f7fb;
+  padding: calc(var(--spacing) * 5);
+  box-shadow: 0 1px 2px 0 #0a0a0a1f;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s,
+    border-color 0.2s;
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: #aad2ff;
+      box-shadow: 0 4px 12px -2px #0a0a0a29;
+      transform: translateY(-2px);
+
+      .mui {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid #3092fa;
+    outline-offset: 2px;
+  }
+}
+
+.bieuTuong {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  margin-bottom: calc(var(--spacing) * 4);
+}
+
+// Nen nhat + mau dam cung ho - lay theo bang mau tham chieu.
+.xanh {
+  background-color: #e2effd;
+  color: #1168c3;
+}
+
+.tim {
+  background-color: #f0ebfe;
+  color: #735db4;
+}
+
+.cam {
+  background-color: #fde1d2;
+  color: #c44e0a;
+}
+
+.xanhLa {
+  background-color: #ecfcda;
+  color: #1d8201;
+}
+
+.hong {
+  background-color: #fdebfe;
+  color: #a831b2;
+}
+
+.ngoc {
+  background-color: #e8eced;
+  color: #2b4345;
+}
+
+.vang {
+  background-color: #f3f4dc;
+  color: #898c1e;
+}
+
+.ten {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0a0a0a;
+}
+
+.dem {
+  margin-top: calc(var(--spacing) * 1);
+  font-size: 0.85rem;
+  color: #4c5966;
+}
+
+.mon {
+  margin-top: calc(var(--spacing) * 3);
+  padding-top: calc(var(--spacing) * 3);
+  border-top: 1px solid #e6ebef;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #7a838c;
+  // Toi da hai dong - linh vuc nhieu mon khong keo dai o.
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mui {
+  position: absolute;
+  top: calc(var(--spacing) * 5);
+  right: calc(var(--spacing) * 5);
+  color: #3092fa;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+}
+
+@media (max-width: 40rem) {
+  .bang {
+    padding-block: calc(var(--spacing) * 10);
+  }
+
+  .khung {
+    padding-inline: calc(var(--spacing) * 4);
+  }
+
+  // Dien thoai: hai cot o nho, bo dong mon cho gon.
+  .luoi {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: calc(var(--spacing) * 3);
+  }
+
+  .o {
+    padding: calc(var(--spacing) * 4);
+  }
+
+  .mon {
+    display: none;
+  }
+}

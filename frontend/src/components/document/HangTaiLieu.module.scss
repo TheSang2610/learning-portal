@@ -1,0 +1,128 @@
+// Hang tai lieu cuon ngang: tieu de + hai nut tron, danh sach scroll-snap.
+
+.hang {
+  margin-top: calc(var(--spacing) * 12);
+}
+
+.dau {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--spacing) * 4);
+  margin-bottom: calc(var(--spacing) * 4);
+}
+
+.chuDau {
+  min-width: 0;
+}
+
+.tieuDe {
+  font-size: clamp(1.25rem, 2.2vw, 1.5rem);
+  font-weight: 700;
+  color: #2f3e4e;
+}
+
+.phu {
+  margin-top: 2px;
+  font-size: 0.85rem;
+  color: #7a838c;
+}
+
+.nut {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+}
+
+.nutTruot {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background-color: #f6f7fb;
+  color: #2f3e4e;
+  cursor: pointer;
+  transition: background-color 0.15s;
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: #e6ebef;
+    }
+  }
+
+  &:disabled {
+    background-color: transparent;
+    color: #c4cbd3;
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 3px solid #3092fa;
+    outline-offset: 2px;
+  }
+}
+
+.ds {
+  display: grid;
+  grid-auto-flow: column;
+  // 6 the tren man rong, the thu 7 lo mep de biet con cuon duoc.
+  grid-auto-columns: calc((100% - 5 * var(--khoang)) / 6.2);
+  gap: var(--khoang);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+  --khoang: calc(var(--spacing) * 3);
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// Con the phia sau: mo dan mep phai.
+.mo {
+  mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent);
+}
+
+.muc {
+  scroll-snap-align: start;
+  min-width: 0;
+}
+
+@media (max-width: 64rem) {
+  .ds {
+    grid-auto-columns: calc((100% - 3 * var(--khoang)) / 4.2);
+  }
+}
+
+@media (max-width: 40rem) {
+  .hang {
+    margin-top: calc(var(--spacing) * 9);
+  }
+
+  .ds {
+    grid-auto-columns: calc((100% - var(--khoang)) / 2.2);
+  }
+
+  .nutTruot {
+    display: none;
+  }
+}
+
+// Nut chu nho canh hai nut truot (vd. "Xóa lịch sử").
+.nutChu {
+  border-radius: 999px;
+  padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 3);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #5b8def;
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: #f1f7fe;
+    }
+  }
+}

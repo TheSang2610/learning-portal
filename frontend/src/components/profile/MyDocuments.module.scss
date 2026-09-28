@@ -1,0 +1,282 @@
+// "Tai lieu toi da chia se" o trang ca nhan. Khung the giong .card cua
+// app/(portal)/user/profile/page.module.scss de dung chung mot nhip voi cac o ben canh.
+
+.card {
+  // Chua cho thanh dieu huong dinh khi cuon toi #tai-lieu-cua-toi.
+  scroll-margin-top: 6rem;
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--color-slate-200);
+  background-color: #fff;
+  padding: calc(var(--spacing) * 6);
+  box-shadow:
+    0 1px 3px 0 #0000001a,
+    0 1px 2px -1px #0000001a;
+}
+
+.dau {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--spacing) * 3);
+  margin-bottom: calc(var(--spacing) * 4);
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-slate-900);
+}
+
+.dem {
+  border-radius: 999px;
+  background-color: var(--color-slate-100);
+  padding: 0.1rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-slate-600);
+}
+
+.nutDang {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-slate-200);
+  padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 3);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-slate-700);
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--color-blue-300);
+      color: var(--color-blue-700);
+    }
+  }
+}
+
+.loi {
+  margin-bottom: calc(var(--spacing) * 3);
+  border-radius: var(--radius-lg);
+  background-color: #fef2f2;
+  padding: calc(var(--spacing) * 3);
+  font-size: 0.875rem;
+  color: #b91c1c;
+}
+
+.trong {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  border-radius: var(--radius-xl);
+  border: 1px dashed var(--color-slate-300);
+  padding: calc(var(--spacing) * 10) calc(var(--spacing) * 4);
+  font-size: 0.9rem;
+  color: var(--color-slate-500);
+}
+
+.ds {
+  display: flex;
+  flex-direction: column;
+  transition: opacity 0.15s;
+}
+
+// Dang tai trang khac: lam mo danh sach cu thay vi xoa trang - khung khong nhay.
+.mo {
+  opacity: 0.55;
+}
+
+.muc {
+  padding-block: calc(var(--spacing) * 3);
+
+  & + & {
+    border-top: 1px solid var(--color-slate-100);
+  }
+}
+
+.dong {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+}
+
+.duoi {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-lg);
+  background-color: #eff6ff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-blue-700);
+}
+
+.thongTin {
+  flex: 1;
+  min-width: 0;
+}
+
+.ten {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--color-slate-900);
+}
+
+a.ten {
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-blue-700);
+    }
+  }
+}
+
+.meta {
+  margin-top: calc(var(--spacing) * 1);
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--spacing) * 1) calc(var(--spacing) * 3);
+  font-size: 0.78rem;
+  color: var(--color-slate-500);
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 1);
+  }
+}
+
+.mon {
+  color: var(--color-blue-700);
+}
+
+.chuaMon {
+  color: #b45309;
+}
+
+.nhanAn {
+  border-radius: 999px;
+  background-color: #fef2f2;
+  padding: 0 0.45rem;
+  font-weight: 600;
+  color: #b91c1c;
+}
+
+.thaoTac {
+  flex-shrink: 0;
+  display: flex;
+  gap: calc(var(--spacing) * 1.5);
+}
+
+.nutSua,
+.nutXoa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--spacing) * 1);
+  height: 32px;
+  border-radius: var(--radius-lg);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nutSua {
+  padding-inline: calc(var(--spacing) * 3);
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-700);
+
+  &[aria-expanded="true"] {
+    background-color: var(--color-blue-600);
+    color: #fff;
+  }
+
+  @media (hover: hover) {
+    &:hover:not([aria-expanded="true"]) {
+      background-color: var(--color-slate-200);
+      color: var(--color-slate-900);
+    }
+  }
+}
+
+.nutXoa {
+  width: 32px;
+  background-color: #fef2f2;
+  color: #dc2626;
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: #dc2626;
+      color: #fff;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.phanTrang {
+  margin-top: calc(var(--spacing) * 4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--spacing) * 3);
+  font-size: 0.85rem;
+  color: var(--color-slate-600);
+}
+
+.nutTrang {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-slate-200);
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+.quay {
+  animation: xoay 0.9s linear infinite;
+}
+
+@keyframes xoay {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Man hep: dua nut xuong duoi thong tin thay vi ep tieu de con vai chu.
+@media (max-width: 30rem) {
+  .dong {
+    flex-wrap: wrap;
+  }
+
+  // Tieu de + thong tin chiem tron hang con lai; nut Sua/Xoa roi xuong dong.
+  .thongTin {
+    flex-basis: calc(100% - 44px - var(--spacing) * 3);
+  }
+
+  .ten {
+    white-space: normal;
+  }
+
+  .thaoTac {
+    margin-left: calc(44px + var(--spacing) * 3);
+  }
+}

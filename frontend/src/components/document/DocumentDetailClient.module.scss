@@ -1,78 +1,113 @@
-// File nay do script sinh ra tu class Tailwind cu.
-// Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
+// Bo cuc trang chi tiet tai lieu.
+//
+// Theo ban mau trang tin cua PTIT ma chu du an dua: dai dau trang co tieu de,
+// duong dan (breadcrumb), noi dung ben trai, danh sach lien quan ben phai.
+// Khac mot cho co chu y: van giu khung doc PDF tai cho - xem ghi chu trong
+// DocumentDetailClient.tsx.
 
-.container {
-  margin-inline: auto;
-  max-width: var(--container-6xl);
-  padding-inline: calc(var(--spacing) * 4);
+/* ---------------------------------------------------------------------------
+   Dai dau trang
+   --------------------------------------------------------------------------- */
+
+/* Nen chuyen sac, KHONG phai anh - xem ghi chu o the <header> ben tsx.
+   Mau lay theo tim/ngoc cua phan mo dau trang chu de hai trang cung mot bo. */
+.hero {
+  background-image:
+    radial-gradient(60% 120% at 15% 20%, rgb(0 191 179 / 0.35), transparent 60%),
+    linear-gradient(135deg, #2b1d7a 0%, #4f2bff 55%, #6a52ff 100%);
+  padding-block: calc(var(--spacing) * 16);
+
+  @media (min-width: 48rem) {
+    padding-block: calc(var(--spacing) * 24);
+  }
 }
 
-.box {
+.heroInner {
+  margin-inline: auto;
+  max-width: 76rem;
+  padding-inline: calc(var(--spacing) * 4);
+  text-align: center;
+}
+
+.crumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--spacing) * 2);
+  font-size: 0.85rem;
+  color: rgb(255 255 255 / 0.75);
+}
+
+.crumbLink {
   display: inline-flex;
   align-items: center;
-  gap: calc(var(--spacing) * 1.5);
-  font-size: var(--text-sm);
-  line-height: var(--tw-leading, var(--text-sm--line-height));
-  --tw-font-weight: var(--font-weight-semibold);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-slate-600);
-  transition-property:
-    color,
-    background-color,
-    border-color,
-    outline-color,
-    text-decoration-color,
-    fill,
-    stroke,
-    --tw-gradient-from,
-    --tw-gradient-via,
-    --tw-gradient-to,
-    opacity,
-    box-shadow,
-    transform,
-    translate,
-    scale,
-    rotate,
-    filter,
-    -webkit-backdrop-filter,
-    backdrop-filter,
-    display,
-    content-visibility,
-    overlay,
-    pointer-events;
-  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
-  transition-duration: var(--tw-duration, var(--default-transition-duration));
+  color: inherit;
 
   @media (hover: hover) {
     &:hover {
-      color: var(--color-blue-700);
+      color: #fff;
+      text-decoration: underline;
     }
   }
 }
 
-.card {
+.crumbSep {
+  color: rgb(255 255 255 / 0.45);
+}
+
+/* Co chu co gian theo be rong: tieu de tai lieu do nguoi dung go, co the rat
+   dai. Ghim mot co chu co dinh thi ten dai se tran ra bon nam dong tren dien
+   thoai. text-wrap: balance chia deu chu giua cac dong thay vi de dong cuoi
+   tro lai mot tu. */
+.heroTitle {
   margin-top: calc(var(--spacing) * 4);
-  border-radius: var(--radius-2xl);
-  border-style: var(--tw-border-style);
-  border-width: 1px;
-  border-color: var(--color-slate-200);
-  background-color: var(--color-white);
-  padding: calc(var(--spacing) * 6);
-  --tw-shadow:
-    0 1px 3px 0 var(--tw-shadow-color, #0000001a),
-    0 1px 2px -1px var(--tw-shadow-color, #0000001a);
-  box-shadow:
-    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
-    var(--tw-ring-shadow), var(--tw-shadow);
+  font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+  font-size: clamp(1.6rem, 3.6vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: #fff;
+  text-wrap: balance;
+}
+
+/* ---------------------------------------------------------------------------
+   Khung va hai cot
+   --------------------------------------------------------------------------- */
+
+.container {
+  margin-inline: auto;
+  max-width: 76rem;
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 10);
+}
+
+/* Cot phai 20rem la do theo noi dung that: ngay + hai dong ten tai lieu. Hep
+   hon thi ten vo ba bon dong, rong hon thi cot trai bi bop mat cho doc. */
+.layout {
+  display: grid;
+  gap: calc(var(--spacing) * 10);
+
+  @media (min-width: 64rem) {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    align-items: start;
+  }
+}
+
+/* Khong co tai lieu lien quan thi mot cot tran het chieu rong. */
+.layoutMot {
+  display: block;
+}
+
+.main {
+  min-width: 0;
 }
 
 .title {
-  font-size: var(--text-2xl);
-  line-height: var(--tw-leading, var(--text-2xl--line-height));
-  --tw-leading: var(--leading-snug);
-  line-height: var(--leading-snug);
-  --tw-font-weight: var(--font-weight-extrabold);
-  font-weight: var(--font-weight-extrabold);
+  font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+  font-size: clamp(1.25rem, 2.2vw, 1.6rem);
+  font-weight: 700;
+  line-height: 1.35;
   color: var(--color-slate-900);
 }
 
@@ -84,7 +119,6 @@
   column-gap: calc(var(--spacing) * 5);
   row-gap: calc(var(--spacing) * 2);
   font-size: var(--text-sm);
-  line-height: var(--tw-leading, var(--text-sm--line-height));
   color: var(--color-slate-600);
 }
 
@@ -98,6 +132,31 @@
   color: var(--color-slate-400);
 }
 
+/* Dong "Xem tai lieu tai day: <ten>" */
+.openLine {
+  margin-top: calc(var(--spacing) * 6);
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--color-slate-700);
+}
+
+.openLink {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5);
+  font-weight: 600;
+  color: var(--color-blue-700);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-blue-800);
+    }
+  }
+}
+
 .link {
   margin-top: calc(var(--spacing) * 5);
   display: inline-flex;
@@ -108,40 +167,393 @@
   padding-inline: calc(var(--spacing) * 5);
   padding-block: calc(var(--spacing) * 2.5);
   font-size: var(--text-sm);
-  line-height: var(--tw-leading, var(--text-sm--line-height));
-  --tw-font-weight: var(--font-weight-bold);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-white);
-  transition-property:
-    color,
-    background-color,
-    border-color,
-    outline-color,
-    text-decoration-color,
-    fill,
-    stroke,
-    --tw-gradient-from,
-    --tw-gradient-via,
-    --tw-gradient-to,
-    opacity,
-    box-shadow,
-    transform,
-    translate,
-    scale,
-    rotate,
-    filter,
-    -webkit-backdrop-filter,
-    backdrop-filter,
-    display,
-    content-visibility,
-    overlay,
-    pointer-events;
-  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
-  transition-duration: var(--tw-duration, var(--default-transition-duration));
+  font-weight: 600;
+  color: #fff;
+  transition: background-color 0.15s ease;
 
   @media (hover: hover) {
     &:hover {
       background-color: var(--color-blue-700);
     }
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Noi dung bai do nguoi dang soan
+   ---------------------------------------------------------------------------
+   Phai trinh bay GIONG HET vung go trong RichTextEditor.module.scss. Lech nhau
+   thi nguoi dang can chinh trong o soan, dang len xong lai thay ra mot kieu
+   khac - va ho khong biet phai sua o dau cho dung.
+   Doi co chu hay khoang cach o day thi phai doi ca ben kia.
+   --------------------------------------------------------------------------- */
+.body {
+  margin-top: calc(var(--spacing) * 6);
+  font-size: 1.02rem;
+  line-height: 1.8;
+  color: var(--color-slate-700);
+
+  /* Do dai dong doc duoc. Tran het 1184px thi mat phai luot qua gan 150 ky tu
+     moi dong, doc het mot doan la moi. */
+  max-width: 72ch;
+
+  > :first-child {
+    margin-top: 0;
+  }
+
+  p {
+    margin-block: 0.85em;
+  }
+
+  h2 {
+    margin-top: 1.6em;
+    margin-bottom: 0.5em;
+    font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--color-slate-900);
+  }
+
+  h3 {
+    margin-top: 1.3em;
+    margin-bottom: 0.4em;
+    font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+    font-size: 1.12rem;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--color-slate-900);
+  }
+
+  ul,
+  ol {
+    margin-block: 0.85em;
+    padding-left: 1.5em;
+  }
+
+  ul {
+    list-style: disc;
+  }
+
+  ol {
+    list-style: decimal;
+  }
+
+  li {
+    margin-block: 0.3em;
+  }
+
+  blockquote {
+    margin-block: 1.1em;
+    border-left: 3px solid var(--color-blue-500);
+    padding-left: 1em;
+    color: var(--color-slate-600);
+    font-style: italic;
+  }
+
+  a {
+    color: var(--color-blue-700);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    overflow-wrap: anywhere;
+  }
+
+  strong {
+    font-weight: 700;
+    color: var(--color-slate-900);
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-lg);
+  }
+
+  /* Bai rong: khong de mot khoang trang khong ly do giua trang. */
+  &:empty {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Hang nut chia se
+   --------------------------------------------------------------------------- */
+
+.share {
+  margin-top: calc(var(--spacing) * 6);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+}
+
+.shareLabel {
+  font-size: var(--text-sm);
+  color: var(--color-slate-600);
+}
+
+.shareBtn {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-blue-600);
+  color: #fff;
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-blue-700);
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Cot tai lieu lien quan
+   --------------------------------------------------------------------------- */
+
+.aside {
+  min-width: 0;
+
+  /* Dinh khi cuon: tai lieu co the dai hang tram trang, cuon toi cuoi ma cot
+     nay da troi mat tu lau thi no khong con tac dung dieu huong nua.
+     6rem = chieu cao thanh dieu huong dinh o dau trang, tru di de tieu de cot
+     khong chui xuong duoi no. */
+  @media (min-width: 64rem) {
+    position: sticky;
+    top: 6rem;
+  }
+}
+
+.asideTitle {
+  font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-slate-900);
+}
+
+.asideList {
+  margin-top: calc(var(--spacing) * 4);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 1);
+
+  /* Danh sach dai thi cuon trong chinh no thay vi keo cot dai mai. */
+  @media (min-width: 64rem) {
+    max-height: calc(100vh - 12rem);
+    overflow-y: auto;
+  }
+}
+
+.asideItem {
+  display: flex;
+  gap: calc(var(--spacing) * 3);
+  border-radius: var(--radius-lg);
+  padding: calc(var(--spacing) * 2);
+  transition: background-color 0.15s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-slate-100);
+    }
+  }
+}
+
+/* O duoi file thay cho anh thu nho - xem ghi chu ben tsx. */
+.asideBadge {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 54px;
+  height: 54px;
+  border-radius: var(--radius-lg);
+  background-color: #eef1fb;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--color-blue-700);
+}
+
+.asideText {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 1);
+}
+
+.asideDate {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5);
+  font-size: 0.75rem;
+  color: var(--color-slate-500);
+}
+
+/* Cat sau hai dong: ten tai lieu do nguoi dung go, co ten rat dai. Cat bang
+   dau ba cham thi moi muc cao bang nhau, danh sach doc ra mot cot deu. */
+.asideName {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-slate-800);
+}
+
+/* Nhan mon hoc trong hang thong tin - noi bat hon cac muc con lai vi day la
+   thong tin phan loai, khong phai so lieu. */
+.mon {
+  border-radius: 999px;
+  background-color: #eef1fb;
+  padding-inline: calc(var(--spacing) * 2.5);
+  padding-block: 2px;
+  font-weight: 600;
+  color: var(--color-blue-700);
+}
+
+/* Ly do goi y duoi ten tai lieu o cot lien quan. */
+.asideWhy {
+  font-size: 0.74rem;
+  color: #6d28d9;
+}
+
+/* Nut "Sua tai lieu" - chi chu bai va admin thay. */
+.nutSua {
+  margin-top: calc(var(--spacing) * 4);
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-slate-300);
+  padding-inline: calc(var(--spacing) * 3);
+  padding-block: calc(var(--spacing) * 1.5);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-slate-700);
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--color-blue-500);
+      color: var(--color-blue-700);
+    }
+  }
+}
+
+// ---------------------------------------------------------------- file dinh kem
+
+.tep {
+  margin-top: calc(var(--spacing) * 7);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-slate-200);
+  overflow: hidden;
+}
+
+.tepTieuDe {
+  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
+  background-color: #f8fafc;
+  border-bottom: 1px solid var(--color-slate-200);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-slate-900);
+}
+
+.tepMuc {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
+
+  & + & {
+    border-top: 1px solid var(--color-slate-100);
+  }
+}
+
+.tepDuoi {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-lg);
+  background-color: #fef2f2;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #b91c1c;
+}
+
+.tepThongTin {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tepTen {
+  overflow-wrap: anywhere;
+  font-weight: 600;
+  color: var(--color-slate-900);
+}
+
+.tepCo {
+  font-size: 0.8rem;
+  color: var(--color-slate-500);
+}
+
+.tepXem,
+.tepTai {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5);
+  border-radius: var(--radius-lg);
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.tepXem {
+  border: 1px solid var(--color-slate-300);
+  color: var(--color-slate-700);
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--color-blue-400);
+      color: var(--color-blue-700);
+    }
+  }
+}
+
+.tepTai {
+  background-color: var(--color-blue-600);
+  color: #fff;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-blue-700);
+    }
+  }
+}
+
+@media (max-width: 30rem) {
+  .tepMuc {
+    flex-wrap: wrap;
+  }
+
+  .tepXem {
+    margin-left: calc(42px + var(--spacing) * 3);
+  }
+}
+
+// Anh trong bai huong dan (anh chup man hinh tung buoc).
+.body :global(img) {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: calc(var(--spacing) * 4) auto;
+  border-radius: 12px;
+  border: 1px solid var(--color-slate-200);
+  box-shadow: 0 1px 2px 0 #0a0a0a14;
 }

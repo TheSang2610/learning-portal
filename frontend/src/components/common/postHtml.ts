@@ -36,6 +36,32 @@ export function boThe(html: string): string {
     .trim();
 }
 
+/**
+ * Doan tom tat cho the danh sach: GIU in dam / nghieng / gach chan, bo moi the
+ * khac (p, h2, ul, a, img...) thanh khoang trang de ca bai chay thanh mot dong
+ * lien, cat 2 dong bang CSS.
+ *
+ * Viet bang bieu thuc chinh quy chu khong dung lamSachHtml: ham nay phai ra
+ * DUNG MOT KET QUA o may chu va trinh duyet (lamSachHtml o may chu tra nguyen
+ * chuoi -> lech khi React hydrate). Va no an toan ma khong can DOM: chi 6 the
+ * tran khong thuoc tinh duoc giu, moi dau "<" con sot deu bi doi thanh &lt; -
+ * nen ke ca du lieu cu chua qua loc cua may chu cung khong chen duoc the nao.
+ * Thuc the (&amp;, &gt;...) giu nguyen de trinh duyet tu hien dung ky tu.
+ */
+export function tomTatHtml(html: string): string {
+  const GIU = /^<\/?(strong|b|em|i|u|s)>$/i;
+  return (
+    String(html || "")
+      // The that bat dau bang chu cai va khong chua "<" ben trong - de "1 < 2 va
+      // <b>" khong bi coi ca cum la mot the va nuot mat chu.
+      .replace(/<\/?[a-z][^<>]*>/gi, (the) => (GIU.test(the) ? the.toLowerCase() : " "))
+      .replace(/<(?!\/?(strong|b|em|i|u|s)>)/gi, "&lt;")
+      .replace(/&nbsp;/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+  );
+}
+
 const RE_TIEU_DE = /<h([1-4])\b([^>]*)>([\s\S]*?)<\/h\1\s*>/gi;
 
 /**

@@ -25,6 +25,8 @@ import AuthModal from "@/src/components/auth/AuthModal";
 const CAU_GIAI_THICH: Record<string, string> = {
   hoc: "Bạn cần đăng nhập để vào học khóa này.",
   ghidanh: "Bạn cần đăng nhập để đăng ký khóa học.",
+  chiase: "Bạn cần đăng nhập để chia sẻ tài liệu.",
+  luu: "Đăng nhập để lưu bài vào trang cá nhân của bạn.",
 };
 
 export default function AuthModalGate() {

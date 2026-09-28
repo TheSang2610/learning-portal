@@ -107,6 +107,21 @@ const nextConfig: NextConfig = {
         destination: "/instructor/questions",
         permanent: false,
       },
+
+      // Khu tai lieu doi cau truc duong dan: danh sach /browse -> /all-document,
+      // chi tiet /share-document/<id> -> /share-document/all-document/<id>.
+      // Link cu da gui di / da luu van mo duoc. Chi khop id 24 ky tu hex de
+      // khong nuot cac duong tinh (institution, all-document...). Query giu nguyen.
+      {
+        source: "/share-document/browse",
+        destination: "/share-document/all-document",
+        permanent: false,
+      },
+      {
+        source: "/share-document/:id([0-9a-fA-F]{24})",
+        destination: "/share-document/all-document/:id",
+        permanent: false,
+      },
     ];
   },
 };

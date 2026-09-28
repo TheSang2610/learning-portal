@@ -1,0 +1,573 @@
+// Trang mot truong - dai dau mau nhat co dom trang tri + ten truong + o tim mon,
+// than: duong dan, mon hoc theo chu cai, tai lieu moi, truong khac.
+// Mau theo bang mau tham chieu (cung InstitutionDirectory).
+
+// ---------------------------------------------------------------- dai dau
+.dau {
+  position: relative;
+  overflow: hidden;
+  background-color: #eef5ff;
+  padding: calc(var(--spacing) * 16) calc(var(--spacing) * 4) calc(var(--spacing) * 14);
+}
+
+.dom {
+  position: absolute;
+  background: center / contain no-repeat;
+  pointer-events: none;
+}
+
+.dom1 {
+  top: -30px;
+  left: 4%;
+  width: 150px;
+  height: 150px;
+  background-image: url("/images/share-document/giot-tim.svg");
+  rotate: -20deg;
+}
+
+.dom2 {
+  bottom: 18px;
+  left: 14%;
+  width: 70px;
+  height: 70px;
+  background-image: url("/images/share-document/cham-chanh.svg");
+}
+
+.dom3 {
+  top: 36px;
+  left: 26%;
+  width: 34px;
+  height: 34px;
+  background-image: url("/images/share-document/cham-hong.svg");
+}
+
+.dom4 {
+  top: -20px;
+  right: 6%;
+  width: 140px;
+  height: 140px;
+  background-image: url("/images/share-document/trung-cam.svg");
+  rotate: 25deg;
+}
+
+.dom5 {
+  bottom: -30px;
+  right: 16%;
+  width: 110px;
+  height: 110px;
+  background-image: url("/images/share-document/la-chanh.svg");
+}
+
+.dom6 {
+  top: 50%;
+  right: 30%;
+  width: 26px;
+  height: 26px;
+  background-image: url("/images/share-document/giot-xanh.svg");
+}
+
+.dauNoiDung {
+  position: relative;
+  margin-inline: auto;
+  max-width: 44rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.oLogo {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background-color: #fff;
+  box-shadow: 0 2px 8px -2px #0a0a0a26;
+}
+
+.tieuDe {
+  margin-top: calc(var(--spacing) * 5);
+  font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: #0a0a0a;
+  text-wrap: balance;
+}
+
+.soLieu {
+  margin-top: calc(var(--spacing) * 3);
+  font-size: 0.95rem;
+  color: #4c5966;
+
+  strong {
+    color: #0a0a0a;
+  }
+}
+
+.oTim {
+  position: relative;
+  width: 100%;
+  margin-top: calc(var(--spacing) * 7);
+}
+
+.iconTim {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--spacing) * 5);
+  translate: 0 -50%;
+  color: #7a838c;
+  pointer-events: none;
+}
+
+.nhap {
+  width: 100%;
+  height: 56px;
+  border-radius: 999px;
+  border: 1px solid #d3d9e0;
+  background-color: #fff;
+  padding: 0 calc(var(--spacing) * 5) 0 calc(var(--spacing) * 12);
+  font-size: 1rem;
+  color: #0a0a0a;
+  box-shadow: 0 1px 2px 0 #0a0a0a14;
+
+  &::placeholder {
+    color: #7a838c;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #3092fa;
+    box-shadow: 0 0 0 4px #d5e9fe;
+  }
+}
+
+// ---------------------------------------------------------------- than
+.nen {
+  background-color: #fff;
+}
+
+.than {
+  margin-inline: auto;
+  max-width: var(--container-7xl);
+  padding: calc(var(--spacing) * 6) calc(var(--spacing) * 6) calc(var(--spacing) * 16);
+}
+
+.duongDan {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  font-size: 0.85rem;
+  color: #7a838c;
+
+  a {
+    display: inline-flex;
+    color: #5b8def;
+
+    @media (hover: hover) {
+      &:hover {
+        color: #1168c3;
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+.duongDanHienTai {
+  color: #4c5966;
+}
+
+.muc {
+  margin-top: calc(var(--spacing) * 10);
+}
+
+.hangTieuDe {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: calc(var(--spacing) * 3);
+}
+
+.tieuDeMuc {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #2f3e4e;
+}
+
+.xemHet {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1168c3;
+
+  @media (hover: hover) {
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// ---- danh muc (linh vuc) cua truong
+.luoiDanhMuc {
+  margin-top: calc(var(--spacing) * 4);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: calc(var(--spacing) * 3);
+}
+
+.danhMuc {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 3.5);
+  height: 100%;
+  border-radius: 16px;
+  border: 1px solid #e6ebef;
+  padding: calc(var(--spacing) * 4);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: #aad2ff;
+      box-shadow: 0 4px 16px -8px #0a0a0a33;
+
+      .tenDanhMuc {
+        color: #1168c3;
+      }
+
+      .muiTen {
+        translate: 3px 0;
+      }
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid #3092fa;
+    outline-offset: 2px;
+  }
+}
+
+.oBieuTuong {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+}
+
+// Nen nhat + mau dam cung ho - khop DocumentCategories.module.scss.
+.xanh {
+  background-color: #e2effd;
+  color: #1168c3;
+}
+
+.tim {
+  background-color: #f0ebfe;
+  color: #735db4;
+}
+
+.cam {
+  background-color: #fde1d2;
+  color: #c44e0a;
+}
+
+.xanhLa {
+  background-color: #ecfcda;
+  color: #1d8201;
+}
+
+.hong {
+  background-color: #fdebfe;
+  color: #a831b2;
+}
+
+.ngoc {
+  background-color: #e8eced;
+  color: #2b4345;
+}
+
+.vang {
+  background-color: #f3f4dc;
+  color: #898c1e;
+}
+
+.chuDanhMuc {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tenDanhMuc {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0a0a0a;
+}
+
+.phuDanhMuc {
+  font-size: 0.82rem;
+  color: #7a838c;
+}
+
+.muiTen {
+  flex-shrink: 0;
+  color: #7a838c;
+  transition: translate 0.15s;
+}
+
+// ---- bang chu cai
+.chuCai {
+  margin-top: calc(var(--spacing) * 4);
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--spacing) * 1);
+  padding-bottom: calc(var(--spacing) * 3);
+  border-bottom: 1px solid #e6ebef;
+}
+
+.chu {
+  display: grid;
+  place-items: center;
+  min-width: 40px;
+  height: 36px;
+  border-radius: 999px;
+  padding-inline: calc(var(--spacing) * 3);
+  font-size: 0.95rem;
+  color: #5b8def;
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover:not(.chuOn) {
+      background-color: #f1f7fe;
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid #3092fa;
+    outline-offset: 2px;
+  }
+}
+
+.chuOn {
+  background-color: #3092fa;
+  font-weight: 600;
+  color: #fff;
+}
+
+.ketQuaTim {
+  margin-top: calc(var(--spacing) * 4);
+  font-size: 0.9rem;
+  color: #4c5966;
+}
+
+// ---- danh sach mon: 2 cot
+.dsMon {
+  margin-top: calc(var(--spacing) * 3);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(var(--spacing) * 1) calc(var(--spacing) * 6);
+}
+
+.mon {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 4);
+  border-radius: 16px;
+  padding: calc(var(--spacing) * 3.5) calc(var(--spacing) * 3);
+  transition: background-color 0.15s;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: #f1f7fe;
+
+      .tenMon {
+        color: #1168c3;
+      }
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid #3092fa;
+    outline-offset: 2px;
+  }
+}
+
+.iconMon {
+  flex-shrink: 0;
+  color: #15a46e;
+  fill: #d8f5e8;
+}
+
+.chuMon {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tenMon {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1rem;
+  color: #2f3e4e;
+}
+
+.phuMon {
+  font-size: 0.8rem;
+  color: #7a838c;
+}
+
+// ---- chua co tai lieu
+.trong {
+  margin-top: calc(var(--spacing) * 5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  border-radius: 20px;
+  border: 1px dashed #d3d9e0;
+  padding: calc(var(--spacing) * 12) calc(var(--spacing) * 6);
+  text-align: center;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #4c5966;
+
+  p:not(.trongTieuDe) {
+    max-width: 30rem;
+  }
+}
+
+.trongHinh {
+  width: 96px;
+  height: 96px;
+  background: url("/images/share-document/truong-minh-hoa.svg") center / contain no-repeat;
+}
+
+.trongTieuDe {
+  margin-top: calc(var(--spacing) * 2);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #2f3e4e;
+}
+
+.nutDang {
+  margin-top: calc(var(--spacing) * 3);
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  border-radius: 999px;
+  background-color: #0a0a0a;
+  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 6);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: #2f3e4e;
+    }
+  }
+}
+
+// ---- truong khac: 2 cot
+.dsTruong {
+  margin-top: calc(var(--spacing) * 3);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(var(--spacing) * 1) calc(var(--spacing) * 6);
+}
+
+.truong {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+  border-radius: 16px;
+  padding: calc(var(--spacing) * 3.5) calc(var(--spacing) * 3);
+  transition: background-color 0.15s;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: #f1f7fe;
+
+      .tenTruong {
+        color: #1168c3;
+      }
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid #3092fa;
+    outline-offset: 2px;
+  }
+}
+
+.bieuTuong {
+  flex-shrink: 0;
+  color: #bd251c;
+}
+
+.bieuTuongLon {
+  color: #bd251c;
+}
+
+.logo {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: center / contain no-repeat;
+}
+
+.logoLon {
+  width: 40px;
+  height: 40px;
+}
+
+.tenTruong {
+  min-width: 0;
+  font-size: 1rem;
+  color: #5b8def;
+}
+
+.soTruong {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: #7a838c;
+}
+
+// ---------------------------------------------------------------- man hep
+@media (max-width: 48rem) {
+  .dau {
+    padding-block: calc(var(--spacing) * 12) calc(var(--spacing) * 10);
+  }
+
+  .dom1,
+  .dom4 {
+    width: 90px;
+    height: 90px;
+  }
+
+  .dom3,
+  .dom6 {
+    display: none;
+  }
+
+  .than {
+    padding-inline: calc(var(--spacing) * 4);
+  }
+
+  .dsMon,
+  .dsTruong {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

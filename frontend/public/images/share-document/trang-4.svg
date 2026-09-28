@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 388">
+  <!-- Trang slide / tong ket: bieu do cot va y chinh. -->
+  <rect width="300" height="388" fill="#fff"/>
+  <rect x="24" y="26" width="160" height="11" rx="3" fill="#c44e0a"/>
+  <rect x="24" y="44" width="110" height="6" rx="3" fill="#9ea9b5"/>
+  <rect x="24" y="66" width="252" height="130" rx="8" fill="#f6f7fb"/>
+  <path d="M44 176H256" stroke="#d3d9e0" stroke-width="2"/>
+  <g>
+    <rect x="58" y="130" width="24" height="46" rx="3" fill="#aad2ff"/>
+    <rect x="100" y="100" width="24" height="76" rx="3" fill="#4ea4ff"/>
+    <rect x="142" y="116" width="24" height="60" rx="3" fill="#aad2ff"/>
+    <rect x="184" y="86" width="24" height="90" rx="3" fill="#3092fa"/>
+    <rect x="226" y="108" width="24" height="68" rx="3" fill="#aad2ff"/>
+  </g>
+  <g fill="#f36a1c"><circle cx="32" cy="221" r="4"/><circle cx="32" cy="247" r="4"/><circle cx="32" cy="273" r="4"/></g>
+  <g fill="#d3d9e0">
+    <rect x="44" y="218" width="220" height="6" rx="3"/><rect x="44" y="244" width="196" height="6" rx="3"/>
+    <rect x="44" y="270" width="228" height="6" rx="3"/>
+  </g>
+  <rect x="20" y="294" width="176" height="14" rx="3" fill="#fcd7ff"/>
+  <rect x="24" y="298" width="166" height="6" rx="3" fill="#a831b2"/>
+  <g fill="#d3d9e0">
+    <rect x="24" y="322" width="246" height="6" rx="3"/><rect x="24" y="336" width="220" height="6" rx="3"/>
+    <rect x="24" y="350" width="160" height="6" rx="3"/>
+  </g>
+</svg>

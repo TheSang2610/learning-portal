@@ -1,0 +1,193 @@
+// O soan noi dung co dinh dang (TipTap).
+//
+// Trinh bay trong vung soan phai GIONG trang doc: nguoi dang bam dam roi thay
+// chu dam dung nhu luc dang len. Lech nhau thi ho chinh toi chinh lui ma van
+// khong ra thu minh muon.
+
+.khung {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-slate-300);
+  background-color: #fff;
+  overflow: hidden;
+
+  &:focus-within {
+    border-color: var(--color-blue-500);
+    box-shadow: 0 0 0 3px rgb(59 130 246 / 0.12);
+  }
+}
+
+/* Thanh cong cu dinh o dau khung khi cuon trong bai dai. */
+.thanh {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--spacing) * 1);
+  border-bottom: 1px solid var(--color-slate-200);
+  background-color: var(--color-slate-50);
+  padding: calc(var(--spacing) * 2);
+}
+
+.nut {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-lg);
+  color: var(--color-slate-600);
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: var(--color-slate-200);
+      color: var(--color-slate-900);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+/* Nut dang bat phai NHIN RA NGAY la dang bat: day la thu duy nhat cho biet
+   doan chu dang boi den co dinh dang gi. */
+.nutBat {
+  background-color: var(--color-blue-600);
+  color: #fff;
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: var(--color-blue-700);
+      color: #fff;
+    }
+  }
+}
+
+.vach {
+  width: 1px;
+  height: 20px;
+  margin-inline: calc(var(--spacing) * 1);
+  background-color: var(--color-slate-300);
+}
+
+/* Vung go */
+.vung {
+  min-height: 260px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: calc(var(--spacing) * 5);
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--color-slate-800);
+  outline: none;
+
+  /* TipTap dat data-placeholder len chinh vung go. Chi hien khi bai con rong -
+     :empty khong dung duoc vi luon co san mot the <p> rong ben trong. */
+  &:has(> p:only-child:empty)::before {
+    content: attr(data-placeholder);
+    color: var(--color-slate-400);
+    pointer-events: none;
+    float: left;
+    height: 0;
+  }
+
+  > :first-child {
+    margin-top: 0;
+  }
+
+  p {
+    margin-block: 0.75em;
+  }
+
+  h2 {
+    margin-top: 1.4em;
+    margin-bottom: 0.5em;
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--color-slate-900);
+  }
+
+  h3 {
+    margin-top: 1.2em;
+    margin-bottom: 0.4em;
+    font-size: 1.12rem;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--color-slate-900);
+  }
+
+  ul,
+  ol {
+    margin-block: 0.75em;
+    padding-left: 1.5em;
+  }
+
+  ul {
+    list-style: disc;
+  }
+
+  ol {
+    list-style: decimal;
+  }
+
+  li {
+    margin-block: 0.25em;
+  }
+
+  blockquote {
+    margin-block: 1em;
+    border-left: 3px solid var(--color-blue-500);
+    padding-left: 1em;
+    color: var(--color-slate-600);
+    font-style: italic;
+  }
+
+  a {
+    color: var(--color-blue-700);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  strong {
+    font-weight: 700;
+  }
+}
+
+.chan {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--spacing) * 2);
+  border-top: 1px solid var(--color-slate-200);
+  background-color: var(--color-slate-50);
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 2);
+  font-size: 0.8rem;
+  color: var(--color-slate-500);
+}
+
+.canhBao {
+  color: #b45309;
+}
+
+// Anh trong bai (bai huong dan co anh chup man hinh).
+.vung :global(img) {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-block: calc(var(--spacing) * 3);
+  border-radius: 10px;
+  border: 1px solid var(--color-slate-200);
+}
+
+.vung :global(img.ProseMirror-selectednode) {
+  outline: 3px solid var(--color-blue-500);
+}

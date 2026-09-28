@@ -1,0 +1,276 @@
+// Style chung cho hai tab "Goi y cho ban" va "Lich su" o trang Chia se tai
+// lieu, va dong tai lieu gon (DocumentRow) ma ca hai dung.
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 1);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+  border-radius: var(--radius-lg);
+  padding: calc(var(--spacing) * 3);
+  transition: background-color 0.12s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-slate-100);
+    }
+  }
+}
+
+.badge {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-lg);
+  background-color: #eef1fb;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--color-blue-700);
+}
+
+.text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 1);
+}
+
+/* Cat mot dong: danh sach de luot nhanh, ten dai bon dong thi moi muc cao mot
+   kieu va mat khong theo kip. Ten day du co o trang chi tiet. */
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-slate-900);
+}
+
+.sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  font-size: 0.8rem;
+  color: var(--color-slate-500);
+}
+
+.mon {
+  border-radius: 999px;
+  background-color: #eef1fb;
+  padding-inline: calc(var(--spacing) * 2);
+  padding-block: 1px;
+  font-weight: 600;
+  color: var(--color-blue-700);
+}
+
+.right {
+  flex-shrink: 0;
+}
+
+.tagTai,
+.tagXem {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1);
+  border-radius: 999px;
+  padding-inline: calc(var(--spacing) * 2);
+  padding-block: 2px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.tagTai {
+  background-color: #ecfdf5;
+  color: #047857;
+}
+
+.tagXem {
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-600);
+}
+
+.note {
+  margin-bottom: calc(var(--spacing) * 3);
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--spacing) * 2);
+  border-radius: var(--radius-lg);
+  background-color: #f5f3ff;
+  padding: calc(var(--spacing) * 3);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #5b21b6;
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+}
+
+.toolbar {
+  margin-bottom: calc(var(--spacing) * 2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--spacing) * 3);
+}
+
+.count {
+  font-size: 0.85rem;
+  color: var(--color-slate-500);
+}
+
+.clear {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5);
+  border-radius: var(--radius-lg);
+  padding-inline: calc(var(--spacing) * 3);
+  padding-block: calc(var(--spacing) * 1.5);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #b91c1c;
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: #fef2f2;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  border-radius: var(--radius-xl);
+  border: 1px dashed var(--color-slate-300);
+  padding-block: calc(var(--spacing) * 12);
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--color-slate-500);
+}
+
+.emptySub {
+  font-size: 0.8rem;
+  color: var(--color-slate-400);
+}
+
+.error {
+  margin-bottom: calc(var(--spacing) * 3);
+  border-radius: var(--radius-lg);
+  background-color: #fef2f2;
+  padding: calc(var(--spacing) * 3);
+  font-size: 0.88rem;
+  color: #b91c1c;
+}
+
+.fine {
+  margin-top: calc(var(--spacing) * 3);
+  font-size: 0.75rem;
+  color: var(--color-slate-400);
+}
+
+.spin {
+  animation: xoay 0.9s linear infinite;
+}
+
+@keyframes xoay {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --------------------- Tab va the loc o trang danh sach --------------------- */
+
+.tabs {
+  margin-bottom: calc(var(--spacing) * 4);
+  display: flex;
+  gap: calc(var(--spacing) * 1);
+  border-bottom: 1px solid var(--color-slate-200);
+  overflow-x: auto;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5);
+  flex-shrink: 0;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  padding-inline: calc(var(--spacing) * 3);
+  padding-block: calc(var(--spacing) * 2.5);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-slate-500);
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-slate-800);
+    }
+  }
+}
+
+.tabOn {
+  border-bottom-color: var(--color-blue-600);
+  color: var(--color-blue-700);
+}
+
+.chips {
+  margin-bottom: calc(var(--spacing) * 4);
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--spacing) * 2);
+}
+
+.chip {
+  border-radius: 999px;
+  border: 1px solid var(--color-slate-300);
+  background-color: #fff;
+  padding-inline: calc(var(--spacing) * 3);
+  padding-block: calc(var(--spacing) * 1.5);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-slate-600);
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--color-blue-400);
+      color: var(--color-blue-700);
+    }
+  }
+}
+
+.chipOn {
+  border-color: var(--color-blue-600);
+  background-color: var(--color-blue-600);
+  color: #fff;
+
+  @media (hover: hover) {
+    &:hover {
+      color: #fff;
+    }
+  }
+}
+
+.chipCount {
+  margin-left: calc(var(--spacing) * 1);
+  opacity: 0.7;
+}

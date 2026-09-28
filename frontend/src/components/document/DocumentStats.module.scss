@@ -1,0 +1,158 @@
+// Section so lieu - ba the so + mang mau trang tri o bon goc.
+
+.bang {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-color: #fff;
+  padding-block: calc(var(--spacing) * 20);
+}
+
+.khung {
+  position: relative;
+  z-index: 1;
+  margin-inline: auto;
+  max-width: 64rem;
+  padding-inline: calc(var(--spacing) * 6);
+  text-align: center;
+}
+
+.tieuDe {
+  font-size: clamp(1.8rem, 3.6vw, 2.6rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: #0a0a0a;
+  text-wrap: balance;
+}
+
+.moTa {
+  margin-top: calc(var(--spacing) * 3);
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
+  color: #0a0a0a;
+  text-wrap: balance;
+}
+
+.ds {
+  margin-top: calc(var(--spacing) * 12);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: calc(var(--spacing) * 6);
+}
+
+.the {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+  border-radius: 24px;
+  border: 1px solid #e6ebef;
+  background-color: #fff;
+  padding: calc(var(--spacing) * 8) calc(var(--spacing) * 5);
+  box-shadow: 0 4px 12px -2px #0a0a0a1f;
+}
+
+.so {
+  font-size: clamp(2.6rem, 5vw, 3.6rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #0a0a0a;
+}
+
+.nhan {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  font-size: 1.1rem;
+  color: #0a0a0a;
+
+  svg {
+    color: #4c5966;
+  }
+}
+
+.tag {
+  border-radius: 999px;
+  padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 4);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+// Mau nhan dac theo bang mau tham chieu.
+.tim {
+  background-color: #967fd6;
+}
+
+.xanhLa {
+  background-color: #1d8201;
+}
+
+.cam {
+  background-color: #f36a1c;
+}
+
+// ---- mang mau trang tri (dung lai SVG da ve cho dai dau trang)
+.hinh {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  background: center / contain no-repeat;
+}
+
+.trenTrai {
+  top: -40px;
+  left: -60px;
+  width: 240px;
+  height: 270px;
+  background-image: url("/images/share-document/giot-xanh.svg");
+  transform: rotate(35deg);
+}
+
+.duoiTrai {
+  bottom: -30px;
+  left: 6%;
+  width: 90px;
+  height: 120px;
+  background-image: url("/images/share-document/giot-tim.svg");
+}
+
+.trenPhai {
+  top: 30px;
+  right: -50px;
+  width: 170px;
+  height: 200px;
+  background-image: url("/images/share-document/trung-cam.svg");
+  transform: rotate(-20deg);
+}
+
+.duoiPhai {
+  bottom: -20px;
+  right: 8%;
+  width: 70px;
+  height: 110px;
+  background-image: url("/images/share-document/sung-hong.svg");
+}
+
+@media (max-width: 48rem) {
+  .bang {
+    padding-block: calc(var(--spacing) * 12);
+  }
+
+  .ds {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 22rem;
+    margin-inline: auto;
+  }
+
+  .trenTrai,
+  .duoiPhai {
+    display: none;
+  }
+
+  .trenPhai {
+    width: 90px;
+    height: 110px;
+    right: -30px;
+  }
+}

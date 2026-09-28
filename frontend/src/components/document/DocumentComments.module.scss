@@ -1,0 +1,257 @@
+// Khu binh luan duoi trang chi tiet tai lieu.
+
+.khung {
+  margin-top: calc(var(--spacing) * 10);
+  border-top: 1px solid var(--color-slate-200);
+  padding-top: calc(var(--spacing) * 8);
+}
+
+.tieuDe {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  margin-bottom: calc(var(--spacing) * 4);
+  font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-slate-900);
+}
+
+.so {
+  font-weight: 500;
+  color: var(--color-slate-500);
+}
+
+/* ------------------------------ O viet ------------------------------ */
+
+.form {
+  margin-bottom: calc(var(--spacing) * 5);
+}
+
+.textarea {
+  width: 100%;
+  resize: vertical;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-slate-300);
+  background-color: #fff;
+  padding: calc(var(--spacing) * 3);
+  font: inherit;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--color-slate-800);
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-blue-500);
+    box-shadow: 0 0 0 3px rgb(59 130 246 / 0.12);
+  }
+}
+
+.formChan {
+  margin-top: calc(var(--spacing) * 2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--spacing) * 3);
+}
+
+.dem {
+  font-size: 0.75rem;
+  color: var(--color-slate-400);
+}
+
+.formNut {
+  display: flex;
+  gap: calc(var(--spacing) * 2);
+}
+
+.nutGui,
+.nutHuy {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5);
+  border-radius: var(--radius-lg);
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 2);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nutGui {
+  background-color: var(--color-blue-600);
+  color: #fff;
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: var(--color-blue-700);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+.nutHuy {
+  color: var(--color-slate-600);
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-slate-100);
+    }
+  }
+}
+
+.moiDangNhap {
+  margin-bottom: calc(var(--spacing) * 5);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-slate-50);
+  padding: calc(var(--spacing) * 4);
+  font-size: 0.9rem;
+  color: var(--color-slate-600);
+}
+
+.linkDangNhap {
+  font-weight: 600;
+  color: var(--color-blue-700);
+  text-decoration: underline;
+}
+
+.loi {
+  margin-top: calc(var(--spacing) * 2);
+  font-size: 0.85rem;
+  color: #b91c1c;
+}
+
+.trong {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  padding-block: calc(var(--spacing) * 6);
+  font-size: 0.9rem;
+  color: var(--color-slate-500);
+}
+
+/* ------------------------------ Danh sach ------------------------------ */
+
+.danhSach {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 5);
+}
+
+.mot {
+  border-radius: var(--radius-lg);
+}
+
+/* Binh luan da an (chi admin thay): mo di va gach vien, de admin nhan ra ngay
+   cai nao nguoi khac dang khong thay. */
+.daAn {
+  opacity: 0.55;
+  outline: 1px dashed #f59e0b;
+  outline-offset: 4px;
+}
+
+.dau {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+}
+
+.ten {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-slate-900);
+}
+
+.nhanTacGia,
+.nhanAdmin,
+.nhanAn {
+  border-radius: 999px;
+  padding-inline: calc(var(--spacing) * 2);
+  padding-block: 1px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.nhanTacGia {
+  background-color: #eef1fb;
+  color: var(--color-blue-700);
+}
+
+.nhanAdmin {
+  background-color: #f5f3ff;
+  color: #6d28d9;
+}
+
+.nhanAn {
+  background-color: #fffbeb;
+  color: #b45309;
+}
+
+.gio {
+  font-size: 0.78rem;
+  color: var(--color-slate-400);
+}
+
+/* pre-wrap: giu xuong dong nguoi viet go. overflow-wrap: mot duong link dai
+   khong co dau cach thi van xuong dong, khong day vo bo cuc. */
+.noiDung {
+  margin-top: calc(var(--spacing) * 1.5);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: var(--color-slate-700);
+}
+
+.thaoTac {
+  margin-top: calc(var(--spacing) * 1.5);
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--spacing) * 1);
+}
+
+.nutNho {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1);
+  border-radius: var(--radius-md);
+  padding-inline: calc(var(--spacing) * 2);
+  padding-block: calc(var(--spacing) * 1);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-slate-500);
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-slate-100);
+      color: var(--color-slate-800);
+    }
+  }
+}
+
+/* Mot cap tra loi: thut vao mot lan, co vach doc noi voi binh luan goc. */
+.traLoi {
+  margin-top: calc(var(--spacing) * 3);
+  margin-left: calc(var(--spacing) * 5);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 4);
+  border-left: 2px solid var(--color-slate-200);
+  padding-left: calc(var(--spacing) * 4);
+}
+
+.quay {
+  animation: xoay 0.9s linear infinite;
+}
+
+@keyframes xoay {
+  to {
+    transform: rotate(360deg);
+  }
+}

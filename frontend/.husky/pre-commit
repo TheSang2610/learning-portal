@@ -6,4 +6,9 @@
 #
 # lint-staged chay o day chi thay file da stage nam duoi frontend/. Backend
 # khong co linter nen khong mat gi; CI van kiem cu phap moi file .js cua no.
-cd frontend && npx lint-staged
+#
+# Kho frontend TACH RIENG thi goc kho chinh la frontend (khong co thu muc
+# frontend/) - khi do chay luon o goc. Truoc day "cd frontend" o day lam hong
+# moi lan commit trong kho tach.
+if [ -d frontend ]; then cd frontend || exit 1; fi
+npx lint-staged

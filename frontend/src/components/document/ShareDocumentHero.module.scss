@@ -1,0 +1,312 @@
+// Dai dau trang /share-document. Nen toi + mang mau SVG hai ben, khung trang
+// o giua (tha file + o tim). Anh nam o public/images/share-document/.
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  // Mau nen burgundy theo ban tham chieu chu du an gui.
+  background-color: #2a0316;
+  padding: calc(var(--spacing) * 28) calc(var(--spacing) * 4) calc(var(--spacing) * 16);
+}
+
+.noiDung {
+  position: relative;
+  z-index: 1;
+  margin-inline: auto;
+  max-width: 46rem;
+  text-align: center;
+}
+
+.tieuDe {
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #fff;
+  // Chia deu hai dong thay vi de mot chu mo coi o dong duoi.
+  text-wrap: balance;
+}
+
+.moTa {
+  margin: calc(var(--spacing) * 5) auto 0;
+  max-width: 38rem;
+  font-size: clamp(1rem, 1.6vw, 1.15rem);
+  line-height: 1.6;
+  color: rgb(255 255 255 / 0.82);
+  text-wrap: balance;
+}
+
+// ---------------------------------------------------------------- khung giua
+
+.khung {
+  margin-top: calc(var(--spacing) * 10);
+  overflow: hidden;
+  border-radius: 18px;
+  background-color: #fff;
+  text-align: center;
+  box-shadow: 0 8px 28px -4px rgb(0 0 0 / 0.45);
+}
+
+.vungTha {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(var(--spacing) * 7) calc(var(--spacing) * 5) calc(var(--spacing) * 6);
+  background-color: #f4f6fb;
+  border-bottom: 2px dashed #d5dbe8;
+  cursor: pointer;
+  transition: background-color 0.15s;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: #eef2fb;
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--color-blue-500);
+    outline-offset: -3px;
+  }
+}
+
+// Dang keo file ngang qua: doi mau ro rang de nguoi dung biet tha duoc.
+.vungThaKeo {
+  background-color: #e5edff;
+  border-bottom-color: var(--color-blue-500);
+}
+
+.iconTai {
+  color: #8b95a9;
+}
+
+.thaTieuDe {
+  margin-top: calc(var(--spacing) * 2);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--color-slate-800);
+}
+
+.thaPhu {
+  margin-top: calc(var(--spacing) * 1.5);
+  font-size: 0.9rem;
+  color: var(--color-slate-500);
+}
+
+.chonFile {
+  font-weight: 700;
+  color: var(--color-blue-600);
+}
+
+.thaGhiChu {
+  margin-top: calc(var(--spacing) * 1);
+  font-size: 0.8rem;
+  color: var(--color-slate-500);
+}
+
+.oTim {
+  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 3.5);
+  text-align: left;
+}
+
+.dongTim {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  padding-inline: calc(var(--spacing) * 1);
+}
+
+.iconTim {
+  flex-shrink: 0;
+  color: var(--color-slate-400);
+}
+
+.nhapTim {
+  flex: 1;
+  min-width: 0;
+  padding-block: calc(var(--spacing) * 2);
+  font-size: 0.95rem;
+  color: var(--color-slate-900);
+  background: transparent;
+
+  &:focus {
+    outline: none;
+  }
+
+  &::placeholder {
+    color: var(--color-slate-400);
+  }
+}
+
+.dongDuoi {
+  margin-top: calc(var(--spacing) * 2);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+}
+
+.chips {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--spacing) * 2);
+}
+
+.chip {
+  border-radius: 999px;
+  border: 1px solid var(--color-slate-300);
+  padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 3.5);
+  font-size: 0.82rem;
+  color: var(--color-slate-700);
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--color-blue-400);
+      color: var(--color-blue-700);
+    }
+  }
+}
+
+.nutTim {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background-color: var(--color-blue-600);
+  color: #fff;
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-blue-700);
+    }
+  }
+}
+
+// --------------------------------------------------------------- mang mau SVG
+
+.hinh {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  background: center / contain no-repeat;
+}
+
+.giotTim {
+  top: 12%;
+  left: 2%;
+  width: 96px;
+  height: 128px;
+  background-image: url("/images/share-document/giot-tim.svg");
+}
+
+.trungCam {
+  top: 56%;
+  left: 2.5%;
+  width: 46px;
+  height: 62px;
+  background-image: url("/images/share-document/trung-cam.svg");
+}
+
+.sungHong {
+  bottom: -18px;
+  left: 3%;
+  width: 80px;
+  height: 96px;
+  background-image: url("/images/share-document/sung-hong.svg");
+}
+
+.chamChanh {
+  top: 17%;
+  right: 5%;
+  width: 34px;
+  height: 34px;
+  background-image: url("/images/share-document/cham-chanh.svg");
+}
+
+.giotXanh {
+  top: 45%;
+  right: 2.5%;
+  width: 56px;
+  height: 120px;
+  background-image: url("/images/share-document/giot-xanh.svg");
+}
+
+.laChanh {
+  bottom: -6px;
+  right: 2%;
+  width: 140px;
+  height: 66px;
+  background-image: url("/images/share-document/la-chanh.svg");
+}
+
+.chamHong {
+  bottom: -10px;
+  left: 49%;
+  width: 36px;
+  height: 26px;
+  background-image: url("/images/share-document/cham-hong.svg");
+}
+
+// Troi nhe len xuong. Chi chay khi may KHONG bat "giam chuyen dong" - xem
+// ghi chu o PartnerMarquee ve Windows tat hieu ung.
+@media (prefers-reduced-motion: no-preference) {
+  .giotTim,
+  .giotXanh,
+  .trungCam {
+    animation: troi 7s ease-in-out infinite;
+  }
+
+  .chamChanh,
+  .sungHong {
+    animation: troi 9s ease-in-out infinite reverse;
+  }
+}
+
+@keyframes troi {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  50% {
+    translate: 0 -10px;
+  }
+}
+
+// Man hep: hinh hai ben de len chu - thu nho va chi giu vai hinh o goc.
+@media (max-width: 48rem) {
+  .hero {
+    padding-top: calc(var(--spacing) * 14);
+  }
+
+  .giotTim {
+    top: 3%;
+    left: -24px;
+    width: 60px;
+    height: 80px;
+  }
+
+  .giotXanh,
+  .trungCam,
+  .chamHong,
+  .sungHong {
+    display: none;
+  }
+
+  // Khung giua chiem gan het be ngang - thu nho la chanh va day xuong goc de
+  // khong de len mep duoi cua khung.
+  .laChanh {
+    bottom: -30px;
+    width: 96px;
+    height: 46px;
+  }
+
+  .chamChanh {
+    top: 4%;
+  }
+}

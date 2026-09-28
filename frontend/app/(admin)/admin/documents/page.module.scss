@@ -1,0 +1,521 @@
+// Trang quan ly tai lieu chia se trong khu quan tri.
+
+.page {
+  padding: calc(var(--spacing) * 6);
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: calc(var(--spacing) * 4);
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-slate-900);
+}
+
+.sub {
+  margin-top: calc(var(--spacing) * 1);
+  font-size: 0.9rem;
+  color: var(--color-slate-500);
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--spacing) * 2);
+}
+
+.stat {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-slate-100);
+  padding-inline: calc(var(--spacing) * 3);
+  padding-block: calc(var(--spacing) * 2);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-slate-700);
+}
+
+/* --------------------------------- Tim --------------------------------- */
+
+.timKhung {
+  position: relative;
+  margin-top: calc(var(--spacing) * 5);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+}
+
+.timIcon {
+  position: absolute;
+  left: calc(var(--spacing) * 3);
+  color: var(--color-slate-400);
+  pointer-events: none;
+}
+
+.timInput {
+  flex: 1;
+  min-width: 0;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-slate-300);
+  background-color: #fff;
+  padding-block: calc(var(--spacing) * 2.5);
+  padding-left: calc(var(--spacing) * 10);
+  padding-right: calc(var(--spacing) * 9);
+  font-size: 0.9rem;
+  color: var(--color-slate-800);
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-blue-500);
+    box-shadow: 0 0 0 3px rgb(59 130 246 / 0.12);
+  }
+}
+
+/* Nam trong long o nhap, sat le phai - phai tru cho nut Tim ben ngoai. */
+.timXoa {
+  position: absolute;
+  right: calc(var(--spacing) * 20);
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  color: var(--color-slate-400);
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-slate-200);
+      color: var(--color-slate-700);
+    }
+  }
+}
+
+.timNut {
+  flex-shrink: 0;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-blue-600);
+  padding-inline: calc(var(--spacing) * 5);
+  padding-block: calc(var(--spacing) * 2.5);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-blue-700);
+    }
+  }
+}
+
+/* ------------------------------ Bao trang thai ------------------------------ */
+
+.bangLoi,
+.bangOk {
+  position: relative;
+  margin-top: calc(var(--spacing) * 4);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  border-radius: var(--radius-lg);
+  padding: calc(var(--spacing) * 3);
+  font-size: 0.9rem;
+}
+
+.bangLoi {
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
+.bangOk {
+  background-color: #f0fdf4;
+  color: #15803d;
+}
+
+.dong {
+  margin-left: auto;
+  cursor: pointer;
+  opacity: 0.7;
+
+  @media (hover: hover) {
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+.trong {
+  margin-top: calc(var(--spacing) * 6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+  border-radius: var(--radius-xl);
+  border: 1px dashed var(--color-slate-300);
+  padding-block: calc(var(--spacing) * 16);
+  color: var(--color-slate-500);
+  font-size: 0.92rem;
+}
+
+.quay {
+  animation: xoay 0.9s linear infinite;
+}
+
+@keyframes xoay {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --------------------------------- Bang --------------------------------- */
+
+/* Cuon ngang tren man hep thay vi bop cot cho be lai: ten tai lieu va ten
+   nguoi dang deu la chu, bop nua thi vo dong lung tung khong doc duoc. */
+.bangBoc {
+  margin-top: calc(var(--spacing) * 5);
+  overflow-x: auto;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-slate-200);
+  background-color: #fff;
+}
+
+.bang {
+  width: 100%;
+  min-width: 42rem;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  th {
+    background-color: var(--color-slate-50);
+    padding: calc(var(--spacing) * 3);
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-slate-600);
+    white-space: nowrap;
+  }
+
+  td {
+    border-top: 1px solid var(--color-slate-100);
+    padding: calc(var(--spacing) * 3);
+    color: var(--color-slate-700);
+    vertical-align: middle;
+  }
+
+  tbody tr {
+    @media (hover: hover) {
+      &:hover {
+        background-color: var(--color-slate-50);
+      }
+    }
+  }
+}
+
+.phai {
+  text-align: right;
+}
+
+.tenTaiLieu {
+  display: block;
+  font-weight: 600;
+  color: var(--color-slate-900);
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-blue-700);
+      text-decoration: underline;
+    }
+  }
+}
+
+.meta {
+  margin-top: calc(var(--spacing) * 1);
+  display: block;
+  font-size: 0.78rem;
+  color: var(--color-slate-500);
+}
+
+.thaoTac {
+  display: inline-flex;
+  gap: calc(var(--spacing) * 2);
+}
+
+.nutPhu,
+.nutXoa {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.nutPhu {
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-600);
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-slate-200);
+      color: var(--color-slate-900);
+    }
+  }
+}
+
+/* Nut xoa PHAI khac mau han nut con lai: no la thao tac khong lay lai duoc,
+   khong duoc de bam nham vi trong giong nut ben canh. */
+.nutXoa {
+  background-color: #fef2f2;
+  color: #dc2626;
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: #dc2626;
+      color: #fff;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+/* ------------------------------- Phan trang ------------------------------- */
+
+.phanTrang {
+  margin-top: calc(var(--spacing) * 5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--spacing) * 3);
+}
+
+.nutTrang {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-slate-300);
+  background-color: #fff;
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 2);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-slate-700);
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: var(--color-slate-100);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+}
+
+.soTrang {
+  font-size: 0.88rem;
+  color: var(--color-slate-600);
+}
+
+/* ------------------------------- Hop thoai ------------------------------- */
+
+.lopPhu {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background-color: rgb(15 23 42 / 0.5);
+  padding: calc(var(--spacing) * 4);
+}
+
+.hopThoai {
+  width: 100%;
+  max-width: 26rem;
+  border-radius: var(--radius-xl);
+  background-color: #fff;
+  padding: calc(var(--spacing) * 6);
+  box-shadow: 0 20px 40px -12px rgb(15 23 42 / 0.35);
+}
+
+.hopTieuDe {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-slate-900);
+}
+
+.hopChu {
+  margin-top: calc(var(--spacing) * 3);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--color-slate-600);
+}
+
+.hopNut {
+  margin-top: calc(var(--spacing) * 6);
+  display: flex;
+  justify-content: flex-end;
+  gap: calc(var(--spacing) * 3);
+}
+
+.nutHuy {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-slate-300);
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 2);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-slate-700);
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-slate-100);
+    }
+  }
+}
+
+.nutXacNhan {
+  border-radius: var(--radius-lg);
+  background-color: #dc2626;
+  padding-inline: calc(var(--spacing) * 4);
+  padding-block: calc(var(--spacing) * 2);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: #b91c1c;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+/* ------------------------------- Mon hoc ------------------------------- */
+
+/* So tai lieu chua co mon: mau canh bao nhe - day la viec can lam. */
+.statCanh {
+  background-color: #fffbeb;
+  color: #b45309;
+}
+
+.mon,
+.monTrong {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5);
+  border-radius: 999px;
+  padding-inline: calc(var(--spacing) * 2.5);
+  padding-block: calc(var(--spacing) * 1);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  /* But chi an di, hien khi re chuot: bang de doc, nut sua khong can dap vao
+     mat o moi dong. */
+  svg {
+    opacity: 0.35;
+  }
+
+  @media (hover: hover) {
+    &:hover svg {
+      opacity: 1;
+    }
+  }
+}
+
+.mon {
+  background-color: #eef1fb;
+  color: var(--color-blue-700);
+}
+
+/* Chua co mon: vien dut, noi bat - la dong admin can xu ly. */
+.monTrong {
+  border: 1px dashed #f59e0b;
+  background-color: #fffbeb;
+  color: #b45309;
+}
+
+.suaMon {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5);
+}
+
+.oMon {
+  width: 11rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-blue-500);
+  padding-inline: calc(var(--spacing) * 2);
+  padding-block: calc(var(--spacing) * 1.5);
+  font-size: 0.85rem;
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgb(59 130 246 / 0.15);
+  }
+}
+
+.nutLuu {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-blue-600);
+  color: #fff;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+/* ------------------------------- Tai lieu da an ------------------------------- */
+
+/* Dong da an: mo di, de admin nhin la biet nguoi dung khong con thay no. */
+.dongAn td {
+  background-color: #fffbeb;
+  opacity: 0.75;
+}
+
+.nhanAn {
+  margin-right: calc(var(--spacing) * 2);
+  border-radius: 999px;
+  background-color: #fef3c7;
+  padding-inline: calc(var(--spacing) * 2);
+  padding-block: 1px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #b45309;
+}
+
+// Sua nhieu mon ngay trong o bang: bo chon the + hang nut Luu / Huy.
+.suaMonNhieu {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 2);
+  min-width: 260px;
+  max-width: 360px;
+}

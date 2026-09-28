@@ -1,0 +1,263 @@
+// Trang quan ly mon hoc cua kho tai lieu.
+
+.page {
+  max-width: 48rem;
+  padding: calc(var(--spacing) * 6);
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-slate-900);
+}
+
+.sub {
+  margin-top: calc(var(--spacing) * 1);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--color-slate-500);
+}
+
+.them {
+  margin-top: calc(var(--spacing) * 5);
+  display: flex;
+  gap: calc(var(--spacing) * 2);
+}
+
+.o {
+  flex: 1;
+  min-width: 0;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-slate-300);
+  background-color: #fff;
+  padding-inline: calc(var(--spacing) * 3);
+  padding-block: calc(var(--spacing) * 2.5);
+  font-size: 0.9rem;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-blue-500);
+    box-shadow: 0 0 0 3px rgb(59 130 246 / 0.12);
+  }
+}
+
+.nutChinh {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5);
+  flex-shrink: 0;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-blue-600);
+  padding-inline: calc(var(--spacing) * 4);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: var(--color-blue-700);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.bangLoi,
+.bangOk {
+  margin-top: calc(var(--spacing) * 4);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  border-radius: var(--radius-lg);
+  padding: calc(var(--spacing) * 3);
+  font-size: 0.9rem;
+}
+
+.bangLoi {
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
+.bangOk {
+  background-color: #f0fdf4;
+  color: #15803d;
+}
+
+.dong {
+  margin-left: auto;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.trong {
+  margin-top: calc(var(--spacing) * 6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+  border-radius: var(--radius-xl);
+  border: 1px dashed var(--color-slate-300);
+  padding: calc(var(--spacing) * 12) calc(var(--spacing) * 6);
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--color-slate-500);
+}
+
+.ds {
+  margin-top: calc(var(--spacing) * 5);
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-slate-200);
+  background-color: #fff;
+}
+
+.dong1 {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
+
+  & + & {
+    border-top: 1px solid var(--color-slate-100);
+  }
+}
+
+.ten {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  color: var(--color-slate-900);
+}
+
+.so {
+  flex-shrink: 0;
+  font-size: 0.82rem;
+  color: var(--color-slate-500);
+}
+
+.thaoTac,
+.sua {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5);
+}
+
+.sua {
+  flex: 1;
+}
+
+.nutIcon,
+.nutXoa {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+}
+
+.nutIcon {
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-600);
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: var(--color-slate-200);
+      color: var(--color-slate-900);
+    }
+  }
+}
+
+.nutXoa {
+  background-color: #fef2f2;
+  color: #dc2626;
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: #dc2626;
+      color: #fff;
+    }
+  }
+
+  /* Mon con tai lieu: nut xoa bi tat - nhat han di de khong ai tuong bam duoc. */
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.quay {
+  animation: xoay 0.9s linear infinite;
+}
+
+@keyframes xoay {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ---- linh vuc
+.page {
+  max-width: 56rem;
+}
+
+.muc {
+  margin-top: calc(var(--spacing) * 8);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-slate-900);
+}
+
+.oChon,
+.oChonNho {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-slate-300);
+  background-color: #fff;
+  font-size: 0.85rem;
+  color: var(--color-slate-700);
+}
+
+.oChon {
+  padding-inline: calc(var(--spacing) * 3);
+}
+
+.oChonNho {
+  max-width: 13rem;
+  height: 32px;
+  padding-inline: calc(var(--spacing) * 2);
+}
+
+// Mon chua xep linh vuc: nhac nhe bang mau - viec admin nen lam.
+.chuaXep {
+  border-color: #f59e0b;
+  color: #b45309;
+}
+
+.bieuTuong {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background-color: #e2effd;
+  color: #1168c3;
+}
+
+// Truong da gan logo - nhan nho canh ten.
+.coLogo {
+  margin-left: calc(var(--spacing) * 2);
+  border-radius: 999px;
+  background-color: #ecfcda;
+  padding: 0 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #1d8201;
+}

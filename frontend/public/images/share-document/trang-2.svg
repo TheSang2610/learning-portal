@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 388">
+  <!-- Trang de thi: tieu de giua, cau hoi danh so, o tra loi. -->
+  <rect width="300" height="388" fill="#fff"/>
+  <rect x="75" y="24" width="150" height="11" rx="3" fill="#2f3e4e"/>
+  <rect x="105" y="42" width="90" height="6" rx="3" fill="#9ea9b5"/>
+  <rect x="24" y="60" width="252" height="2" fill="#e6ebef"/>
+  <g fill="#2f3e4e"><rect x="24" y="78" width="52" height="8" rx="3"/><rect x="24" y="168" width="52" height="8" rx="3"/><rect x="24" y="258" width="52" height="8" rx="3"/></g>
+  <g fill="#d3d9e0">
+    <rect x="84" y="79" width="190" height="6" rx="3"/><rect x="24" y="94" width="230" height="6" rx="3"/>
+    <rect x="84" y="169" width="170" height="6" rx="3"/><rect x="24" y="184" width="246" height="6" rx="3"/>
+    <rect x="84" y="259" width="186" height="6" rx="3"/><rect x="24" y="274" width="210" height="6" rx="3"/>
+  </g>
+  <g fill="none" stroke="#d3d9e0" stroke-width="2">
+    <circle cx="34" cy="118" r="6"/><circle cx="34" cy="138" r="6"/><circle cx="160" cy="118" r="6"/><circle cx="160" cy="138" r="6"/>
+    <rect x="24" y="202" width="252" height="40" rx="6"/>
+    <circle cx="34" cy="298" r="6"/><circle cx="34" cy="318" r="6"/><circle cx="160" cy="298" r="6"/><circle cx="160" cy="318" r="6"/>
+  </g>
+  <circle cx="34" cy="138" r="3.5" fill="#2cc302"/><circle cx="160" cy="298" r="3.5" fill="#2cc302"/>
+  <g fill="#e6ebef">
+    <rect x="46" y="115" width="90" height="6" rx="3"/><rect x="46" y="135" width="76" height="6" rx="3"/>
+    <rect x="172" y="115" width="80" height="6" rx="3"/><rect x="172" y="135" width="92" height="6" rx="3"/>
+    <rect x="46" y="295" width="84" height="6" rx="3"/><rect x="46" y="315" width="96" height="6" rx="3"/>
+    <rect x="172" y="295" width="90" height="6" rx="3"/><rect x="172" y="315" width="70" height="6" rx="3"/>
+  </g>
+</svg>
