@@ -4,7 +4,7 @@ import styles from "./GradeProfileGuide.module.scss";
 const STEPS: { title: string; body: string }[] = [
   {
     title: "Nhập điểm và theo dõi GPA",
-    body: "Mỗi môn học sẽ có 2 ô nhập điểm, ô đầu tiên dùng để chọn điểm hiện tại. Nếu điểm hiện tại không phải là A+ sẽ có 1 ô bên cạnh để chọn điểm cải thiện. Sau khi thay đổi điểm của một môn học, điểm trung bình học kỳ (GPA) và điểm trung bình tích lũy (CPA/CGPA) sẽ được cập nhật ngay lập tức.",
+    body: "Mỗi môn học có ô gõ điểm hệ 10 (ví dụ 8,5): gõ xong điểm chữ tự đổi theo thang điểm đang chọn. Nếu chỉ biết điểm chữ, bạn chọn thẳng ở ô điểm chữ bên cạnh. Nếu điểm hiện tại chưa phải điểm cao nhất sẽ có thêm 1 ô để chọn điểm cải thiện. Sau khi thay đổi điểm của một môn học, điểm trung bình học kỳ (GPA) và điểm trung bình tích lũy (CPA/CGPA) sẽ được cập nhật ngay lập tức.",
   },
   {
     title: "Reset dữ liệu hồ sơ",

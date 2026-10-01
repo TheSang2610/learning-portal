@@ -9,8 +9,9 @@ import ShareDocumentHeader from "./headers/ShareDocumentHeader";
 import GpaHeader from "./headers/GpaHeader";
 
 import styles from "./Header.module.scss";
-// Ba cong cu diem dung chung mot header de dieu huong qua lai giua chung
-const GPA_ROUTES = ["/gpa-calculator", "/calc-point", "/convert-10-to-4"];
+// Cac cong cu diem va trang luyen tap dung chung mot header de dieu huong qua
+// lai giua chung. Phai khop danh sach TOOLS trong headers/GpaHeader.tsx.
+const GPA_ROUTES = ["/gpa-calculator", "/calc-point", "/convert-10-to-4", "/practice"];
 
 export default function Header() {
   const pathname = usePathname();

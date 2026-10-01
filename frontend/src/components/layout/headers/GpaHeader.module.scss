@@ -30,6 +30,9 @@
 }
 
 .box2 {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
   flex-shrink: 0;
   font-size: 20px;
   --tw-font-weight: var(--font-weight-bold);
@@ -41,6 +44,19 @@
 
   @media (min-width: 40rem) {
     font-size: 26px;
+  }
+}
+
+// Dong chu nho duoi logo, nhu "Grade PTIT / Quan ly diem" o ban mau
+.logoPhu {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.01em;
+  color: var(--color-slate-500);
+
+  @media (min-width: 40rem) {
+    font-size: 12px;
   }
 }
 

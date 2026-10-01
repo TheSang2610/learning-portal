@@ -23,19 +23,32 @@
   }
 }
 
-.label {
-  font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
-  color: #0b0c1e;
-  font-size: clamp(1.1rem, 2.4vw, 1.7rem);
-  --tw-font-weight: var(--font-weight-bold);
-  font-weight: var(--font-weight-bold);
-  --tw-tracking: -0.03em;
-  letter-spacing: -0.03em;
-  white-space: nowrap;
+// Chieu cao 52px va rong toi da 180px phai khop CAO_LOGO / RONG_TOI_DA trong
+// PartnerMarquee.tsx - hai so do dung de uoc toc do chay.
+.logo {
+  display: block;
+  flex-shrink: 0;
+  height: 40px;
+  width: auto;
+  max-width: 140px;
+  object-fit: contain;
+
+  @media (min-width: 48rem) {
+    height: 52px;
+    max-width: 180px;
+  }
 }
 
-.label2 {
-  color: #4f2bff;
+// Vach thang ngan giua hai logo.
+.vach {
+  flex-shrink: 0;
+  width: 1px;
+  height: 32px;
+  background-color: var(--color-slate-300);
+
+  @media (min-width: 48rem) {
+    height: 44px;
+  }
 }
 
 .section {
@@ -113,6 +126,11 @@
   display: flex;
   width: max-content;
   animation: troi-ngang var(--nhip) linear infinite;
+
+  // Re chuot vao thi dung lai de nhin ro logo.
+  &:hover {
+    animation-play-state: paused;
+  }
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;

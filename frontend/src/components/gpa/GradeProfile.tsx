@@ -8,9 +8,11 @@ import styles from "./GradeProfile.module.scss";
 import {
   SCALES,
   TARGETS,
+  type Scale,
   scaleById,
   targetById,
   gpa4Of,
+  gradeOf,
   suggestImprovements,
   classify,
 } from "./gradeScales";
@@ -20,6 +22,11 @@ interface Subject {
   name: string;
   /** Giu dang chuoi de go dang do (vd "1.") khong bi nhay so */
   credits: string;
+  /**
+   * Diem he 10 go tay (vd "8,5"). Co diem hop le thi `letter` duoc suy ra tu no
+   * theo thang dang chon. Tuy chon vi ho so luu truoc khi co o nay thi khong co.
+   */
+  score10?: string;
   letter: string;
   /** Diem hoc lai / hoc cai thien - neu co thi thay cho diem goc */
   improved: string;
@@ -41,6 +48,7 @@ const newSubject = (n: number): Subject => ({
   id: uid(),
   name: `Môn học số ${n}`,
   credits: "",
+  score10: "",
   letter: "",
   improved: "",
 });
@@ -73,6 +81,25 @@ const num = (v: string) => {
   const n = Number(v.replace(",", ".").trim());
   return Number.isFinite(n) ? n : NaN;
 };
+
+/** Diem he 10 hop le (0 - 10, nhan ca dau phay) hoac NaN. O trong cung la NaN. */
+const diem10 = (v: string | undefined) => {
+  if (!v?.trim()) return NaN;
+  const n = num(v);
+  return n >= 0 && n <= 10 ? n : NaN;
+};
+
+/**
+ * Diem chu dung de tinh cho mot mon: diem cai thien, nhung CHI khi no cao hon
+ * diem hien tai. Diem cai thien bang hoac thap hon (vd sua diem hien tai len
+ * sau khi da chon cai thien) thi bo qua, vi hoc cai thien khong the lam tut diem.
+ */
+const diemDung = (scale: Scale, sub: Subject) =>
+  gpa4Of(scale, sub.improved) > gpa4Of(scale, sub.letter) ? sub.improved : sub.letter;
+
+/** Diem cai thien chi con hop le khi cao hon diem hien tai moi. */
+const giuCaiThien = (scale: Scale, improved: string, letter: string) =>
+  gpa4Of(scale, improved) > gpa4Of(scale, letter) ? improved : "";
 
 const fmt = (n: number, d = 3) => (Number.isFinite(n) ? n.toFixed(d) : "--");
 
@@ -134,11 +161,16 @@ export default function GradeProfile() {
       setSemesters((sems) =>
         sems.map((s) => ({
           ...s,
-          subjects: s.subjects.map((sub) => ({
-            ...sub,
-            letter: remap(sub.letter),
-            improved: remap(sub.improved),
-          })),
+          subjects: s.subjects.map((sub) => {
+            // Mon co diem he 10 thi xep lai tu chinh diem do: chinh xac hon
+            // quy doi diem chu cu sang muc gan nhat cua thang moi.
+            const n = diem10(sub.score10);
+            return {
+              ...sub,
+              letter: Number.isFinite(n) ? gradeOf(to, n).letter : remap(sub.letter),
+              improved: remap(sub.improved),
+            };
+          }),
         })),
       );
       setScaleId(nextId);
@@ -176,9 +208,6 @@ export default function GradeProfile() {
 
   // ---- Tinh toan ----
   const stats = useMemo(() => {
-    // Diem dung de tinh: co diem cai thien thi lay diem cai thien.
-    const effective = (sub: Subject) => sub.improved || sub.letter;
-
     const perSemester: {
       id: string;
       credits: number;
@@ -187,30 +216,37 @@ export default function GradeProfile() {
       cumPassed: number;
       gpa: number;
       cpa: number;
+      /** Diem khi CHUA tinh cai thien - hien gach ngang canh diem moi */
+      gpaGoc: number;
+      cpaGoc: number;
     }[] = [];
 
     let runCredits = 0;
     let runPoints = 0;
+    let runPointsGoc = 0;
     let runPassed = 0;
 
     // Duyet tuan tu bang vong for: CPA cua moi hoc ky luy ke tu dau den ky do
     for (const s of semesters) {
       let credits = 0;
       let points = 0;
+      let pointsGoc = 0;
       let passed = 0;
 
       for (const sub of s.subjects) {
         const c = num(sub.credits);
-        const g = gpa4Of(scale, effective(sub));
+        const g = gpa4Of(scale, diemDung(scale, sub));
         if (!Number.isFinite(c) || c <= 0 || !Number.isFinite(g)) continue;
 
         credits += c;
         points += g * c;
+        pointsGoc += gpa4Of(scale, sub.letter) * c;
         if (g > 0) passed += c; // truot (F) khong duoc tinh tin chi
       }
 
       runCredits += credits;
       runPoints += points;
+      runPointsGoc += pointsGoc;
       runPassed += passed;
 
       perSemester.push({
@@ -221,6 +257,8 @@ export default function GradeProfile() {
         cumPassed: runPassed,
         gpa: credits > 0 ? points / credits : NaN,
         cpa: runCredits > 0 ? runPoints / runCredits : NaN,
+        gpaGoc: credits > 0 ? pointsGoc / credits : NaN,
+        cpaGoc: runCredits > 0 ? runPointsGoc / runCredits : NaN,
       });
     }
 
@@ -230,6 +268,7 @@ export default function GradeProfile() {
       totalPoints: runPoints,
       totalPassed: runPassed,
       cpa: runCredits > 0 ? runPoints / runCredits : NaN,
+      cpaGoc: runCredits > 0 ? runPointsGoc / runCredits : NaN,
     };
   }, [semesters, scale]);
 
@@ -243,7 +282,7 @@ export default function GradeProfile() {
       s.subjects.map((sub) => ({
         id: sub.id,
         credits: num(sub.credits),
-        gpa4: gpa4Of(scale, sub.improved || sub.letter),
+        gpa4: gpa4Of(scale, diemDung(scale, sub)),
       })),
     );
 
@@ -357,8 +396,16 @@ export default function GradeProfile() {
               <div className={styles.stack2}>
                 {sem.subjects.map((sub, i) => {
                   const hint = suggestion?.bySubject[sub.id];
-                  // Diem cao nhat thi khong con gi de cai thien
-                  const isTop = sub.letter === scale.grades[0].letter;
+                  // Chi cac muc CAO HON diem hien tai moi la diem cai thien.
+                  // Ban cu liet ke ca 9 muc, ke ca muc thap hon, nen dang C ma
+                  // mo ra phai do tim B+, A giua mot danh sach dai lan lon.
+                  // Chua co diem hien tai, hoac da la muc cao nhat, thi an o nay.
+                  const mucCaoHon = sub.letter
+                    ? scale.grades.filter((g) => g.gpa4 > gpa4Of(scale, sub.letter))
+                    : [];
+                  // Go chu dang do hoac so ngoai 0-10 thi to do, khong doi diem chu
+                  const diemSai =
+                    Boolean(sub.score10?.trim()) && !Number.isFinite(diem10(sub.score10));
 
                   return (
                     <div key={sub.id} className={styles.box3}>
@@ -411,11 +458,56 @@ export default function GradeProfile() {
                           tín chỉ
                         </span>
 
+                        <span
+                          className={`${styles.label4} ${diemSai ? styles.label4Sai : ""}`}
+                          title={
+                            diemSai
+                              ? "Điểm hệ 10 phải là số từ 0 đến 10"
+                              : "Gõ điểm hệ 10, điểm chữ tự đổi theo thang đang chọn"
+                          }
+                        >
+                          <input
+                            value={sub.score10 ?? ""}
+                            placeholder="--"
+                            inputMode="decimal"
+                            maxLength={5}
+                            aria-label={`Điểm hệ 10 ${sub.name || `môn ${i + 1}`}`}
+                            aria-invalid={diemSai || undefined}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              const n = diem10(v);
+                              patchSubject(
+                                sem.id,
+                                sub.id,
+                                Number.isFinite(n)
+                                  ? {
+                                      score10: v,
+                                      letter: gradeOf(scale, n).letter,
+                                      improved: giuCaiThien(
+                                        scale,
+                                        sub.improved,
+                                        gradeOf(scale, n).letter,
+                                      ),
+                                    }
+                                  : { score10: v },
+                              );
+                            }}
+                            className={styles.input4}
+                          />
+                          điểm
+                        </span>
+
                         <select
                           value={sub.letter}
                           aria-label={`Điểm chữ ${sub.name || `môn ${i + 1}`}`}
+                          // Chon tay diem chu thi bo diem he 10 da go: hai o
+                          // khong con khop nhau, giu lai chi gay hieu nham.
                           onChange={(e) =>
-                            patchSubject(sem.id, sub.id, { letter: e.target.value })
+                            patchSubject(sem.id, sub.id, {
+                              letter: e.target.value,
+                              score10: "",
+                              improved: giuCaiThien(scale, sub.improved, e.target.value),
+                            })
                           }
                           className={smallSelect}
                         >
@@ -427,7 +519,7 @@ export default function GradeProfile() {
                           ))}
                         </select>
 
-                        {!isTop && (
+                        {mucCaoHon.length > 0 && (
                           <select
                             value={sub.improved}
                             aria-label={`Điểm cải thiện ${sub.name || `môn ${i + 1}`}`}
@@ -437,7 +529,7 @@ export default function GradeProfile() {
                             className={smallSelect}
                           >
                             <option value="">Điểm cải thiện</option>
-                            {scale.grades.map((g) => (
+                            {mucCaoHon.map((g) => (
                               <option key={g.letter} value={g.letter}>
                                 {g.letter}
                               </option>
@@ -446,13 +538,17 @@ export default function GradeProfile() {
                         )}
 
                         {hint && (
-                          <span
-                            title={`Gợi ý: học cải thiện môn này lên ${hint} để đạt mục tiêu`}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              patchSubject(sem.id, sub.id, { improved: hint })
+                            }
+                            title={`Gợi ý: học cải thiện môn này lên ${hint} để đạt mục tiêu. Bấm để áp dụng.`}
                             className={styles.label5}
                           >
                             <TargetIcon size={13} />
                             {hint}
-                          </span>
+                          </button>
                         )}
                       </div>
                     </div>
@@ -462,8 +558,16 @@ export default function GradeProfile() {
 
               {/* --- Thong ke hoc ky --- */}
               <dl className={styles.stack3}>
-                <StatLine label="Điểm trung bình học kì" value={fmt(st.gpa)} />
-                <StatLine label="Điểm trung bình tích luỹ" value={fmt(st.cpa)} />
+                <StatLine
+                  label="Điểm trung bình học kì"
+                  value={fmt(st.gpa)}
+                  goc={fmt(st.gpaGoc)}
+                />
+                <StatLine
+                  label="Điểm trung bình tích luỹ"
+                  value={fmt(st.cpa)}
+                  goc={fmt(st.cpaGoc)}
+                />
                 <StatLine label="Số tín chỉ đạt" value={String(st.passed)} />
                 <StatLine label="Số tín chỉ tích luỹ" value={String(st.cumPassed)} />
               </dl>
@@ -517,7 +621,7 @@ export default function GradeProfile() {
 
       {/* ============ TONG KET ============ */}
       <div className={styles.grid}>
-        <Stat label="CPA tích luỹ" value={fmt(stats.cpa)} big />
+        <Stat label="CPA tích luỹ" value={fmt(stats.cpa)} goc={fmt(stats.cpaGoc)} big />
         <Stat label="Tổng tín chỉ tích luỹ" value={String(stats.totalPassed)} />
         <div className={styles.card}>
           <p className={styles.text}>Xếp loại</p>
@@ -542,20 +646,50 @@ const solidBtn = styles.button4;
 
 const outlineBtn = styles.button5;
 
-function StatLine({ label, value }: { label: string; value: string }) {
+/**
+ * `goc` la diem khi chua tinh cai thien. Khac `value` nghia la co mon dang chon
+ * diem cai thien: hien diem cu gach ngang, diem moi mau do ngay canh.
+ */
+function StatLine({ label, value, goc }: { label: string; value: string; goc?: string }) {
+  const doi = goc !== undefined && goc !== value;
   return (
     <div className={styles.row6}>
       <dt className={styles.box4}>{label}:</dt>
-      <dd className={styles.box5}>{value}</dd>
+      {doi ? (
+        <dd className={styles.doiDiem}>
+          <s className={styles.soCu} aria-label={`trước khi cải thiện ${goc}`}>
+            {goc}
+          </s>
+          <span className={styles.soMoi} aria-label={`sau khi cải thiện ${value}`}>
+            {value}
+          </span>
+        </dd>
+      ) : (
+        <dd className={styles.box5}>{value}</dd>
+      )}
     </div>
   );
 }
 
-function Stat({ label, value, big }: { label: string; value: string; big?: boolean }) {
+function Stat({
+  label,
+  value,
+  goc,
+  big,
+}: {
+  label: string;
+  value: string;
+  goc?: string;
+  big?: boolean;
+}) {
+  const doi = goc !== undefined && goc !== value;
   return (
     <div className={styles.card}>
       <p className={styles.text}>{label}</p>
-      <p className={`${styles.text5} ${big ? styles.text3 : styles.text4}`}>{value}</p>
+      <p className={`${styles.text5} ${big ? styles.text3 : styles.text4}`}>
+        {doi && <s className={styles.soCuLon}>{goc}</s>}
+        <span className={doi ? styles.soMoiLon : undefined}>{value}</span>
+      </p>
     </div>
   );
 }

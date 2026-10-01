@@ -361,7 +361,38 @@
   }
 }
 
+// O diem he 10: rong hon o tin chi vi phai chua "8,75".
+.input4 {
+  @extend .input3;
+  width: calc(var(--spacing) * 10);
+}
+
+// Diem he 10 go sai (chu, hoac ngoai 0-10).
+.label4Sai {
+  background-color: var(--color-red-100);
+  color: var(--color-red-700);
+
+  .input4::placeholder {
+    color: var(--color-red-700);
+  }
+}
+
+// Goi y diem can dat: la nut, bam vao la chon luon muc do lam diem cai thien.
 .label5 {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.15s ease-out;
+
+  &:hover {
+    background-color: var(--color-blue-700);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-blue-600);
+    outline-offset: 2px;
+  }
+
   display: inline-flex;
   align-items: center;
   gap: calc(var(--spacing) * 1);
@@ -517,6 +548,48 @@
   --tw-font-weight: var(--font-weight-bold);
   font-weight: var(--font-weight-bold);
   color: var(--color-white);
+}
+
+// Co diem cai thien: diem cu gach ngang mau xam, diem moi mau xanh ben canh.
+.doiDiem {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1);
+}
+
+.soCu,
+.soMoi {
+  border-radius: var(--radius-md);
+  padding-inline: calc(var(--spacing) * 2);
+  padding-block: calc(var(--spacing) * 0.5);
+  font-size: var(--text-xs);
+  line-height: var(--tw-leading, var(--text-xs--line-height));
+  font-weight: var(--font-weight-bold);
+  color: var(--color-white);
+  font-variant-numeric: tabular-nums;
+}
+
+.soCu {
+  background-color: var(--color-slate-500);
+  text-decoration-thickness: 1.5px;
+}
+
+// Diem moi dung dung mau xanh cua cac o diem khac tren trang; diem cu xam
+// gach ngang da du de phan biet, khong can them mau do lac tong.
+.soMoi {
+  background-color: var(--color-blue-600);
+}
+
+.soCuLon {
+  margin-right: calc(var(--spacing) * 2);
+  font-size: 0.55em;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-slate-500);
+  vertical-align: middle;
+}
+
+.soMoiLon {
+  color: var(--color-blue-600);
 }
 
 .text3 {
@@ -755,9 +828,12 @@
   color: var(--color-emerald-800);
 }
 
+// Gioi tung dung do - trung tong voi "Kem" nen hoc luc gioi nhin nhu bi canh
+// bao. Nay theo mau xanh chu dao cua trang, nam dung thu tu xanh la -> xanh
+// duong -> vang -> cam -> hong -> do cua cac muc.
 .gioi {
-  background-color: var(--color-red-50);
-  color: var(--color-red-800);
+  background-color: var(--color-blue-50);
+  color: var(--color-blue-700);
 }
 
 .kha {
