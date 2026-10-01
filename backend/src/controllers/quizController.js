@@ -2,6 +2,38 @@ const Quiz = require('../models/Quiz');
 const QuizAttempt = require('../models/QuizAttempt');
 const Course = require('../models/Course');
 const mongoose = require('mongoose');
+const { ghepBaiLuyenTap } = require('../utils/practiceList');
+
+// @desc    Danh sach bai luyen tap cho trang /practice (cong khai, khong can dang nhap)
+// @route   GET /api/quizzes/practice
+//
+// Chi lay quiz DA XUAT BAN nam trong khoa hoc DA XUAT BAN. Tra thong tin tom tat,
+// khong tra cau hoi - xem utils/practiceList.js. Lam bai thi van phai vao khoa
+// hoc, nen cong noi dung co phi (contentAccess) khong bi di vong qua duong nay.
+const getPracticeList = async (req, res) => {
+    try {
+        const khoaXuatBan = await Course.find({ isPublished: true }).select('_id').lean();
+
+        const quizzes = await Quiz.find({
+            isPublished: true,
+            course: { $in: khoaXuatBan.map((k) => k._id) }
+        })
+            // Chi can _id cua cau hoi de dem so cau; khong keo noi dung/dap an ve
+            .select('title description course questions._id')
+            .populate('course', 'title slug')
+            .lean();
+
+        const luot = await QuizAttempt.aggregate([
+            { $match: { quiz: { $in: quizzes.map((q) => q._id) } } },
+            { $group: { _id: '$quiz', n: { $sum: 1 } } }
+        ]);
+        const soLuot = new Map(luot.map((x) => [String(x._id), x.n]));
+
+        res.json(ghepBaiLuyenTap(quizzes, soLuot));
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
 // @desc    Tạo quiz mới
 // @route   POST /api/quizzes
@@ -550,6 +582,7 @@ const getQuizStats = async (req, res) => {
 module.exports = {
     createQuiz,
     getCourseQuizzes,
+    getPracticeList,
     getQuizById,
     updateQuiz,
     publishQuiz,

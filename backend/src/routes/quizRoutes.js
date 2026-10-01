@@ -8,6 +8,7 @@ capIdHopLe(router);
 const {
     createQuiz,
     getCourseQuizzes,
+    getPracticeList,
     getQuizById,
     updateQuiz,
     publishQuiz,
@@ -21,8 +22,14 @@ const {
 
 const { protect, instructor } = require('../middlewares/authMiddleware');
 
+// @route    GET /api/quizzes/practice
+// Cong khai: trang Luyen tap cho ca nguoi chua dang nhap xem danh sach de.
+// PHAI dat truoc router.use(protect) va truoc '/:id', neu khong "practice" bi
+// hieu la mot id quiz.
+router.get('/practice', getPracticeList);
+
 // Khóa học & Đề thi cần định danh người xem để xử lý ẩn/hiện đáp án đúng cấu hình
-router.use(protect); 
+router.use(protect);
 
 // @route    POST /api/quizzes
 router.post('/', instructor, createQuiz);

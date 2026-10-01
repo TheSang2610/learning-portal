@@ -1,0 +1,225 @@
+// Hop "Xem truoc cau hoi" theo ban goc, doi mau do sang xanh chu dao cua trang.
+
+.nen {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background-color: #0f172b80;
+}
+
+.hop {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 58rem);
+  max-height: calc(100dvh - 32px);
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: var(--color-white);
+  box-shadow: 0 20px 50px #0f172b40;
+}
+
+.tieuDe {
+  margin: 0;
+  padding: 14px 16px;
+  background-color: var(--color-blue-600);
+  font-size: 20px;
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+  color: var(--color-white);
+}
+
+.than {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px 16px 20px;
+}
+
+/* ---------- Cong tac hien dap an ---------- */
+.congTacDong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.congTacNhan {
+  font-size: 16px;
+  font-weight: var(--font-weight-medium);
+}
+
+.congTac {
+  position: relative;
+  flex-shrink: 0;
+  width: 74px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 100px;
+  background-color: var(--color-slate-100);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-blue-600);
+    outline-offset: 2px;
+  }
+}
+
+.nutTron {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: var(--color-slate-400);
+  font-size: 9px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-white);
+  transition:
+    left 0.3s ease,
+    background-color 0.3s ease;
+}
+
+.congTacBat {
+  background-color: var(--color-blue-50);
+
+  .nutTron {
+    left: 42px;
+    background-color: var(--color-blue-600);
+  }
+}
+
+/* ---------- Danh sach cau ---------- */
+.ds {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// Moi cau mot khoi nen nhat, vach trai 3px nhu ban goc
+.cau {
+  padding: 8px;
+  border-left: 3px solid var(--color-blue-300);
+  border-radius: 8px;
+  background-color: var(--color-blue-50);
+}
+
+.cauHoi {
+  margin: 0;
+  font-size: 14px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.5;
+  text-align: justify;
+  color: var(--color-slate-900);
+}
+
+.dapAn {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.moi {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-slate-700);
+}
+
+.moiDung {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-emerald-700);
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--color-slate-700);
+}
+
+// Dau tich dap an dung: xanh la - mau "dung" chung, khong phai mau thuong hieu
+.iconDung {
+  flex-shrink: 0;
+  color: var(--color-emerald-600);
+}
+
+.chuaCo {
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background-color: var(--color-slate-100);
+  font-size: 14px;
+  color: var(--color-slate-600);
+}
+
+/* ---------- Chan hop ---------- */
+.chan {
+  display: flex;
+  justify-content: center;
+  padding: 8px;
+  border-top: 1px solid var(--color-blue-600);
+}
+
+.nutDong {
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 8px;
+  background-color: var(--color-slate-400);
+  font: inherit;
+  font-size: 16px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-white);
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-slate-500);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-blue-600);
+    outline-offset: 2px;
+  }
+}
+
+// Noi dung giau tu du lieu goc: anh de bai, cong thuc MathML, chi so tren/duoi.
+.giau {
+  min-width: 0;
+  overflow-wrap: anywhere;
+
+  p {
+    margin: 0;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-block: 6px;
+    border-radius: 6px;
+  }
+
+  math {
+    font-size: 1.1em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .congTac,
+  .nutTron {
+    transition: none;
+  }
+}

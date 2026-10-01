@@ -1,0 +1,539 @@
+// Man ket qua va trang xem dap an sau khi nop, theo mau trang thi cua chu du an.
+// Nam trong .phong cua PracticeTest (lop phu kin man hinh).
+
+.thanh {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-slate-200);
+  background-color: var(--color-white);
+}
+
+%nut {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    color 0.2s;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-blue-600);
+    outline-offset: 2px;
+  }
+}
+
+.nutTrong {
+  @extend %nut;
+  padding: 6px 8px;
+  border: 0;
+  background: none;
+  font-size: 14px;
+  color: var(--color-slate-700);
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-blue-700);
+    }
+  }
+}
+
+.cuon {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 20px 12px 48px;
+}
+
+/* ---------- Man tom tat ---------- */
+.tomTat {
+  display: grid;
+  width: min(100%, 36rem);
+  margin-inline: auto;
+  border-radius: 8px;
+  background-color: var(--color-white);
+  box-shadow: 0 3px 20px #0000000b;
+}
+
+.daGui {
+  margin: 0;
+  padding: 16px 16px 4px;
+  font-size: 18px;
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+  text-wrap: balance;
+}
+
+.diemDong {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  margin: 0;
+  padding: 4px 16px 12px;
+  border-bottom: 1px solid var(--color-slate-200);
+  font-weight: var(--font-weight-medium);
+
+  strong {
+    font-size: 25px;
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-blue-700);
+  }
+}
+
+.tenDe {
+  margin: 12px 0 0;
+  padding-inline: 16px;
+  font-size: 15px;
+  font-weight: var(--font-weight-medium);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+// "Da luu vao lich su lam bai" ngay duoi ten de
+.luu {
+  margin: 6px 0 0;
+  padding-inline: 16px;
+  font-size: 13px;
+  text-align: center;
+  color: var(--color-slate-500);
+}
+
+.luuLoi {
+  color: var(--color-red-600);
+}
+
+.thongTin {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding-inline: 16px;
+  font-size: 14px;
+
+  > div {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  dt {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-slate-600);
+  }
+
+  dd {
+    margin: 0 0 0 auto;
+    font-weight: var(--font-weight-medium);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+}
+
+.nutDuoi {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+}
+
+.nutXem {
+  @extend %nut;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--color-blue-700);
+  background-color: var(--color-white);
+  font-size: 14px;
+  color: var(--color-blue-700);
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-blue-50);
+    }
+  }
+}
+
+.nutLamLai {
+  @extend %nut;
+  width: 100%;
+  padding: 10px 14px;
+  border: 0;
+  background-color: var(--color-slate-100);
+  font-size: 14px;
+  color: var(--color-slate-700);
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-slate-200);
+    }
+  }
+}
+
+/* ---------- Trang xem dap an ---------- */
+.khung {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+
+  @media (min-width: 64rem) {
+    grid-template-columns: 24rem minmax(0, 1fr);
+  }
+}
+
+.khungAn {
+  @media (min-width: 64rem) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.ben {
+  border-radius: 8px;
+  background-color: var(--color-white);
+  box-shadow: 0 3px 20px #0000000b;
+
+  @media (min-width: 64rem) {
+    position: sticky;
+    top: 0;
+  }
+}
+
+.benDiem {
+  margin: 0;
+  padding: 12px;
+  border-bottom: 1px solid var(--color-slate-200);
+  font-size: 18px;
+  font-weight: var(--font-weight-medium);
+
+  strong {
+    margin-left: 8px;
+    font-weight: var(--font-weight-medium);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.chiTiet {
+  padding: 12px;
+}
+
+.chiTietDau {
+  margin: 0;
+  padding: 12px;
+  border-radius: 6px 6px 0 0;
+  background-color: var(--color-slate-200);
+  font-size: 14px;
+  font-weight: var(--font-weight-normal);
+}
+
+.chiTietThan {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid var(--color-slate-200);
+  border-top: 0;
+  border-radius: 0 0 6px 6px;
+  font-size: 14px;
+
+  > div {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  dd {
+    margin: 0 0 0 auto;
+    font-weight: var(--font-weight-medium);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.nutChu {
+  @extend %nut;
+  margin-top: 10px;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  font-size: 14px;
+  color: var(--color-blue-700);
+
+  @media (hover: hover) {
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.chinh {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.thanhDe {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background-color: var(--color-white);
+  box-shadow: 0 3px 20px #0000000b;
+}
+
+.nutAn {
+  @extend %nut;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-slate-200);
+  background-color: var(--color-white);
+  color: var(--color-slate-500);
+
+  @media (max-width: 63.99rem) {
+    display: none;
+  }
+}
+
+.thanhDeTen {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: var(--font-weight-normal);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Nut loc 3 trang thai: tat ca (xanh ngoc) / dung (xanh la) / sai (do)
+.loc {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  color: var(--color-white);
+}
+
+.locTong {
+  // cyan-600 / lime-600 ghi thang ma: Tailwind v4 chi xuat bien mau da dung
+  // o dau do, var(--color-cyan-600) o day se rong.
+  background-color: #0891b2;
+}
+
+.locDung {
+  background-color: #65a30d;
+}
+
+.locSai {
+  background-color: var(--color-red-600);
+}
+
+.locNut,
+.locBo {
+  @extend %nut;
+  border: 0;
+  background: none;
+  font-weight: inherit;
+  color: inherit;
+}
+
+.locNut {
+  padding: 7px 10px;
+}
+
+.locBo {
+  margin-left: -6px;
+  padding: 7px 8px 7px 2px;
+  color: #fef08a;
+
+  .locDung & {
+    color: var(--color-red-600);
+  }
+}
+
+.baiLam {
+  border-radius: 8px;
+  background-color: var(--color-white);
+  box-shadow: 0 3px 20px #0000000b;
+}
+
+.tab {
+  display: flex;
+  padding-inline: 12px;
+  border-bottom: 1px solid var(--color-slate-200);
+}
+
+.tabChon {
+  padding: 14px 12px 12px;
+  border-bottom: 2px solid var(--color-blue-700);
+  margin-bottom: -1px;
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.02em;
+  color: var(--color-blue-700);
+}
+
+.dsCau {
+  display: grid;
+  margin: 0;
+  padding: 4px 12px 32px;
+  list-style: none;
+}
+
+.cau {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--color-slate-100);
+  line-height: 1.7;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.cauSo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: var(--font-weight-semibold);
+}
+
+.nhanBo {
+  padding: 0 8px;
+  border-radius: 999px;
+  background-color: var(--color-slate-100);
+  font-size: 12px;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-slate-600);
+}
+
+.cauChu {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.dapAn {
+  display: grid;
+  gap: 8px 16px;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.cot4 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  @media (min-width: 48rem) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.cot2 {
+  @media (min-width: 48rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.cot1 {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.moi {
+  min-width: 0;
+  overflow-wrap: anywhere;
+
+  b {
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+// "Dap an dung: C" + day A B C D, dat sat phai nhu ban goc
+.hopDapAn {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 16px;
+  margin-top: 14px;
+  font-weight: var(--font-weight-bold);
+  --mau: var(--color-slate-400);
+}
+
+.hopDung {
+  --mau: var(--color-emerald-600);
+}
+
+.hopSai {
+  --mau: var(--color-red-600);
+}
+
+.dapAnDung {
+  font-size: 15px;
+  color: var(--mau);
+}
+
+.dayChu {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 4px;
+  min-width: min(100%, 15.5rem);
+  padding: 6px 10px;
+  border: 1px solid var(--mau);
+  border-radius: 6px;
+}
+
+.chu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 44px;
+  height: 28px;
+  font-size: 14px;
+  color: var(--color-slate-800);
+}
+
+.tickDung {
+  color: var(--color-emerald-600);
+}
+
+.tickSai {
+  color: var(--color-red-600);
+}
+
+.trong {
+  margin: 0;
+  padding: 32px 16px;
+  font-size: 14px;
+  text-align: center;
+  color: var(--color-slate-500);
+}
+
+.giau {
+  p {
+    margin: 0;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-block: 6px;
+    border-radius: 6px;
+  }
+
+  math {
+    font-size: 1.1em;
+  }
+}

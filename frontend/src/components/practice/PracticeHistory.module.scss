@@ -1,0 +1,154 @@
+// Lich su lam bai o trang thiet lap de, theo mau trang thi cua chu du an.
+
+.moDau {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+
+.nutMo {
+  padding: 12px 16px;
+  border: 1px solid var(--color-slate-300);
+  border-radius: 6px;
+  background-color: var(--color-slate-100);
+  font: inherit;
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-slate-600);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  @media (hover: hover) {
+    &:not(:disabled):hover {
+      background-color: var(--color-slate-200);
+    }
+  }
+
+  &:disabled {
+    cursor: progress;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-blue-600);
+    outline-offset: 2px;
+  }
+}
+
+.loi {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-red-600);
+}
+
+.khoi {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+.tieuDe {
+  margin: 0;
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+}
+
+.trong {
+  margin: 0;
+  padding: 20px 16px;
+  border-radius: 8px;
+  background-color: var(--color-white);
+  font-size: 14px;
+  text-align: center;
+  color: var(--color-slate-500);
+}
+
+.ds {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.the {
+  border-radius: 8px;
+  background-color: var(--color-white);
+  box-shadow: 0 3px 20px #0000000b;
+}
+
+.diem {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 12px;
+  margin: 0;
+  padding: 16px;
+  border-bottom: 1px solid var(--color-slate-200);
+  font-size: 15px;
+  font-weight: var(--font-weight-medium);
+
+  strong {
+    font-size: 25px;
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.thongTin {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 16px 16px 4px;
+  font-size: 14px;
+
+  > div {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  dt {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-slate-600);
+  }
+
+  dd {
+    margin: 0 0 0 auto;
+    font-weight: var(--font-weight-medium);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+}
+
+.soDung {
+  color: var(--color-emerald-600);
+}
+
+.nutXem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 12px 16px 16px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background-color: var(--color-slate-100);
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  color: var(--color-slate-600);
+  transition: background-color 0.15s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-slate-200);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-blue-600);
+    outline-offset: 2px;
+  }
+}

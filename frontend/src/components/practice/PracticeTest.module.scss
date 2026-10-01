@@ -1,0 +1,636 @@
+// Phong lam bai theo mau trang thi cua chu du an: phu kin man hinh (che header
+// va footer cua portal) nhu mot phong thi rieng, doi mau sang xanh chu dao.
+
+.phong {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-800);
+}
+
+/* ---------- Thanh tren ---------- */
+.thanh {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 60px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-slate-200);
+  background-color: var(--color-white);
+
+  @media (min-width: 48rem) {
+    padding-inline: 16px;
+  }
+}
+
+.thiSinh {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: var(--font-weight-medium);
+
+  @media (max-width: 40rem) {
+    display: none;
+  }
+}
+
+.phai {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  @media (min-width: 48rem) {
+    gap: 8px;
+  }
+}
+
+.dongHo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 8px;
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+
+  @media (min-width: 48rem) {
+    margin-right: 16px;
+  }
+}
+
+%nut {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    color 0.2s;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-blue-600);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.nutVien {
+  @extend %nut;
+  padding: 6px 10px;
+  border: 1px solid var(--color-slate-300);
+  background-color: var(--color-white);
+  font-size: 13px;
+  color: var(--color-slate-600);
+
+  @media (hover: hover) {
+    &:not(:disabled):hover {
+      border-color: var(--color-blue-500);
+      color: var(--color-blue-700);
+    }
+  }
+}
+
+.nutXam {
+  @extend %nut;
+  width: 38px;
+  height: 36px;
+  border: 0;
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-700);
+
+  @media (hover: hover) {
+    &:not(:disabled):hover {
+      background-color: var(--color-slate-200);
+    }
+  }
+
+  &[aria-expanded="true"] {
+    background-color: var(--color-blue-100);
+    color: var(--color-blue-700);
+  }
+}
+
+.chiDienThoai {
+  @media (min-width: 64rem) {
+    display: none;
+  }
+}
+
+.nutNop {
+  @extend %nut;
+  padding: 8px 12px;
+  border: 0;
+  background-color: var(--color-blue-700);
+  font-size: 13px;
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  color: var(--color-white);
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-blue-800);
+    }
+  }
+}
+
+/* ---------- Menu kieu hien thi ---------- */
+.menuBoc {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 5;
+  display: grid;
+  gap: 2px;
+  min-width: 250px;
+  padding: 6px;
+  border-radius: 10px;
+  background-color: var(--color-white);
+  box-shadow: 0 10px 30px #0f172b26;
+}
+
+.menuMuc {
+  @extend %nut;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 0;
+  background: none;
+  font-size: 14px;
+  text-align: left;
+  color: var(--color-slate-700);
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-slate-100);
+    }
+  }
+}
+
+.menuChon {
+  background-color: var(--color-blue-700);
+  color: var(--color-white);
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-blue-800);
+    }
+  }
+}
+
+/* ---------- Than ---------- */
+.cuon {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.khung {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px 12px 40px;
+
+  @media (min-width: 64rem) {
+    grid-template-columns: minmax(0, 1fr) 27rem;
+    align-items: start;
+    padding: 24px 8px 48px;
+  }
+}
+
+.cot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  line-height: 1.5;
+}
+
+.the {
+  scroll-margin-top: 12px;
+  padding: 16px 14px 18px;
+  border-radius: 6px;
+  background-color: var(--color-white);
+  box-shadow: 0 3px 20px #0000000b;
+}
+
+// Tach cau hoi va dap an: hai cot tren man rong
+.theTach {
+  @media (min-width: 48rem) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+
+    .gach {
+      margin-top: 0;
+    }
+  }
+}
+
+.cauDau {
+  min-width: 0;
+}
+
+.cauSo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9em;
+  font-weight: var(--font-weight-semibold);
+}
+
+.cauChu {
+  margin-top: 2px;
+  font-size: 0.9em;
+  overflow-wrap: anywhere;
+}
+
+// "---- Chon mot dap an dung ----"
+.gach {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 8px;
+  font-size: 0.9em;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-slate-600);
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: var(--color-slate-200);
+  }
+}
+
+.dsDapAn {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding-inline: 0;
+
+  @media (min-width: 48rem) {
+    padding-inline: 4px;
+  }
+}
+
+.dapAn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: none;
+
+    .chuCai {
+      outline: 2px solid var(--color-blue-600);
+      outline-offset: 2px;
+    }
+  }
+
+  @media (hover: hover) {
+    &:not(:disabled):hover {
+      .chuCai,
+      .dapAnChu {
+        border-color: var(--color-blue-500);
+      }
+    }
+  }
+}
+
+.chuCai {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-slate-400);
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.dapAnChu {
+  min-width: 0;
+  padding: 6px 9px;
+  border: 1px solid var(--color-slate-400);
+  border-radius: 6px;
+  font-size: 0.9em;
+  overflow-wrap: anywhere;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+
+.dapAnChon {
+  .chuCai {
+    border-color: var(--color-blue-700);
+    background-color: var(--color-blue-700);
+    color: var(--color-white);
+  }
+
+  .dapAnChu {
+    border-color: var(--color-blue-600);
+    background-color: var(--color-blue-50);
+  }
+}
+
+// Noi dung giau tu du lieu goc: anh de bai, cong thuc MathML, chi so
+.giau {
+  p {
+    margin: 0;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-block: 6px;
+    border-radius: 6px;
+  }
+
+  math {
+    font-size: 1.1em;
+  }
+}
+
+/* ---------- Chuyen cau (che do tung cau) ---------- */
+.chuyen {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 14px;
+}
+
+/* ---------- Danh sach cau hoi ---------- */
+.ben {
+  display: none;
+
+  @media (min-width: 64rem) {
+    display: block;
+    position: sticky;
+    top: 24px;
+  }
+}
+
+// Dien thoai: bam nut luoi tren thanh tren de mo danh sach len dau trang
+.benMo {
+  display: block;
+  order: -1;
+}
+
+.oDs {
+  padding: 16px 12px;
+  border-radius: 6px;
+  background-color: var(--color-white);
+  box-shadow: 0 3px 20px #0000000b;
+}
+
+.oDsTieuDe {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+}
+
+.luoi {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  max-height: min(60vh, 34rem);
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.oSo {
+  @extend %nut;
+  height: 34px;
+  border: 1px solid var(--color-slate-300);
+  background-color: var(--color-white);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-slate-700);
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--color-blue-500);
+    }
+  }
+}
+
+.oSoLam {
+  border-color: var(--color-blue-700);
+  background-color: var(--color-blue-700);
+  color: var(--color-white);
+}
+
+.oSoHienTai {
+  box-shadow:
+    0 0 0 2px var(--color-white),
+    0 0 0 4px var(--color-blue-500);
+}
+
+.oDsChu {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--color-slate-500);
+}
+
+/* ---------- Nut chung, man cho, hop xac nhan ---------- */
+.giua {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  margin: auto;
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.giuaChu {
+  margin: 0;
+  font-size: 16px;
+}
+
+.giuaNut {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.giua .giuaNut {
+  justify-content: center;
+}
+
+.nutChinh {
+  @extend %nut;
+  padding: 10px 18px;
+  border: 0;
+  background-color: var(--color-blue-700);
+  font-size: 14px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-white);
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-blue-800);
+    }
+  }
+}
+
+.nutPhu {
+  @extend %nut;
+  padding: 10px 18px;
+  border: 1px solid var(--color-slate-300);
+  background-color: var(--color-white);
+  font-size: 14px;
+  text-decoration: none;
+  color: var(--color-slate-700);
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-slate-50);
+    }
+  }
+}
+
+.nenHop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background-color: #0f172b80;
+}
+
+.hop {
+  width: min(100%, 34rem);
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: var(--color-white);
+  box-shadow: 0 20px 50px #0f172b40;
+}
+
+.hopThan {
+  display: grid;
+  gap: 8px;
+  padding: 20px;
+  font-size: 14px;
+}
+
+.hopTieuDe {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: var(--font-weight-medium);
+}
+
+.hopIcon {
+  flex-shrink: 0;
+  color: var(--color-emerald-600);
+}
+
+.hopDong {
+  margin: 0;
+}
+
+.soGio {
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+.hopCanhBao {
+  margin: 0;
+  color: var(--color-red-600);
+
+  strong {
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+.hopGhiChu {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-slate-500);
+}
+
+.hopNut {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 10rem));
+  justify-content: end;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--color-slate-200);
+}
+
+.nutHuy {
+  @extend %nut;
+  padding: 10px 18px;
+  border: 0;
+  background-color: var(--color-slate-100);
+  font-size: 14px;
+  color: var(--color-slate-700);
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-slate-200);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chuCai,
+  .dapAnChu {
+    transition: none;
+  }
+}
+
+// Dien thoai: thanh tren chat cho - "Quay lai" chi con mui ten, bo hai nut co
+// chu (tren dien thoai chum hai ngon de phong to). Dat cuoi file de de len
+// display cua .nutXam.
+.chuRong {
+  @media (max-width: 40rem) {
+    display: none;
+  }
+}
