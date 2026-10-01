@@ -4,3 +4,7 @@ node_modules/
 package-lock.json
 lint-report.json
 *.tsbuildinfo
+# Du lieu de luyen tap tu sinh (~3.4 MB), de mot dong cho nhe
+src/components/practice/de/*.json
+# Cau hinh + cache cua cong cu thiet ke impeccable, khong phai ma nguon
+.impeccable/

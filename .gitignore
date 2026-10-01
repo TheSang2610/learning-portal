@@ -38,3 +38,6 @@ Thuctapcoso_Nhom1_LearningPortal.*
 docs/De_cuong_Nhom1_LearningPortal.pdf
 docs/Slide_Nhom1_LearningPortal.pdf
 docs/erd/
+
+# Cau hinh + cache cua cong cu thiet ke impeccable (o goc va trong frontend/)
+.impeccable/

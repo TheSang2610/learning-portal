@@ -37,19 +37,20 @@
   "description": "Giao dien cong hoc truc tuyen aLMS, dung Next.js App Router.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shuangsangghom999/learning-portal-frontend.git"
+    "url": "git+https://github.com/TheSang2610/learning-portal.git",
+    "directory": "frontend"
   },
   "keywords": [
     "lms",
     "nextjs",
     "react"
   ],
-  "author": "",
+  "author": "Nguyễn Thế Sang (https://github.com/TheSang2610)",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/shuangsangghom999/learning-portal-frontend/issues"
+    "url": "https://github.com/TheSang2610/learning-portal/issues"
   },
-  "homepage": "https://github.com/shuangsangghom999/learning-portal-frontend#readme",
+  "homepage": "https://github.com/TheSang2610/learning-portal#readme",
   "lint-staged": {
     "*.{ts,tsx}": [
       "prettier --write",
