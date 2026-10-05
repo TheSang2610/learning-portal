@@ -70,9 +70,23 @@ const notificationSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+
+        // Chi co o thong bao he thong gui tu trang quan tri: tro ve ban ghi goc
+        // trong Announcement. Nho no ma quan tri SUA hoac THU HOI duoc ca dot
+        // gui mot luc - truoc day gui roi la nam vinh vien trong chuong moi nguoi,
+        // go sai mot chu cung khong lam gi duoc.
+        thongBaoGoc: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Announcement',
+            default: undefined,
+        },
     },
     { timestamps: true },
 );
+
+// Sua / thu hoi ca dot: tim moi thong bao cung mot ban ghi goc. sparse vi phan
+// lon thong bao (don hang, chung nhan...) khong co truong nay.
+notificationSchema.index({ thongBaoGoc: 1 }, { sparse: true });
 
 // Truy van duy nhat cua man hinh chuong: lay thong bao cua MOT nguoi, moi nhat
 // truoc. Khong co index nay thi moi lan mo chuong la mot lan quet ca bang.

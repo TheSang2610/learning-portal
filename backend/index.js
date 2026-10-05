@@ -222,6 +222,7 @@ app.use('/api/documents', require('./src/routes/documentRoutes'));
 app.use('/api/posts', require('./src/routes/postRoutes'));
 app.use('/api/tro-ly', require('./src/routes/assistantRoutes'));
 app.use('/api/thong-bao', require('./src/routes/notificationRoutes'));
+app.use('/api/thong-bao-chung', require('./src/routes/announcementRoutes'));
 app.use('/api/hoi-dap', require('./src/routes/questionRoutes'));
 app.use('/api/ghi-chu', require('./src/routes/noteRoutes'));
 app.use('/api/ma-giam-gia', require('./src/routes/voucherRoutes'));

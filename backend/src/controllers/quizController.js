@@ -315,8 +315,13 @@ const submitQuizAttempt = async (req, res) => {
                 const correctOption = question.options.find((opt) => opt.isCorrect);
                 isCorrect = correctOption && answer.studentAnswer === correctOption.text;
             } else if (question.type === 'short_answer') {
-                isCorrect = answer.studentAnswer && question.correctAnswer &&
-                            answer.studentAnswer.toLowerCase().trim() === question.correctAnswer.toLowerCase().trim();
+                // Boolean(...) bat buoc: bo trong o tra loi thi bieu thuc && tra ve
+                // chuoi rong "", Mongoose khong ep "" thanh Boolean duoc va ca bai
+                // nop bi tu choi voi loi "Cast to Boolean failed".
+                isCorrect = Boolean(
+                    answer.studentAnswer && question.correctAnswer &&
+                    String(answer.studentAnswer).toLowerCase().trim() === question.correctAnswer.toLowerCase().trim()
+                );
             }
 
             if (isCorrect) {

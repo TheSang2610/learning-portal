@@ -19,6 +19,8 @@ export interface ThongBao {
   duongDan: string;
   daDoc: boolean;
   createdAt: string;
+  // Chi co o thong bao he thong gui tu trang quan tri - id dot thong bao goc.
+  thongBaoGoc?: string;
 }
 
 export interface TrangThongBao {

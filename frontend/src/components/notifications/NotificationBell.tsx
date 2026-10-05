@@ -13,8 +13,11 @@ import {
   CircleX,
   Coins,
   Info,
+  Megaphone,
   MessageCircle,
 } from "lucide-react";
+
+import { layThongBaoChung, type ThongBaoChung } from "@/src/services/announcement";
 
 import {
   danhDauDaDoc,
@@ -65,6 +68,9 @@ export default function ChuongThongBao() {
   const [mo, setMo] = useState(false);
   const [chuaDoc, setChuaDoc] = useState(0);
   const [danhSach, setDanhSach] = useState<ThongBao[]>([]);
+  // Thong bao chung (dai dau trang) cung ghim o day, de nguoi da dong dai tren
+  // trang hoac quan tri - von khong nhan thong bao chuong - van xem lai duoc.
+  const [chung, setChung] = useState<ThongBaoChung[]>([]);
   const [dangTai, setDangTai] = useState(false);
   const [loi, setLoi] = useState("");
   const boc = useRef<HTMLDivElement>(null);
@@ -127,6 +133,12 @@ export default function ChuongThongBao() {
     setDangTai(true);
     setLoi("");
 
+    // Thong bao chung tai rieng va khong duoc lam hong ca bang: loi thi coi
+    // nhu khong co, danh sach ca nhan van hien.
+    layThongBaoChung()
+      .then((kq) => setChung(kq?.danhSach ?? []))
+      .catch(() => setChung([]));
+
     try {
       const kq = await layThongBao(1);
       setDanhSach(kq.danhSach);
@@ -163,6 +175,11 @@ export default function ChuongThongBao() {
       doSoChuaDoc();
     }
   };
+
+  // Dot nao vua hien dau trang vua gui vao chuong thi da co trong danh sach ca
+  // nhan (tro ve qua thongBaoGoc) - bo ban ghim di cho khong hien hai lan.
+  const daCoTrongChuong = new Set(danhSach.map((tb) => tb.thongBaoGoc).filter(Boolean));
+  const chungRieng = chung.filter((tb) => !daCoTrongChuong.has(tb._id));
 
   return (
     <div className={styles.box} ref={boc}>
@@ -203,7 +220,42 @@ export default function ChuongThongBao() {
 
             {!dangTai && loi && <p className={styles.text3}>{loi}</p>}
 
-            {!dangTai && !loi && danhSach.length === 0 && (
+            {!dangTai &&
+              chungRieng.map((tb) => {
+                const ben = (
+                  <>
+                    <Megaphone
+                      size={18}
+                      className={`${styles.box5} ${
+                        tb.mucDo === "quan_trong" ? styles.mauTuChoi : styles.mauHeThong
+                      }`}
+                    />
+                    <div className={styles.box4}>
+                      <p className={`${styles.text8} ${styles.text}`}>{tb.tieuDe}</p>
+                      {tb.noiDung && <p className={styles.text6}>{tb.noiDung}</p>}
+                      <p className={styles.text7}>
+                        Thông báo chung · {khoangCach(tb.createdAt)}
+                      </p>
+                    </div>
+                  </>
+                );
+                return tb.duongDan ? (
+                  <Link
+                    key={`chung-${tb._id}`}
+                    href={tb.duongDan}
+                    onClick={() => setMo(false)}
+                    className={styles.dong}
+                  >
+                    {ben}
+                  </Link>
+                ) : (
+                  <div key={`chung-${tb._id}`} className={styles.dong}>
+                    {ben}
+                  </div>
+                );
+              })}
+
+            {!dangTai && !loi && danhSach.length === 0 && chungRieng.length === 0 && (
               <div className={styles.box2}>
                 <Bell size={28} className={styles.box3} />
                 <p className={styles.text4}>Chưa có thông báo nào.</p>

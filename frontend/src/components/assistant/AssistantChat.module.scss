@@ -1,8 +1,9 @@
 // File nay do script sinh ra tu class Tailwind cu.
 // Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
 
+// Nut mo hop chat chi la hinh con bot (bot-avatars), khong con vien tim va chu.
 .button {
-  background-color: #4f2bff;
+  background: transparent;
   position: fixed;
   right: calc(var(--spacing) * 5);
   bottom: calc(var(--spacing) * 5);
@@ -11,15 +12,9 @@
   align-items: center;
   gap: calc(var(--spacing) * 2);
   border-radius: 3.40282e38px;
-  padding-inline: calc(var(--spacing) * 5);
-  padding-block: calc(var(--spacing) * 3);
-  color: var(--color-white);
-  --tw-shadow:
-    0 10px 15px -3px var(--tw-shadow-color, #0000001a),
-    0 4px 6px -4px var(--tw-shadow-color, #0000001a);
-  box-shadow:
-    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
-    var(--tw-ring-shadow), var(--tw-shadow);
+  padding: 0;
+  border: 0;
+  cursor: pointer;
   transition-property:
     color,
     background-color,

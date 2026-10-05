@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bot, Send, Trash2, X, Loader2 } from "lucide-react";
+import { Send, Trash2, X, Loader2 } from "lucide-react";
 
 import { getErrorMessage } from "@/src/services/apiHelper";
 
 import styles from "./AssistantChat.module.scss";
+import BotTraiTim from "./HeartBot";
 import {
   hoiTroLy,
   layLichSuTroLy,
@@ -156,9 +157,11 @@ export default function HopChatTroLy({ courseId, lessonId, tenBai }: Props) {
         }}
         className={styles.button}
         aria-label={cheBai ? "Mở trợ giảng AI" : "Mở trợ lý Learning Portal"}
+        title={cheBai ? "Trợ giảng AI" : "Hỏi đáp AI"}
       >
-        <Bot size={20} />
-        <span className={styles.label}>{cheBai ? "Trợ giảng AI" : "Hỏi đáp AI"}</span>
+        {/* Chi con hinh con bot, bo chu: nut tron gon o goc phai, khong de len
+            noi dung trang tren dien thoai. Ten nut van nam o aria-label/title. */}
+        <BotTraiTim size={60} state={dangGui ? "working" : "default"} nhinTheoChuot />
       </button>
     );
   }
@@ -166,7 +169,7 @@ export default function HopChatTroLy({ courseId, lessonId, tenBai }: Props) {
   return (
     <div className={styles.overlay}>
       <header className={styles.header}>
-        <Bot size={18} />
+        <BotTraiTim size={32} state={dangGui ? "working" : "default"} />
         <div className={styles.box}>
           <p className={styles.text}>
             {cheBai ? "Trợ giảng AI" : "Hỏi đáp Learning Portal"}
