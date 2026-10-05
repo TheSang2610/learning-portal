@@ -16,6 +16,7 @@ import {
 } from "@/src/services/coin.api";
 import { baoCoinDaDoi } from "@/src/components/common/CoinBalance";
 import { getErrorMessage } from "@/src/services/apiHelper";
+import { HIEN_COIN } from "@/src/services/tinhNang";
 
 import styles from "./page.module.scss";
 // Cac muc nap goi san. Nguoi dung van go so tuy y duoc, nhung phan lon chon
@@ -54,7 +55,28 @@ function NutChep({ giaTri, nhan }: { giaTri: string; nhan: string }) {
   );
 }
 
-export default function TrangNapCoin() {
+/**
+ * Coin dang tam an (services/tinhNang.ts). Ai con giu duong dan cu hoac bam tu
+ * mot thong bao cu thi thay mot cau giai thich, khong thay form nap tien vao
+ * mot tinh nang da tat. Tach thanh component rieng de cac hook ben trong
+ * TrangNapCoin khong bi goi co dieu kien.
+ */
+export default function TrangCoin() {
+  if (!HIEN_COIN) {
+    return (
+      <div className={styles.container}>
+        <p>
+          Tính năng coin đang tạm ngưng. Khóa học có phí thanh toán bằng chuyển khoản qua
+          mã QR.
+        </p>
+        <Link href="/courses">Về danh sách khóa học</Link>
+      </div>
+    );
+  }
+  return <TrangNapCoin />;
+}
+
+function TrangNapCoin() {
   const [soDu, setSoDu] = useState<number | null>(null);
   const [soCoin, setSoCoin] = useState<number>(500);
   const [yeuCau, setYeuCau] = useState<YeuCauNap | null>(null);

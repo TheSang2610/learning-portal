@@ -6,6 +6,7 @@ import AnhDaiDien from "@/src/components/ui/Avatar";
 import { Users, Flame, Clock, Loader2 } from "lucide-react";
 import ActivityHeatmap from "@/src/components/profile/ActivityHeatmap";
 import ViCoinCuaToi from "@/src/components/common/MyCoinWallet";
+import { HIEN_COIN } from "@/src/services/tinhNang";
 import MyDocuments from "@/src/components/profile/MyDocuments";
 import SavedItems from "@/src/components/profile/SavedItems";
 import ProfileTabs, { useTabHoSo } from "@/src/components/profile/ProfileTabs";
@@ -159,7 +160,7 @@ export default function ProfilePage() {
                     <div className={styles.card2}>Chưa tải được dữ liệu hoạt động.</div>
                   )}
 
-                  <ViCoinCuaToi />
+                  {HIEN_COIN && <ViCoinCuaToi />}
 
                   <div className={styles.card}>
                     <h2 className={styles.heading}>Thông tin tài khoản</h2>

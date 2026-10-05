@@ -122,9 +122,30 @@ const docBaoCo = (than) => {
     return tho.map(docMotBaoCo).filter(Boolean);
 };
 
+/**
+ * Rut ma DON HANG (vi du "DH7K3M", xem Order.sinhMa) ra khoi noi dung chuyen
+ * khoan. Cung quy tac voi rutMaNap: thay hai ma khac nhau thi tra null de quan
+ * tri xu ly tay, khong doan bua.
+ *
+ * Tien to "DH" ngan hon "NAP" nen de trung voi chu thuong hon (ten "...DHANH..."
+ * dinh lien sau khi bo dau cach). Khong sao: ma rut ra con phai la mot don CO
+ * THAT, dang cho, va so tien ve phai du - ba dieu kien cung trung la gan nhu
+ * khong the.
+ */
+const MAU_MA_DON = new RegExp(`DH[${BANG_CHU}]{4}`, 'g');
+
+const rutMaDon = (noiDung) => {
+    const thay = chuanHoaNoiDung(noiDung).match(MAU_MA_DON);
+    if (!thay || thay.length === 0) return null;
+
+    const rieng = [...new Set(thay)];
+    return rieng.length === 1 ? rieng[0] : null;
+};
+
 module.exports = {
     chuanHoaNoiDung,
     rutMaNap,
+    rutMaDon,
     duTien,
     docMotBaoCo,
     docBaoCo,

@@ -2,7 +2,9 @@ const BankTransaction = require('../models/BankTransaction');
 const CoinTopUp = require('../models/CoinTopUp');
 const { congCoin } = require('../utils/coinWallet');
 const { hopLe, daCauHinh } = require('../config/bankWebhook');
-const { rutMaNap, duTien, docBaoCo } = require('../utils/matchBankTransfer');
+const { rutMaNap, rutMaDon, duTien, docBaoCo } = require('../utils/matchBankTransfer');
+const Order = require('../models/Order');
+const { moKhoaChoDon } = require('./adminOrderController');
 const { guiThongBao } = require('./notificationController');
 
 /**
@@ -30,6 +32,50 @@ const { guiThongBao } = require('./notificationController');
  *   paid       - da cong roi. Ghi 'trung' chu khong cong them.
  */
 
+/**
+ * Tien ve mang ma don hang ("DH...") -> tu mo khoa, khong cho quan tri bam.
+ *
+ * Truoc 04/10/2026 webhook chi biet ma nap coin; don mua khoa thi luon nam cho
+ * quan tri mo sao ke doi chieu, hoc vien chuyen khoan xong phai ngoi cho. Mo
+ * khoa di qua moKhoaChoDon - DUNG cung mot ham voi nut xac nhan cua quan tri,
+ * nen hai duong khong bao gio lam khac nhau (mo thieu khoa, thieu mail...).
+ *
+ * Don da HUY thi khong tu mo: hoc vien da bo don do, co the da dat don khac
+ * cho cung khoa. Ghi 'chua_khop' de quan tri xem tay roi quyet hoan tien hay mo.
+ */
+const xuLyBaoCoDonHang = async (bc, maDon) => {
+    const don = await Order.findOne({ code: maDon }).select('_id status amount');
+    if (!don) {
+        return { maNap: maDon, xuLy: 'chua_khop', ghiChu: `Không có đơn hàng nào mang mã ${maDon}` };
+    }
+    if (don.status === 'paid') {
+        return { maNap: maDon, order: don._id, xuLy: 'trung', ghiChu: 'Đơn này đã được xác nhận trước đó' };
+    }
+    if (don.status === 'cancelled') {
+        return {
+            maNap: maDon,
+            order: don._id,
+            xuLy: 'chua_khop',
+            ghiChu: 'Đơn đã bị hủy nhưng tiền vẫn về, cần đối chiếu tay'
+        };
+    }
+    if (!duTien(bc.soTien, don.amount)) {
+        return {
+            maNap: maDon,
+            order: don._id,
+            xuLy: 'chua_khop',
+            ghiChu: `Tiền về ${bc.soTien.toLocaleString('vi-VN')}đ, đơn cần ${don.amount.toLocaleString('vi-VN')}đ`
+        };
+    }
+
+    const kq = await moKhoaChoDon(don._id, { note: `Tự động xác nhận theo báo có ngân hàng ${bc.maGiaoDich}` });
+    if (!kq.ok) {
+        return { maNap: maDon, order: don._id, xuLy: 'trung', ghiChu: 'Đơn vừa được xác nhận bởi luồng khác' };
+    }
+
+    return { maNap: maDon, order: don._id, xuLy: 'da_mo_khoa', ghiChu: 'Đã tự xác nhận đơn và mở khóa học' };
+};
+
 /** Cac trang thai con duoc cong khi tien ve. */
 const CON_NHAN_TIEN = ['pending', 'expired', 'abandoned'];
 
@@ -49,7 +95,10 @@ const xuLyMotBaoCo = async (bc) => {
 
     const maNap = rutMaNap(bc.noiDung);
     if (!maNap) {
-        return { maNap: null, xuLy: 'chua_khop', ghiChu: 'Nội dung không chứa mã nạp hợp lệ' };
+        // Khong phai nap coin thi thu xem co phai tra tien don hang khong.
+        const maDon = rutMaDon(bc.noiDung);
+        if (maDon) return xuLyBaoCoDonHang(bc, maDon);
+        return { maNap: null, xuLy: 'chua_khop', ghiChu: 'Nội dung không chứa mã nạp hay mã đơn hợp lệ' };
     }
 
     const yc = await CoinTopUp.findOne({ code: maNap });
@@ -194,6 +243,7 @@ const nhanBaoCoNganHang = async (req, res) => {
 
             ban.maNap = kq.maNap ?? null;
             ban.topUp = kq.topUp ?? null;
+            ban.order = kq.order ?? null;
             ban.soCoinDaCong = kq.soCoinDaCong ?? 0;
             ban.xuLy = kq.xuLy;
             ban.ghiChu = String(kq.ghiChu || '').slice(0, 500);

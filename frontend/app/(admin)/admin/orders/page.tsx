@@ -203,7 +203,13 @@ export default function TrangDonHang() {
                     <div className={styles.box3}>{don.student?.email ?? ""}</div>
                   </td>
                   <td className={styles.cell3}>
-                    <div className={styles.box4}>{don.course?.title ?? "—"}</div>
+                    {/* Don gio hang: hien du ten moi khoa - quan tri doi chieu
+                        mot dong sao ke voi CA don, can biet don tra cho nhung gi. */}
+                    <div className={styles.box4}>
+                      {don.courses && don.courses.length > 1
+                        ? `${don.courses.length} khóa: ${don.courses.map((k) => k.title).join(", ")}`
+                        : (don.course?.title ?? "—")}
+                    </div>
                   </td>
                   <td className={styles.cell4}>{dinhDangTien(don.amount)}</td>
                   <td className={styles.headCell}>

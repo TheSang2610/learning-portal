@@ -30,6 +30,18 @@ const orderSchema = new mongoose.Schema({
         required: true
     },
 
+    // Don thanh toan CA GIO HANG: moi khoa trong don, tinh ca `course` o tren.
+    // Don mua le de rong - don cu truoc 04/10/2026 cung rong, nen moi cho can
+    // danh sach khoa cua don phai goi cacKhoaCuaDon() (utils/orderCourses.js)
+    // chu khong doc thang truong nay.
+    //
+    // Giu `course` = khoa dau tien thay vi bo han: trang quan tri, mail va moi
+    // cau truy van cu deu doc `course`, doi het mot luc la de sot mot cho.
+    courses: {
+        type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
+        default: []
+    },
+
     student: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

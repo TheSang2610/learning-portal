@@ -5,6 +5,7 @@ import { xoaPhien } from "@/src/services/apiHelper";
 import { ChevronDown, User, Settings, LogOut, BookOpen } from "lucide-react";
 import AnhDaiDien from "@/src/components/ui/Avatar";
 import SoDuCoin from "@/src/components/common/CoinBalance";
+import { HIEN_COIN } from "@/src/services/tinhNang";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useNguoiDungLuu, useDangTaiNguoiDung } from "@/src/hooks/userStore";
@@ -133,7 +134,7 @@ export default function HeaderUserMenu({
           <div className={styles.box5}>
             <span className={styles.label2}>{tenHienThi}</span>
             <span className={styles.row3}>
-              <SoDuCoin />
+              {HIEN_COIN && <SoDuCoin />}
               {user.role !== "student" && (
                 <span className={styles.label3}>{user.role}</span>
               )}

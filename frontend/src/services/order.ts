@@ -44,6 +44,11 @@ export interface DonHang {
   daBaoChuyenKhoanLuc: string | null;
   createdAt: string;
   course: KhoaHocTrongDon | null;
+  /**
+   * Đơn thanh toán cả giỏ hàng: mọi khóa trong đơn (đã gồm `course`).
+   * Đơn mua lẻ để mảng rỗng — khi đó chỉ hiện `course`.
+   */
+  courses: KhoaHocTrongDon[];
   chuyenKhoan: ThongTinChuyenKhoan | null;
 
   /** Giá trước khi giảm. Bằng `amount` khi không dùng mã. */
@@ -69,6 +74,22 @@ export const taoDonHang = async (
     // ap ma roi tra 400 "Bạn chưa nhập mã giảm giá" cho mot nguoi khong he
     // dinh dung ma nao.
     body: JSON.stringify(maGiamGia ? { courseId, maGiamGia } : { courseId }),
+  });
+
+/**
+ * Tạo MỘT đơn cho cả giỏ hàng → một mã QR, một số tiền.
+ *
+ * Mã giảm giá áp vào đúng một khóa trong giỏ (`courseIdGiam`), giống ô nhập mã
+ * trên trang giỏ hàng. Gọi lại với đúng bộ khóa đó thì máy chủ trả lại đơn đang
+ * chờ thay vì sinh mã mới.
+ */
+export const taoDonGioHang = async (
+  courseIds: string[],
+  giam?: { maGiamGia: string; courseIdGiam: string },
+): Promise<{ order: DonHang }> =>
+  apiRequest("/orders/gio-hang", {
+    method: "POST",
+    body: JSON.stringify(giam?.maGiamGia ? { courseIds, ...giam } : { courseIds }),
   });
 
 export const layDonTheoMa = async (code: string): Promise<{ order: DonHang }> =>
@@ -116,6 +137,8 @@ export interface DonHangAdmin {
   createdAt: string;
   note: string;
   course: { _id: string; title: string; slug: string; price: number } | null;
+  /** Đơn giỏ hàng: mọi khóa trong đơn. Đơn mua lẻ: mảng rỗng hoặc không có. */
+  courses?: { _id: string; title: string; slug: string; price: number }[];
   student: { _id: string; name: string; email: string; avatar?: string } | null;
   confirmedBy: { _id: string; name: string } | null;
 }

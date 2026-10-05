@@ -9,6 +9,8 @@ import { CircleCheck, CircleX, ShoppingCart, Trash2 } from "lucide-react";
 import { useGioHang } from "@/src/hooks/cart";
 import { giaRaCoin, layViCuaToi, muaBangCoin } from "@/src/services/coin.api";
 import { getErrorMessage } from "@/src/services/apiHelper";
+import { taoDonGioHang } from "@/src/services/order";
+import { HIEN_COIN } from "@/src/services/tinhNang";
 import OMaGiamGiaGioHang from "@/src/components/vouchers/CartVoucherBox";
 import { useNguoiDungLuu, useDangTaiNguoiDung } from "@/src/hooks/userStore";
 import { duongDanDangNhap } from "@/src/components/auth/loginUrl";
@@ -52,11 +54,38 @@ export default function CartPage() {
   // tru gi nua - hai con so tren cung mot man hinh noi hai chuyen khac nhau.
   const [lanMa, setLanMa] = useState(0);
 
+  const [dangTaoDon, setDangTaoDon] = useState(false);
+  const [loiDon, setLoiDon] = useState("");
+
   useEffect(() => {
+    // Coin dang an thi khoi hoi so du - mot luot goi mang thua moi lan mo gio.
+    if (!HIEN_COIN) return;
     layViCuaToi()
       .then((v) => setSoDu(v.soDuCoin))
       .catch(() => setSoDu(null));
   }, []);
+
+  /**
+   * Gom ca gio vao MOT don roi sang trang QR. Gio KHONG bi xoa o day: nguoi
+   * dung co the dong trang QR ma chua chuyen tien, xoa gio luc nay la mat het
+   * nhung gi ho da chon. Trang thanh toan tu bo cac khoa khoi gio khi don da
+   * duoc xac nhan.
+   */
+  const thanhToanQR = async () => {
+    if (dangTaoDon || gio.length === 0) return;
+    setDangTaoDon(true);
+    setLoiDon("");
+    try {
+      const { order } = await taoDonGioHang(
+        gio.map((m) => m.courseId),
+        ma && maCuaKhoa ? { maGiamGia: ma, courseIdGiam: maCuaKhoa } : undefined,
+      );
+      router.push(`/payment?code=${order.code}`);
+    } catch (e) {
+      setLoiDon(getErrorMessage(e));
+      setDangTaoDon(false);
+    }
+  };
 
   const goMa = () => {
     setMa("");
@@ -204,9 +233,11 @@ export default function CartPage() {
                     <h2 className={styles.heading}>{m.title}</h2>
                     <p className={styles.text2}>
                       {m.gia.toLocaleString("vi-VN")}đ
-                      <span className={styles.label}>
-                        ({giaRaCoin(m.gia).toLocaleString("vi-VN")} coin)
-                      </span>
+                      {HIEN_COIN && (
+                        <span className={styles.label}>
+                          ({giaRaCoin(m.gia).toLocaleString("vi-VN")} coin)
+                        </span>
+                      )}
                     </p>
 
                     {tt === "xong" && (
@@ -264,10 +295,14 @@ export default function CartPage() {
                 </div>
               )}
 
-              <div className={styles.row4}>
-                <span className={styles.label2}>Quy ra coin</span>
-                <span className={styles.label3}>{tongCoin.toLocaleString("vi-VN")}</span>
-              </div>
+              {HIEN_COIN && (
+                <div className={styles.row4}>
+                  <span className={styles.label2}>Quy ra coin</span>
+                  <span className={styles.label3}>
+                    {tongCoin.toLocaleString("vi-VN")}
+                  </span>
+                </div>
+              )}
 
               <div className={styles.box8}>
                 <OMaGiamGiaGioHang
@@ -296,6 +331,20 @@ export default function CartPage() {
                 </div>
               ) : (
                 <>
+                  <button
+                    type="button"
+                    onClick={thanhToanQR}
+                    disabled={dangTaoDon || dangMua}
+                    className={styles.button3}
+                  >
+                    {dangTaoDon ? "Đang tạo đơn…" : "Thanh toán qua mã QR ngân hàng"}
+                  </button>
+                  {loiDon && <p className={styles.text7}>{loiDon}</p>}
+                </>
+              )}
+
+              {user && HIEN_COIN && (
+                <>
                   <div className={styles.box9}>
                     <div className={styles.row6}>
                       <span className={styles.label2}>Ví của bạn</span>
@@ -318,24 +367,20 @@ export default function CartPage() {
                   <button
                     type="button"
                     onClick={thanhToan}
-                    disabled={dangMua || !duCoin}
-                    className={styles.button3}
+                    disabled={dangMua || dangTaoDon || !duCoin}
+                    className={styles.button4}
                   >
                     {dangMua ? "Đang mua…" : "Thanh toán bằng coin"}
                   </button>
                 </>
               )}
 
-              {/* Noi thang vi sao khong co nut chuyen khoan o day, thay vi de
-                  nguoi dung tim mai khong thay. Ma QR khop tien theo TUNG don,
-                  nen mot lan chuyen cho nhieu khoa se khong doi chieu duoc. */}
+              {/* Truoc day gio chi tra duoc bang coin vi QR khop theo TUNG don.
+                  Nay ca gio gom vao mot don (mot ma, mot so tien), nen chuyen
+                  khoan mot lan la doi chieu duoc. */}
               <p className={styles.text8}>
-                Giỏ hàng chỉ thanh toán bằng coin. Muốn chuyển khoản thì mua từng khóa ở
-                trang khóa học đó, hoặc{" "}
-                <Link href="/user/coin" className={styles.box10}>
-                  nạp coin
-                </Link>{" "}
-                rồi quay lại đây.
+                Cả giỏ hàng thanh toán bằng một lần chuyển khoản. Quét mã QR ở bước sau,
+                khóa học tự mở khi tiền về tài khoản, thường chỉ sau vài phút.
               </p>
 
               {xong && (

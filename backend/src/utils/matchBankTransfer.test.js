@@ -133,3 +133,23 @@ test('than request rac thi tra mang rong chu khong nem loi', () => {
     assert.deepStrictEqual(docBaoCo('chuoi'), []);
     assert.deepStrictEqual(docBaoCo(undefined), []);
 });
+
+/* -------------------------------------------------------------- rutMaDon */
+
+const { rutMaDon } = require('./matchBankTransfer');
+
+test('rutMaDon doc duoc ma don du ngan hang viet kieu gi', () => {
+    assert.strictEqual(rutMaDon('DH7K3M'), 'DH7K3M');
+    assert.strictEqual(rutMaDon('dh 7k3m thanh toan'), 'DH7K3M');
+    assert.strictEqual(rutMaDon('CT DEN:123 DH7K3M-CK'), 'DH7K3M');
+});
+
+test('rutMaDon tra null khi khong co ma hoac co hai ma khac nhau', () => {
+    assert.strictEqual(rutMaDon('chuyen tien hoc'), null);
+    assert.strictEqual(rutMaDon('DH7K3M DH9PQR'), null);
+    assert.strictEqual(rutMaDon('DH7K3M DH7K3M'), 'DH7K3M');
+});
+
+test('ma nap coin khong bi nhan nham thanh ma don', () => {
+    assert.strictEqual(rutMaDon('NAP7K3M'), null);
+});

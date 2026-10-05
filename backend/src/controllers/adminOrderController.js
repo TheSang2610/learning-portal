@@ -7,6 +7,7 @@ const User = require('../models/User');
 const { guiMail } = require('../config/mail');
 const { soanMailDonDaXacNhan } = require('../utils/orderMail');
 const { guiThongBao } = require('./notificationController');
+const { cacKhoaCuaDon } = require('../utils/orderCourses');
 
 const TRANG_THAI_HOP_LE = new Set(['pending', 'paid', 'cancelled', 'expired']);
 
@@ -31,6 +32,7 @@ const getOrdersAdmin = async (req, res) => {
         const [ds, tong, dangCho, daBao] = await Promise.all([
             Order.find(loc)
                 .populate('course', 'title slug price')
+                .populate('courses', 'title slug price')
                 .populate('student', 'name email avatar')
                 .populate('confirmedBy', 'name')
                 .sort({ createdAt: -1 })
@@ -62,6 +64,84 @@ const getOrdersAdmin = async (req, res) => {
     }
 };
 
+/**
+ * Danh dau don DA TRA va mo moi khoa trong don. Mot cua duy nhat cho ca quan tri
+ * bam tay (confirmOrder) lan webhook ngan hang (bankWebhookController).
+ *
+ * KHOA DON TRUOC, mo khoa sau. Ban cu lam nguoc lai (ghi danh roi moi luu
+ * 'paid') - khi chi co quan tri bam thi khong sao, nhung tu khi webhook cung
+ * xac nhan duoc, quan tri bam dung luc bao co ve la ca hai cung chay het: hai
+ * mail, hai thong bao. findOneAndUpdate co dieu kien trang thai chi cho DUNG MOT
+ * ben qua cua.
+ *
+ * Tra ve { ok:false } khi don khong con o trang thai nhan tien (da tra, da huy,
+ * hoac ben khac vua xu ly). Loi CSDL luc ghi danh thi tra don ve 'pending' roi
+ * nem tiep: de don 'paid' ma khoa chua mo la hoc vien mat tien ma khong ai biet.
+ */
+const TRANG_THAI_NHAN_TIEN = ['pending', 'expired'];
+
+const moKhoaChoDon = async (donId, { confirmedBy = null, note, tenNguoiXacNhan = '' } = {}) => {
+    const $set = { status: 'paid', paidAt: new Date(), confirmedBy };
+    if (typeof note === 'string') $set.note = note.slice(0, 500);
+
+    const don = await Order.findOneAndUpdate(
+        { _id: donId, status: { $in: TRANG_THAI_NHAN_TIEN } },
+        { $set },
+        { new: true }
+    );
+    if (!don) return { ok: false };
+
+    // Mo MOI khoa trong don. Don gio hang ma chi doc don.course thi hoc vien
+    // tra tien ba khoa nhung chi duoc mo mot - xem utils/orderCourses.js.
+    const idKhoa = cacKhoaCuaDon(don);
+    let moiTao = false;
+    try {
+        for (const id of idKhoa) {
+            const kq = await taoGhiDanh(id, don.student);
+            if (kq.moiTao) moiTao = true;
+        }
+    } catch (loi) {
+        await Order.updateOne(
+            { _id: don._id },
+            { $set: { status: 'pending', paidAt: null, confirmedBy: null } }
+        ).catch(() => {});
+        throw loi;
+    }
+
+    // Bao mail SAU khi da luu xong. Mail hong thi guiMail tu nuot loi va ghi
+    // console - khong duoc de mot loi gui mail lam hong viec da mo khoa.
+    const [dsKhoa, hocVien] = await Promise.all([
+        Course.find({ _id: { $in: idKhoa } }).select('title slug'),
+        User.findById(don.student).select('name email')
+    ]);
+    // Don gio hang gop ten moi khoa, con duong dan thi tro ve khoa dau tien.
+    const khoa = dsKhoa.length
+        ? { title: dsKhoa.map((k) => k.title).join(', '), slug: dsKhoa[0].slug }
+        : null;
+
+    await guiMail(
+        soanMailDonDaXacNhan({
+            maDon: don.code,
+            soTien: don.amount,
+            tenHocVien: hocVien?.name || hocVien?.email || 'Không rõ',
+            emailHocVien: hocVien?.email || '',
+            tenKhoa: khoa?.title || 'Khóa học',
+            xacNhanLuc: don.paidAt,
+            nguoiXacNhan: tenNguoiXacNhan || 'Tự động theo báo có ngân hàng',
+            daCoKhoaTuTruoc: !moiTao
+        })
+    );
+
+    // Chuong thong bao song song voi mail: mail de vao thu rac, chuong thi hoc
+    // vien thay ngay lan sau mo trang. guiThongBao() khong bao gio nem.
+    await guiThongBao(don.student, 'don_duoc_duyet', {
+        tenKhoa: khoa?.title,
+        slugKhoa: khoa?.slug
+    });
+
+    return { ok: true, don, moiTao };
+};
+
 // @desc    Xac nhan da nhan tien -> mo khoa hoc cho hoc vien
 // @route   PUT /api/admin/orders/:code/confirm
 // @access  admin
@@ -85,53 +165,22 @@ const confirmOrder = async (req, res) => {
             return res.status(400).json({ message: 'Đơn này đã bị hủy' });
         }
 
-        const { moiTao } = await taoGhiDanh(don.course, don.student);
-
-        don.status = 'paid';
-        don.paidAt = new Date();
-        don.confirmedBy = req.user._id;
-        if (typeof req.body?.note === 'string') {
-            don.note = req.body.note.slice(0, 500);
-        }
-        await don.save();
-
-        // Bao mail SAU khi da luu xong. Mail hong thi guiMail tu nuot loi va
-        // ghi console - khong duoc de mot loi gui mail lam yeu cau nay tra ve
-        // 500 trong khi don DA xac nhan va khoa DA mo.
-        const [khoa, hocVien] = await Promise.all([
-            Course.findById(don.course).select('title slug'),
-            User.findById(don.student).select('name email')
-        ]);
-
-        await guiMail(
-            soanMailDonDaXacNhan({
-                maDon: don.code,
-                soTien: don.amount,
-                tenHocVien: hocVien?.name || hocVien?.email || 'Không rõ',
-                emailHocVien: hocVien?.email || '',
-                tenKhoa: khoa?.title || 'Khóa học',
-                xacNhanLuc: don.paidAt,
-                nguoiXacNhan: req.user?.name || '',
-                daCoKhoaTuTruoc: !moiTao
-            })
-        );
-
-        // Thong bao trong ung dung, SONG SONG voi mail chu khong thay the.
-        //
-        // Mail de vao thu rac hoac bi bo qua; cai chuong thi hoc vien thay ngay
-        // lan sau mo trang. Truoc day khong co ca hai duong nay o phia trong
-        // ung dung nen hoc vien chuyen khoan xong phai tu bam thu xem khoa da
-        // mo chua. guiThongBao() khong bao gio nem - xem ghi chu o ham do.
-        await guiThongBao(don.student, 'don_duoc_duyet', {
-            tenKhoa: khoa?.title,
-            slugKhoa: khoa?.slug
+        const kq = await moKhoaChoDon(don._id, {
+            confirmedBy: req.user._id,
+            note: typeof req.body?.note === 'string' ? req.body.note : undefined,
+            tenNguoiXacNhan: req.user?.name || ''
         });
 
+        // Ben khac (webhook ngan hang) vua xac nhan don nay truoc mot nhip.
+        if (!kq.ok) {
+            return res.status(400).json({ message: 'Đơn này vừa được xác nhận (có thể tự động theo báo có ngân hàng)' });
+        }
+
         return res.status(200).json({
-            message: moiTao
+            message: kq.moiTao
                 ? 'Đã xác nhận thanh toán và mở khóa học cho học viên'
                 : 'Đã xác nhận thanh toán. Học viên vốn đã có khóa học này.',
-            order: don
+            order: kq.don
         });
     } catch (error) {
         console.error('confirmOrder:', error.message);
@@ -203,4 +252,4 @@ const getOrderAdmin = async (req, res) => {
     }
 };
 
-module.exports = { getOrdersAdmin, getOrderAdmin, confirmOrder, rejectOrder };
+module.exports = { getOrdersAdmin, getOrderAdmin, confirmOrder, rejectOrder, moKhoaChoDon };

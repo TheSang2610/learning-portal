@@ -40,15 +40,25 @@ const bankTransactionSchema = new mongoose.Schema({
     soTaiKhoan: { type: String, default: '' },
     thoiGianNganHang: { type: Date, default: null },
 
-    // Ma nap rut ra tu noi dung, null khi khong rut duoc.
+    // Ma rut ra tu noi dung, null khi khong rut duoc. Tu 04/10/2026 la ma nap
+    // ("NAP...") HOAC ma don hang ("DH..."); ten truong giu nguyen de khong phai
+    // doi du lieu cu.
     maNap: { type: String, default: null, uppercase: true, trim: true },
 
     // Ket qua xu ly. 'chua_khop' la hang doi viec cho quan tri, khong phai loi
     // he thong - phan lon la nguoi dung go thieu ma hoac chuyen thieu tien.
+    // 'da_mo_khoa' = tien ve khop mot don hang, don da chuyen 'paid' va khoa da mo.
     xuLy: {
         type: String,
-        enum: ['da_cong', 'chua_khop', 'trung', 'bo_qua'],
+        enum: ['da_cong', 'da_mo_khoa', 'chua_khop', 'trung', 'bo_qua'],
         default: 'chua_khop'
+    },
+
+    // Don hang duoc mo khoa nho bao co nay, neu co.
+    order: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Order',
+        default: null
     },
 
     // Yeu cau nap duoc cong nho bao co nay, neu co.

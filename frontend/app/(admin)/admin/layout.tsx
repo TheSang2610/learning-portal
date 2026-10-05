@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useNguoiDungLuu, useDangTaiNguoiDung } from "@/src/hooks/userStore";
+import { HIEN_COIN } from "@/src/services/tinhNang";
 
 import styles from "./layout.module.scss";
 interface SubMenuItem {
@@ -175,16 +176,22 @@ const menuItems: MenuItem[] = [
     href: "/admin/notifications",
     icon: Bell,
   },
-  {
-    label: "Coin & Quà tặng",
-    href: "/admin/coin",
-    icon: Coins,
-  },
-  {
-    label: "Yêu cầu nạp coin",
-    href: "/admin/coin-topups",
-    icon: Coins,
-  },
+  // Coin dang tam an (services/tinhNang.ts). Hai trang van con nguyen, go thang
+  // dia chi van vao duoc - chi bo khoi menu.
+  ...(HIEN_COIN
+    ? [
+        {
+          label: "Coin & Quà tặng",
+          href: "/admin/coin",
+          icon: Coins,
+        },
+        {
+          label: "Yêu cầu nạp coin",
+          href: "/admin/coin-topups",
+          icon: Coins,
+        },
+      ]
+    : []),
   {
     label: "Enrollments",
     href: "/admin/enrollments",

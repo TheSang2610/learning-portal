@@ -9,6 +9,17 @@ const { guiMail, daCauHinh: mailDaCauHinh } = require('../config/mail');
 const { soanMailBaoChuyenKhoan } = require('../utils/orderMail');
 const LuotDungMa = require('../models/VoucherUsage');
 const { datChoLuotDung, hoanLuotDungMa } = require('./voucherController');
+const { cacKhoaCuaDon, locDanhSachKhoa } = require('../utils/orderCourses');
+
+const TRUONG_KHOA = 'title slug thumbnail price';
+
+const tomTatKhoa = (k) => ({
+    _id: k._id,
+    title: k.title,
+    slug: k.slug,
+    thumbnail: k.thumbnail || '',
+    price: k.price
+});
 
 const { sinhMa, HAN_GIU_DON_MS } = Order;
 
@@ -50,15 +61,11 @@ const dangDon = (don, khoaHoc) => ({
     paidAt: don.paidAt || null,
     daBaoChuyenKhoanLuc: don.daBaoChuyenKhoanLuc || null,
     createdAt: don.createdAt,
-    course: khoaHoc
-        ? {
-            _id: khoaHoc._id,
-            title: khoaHoc.title,
-            slug: khoaHoc.slug,
-            thumbnail: khoaHoc.thumbnail || '',
-            price: khoaHoc.price
-        }
-        : null,
+    course: khoaHoc ? tomTatKhoa(khoaHoc) : null,
+    // Don gio hang: du moi khoa de trang thanh toan liet ke. Don mua le de
+    // rong, giao dien khi do chi hien `course`. Chi lay ban da populate - ban
+    // con la ObjectId tran thi khong co ten de hien.
+    courses: (don.courses || []).filter((k) => k && k.title).map(tomTatKhoa),
     chuyenKhoan: don.status === 'pending'
         ? thongTinChuyenKhoan({ soTien: don.amount, noiDung: don.code })
         : null
@@ -185,6 +192,114 @@ const createOrder = async (req, res) => {
     }
 };
 
+// @desc    Tao MOT don cho ca gio hang, tra bang mot ma QR
+// @route   POST /api/orders/gio-hang
+// @access  Dang nhap
+//
+// Truoc 04/10/2026 gio hang chi tra duoc bang coin, vi ma QR khop tien theo
+// TUNG don: chuyen mot lan cho ba khoa thi khong doi chieu duoc voi ba don.
+// Gom ca gio vao mot don (mot ma, mot so tien) la giai dung cho do - quan tri
+// van doi chieu dung mot dong sao ke voi mot ma don nhu don mua le.
+const createCartOrder = async (req, res) => {
+    try {
+        const loc = locDanhSachKhoa(req.body?.courseIds, (x) => mongoose.Types.ObjectId.isValid(x));
+        if (loc.loi) {
+            return res.status(400).json({ message: loc.loi });
+        }
+        const ids = loc.ds;
+
+        const dsKhoa = await Course.find({ _id: { $in: ids } }).select(TRUONG_KHOA);
+        const theoId = new Map(dsKhoa.map((k) => [String(k._id), k]));
+        if (theoId.size !== ids.length) {
+            return res.status(404).json({ message: 'Có khóa học trong giỏ không còn tồn tại, bạn bỏ nó ra rồi thử lại' });
+        }
+        const khoaTheoThuTu = ids.map((id) => theoId.get(id));
+
+        // Tu choi ca don thay vi lang lang bo khoa loi ra: nguoi dung thay tong
+        // tien o gio va so tien tren QR khac nhau la nghi ngay - va ho dung.
+        const mienPhi = khoaTheoThuTu.find((k) => !k.price || k.price <= 0);
+        if (mienPhi) {
+            return res.status(400).json({ message: `"${mienPhi.title}" miễn phí, bạn bỏ khỏi giỏ và vào học ngay` });
+        }
+
+        const daHoc = await Enrollment.findOne({
+            course: { $in: ids },
+            student: req.user._id,
+            status: { $ne: 'dropped' }
+        }).select('course');
+        if (daHoc) {
+            const ten = theoId.get(String(daHoc.course))?.title || 'một khóa trong giỏ';
+            return res.status(400).json({ message: `Bạn đã có khóa "${ten}", hãy bỏ khỏi giỏ rồi thanh toán` });
+        }
+
+        // Cung mot gio dang cho thi tra lai don cu - cung ly do nhu createOrder:
+        // bam hai lan ra hai ma, chuyen theo ma cu thi don moi khong bao gio khop.
+        const donCu = await Order.findOne({
+            student: req.user._id,
+            status: 'pending',
+            courses: { $size: ids.length, $all: ids }
+        });
+        if (donCu) {
+            await capNhatNeuHetHan(donCu);
+            if (donCu.status === 'pending') {
+                await donCu.populate('courses', TRUONG_KHOA);
+                return res.status(200).json({ order: dangDon(donCu, khoaTheoThuTu[0]) });
+            }
+        }
+
+        // Ma giam gia an vao DUNG MOT khoa trong gio, giong o nhap ma tren
+        // trang gio hang. Tru luot ngay luc dat don - xem ghi chu o createOrder.
+        let soTienGiam = 0;
+        let maDaDung = null;
+        let khoaDuocGiam = null;
+
+        if (req.body?.maGiamGia) {
+            khoaDuocGiam = String(req.body.courseIdGiam || '');
+            if (!ids.includes(khoaDuocGiam)) {
+                return res.status(400).json({ message: 'Mã giảm giá phải áp vào một khóa có trong giỏ' });
+            }
+
+            const dat = await datChoLuotDung({
+                maTho: req.body.maGiamGia,
+                courseId: khoaDuocGiam,
+                nguoiDung: req.user
+            });
+            if (!dat.ok) {
+                return res.status(400).json({ message: dat.cau });
+            }
+
+            soTienGiam = dat.soTienGiam;
+            maDaDung = dat.ma;
+        }
+
+        const tongGoc = khoaTheoThuTu.reduce((t, k) => t + k.price, 0);
+
+        const don = await taoDonVoiMaDuyNhat({
+            course: ids[0],
+            courses: ids,
+            student: req.user._id,
+            amount: Math.max(0, tongGoc - soTienGiam),
+            giaGoc: tongGoc,
+            maGiamGia: maDaDung,
+            soTienGiam,
+            expiresAt: new Date(Date.now() + HAN_GIU_DON_MS)
+        });
+
+        if (maDaDung) {
+            await LuotDungMa.updateOne(
+                { user: req.user._id, course: khoaDuocGiam, donHang: null },
+                { $set: { donHang: don._id } }
+            ).catch(() => {});
+        }
+
+        await don.populate('courses', TRUONG_KHOA);
+        return res.status(201).json({ order: dangDon(don, khoaTheoThuTu[0]) });
+    } catch (error) {
+        console.error('createCartOrder:', error.message);
+        return res.status(500).json({ message: 'Không tạo được đơn hàng cho giỏ' });
+    }
+};
+
 // @desc    Xem mot don theo ma (trang thanh toan)
 // @route   GET /api/orders/:code
 // @access  Dang nhap, va phai la chu don
@@ -192,7 +307,9 @@ const getOrderByCode = async (req, res) => {
     try {
         const ma = String(req.params.code || '').toUpperCase().trim();
 
-        const don = await Order.findOne({ code: ma }).populate('course', 'title slug thumbnail price');
+        const don = await Order.findOne({ code: ma })
+            .populate('course', TRUONG_KHOA)
+            .populate('courses', TRUONG_KHOA);
         if (!don) {
             return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
         }
@@ -225,7 +342,8 @@ const getMyOrders = async (req, res) => {
 
         const [ds, tong] = await Promise.all([
             Order.find(loc)
-                .populate('course', 'title slug thumbnail price')
+                .populate('course', TRUONG_KHOA)
+                .populate('courses', TRUONG_KHOA)
                 .sort({ createdAt: -1 })
                 .skip(boQua)
                 .limit(soDong),
@@ -316,14 +434,16 @@ const baoDaChuyenKhoan = async (req, res) => {
 
         let mail = { daGui: false, lyDo: 'chua_cau_hinh' };
         if (laLanDau) {
-            const khoa = await Course.findById(don.course).select('title');
+            // Don gio hang: liet ke du ten de quan tri biet mot lan chuyen nay
+            // tra cho nhung khoa nao.
+            const dsKhoa = await Course.find({ _id: { $in: cacKhoaCuaDon(don) } }).select('title');
             mail = await guiMail(
                 soanMailBaoChuyenKhoan({
                     maDon: don.code,
                     soTien: don.amount,
                     tenHocVien: req.user.name || req.user.email,
                     emailHocVien: req.user.email,
-                    tenKhoa: khoa?.title || 'Khóa học',
+                    tenKhoa: dsKhoa.map((k) => k.title).join(', ') || 'Khóa học',
                     baoLuc: don.daBaoChuyenKhoanLuc,
                     daQuaHan,
                     duongDanQuanTri: process.env.FRONTEND_URL
@@ -351,4 +471,4 @@ const baoDaChuyenKhoan = async (req, res) => {
     }
 };
 
-module.exports = { createOrder, baoDaChuyenKhoan, getOrderByCode, getMyOrders, cancelOrder, dangDon, capNhatNeuHetHan };
+module.exports = { createOrder, createCartOrder, baoDaChuyenKhoan, getOrderByCode, getMyOrders, cancelOrder, dangDon, capNhatNeuHetHan };

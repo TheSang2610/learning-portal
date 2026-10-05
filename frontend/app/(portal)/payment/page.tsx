@@ -12,9 +12,17 @@ import {
   layDonTheoMa,
   baoDaChuyenKhoan,
   taoDonHang,
+  taoDonGioHang,
+  KhoaHocTrongDon,
 } from "@/src/services/order";
 import { getErrorMessage } from "@/src/services/apiHelper";
 import NutMuaBangCoin from "@/src/components/common/BuyWithCoinButton";
+import { useGioHang } from "@/src/hooks/cart";
+import { HIEN_COIN } from "@/src/services/tinhNang";
+
+/** Moi khoa trong don: don gio hang doc `courses`, don mua le chi co `course`. */
+const khoaTrongDon = (don: DonHang): KhoaHocTrongDon[] =>
+  don.courses?.length ? don.courses : don.course ? [don.course] : [];
 
 import styles from "./page.module.scss";
 // Bao lau hoi lai may chu mot lan xem don da duoc xac nhan chua.
@@ -118,6 +126,16 @@ function NoiDungThanhToan() {
     };
   }, [ma, lanTai]);
 
+  // Don da duoc xac nhan thi bo cac khoa do khoi gio. Trang gio hang co y KHONG
+  // xoa luc tao don (nguoi dung co the bo do giua chung), nen day la cho duy
+  // nhat don gio sau khi tien da vao. Khong bo thi lan sau mo gio van thay khoa
+  // da mua, bam thanh toan la bi bao "bạn đã có khóa này".
+  const { bo: boKhoiGio } = useGioHang();
+  useEffect(() => {
+    if (don?.status !== "paid") return;
+    khoaTrongDon(don).forEach((k) => boKhoiGio(k._id));
+  }, [don, boKhoiGio]);
+
   // Dem nguoc tai cho. Chi la hien thi - moc het han that nam o may chu.
   useEffect(() => {
     if (!don || don.status !== "pending") return;
@@ -163,7 +181,13 @@ function NoiDungThanhToan() {
     if (!don?.course) return;
     setDangTaoLai(true);
     try {
-      const { order } = await taoDonHang(don.course._id);
+      // Don gio hang thi tao lai don gio hang voi dung bo khoa do - goi
+      // taoDonHang(don.course) o day la ma moi chi con tinh tien khoa dau.
+      const ds = khoaTrongDon(don);
+      const { order } =
+        ds.length > 1
+          ? await taoDonGioHang(ds.map((k) => k._id))
+          : await taoDonHang(don.course._id);
       router.push(`/payment?code=${order.code}`);
     } catch (e) {
       setLoi(getErrorMessage(e, "Không tạo được mã mới"));
@@ -237,13 +261,29 @@ function NoiDungThanhToan() {
         <div className={styles.box2}>✓</div>
         <h1 className={styles.title}>Thanh toán thành công</h1>
         <p className={styles.text2}>
-          Khóa học <strong>{don.course?.title}</strong> đã được mở cho tài khoản của bạn.
+          {khoaTrongDon(don).length > 1 ? (
+            <>
+              <strong>{khoaTrongDon(don).length} khóa học</strong> đã được mở cho tài
+              khoản của bạn.
+            </>
+          ) : (
+            <>
+              Khóa học <strong>{don.course?.title}</strong> đã được mở cho tài khoản của
+              bạn.
+            </>
+          )}
         </p>
         <Link
-          href={don.course ? `/learn?slug=${don.course.slug}` : "/courses"}
+          href={
+            khoaTrongDon(don).length > 1
+              ? "/user/my-courses"
+              : don.course
+                ? `/learn?slug=${don.course.slug}`
+                : "/courses"
+          }
           className={styles.box3}
         >
-          Vào học ngay
+          {khoaTrongDon(don).length > 1 ? "Tới khóa học của tôi" : "Vào học ngay"}
         </Link>
       </div>
     );
@@ -271,10 +311,16 @@ function NoiDungThanhToan() {
             </button>
           )}
           <Link
-            href={don.course ? `/course?slug=${don.course.slug}` : "/courses"}
+            href={
+              khoaTrongDon(don).length > 1
+                ? "/cart"
+                : don.course
+                  ? `/course?slug=${don.course.slug}`
+                  : "/courses"
+            }
             className={styles.box4}
           >
-            Quay lại khóa học
+            {khoaTrongDon(don).length > 1 ? "Quay lại giỏ hàng" : "Quay lại khóa học"}
           </Link>
         </div>
       </div>
@@ -331,37 +377,54 @@ function NoiDungThanhToan() {
         <h2 id="muc-don-hang" className={styles.heading}>
           Các mục trong đơn hàng
         </h2>
-        <div className={styles.row2}>
-          <div className={styles.row3}>KH</div>
-          <div className={styles.box7}>
-            <h3 className={styles.subheading}>{don.course?.title ?? "Khóa học"}</h3>
-            <p className={styles.text3}>Khóa học</p>
+        {/* Don gio hang co nhieu dong; moi dong la gia cua khoa do. Dong
+            tong (da tru ma giam gia neu co) nam o cau "Bạn cần chuyển" ben tren. */}
+        {khoaTrongDon(don).length > 1 ? (
+          khoaTrongDon(don).map((k) => (
+            <div key={k._id} className={styles.row2}>
+              <div className={styles.row3}>KH</div>
+              <div className={styles.box7}>
+                <h3 className={styles.subheading}>{k.title}</h3>
+                <p className={styles.text3}>Khóa học</p>
+              </div>
+              <p className={styles.text4}>{dinhDangTien(k.price)}</p>
+            </div>
+          ))
+        ) : (
+          <div className={styles.row2}>
+            <div className={styles.row3}>KH</div>
+            <div className={styles.box7}>
+              <h3 className={styles.subheading}>{don.course?.title ?? "Khóa học"}</h3>
+              <p className={styles.text3}>Khóa học</p>
+            </div>
+            <p className={styles.text4}>{dinhDangTien(don.amount)}</p>
           </div>
-          <p className={styles.text4}>{dinhDangTien(don.amount)}</p>
-        </div>
+        )}
       </section>
 
-      {/* Tra bang coin, dat TRUOC khoi QR.
-          Truoc day trang nay chi co mot duong duy nhat la chuyen khoan: hoc vien
-          co san coin trong vi van phai mo app ngan hang roi ngoi cho quan tri
-          doi soat. Nut mua bang coin von chi nam o the ben phai trang khoa hoc,
-          ma nut to tren banner lai di thang sang day nen khong may ai thay no. */}
-      {don.status === "pending" && don.course?._id && (
-        <section className={styles.section2} aria-label="Thanh toán bằng coin">
-          <h2 className={styles.heading2}>Trả bằng coin — mở khóa ngay</h2>
-          <p className={styles.text5}>
-            Không phải chuyển khoản, không phải chờ ban quản trị đối soát.
-          </p>
-          <NutMuaBangCoin
-            courseId={don.course._id}
-            gia={don.amount}
-            khiMuaXong={() => {
-              const slug = don.course?.slug;
-              router.push(slug ? `/learn?slug=${slug}` : "/user/profile");
-            }}
-          />
-        </section>
-      )}
+      {/* Tra bang coin, dat TRUOC khoi QR - chi khi coin dang bat
+          (services/tinhNang.ts). Don gio hang khong co nut nay: nut mua bang
+          coin chi mua duoc mot khoa, dat o day la tra coin cho khoa dau con cac
+          khoa sau van nam trong don cho chuyen khoan. */}
+      {HIEN_COIN &&
+        don.status === "pending" &&
+        don.course?._id &&
+        khoaTrongDon(don).length <= 1 && (
+          <section className={styles.section2} aria-label="Thanh toán bằng coin">
+            <h2 className={styles.heading2}>Trả bằng coin — mở khóa ngay</h2>
+            <p className={styles.text5}>
+              Không phải chuyển khoản, không phải chờ ban quản trị đối soát.
+            </p>
+            <NutMuaBangCoin
+              courseId={don.course._id}
+              gia={don.amount}
+              khiMuaXong={() => {
+                const slug = don.course?.slug;
+                router.push(slug ? `/learn?slug=${slug}` : "/user/profile");
+              }}
+            />
+          </section>
+        )}
 
       {/* Chưa khai báo tài khoản nhận tiền */}
       {ck && !ck.daCauHinh && (

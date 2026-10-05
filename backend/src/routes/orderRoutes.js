@@ -7,6 +7,7 @@ capIdHopLe(router);
 
 const {
     createOrder,
+    createCartOrder,
     getOrderByCode,
     getMyOrders,
     cancelOrder,
@@ -28,6 +29,9 @@ router.get('/my', getMyOrders);
 // @route   POST /api/orders
 // @desc    Tao don cho mot khoa hoc co phi
 router.post('/', createOrder);
+
+// Ca gio hang mot ma QR. Dat TRUOC '/:code' cho de doc, du hai duong khac phuong thuc.
+router.post('/gio-hang', createCartOrder);
 
 // @route   GET /api/orders/:code
 // @desc    Xem don theo ma, dung cho trang thanh toan
