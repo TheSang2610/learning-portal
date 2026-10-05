@@ -1,0 +1,9 @@
+# Vercel CLI KHONG doc .gitignore. Thieu file nay thi `vercel --prod` tai len ca
+# cache cua may dev (.next-dev ~1 GB) va bi tu choi "File size limit exceeded".
+.next
+.next-dev
+node_modules
+.impeccable
+*.tsbuildinfo
+lint-report.json
+eslint-report.json

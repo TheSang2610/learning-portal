@@ -1,65 +1,105 @@
 // File nay do script sinh ra tu class Tailwind cu.
 // Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
 
+/* Bo vien roi thi KHOANG TRANG la thu duy nhat tach hai don vi ra. Nen gap o
+   day phai rong hon han ban cu (16px -> 40px, man rong 24px -> 72px): hep hon
+   thi ten cua don vi nay dinh vao logo cua don vi ke tiep, doc ra mot chuoi
+   lien tuc khong biet dau la mot muc. */
 .row {
   display: flex;
   align-items: center;
-  gap: calc(var(--spacing) * 6);
-  padding-right: calc(var(--spacing) * 6);
+  gap: calc(var(--spacing) * 10);
+  padding-right: calc(var(--spacing) * 10);
 
   @media (min-width: 48rem) {
-    gap: calc(var(--spacing) * 12);
-    padding-right: calc(var(--spacing) * 12);
+    gap: calc(var(--spacing) * 18);
+    padding-right: calc(var(--spacing) * 18);
   }
 }
 
-.row2 {
-  display: flex;
+/* Mot don vi: logo ben trai, ten ben phai. KHONG vien, KHONG nen rieng.
+   Da THU kieu "vien thuoc" (nen trang + vien + bo tron 999px) va bo di: bon
+   vien giong het nhau xep canh nhau doc ra mot day the trang tri, trong khi
+   thu can nhin o day la BON DAU HIEU NHAN DIEN khac nhau. Bo khung di thi cai
+   con lai tren nen chinh la logo, dung thu can con lai. */
+.item {
+  display: inline-flex;
   align-items: center;
-  gap: calc(var(--spacing) * 6);
-
-  @media (min-width: 48rem) {
-    gap: calc(var(--spacing) * 12);
-  }
+  gap: calc(var(--spacing) * 3);
+  flex-shrink: 0;
 }
 
-// Chieu cao 52px va rong toi da 180px phai khop CAO_LOGO / RONG_TOI_DA trong
-// PartnerMarquee.tsx - hai so do dung de uoc toc do chay.
+/* Chieu cao co dinh, be rong tu do - KHONG phai o vuong.
+   Bon logo nay khac han nhau ve ty le: FPT la chu nam ngang, HCMUTE va UTC la
+   phu hieu gan vuong, PTIT la khung do. Nhot ca bon vao o vuong thi chu nam
+   ngang bi thu nho ti xiu de vua chieu ngang, con phu hieu thi vua khit - nhin
+   ra hai co chu khac nhau. Ghim CHIEU CAO thi ca bon nang luong thi giac bang
+   nhau, dung cach cac dai logo that van lam.
+   width: auto di kem height la cach next/image chap nhan cho anh doi ty le ma
+   khong canh bao; bo mot trong hai la console kêu ngay. */
+/* De trang dat duoi logo.
+   DAY LA CACH CHUA MOT LOI DU LIEU, khong phai trang tri. Bon logo trong CSDL
+   khong dong nhat ve nen: HCMUTE la PNG nen trong, UTC co nen kem, FPT nen
+   trang nga, PTITHCM co san mot khung do. Tha thang len nen xam cua dai thi ba
+   cai sau noi ra thanh ba o vuong mau khac nhau - nhin ra anh dan ep.
+   DA THU mix-blend-mode: multiply truoc (khong them the nao ca) va BO: multiply
+   chi lam tan duoc mau TRANG TINH, nen kem cua UTC va trang nga cua FPT van
+   con nguyen. Do o anh chup 2x moi thay, o 1x thi tuong da sach.
+   Dat het len cung mot de trang thi ba cai nen kia tan vao de, ca bon thanh mot
+   bo. Cach dung han la yeu cau ben cung cap gui PNG nen trong, luc do bo de nay
+   di duoc - nhung khong cho duoc dieu do moi hien dung. */
+.logoBox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: 48px;
+  min-width: 48px;
+  padding-inline: calc(var(--spacing) * 3);
+  border-radius: 14px;
+  background-color: #fff;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
+}
+
+/* Ghim CHIEU CAO, be rong tu do - KHONG phai o vuong.
+   Bon logo khac han nhau ve ty le: FPT la chu nam ngang, HCMUTE va UTC la phu
+   hieu gan vuong. Nhot ca bon vao o vuong thi chu nam ngang bi thu ti xiu de
+   vua chieu ngang, con phu hieu thi vua khit - nhin ra hai co chu khac nhau.
+   Ghim chieu cao thi ca bon nang luong thi giac bang nhau.
+   width: auto di kem height la cach next/image chap nhan cho anh doi ty le ma
+   khong canh bao; bo mot trong hai la console keu ngay. */
 .logo {
-  display: block;
-  flex-shrink: 0;
-  height: 40px;
+  height: 28px;
   width: auto;
-  max-width: 140px;
+  max-width: 92px;
   object-fit: contain;
-
-  @media (min-width: 48rem) {
-    height: 52px;
-    max-width: 180px;
-  }
 }
 
-// Vach thang ngan giua hai logo.
-.vach {
-  flex-shrink: 0;
-  width: 1px;
-  height: 32px;
-  background-color: var(--color-slate-300);
-
-  @media (min-width: 48rem) {
-    height: 44px;
-  }
+/* Ten chi lam nhiem vu chu thich cho logo, nen nhe han ban cu (bold 1.15rem ->
+   semibold .95rem, mau muc -> xam). Viet tat nhu PTITHCM hay HCM-UTE khong doan
+   ra duoc tu rieng logo, nen van phai co ten - chi la no khong gianh phan dan. */
+.label {
+  font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+  color: #56607a;
+  font-size: clamp(0.9rem, 1.3vw, 0.95rem);
+  --tw-font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
 }
 
+/* KHONG co duong ke tren/duoi.
+   Ban truoc co border-block 1px slate-200 ca hai canh, cong voi doi mau nen la
+   ba tin hieu chia cat cho cung mot viec. Chi giu mot: sac nen doi nhe tu trang
+   cua phan mo dau sang #f6f7fb. Bay nhieu la du thay ranh gioi, va khong cat
+   ngang trang bang hai net ke.
+   #f6f7fb pha mot chut xanh tim de noi voi mau tim cua phan mo dau ngay tren,
+   thay vi xam trung tinh. */
 .section {
-  border-block-style: var(--tw-border-style);
-  border-block-width: 1px;
-  border-color: var(--color-slate-200);
-  background-color: var(--color-slate-50);
-  padding-block: calc(var(--spacing) * 5);
+  background-color: #f6f7fb;
+  padding-block: calc(var(--spacing) * 9);
 
   @media (min-width: 48rem) {
-    padding-block: calc(var(--spacing) * 8);
+    padding-block: calc(var(--spacing) * 12);
   }
 }
 
@@ -68,69 +108,38 @@
   overflow: hidden;
 }
 
-.floating {
+/* Hai lop mo hai dau, de logo troi vao / troi ra chu khong bi cat cut giua
+   chung. Mau PHAI trung voi nen cua .section - lech mot chut la lo ra hai vet
+   sang o hai mep. Doi nen dai thi doi ca hai cho nay.
+   Viet thang bang linear-gradient thay cho bo bien --tw-gradient-* do script
+   sinh ra: o day chi can mot dai mau don gian, khong can ca bo may cua Tailwind. */
+.floating,
+.floating2 {
   pointer-events: none;
   position: absolute;
-  inset-block: calc(var(--spacing) * 0);
-  left: calc(var(--spacing) * 0);
+  inset-block: 0;
   z-index: 2;
   width: calc(var(--spacing) * 12);
-  --tw-gradient-position: to right;
-  background-image: linear-gradient(var(--tw-gradient-stops));
-  --tw-gradient-from: var(--color-slate-50);
-  --tw-gradient-stops: var(
-    --tw-gradient-via-stops,
-    var(--tw-gradient-position),
-    var(--tw-gradient-from) var(--tw-gradient-from-position),
-    var(--tw-gradient-to) var(--tw-gradient-to-position)
-  );
-  --tw-gradient-to: transparent;
-
-  @supports (background-image: linear-gradient(in lab, red, red)) {
-    --tw-gradient-position: to right in oklab;
-  }
 
   @media (min-width: 48rem) {
     width: calc(var(--spacing) * 36);
   }
 }
 
+.floating {
+  left: 0;
+  background-image: linear-gradient(to right, #f6f7fb, rgb(246 247 251 / 0));
+}
+
 .floating2 {
-  pointer-events: none;
-  position: absolute;
-  inset-block: calc(var(--spacing) * 0);
-  right: calc(var(--spacing) * 0);
-  z-index: 2;
-  width: calc(var(--spacing) * 12);
-  --tw-gradient-position: to left;
-  background-image: linear-gradient(var(--tw-gradient-stops));
-  --tw-gradient-from: var(--color-slate-50);
-  --tw-gradient-stops: var(
-    --tw-gradient-via-stops,
-    var(--tw-gradient-position),
-    var(--tw-gradient-from) var(--tw-gradient-from-position),
-    var(--tw-gradient-to) var(--tw-gradient-to-position)
-  );
-  --tw-gradient-to: transparent;
-
-  @supports (background-image: linear-gradient(in lab, red, red)) {
-    --tw-gradient-position: to left in oklab;
-  }
-
-  @media (min-width: 48rem) {
-    width: calc(var(--spacing) * 36);
-  }
+  right: 0;
+  background-image: linear-gradient(to left, #f6f7fb, rgb(246 247 251 / 0));
 }
 
 .row3 {
   display: flex;
   width: max-content;
   animation: troi-ngang var(--nhip) linear infinite;
-
-  // Re chuot vao thi dung lai de nhin ro logo.
-  &:hover {
-    animation-play-state: paused;
-  }
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;

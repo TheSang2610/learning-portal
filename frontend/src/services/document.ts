@@ -333,7 +333,14 @@ export const documentService = {
     if (params?.id) sp.append("id", params.id);
     if (params?.limit) sp.append("limit", String(params.limit));
     const qs = sp.toString() ? `?${sp.toString()}` : "";
-    return apiRequest(`/documents/goi-y${qs}`, { method: "GET" });
+    const kq: RecommendationResponse = await apiRequest(`/documents/goi-y${qs}`, {
+      method: "GET",
+    });
+    // Moi duong tra tai lieu ra deu phai qua chuanHoaTaiLieu, khong chi
+    // getDocuments. Bai kieu blog co the khong co `files` (khong kem file) -
+    // the TheTaiLieuDoc doc `doc.files.length` la sap ca trang. Loi that
+    // 04/10/2026 o hang "Xem gần đây" cua /share-document/all-document.
+    return { ...kq, documents: (kq.documents ?? []).map(chuanHoaTaiLieu) };
   },
 
   /**
@@ -354,7 +361,11 @@ export const documentService = {
 
   /** Lich su xem/tai cua chinh minh. Bat buoc dang nhap. */
   getMyHistory: async (): Promise<{ items: HistoryItem[] }> => {
-    return apiRequest("/documents/lich-su", { method: "GET" });
+    const kq: { items: HistoryItem[] } = await apiRequest("/documents/lich-su", {
+      method: "GET",
+    });
+    // Xem ghi chu o getRecommendations.
+    return { ...kq, items: (kq.items ?? []).map(chuanHoaTaiLieu) };
   },
 
   /** Xoa toan bo lich su cua chinh minh (ca lich su tim). */
@@ -388,7 +399,11 @@ export const documentService = {
     if (params?.page) sp.append("page", String(params.page));
     if (params?.limit) sp.append("limit", String(params.limit));
     const qs = sp.toString() ? `?${sp.toString()}` : "";
-    return apiRequest(`/documents/cua-toi${qs}`, { method: "GET" });
+    const kq: DocumentListResponse = await apiRequest(`/documents/cua-toi${qs}`, {
+      method: "GET",
+    });
+    // Xem ghi chu o getRecommendations.
+    return { ...kq, documents: (kq.documents ?? []).map(chuanHoaTaiLieu) };
   },
 
   // ----------------------------- quan tri -----------------------------
@@ -404,7 +419,11 @@ export const documentService = {
     if (params?.limit) sp.append("limit", String(params.limit));
     if (params?.q?.trim()) sp.append("q", params.q.trim());
     const qs = sp.toString() ? `?${sp.toString()}` : "";
-    return apiRequest(`/documents/quan-tri${qs}`, { method: "GET" });
+    const kq: DocumentListResponse = await apiRequest(`/documents/quan-tri${qs}`, {
+      method: "GET",
+    });
+    // Xem ghi chu o getRecommendations.
+    return { ...kq, documents: (kq.documents ?? []).map(chuanHoaTaiLieu) };
   },
 
   /** An / hien tai lieu. Chi admin. */
