@@ -40,6 +40,7 @@ import {
 import NutMuaBangCoin from "@/src/components/common/BuyWithCoinButton";
 import ONhapMaGiamGia from "@/src/components/vouchers/VoucherInput";
 import { giaRaCoin } from "@/src/services/coin.api";
+import { HIEN_COIN } from "@/src/services/tinhNang";
 import GoiYKhoaHoc from "@/src/components/courses/CourseSuggestions";
 import { useGioHang } from "@/src/hooks/cart";
 import { ShoppingCart, Check } from "lucide-react";
@@ -468,7 +469,7 @@ function CourseDetailPageContent() {
 
   const instructorName =
     typeof course.instructor === "object"
-      ? course.instructor.name
+      ? course.instructor?.name || "Expert Instructor"
       : course.instructor || "Expert Instructor";
 
   return (
@@ -544,7 +545,11 @@ function CourseDetailPageContent() {
                       ? `Mua khóa học - ${dinhDangTien(course.price ?? 0)}`
                       : "Đăng ký học miễn phí"}
                   <span className={styles.label3}>
-                    {(course.price ?? 0) > 0 ? "Coin hoặc chuyển khoản" : "Bắt đầu ngay"}
+                    {(course.price ?? 0) > 0
+                      ? HIEN_COIN
+                        ? "Coin hoặc chuyển khoản"
+                        : "Chuyển khoản qua mã QR"
+                      : "Bắt đầu ngay"}
                   </span>
                 </button>
               )}
@@ -965,7 +970,7 @@ function CourseDetailPageContent() {
                       quan tri doi chieu. Ai khong du coin thi component nay tu
                       bao thieu bao nhieu, va nut chuyen khoan ben duoi van con
                       nguyen. */}
-                  {(course.price ?? 0) > 0 && (
+                  {HIEN_COIN && (course.price ?? 0) > 0 && (
                     <NutMuaBangCoin
                       courseId={course._id}
                       gia={course.price ?? 0}

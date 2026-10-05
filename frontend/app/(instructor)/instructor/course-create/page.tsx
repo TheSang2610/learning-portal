@@ -90,9 +90,11 @@ export default function InstructorCreateCoursePage() {
   // Bu them: truong `provider` nay lay tu ho so DAY DU, con ban cu doc
   // localStorage thi than phan hoi luc dang nhap khong he co no - tuc la o
   // nay truoc gio chua bao gio duoc dien tu dong.
+  // typeof null cung la "object": giang vien chua gan doi tac thi provider la
+  // null, phai dung ?. chu khong duoc doc thang ._id.
   const doiTacHoSo =
     typeof nguoiDung?.provider === "object"
-      ? nguoiDung.provider._id
+      ? nguoiDung.provider?._id
       : nguoiDung?.provider;
 
   if (doiTacHoSo && daDien !== doiTacHoSo) {
