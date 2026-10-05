@@ -3,7 +3,12 @@
 import { Suspense, useEffect, useState } from "react";
 import { getErrorMessage } from "@/src/services/apiHelper";
 import { useSearchParams, useRouter } from "next/navigation";
-import { getLessonById, updateLesson, deleteLesson } from "@/src/services/lesson.api";
+import {
+  getLessonById,
+  updateLesson,
+  deleteLesson,
+  uploadVideoKin,
+} from "@/src/services/lesson.api";
 
 import styles from "./page.module.scss";
 function AdminEditLessonPageContent() {
@@ -23,6 +28,11 @@ function AdminEditLessonPageContent() {
   const [videoUrl, setVideoUrl] = useState("");
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string>("");
+  // Video dang o kho kin: `videoUrl` luc tai trang la link ky chi de phat.
+  const [videoKin, setVideoKin] = useState(false);
+  const [linkKinBanDau, setLinkKinBanDau] = useState("");
+  // % tai video len kho kin; null = khong dang tai.
+  const [tienDo, setTienDo] = useState<number | null>(null);
   const [order, setOrder] = useState(1);
 
   // Gọi API lấy dữ liệu bài học khi trang vừa load
@@ -35,6 +45,8 @@ function AdminEditLessonPageContent() {
         setTitle(lesson.title || "");
         setContent(lesson.content || "");
         setVideoUrl(lesson.videoUrl || "");
+        setVideoKin(Boolean(lesson.videoKin));
+        setLinkKinBanDau(lesson.videoKin ? lesson.videoUrl || "" : "");
         setOrder(lesson.order || 1);
       } catch (error) {
         console.error(error);
@@ -96,11 +108,15 @@ function AdminEditLessonPageContent() {
       formData.append("content", content);
       formData.append("order", String(order));
 
-      // 🎯 Nếu có chọn file video mới, append vào FormData với key "video"
+      // File moi: tai THANG len kho kin Cloudinary roi chi gui ma video - xem
+      // uploadVideoKin. Video kin cu ma khong doi gi thi KHONG gui videoUrl:
+      // o do dang chua link ky chi de phat, gui len la mat video kin (backend
+      // cung tu bo qua, day la chot thu hai).
       if (videoFile) {
-        formData.append("video", videoFile);
-      } else if (videoUrl) {
-        // 🎯 Nếu không upload file, dùng link video được dán
+        setTienDo(0);
+        const maVideo = await uploadVideoKin(videoFile, setTienDo);
+        formData.append("videoPublicId", maVideo);
+      } else if (videoUrl && !(videoKin && videoUrl === linkKinBanDau)) {
         formData.append("videoUrl", videoUrl);
       }
 
@@ -113,6 +129,7 @@ function AdminEditLessonPageContent() {
       alert(getErrorMessage(error, "Failed to update lesson"));
     } finally {
       setSubmitting(false);
+      setTienDo(null);
     }
   };
 
@@ -286,7 +303,11 @@ function AdminEditLessonPageContent() {
               disabled={submitting || deleting}
               className={styles.button5}
             >
-              {submitting ? "💾 Saving..." : "✓ Save Changes"}
+              {tienDo !== null
+                ? `Uploading video... ${tienDo}%`
+                : submitting
+                  ? "💾 Saving..."
+                  : "✓ Save Changes"}
             </button>
           </div>
         </form>

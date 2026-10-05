@@ -5,6 +5,22 @@ const QuizAttempt = require('../models/QuizAttempt');
 const { protect } = require('../middlewares/authMiddleware');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
 const { duocXemNoiDung } = require('../utils/contentAccess');
+const { idVideoHopLe, ganLinkPhat, thamSoUploadVideo } = require('../utils/privateVideo');
+
+// @desc    Chu ky de trinh duyet upload video THANG len kho kin Cloudinary
+// @route   POST /api/lessons/chu-ky-video
+// @access  giang vien / admin
+//
+// Video bai giang khong di qua backend: Vercel chi nhan request ~4.5 MB nen
+// upload qua day thi video that (vai tram MB) hong tren ban production.
+const layChuKyVideo = async (req, res) => {
+    try {
+        return res.json(thamSoUploadVideo());
+    } catch (error) {
+        console.error('layChuKyVideo:', error.message);
+        return res.status(503).json({ message: 'Máy chủ chưa cấu hình kho lưu video' });
+    }
+};
 
 // Hàm helper chuyển đổi Tiếng Việt có dấu thành Slug gọn đẹp
 const slugify = (str) => {
@@ -59,8 +75,19 @@ const addLesson = async (req, res) => {
             }
         }
 
+        // Video trinh duyet da upload THANG len kho kin (utils/privateVideo.js).
+        // Co ma nay thi bo videoUrl: bai hoc chi co mot nguon video.
+        let videoPublicId = '';
+        if (req.body.videoPublicId) {
+            if (!idVideoHopLe(req.body.videoPublicId)) {
+                return res.status(400).json({ message: 'Mã video không hợp lệ, vui lòng tải video lên lại' });
+            }
+            videoPublicId = req.body.videoPublicId;
+            videoUrl = '';
+        }
+
         const lesson = await Lesson.create({
-            courseId, title, slug, content, videoUrl, documentUrl, order
+            courseId, title, slug, content, videoUrl, videoPublicId, documentUrl, order
         });
 
         // Cập nhật mảng lessons trong Course model
@@ -68,7 +95,7 @@ const addLesson = async (req, res) => {
             $push: { lessons: lesson._id }
         });
 
-        res.status(201).json(lesson);
+        res.status(201).json(ganLinkPhat(lesson));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -95,7 +122,7 @@ const getLessonById = async (req, res) => {
             });
         }
 
-        res.status(200).json(lesson);
+        res.status(200).json(ganLinkPhat(lesson));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -128,7 +155,7 @@ const getLessonBySlug = async (req, res) => {
             });
         }
 
-        res.status(200).json(lesson);
+        res.status(200).json(ganLinkPhat(lesson));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -149,6 +176,17 @@ const updateLesson = async (req, res) => {
         const course = await Course.findById(lesson.courseId);
         if (course && course.instructor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
             return res.status(403).json({ message: 'Bạn không có quyền chỉnh sửa bài học này' });
+        }
+
+        // Form sua bai nhan videoUrl la LINK KY cua video kho kin (ganLinkPhat).
+        // Bam luu khong doi gi thi form gui nguyen link do len - nhan no la luu
+        // mot link ky thanh link cong khai va mat videoPublicId. Bo qua no.
+        if (
+            lesson.videoPublicId &&
+            typeof req.body.videoUrl === 'string' &&
+            req.body.videoUrl.includes('/video/authenticated/')
+        ) {
+            delete req.body.videoUrl;
         }
 
         // XỬ LÝ UPLOAD FILE KHI CẬP NHẬT
@@ -179,11 +217,27 @@ const updateLesson = async (req, res) => {
             lesson.slug = slugify(title); 
         }
         
+        // Nguon video moi: ma kho kin thang tu trinh duyet, HOAC file / link
+        // moi thay cho video kin cu. Bai hoc chi giu mot nguon.
+        const idMoi = req.body.videoPublicId;
+        if (typeof idMoi === 'string' && idMoi) {
+            if (!idVideoHopLe(idMoi)) {
+                return res.status(400).json({ message: 'Mã video không hợp lệ, vui lòng tải video lên lại' });
+            }
+            lesson.videoPublicId = idMoi;
+            lesson.videoUrl = '';
+        } else if (
+            req.files?.video?.[0] ||
+            (typeof req.body.videoUrl === 'string' && req.body.videoUrl.trim())
+        ) {
+            lesson.videoPublicId = '';
+        }
+
         lesson.content = content !== undefined ? content : lesson.content;
         lesson.order = order !== undefined ? order : lesson.order;
 
         const updatedLesson = await lesson.save();
-        res.status(200).json(updatedLesson);
+        res.status(200).json(ganLinkPhat(updatedLesson));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -218,4 +272,4 @@ const deleteLesson = async (req, res) => {
     }
 };
 
-module.exports = { addLesson, getLessonById, getLessonBySlug, updateLesson, deleteLesson };
+module.exports = { addLesson, getLessonById, getLessonBySlug, updateLesson, deleteLesson, layChuKyVideo };

@@ -5,6 +5,7 @@ const { taoGhiDanh } = require('../utils/enrollment');
 const User = require('../models/User');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
 const { duocXemNoiDung, catNoiDung } = require('../utils/contentAccess');
+const { ganLinkPhat } = require('../utils/privateVideo');
 const Enrollment = require('../models/Enrollment');
 const Category = require('../models/categoryModel');
 const { xepHangGoiY } = require('../utils/rankSuggestions');
@@ -16,9 +17,14 @@ const { phanTrang, timGan } = require('../utils/queryParams');
 // nguoi ta dang ky. Chi cat dung phan noi dung.
 const traKhoaTheoQuyen = async (khoa, nguoiDung, res) => {
     const duoc = await duocXemNoiDung(khoa, nguoiDung);
-    if (duoc) return res.json(khoa);
-
     const doi = khoa.toObject();
+
+    // Duoc xem: video kho kin doi sang link ky (utils/privateVideo.js).
+    if (duoc) {
+        doi.lessons = (doi.lessons || []).map((b) => ganLinkPhat(b));
+        return res.json(doi);
+    }
+
     doi.lessons = (doi.lessons || []).map(catNoiDung);
     return res.json(doi);
 };
@@ -360,8 +366,9 @@ const enrollInCourse = async (req, res) => {
         // van goi thang duong nay bang curl.
         if (course.price > 0) {
             const Order = require('../models/Order');
+            // donChuaKhoa: khoa co the nam trong don gio hang (truong `courses`).
             const donDaTra = await Order.findOne({
-                course: courseId,
+                ...require('../utils/orderCourses').donChuaKhoa(courseId),
                 student: req.user._id,
                 status: 'paid'
             });

@@ -20,7 +20,9 @@
 const Enrollment = require('../models/Enrollment');
 
 // Cac truong chi nguoi co quyen moi duoc nhan.
-const TRUONG_KIN = ['videoUrl', 'content', 'documentUrl'];
+// videoPublicId: ma video o kho kin - khong lo cho nguoi chua mua, va nguoi da
+// mua cung chi nhan link ky (utils/privateVideo.ganLinkPhat), khong nhan ma.
+const TRUONG_KIN = ['videoUrl', 'videoPublicId', 'content', 'documentUrl'];
 
 /**
  * @param {object} khoa   Tai lieu Course (co _id va instructor)

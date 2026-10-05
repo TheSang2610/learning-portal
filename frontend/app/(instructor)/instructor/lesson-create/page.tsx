@@ -15,7 +15,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-import { addLesson } from "@/src/services/lesson.api";
+import { addLesson, uploadVideoKin } from "@/src/services/lesson.api";
 import { getCourseById } from "@/src/services/course";
 
 import styles from "./page.module.scss";
@@ -25,6 +25,8 @@ function InstructorLessonCreatePageContent() {
   const courseId = params.get("courseId") || "";
 
   const [submitting, setSubmitting] = useState(false);
+  // % tai video len kho kin; null = khong dang tai.
+  const [tienDo, setTienDo] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "", // Tren backend truong nay la 'content'
@@ -88,10 +90,14 @@ function InstructorLessonCreatePageContent() {
         dataToSend.append("duration", String(Math.round(formData.duration * 60)));
       }
 
-      // Co tep thi uu tien tep (backend day len Cloudinary roi lay duong dan);
-      // khong co tep moi dung duong dan da dan san.
+      // Co tep thi uu tien tep: trinh duyet tai THANG len kho kin Cloudinary
+      // roi chi gui ma video (videoPublicId). Truoc day gui file qua backend -
+      // hong voi video that tren Vercel (gioi han ~4.5 MB moi request), va video
+      // nam o che do cong khai. Xem uploadVideoKin.
       if (videoFile) {
-        dataToSend.append("video", videoFile);
+        setTienDo(0);
+        const maVideo = await uploadVideoKin(videoFile, setTienDo);
+        dataToSend.append("videoPublicId", maVideo);
       } else if (formData.videoUrl.trim()) {
         dataToSend.append("videoUrl", formData.videoUrl.trim());
       }
@@ -114,6 +120,7 @@ function InstructorLessonCreatePageContent() {
       );
     } finally {
       setSubmitting(false);
+      setTienDo(null);
     }
   };
 
@@ -191,7 +198,7 @@ function InstructorLessonCreatePageContent() {
             {videoFile && (
               <p className={styles.text4}>
                 Đã chọn <b>{videoFile.name}</b> — tệp này sẽ được dùng thay cho ô link ở
-                trên.{" "}
+                trên. Video được lưu kín: chỉ học viên đã mua khóa mới xem được.{" "}
                 <button
                   type="button"
                   onClick={() => setVideoFile(null)}
@@ -292,7 +299,11 @@ function InstructorLessonCreatePageContent() {
               Hủy bỏ
             </Link>
             <button type="submit" disabled={submitting} className={styles.button2}>
-              {submitting ? "Đang tạo..." : "Xác nhận thêm bài học"}
+              {tienDo !== null
+                ? `Đang tải video lên... ${tienDo}%`
+                : submitting
+                  ? "Đang tạo..."
+                  : "Xác nhận thêm bài học"}
             </button>
           </div>
         </form>

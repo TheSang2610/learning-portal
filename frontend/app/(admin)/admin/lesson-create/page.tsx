@@ -14,7 +14,7 @@ import {
   ListOrdered,
 } from "lucide-react";
 
-import { addLesson } from "@/src/services/lesson.api";
+import { addLesson, uploadVideoKin } from "@/src/services/lesson.api";
 import { getCourseById } from "@/src/services/course";
 
 import styles from "./page.module.scss";
@@ -24,6 +24,8 @@ function AdminLessonCreatePageContent() {
   const courseId = params.get("courseId") || "";
 
   const [submitting, setSubmitting] = useState(false);
+  // % tai video len kho kin; null = khong dang tai.
+  const [tienDo, setTienDo] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "", // Tren backend truong nay la 'content'
@@ -87,10 +89,12 @@ function AdminLessonCreatePageContent() {
         dataToSend.append("duration", String(Math.round(formData.duration * 60)));
       }
 
-      // Co tep thi uu tien tep (backend day len Cloudinary roi lay duong dan);
-      // khong co tep moi dung duong dan da dan san.
+      // Co tep thi uu tien tep: tai THANG len kho kin Cloudinary roi chi gui ma
+      // video - xem uploadVideoKin va trang instructor/lesson-create.
       if (videoFile) {
-        dataToSend.append("video", videoFile);
+        setTienDo(0);
+        const maVideo = await uploadVideoKin(videoFile, setTienDo);
+        dataToSend.append("videoPublicId", maVideo);
       } else if (formData.videoUrl.trim()) {
         dataToSend.append("videoUrl", formData.videoUrl.trim());
       }
@@ -113,6 +117,7 @@ function AdminLessonCreatePageContent() {
       );
     } finally {
       setSubmitting(false);
+      setTienDo(null);
     }
   };
 
@@ -276,7 +281,11 @@ function AdminLessonCreatePageContent() {
               Hủy bỏ
             </Link>
             <button type="submit" disabled={submitting} className={styles.button2}>
-              {submitting ? "Đang tạo..." : "Xác nhận thêm bài học"}
+              {tienDo !== null
+                ? `Đang tải video lên... ${tienDo}%`
+                : submitting
+                  ? "Đang tạo..."
+                  : "Xác nhận thêm bài học"}
             </button>
           </div>
         </form>

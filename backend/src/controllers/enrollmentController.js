@@ -1,3 +1,4 @@
+const { ganLinkPhat } = require('../utils/privateVideo');
 const Enrollment = require('../models/Enrollment');
 const Course = require('../models/Course');
 const { taoGhiDanh } = require('../utils/enrollment');
@@ -34,7 +35,7 @@ const getEnrollmentByCourse = async (req, res) => {
             .populate('course')
             .populate({
                 path: 'lessonProgress.lesson',
-                select: 'title duration order content videoUrl'
+                select: 'title duration order content videoUrl videoPublicId'
             });
 
         // 🎯 SỬA CHỖ NÀY: Trả về status 200 thay vì 404
@@ -47,9 +48,15 @@ const getEnrollmentByCourse = async (req, res) => {
         }
 
         // Nếu đã đăng ký, trả về thông tin enrollment và đính kèm thêm cờ isEnrolled: true
+        // Video kho kin -> link ky, khong lo videoPublicId (utils/privateVideo.js).
+        // Den day chac chan da ghi danh nen duoc xem.
+        const doi = enrollment.toObject();
+        doi.lessonProgress = (doi.lessonProgress || []).map((p) =>
+            p && p.lesson && typeof p.lesson === 'object' ? { ...p, lesson: ganLinkPhat(p.lesson) } : p
+        );
         res.json({
             isEnrolled: true,
-            ...enrollment.toObject() // Trải phẳng dữ liệu cũ của bạn ra
+            ...doi // Trải phẳng dữ liệu cũ của bạn ra
         });
 
     } catch (error) {
@@ -379,8 +386,9 @@ const enrollInCourse = async (req, res) => {
         // khong ai goi - chan mot ben ma quen ben kia thi coi nhu khong chan.
         if (course.price > 0) {
             const Order = require('../models/Order');
+            // donChuaKhoa: khoa co the nam trong don gio hang (truong `courses`).
             const donDaTra = await Order.findOne({
-                course: courseId,
+                ...require('../utils/orderCourses').donChuaKhoa(courseId),
                 student: req.user._id,
                 status: 'paid'
             });

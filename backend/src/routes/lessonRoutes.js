@@ -10,7 +10,8 @@ const {
     getLessonById, 
     getLessonBySlug, 
     updateLesson,
-    deleteLesson 
+    deleteLesson,
+    layChuKyVideo
 } = require('../controllers/lessonController');
 
 const { protect, instructor } = require('../middlewares/authMiddleware');
@@ -24,6 +25,9 @@ router.route('/:id')
     .put(protect, instructor, uploadLessonFiles, updateLesson)
     .delete(protect, instructor, deleteLesson); 
 
-router.post('/', protect, instructor, uploadLessonFiles, addLesson); 
+router.post('/', protect, instructor, uploadLessonFiles, addLesson);
+
+// Chu ky de trinh duyet upload video thang len kho kin - xem utils/privateVideo.js.
+router.post('/chu-ky-video', protect, instructor, layChuKyVideo);
 
 module.exports = router;
