@@ -15,15 +15,15 @@
 // Ma ngan hang theo danh sach cua VietQR (MB, VCB, TCB, ACB, BIDV, VPB...).
 // Xem day du o https://api.vietqr.io/v2/banks. BIDV con co ma BIN la 970418,
 // dung ma nao cung duoc.
-const NGAN_HANG = process.env.NGAN_HANG || 'BIDV';
-const SO_TAI_KHOAN = process.env.SO_TAI_KHOAN || '1810408755';
+const BANK = process.env.NGAN_HANG || 'BIDV';
+const ACCOUNT_NUMBER = process.env.SO_TAI_KHOAN || '1810408755';
 
 // VietQR in ten chu tai khoan len anh, va ngan hang doi chieu KHONG DAU chu in
 // hoa - go co dau vao thi anh hien sai chinh ta so voi ten that tren tai khoan.
-const TEN_TAI_KHOAN = process.env.TEN_TAI_KHOAN || 'NGUYEN THE SANG';
+const ACCOUNT_NAME = process.env.TEN_TAI_KHOAN || 'NGUYEN THE SANG';
 
 /** Da khai bao du de sinh QR chua? Thieu mot cai la khong sinh duoc. */
-const daCauHinh = () => Boolean(NGAN_HANG && SO_TAI_KHOAN && TEN_TAI_KHOAN);
+const isConfigured = () => Boolean(BANK && ACCOUNT_NUMBER && ACCOUNT_NAME);
 
 /**
  * Dia chi anh QR do VietQR sinh ra.
@@ -35,13 +35,13 @@ const daCauHinh = () => Boolean(NGAN_HANG && SO_TAI_KHOAN && TEN_TAI_KHOAN);
  * Tra ve null khi chua cau hinh, de tang tren con biet ma bao cho nguoi dung
  * thay vi hien mot anh vo.
  */
-const anhQR = ({ soTien, noiDung }) => {
-    if (!daCauHinh()) return null;
+const qrImage = ({ soTien: amount, noiDung: content }) => {
+    if (!isConfigured()) return null;
 
     const tham = new URLSearchParams({
-        accountName: TEN_TAI_KHOAN,
-        amount: String(Math.round(Number(soTien) || 0)),
-        addInfo: String(noiDung || '')
+        accountName: ACCOUNT_NAME,
+        amount: String(Math.round(Number(amount) || 0)),
+        addInfo: String(content || '')
     });
 
     // "compact2" in ten chu tai khoan, so tai khoan va SO TIEN ngay tren anh,
@@ -51,18 +51,18 @@ const anhQR = ({ soTien, noiDung }) => {
     // nam trong du lieu ma QR de app ngan hang tu dien vao. Nen trang thanh
     // toan van phai hien ma don bang chu kem nut sao chep, cho nguoi khong
     // quet duoc QR: thieu ma do thi tien ve toi noi ma khong khop don nao.
-    return `https://img.vietqr.io/image/${NGAN_HANG}-${SO_TAI_KHOAN}-compact2.jpg?${tham}`;
+    return `https://img.vietqr.io/image/${BANK}-${ACCOUNT_NUMBER}-compact2.jpg?${tham}`;
 };
 
 /** Phan thong tin chuyen khoan gui cho giao dien. Khong co gi bi mat o day. */
-const thongTinChuyenKhoan = ({ soTien, noiDung }) => ({
-    nganHang: NGAN_HANG,
-    soTaiKhoan: SO_TAI_KHOAN,
-    tenTaiKhoan: TEN_TAI_KHOAN,
-    soTien,
-    noiDung,
-    anhQR: anhQR({ soTien, noiDung }),
-    daCauHinh: daCauHinh()
+const transferInfo = ({ soTien: amount, noiDung: content }) => ({
+    nganHang: BANK,
+    soTaiKhoan: ACCOUNT_NUMBER,
+    tenTaiKhoan: ACCOUNT_NAME,
+    soTien: amount,
+    noiDung: content,
+    anhQR: qrImage({ soTien: amount, noiDung: content }),
+    daCauHinh: isConfigured()
 });
 
-module.exports = { daCauHinh, anhQR, thongTinChuyenKhoan };
+module.exports = { daCauHinh: isConfigured, anhQR: qrImage, transferInfo };

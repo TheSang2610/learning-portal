@@ -16,12 +16,6 @@ export interface VerifyCertificateResponse {
   };
 }
 
-export interface LeaderboardRow {
-  student: { _id: string; name: string; avatar?: string };
-  totalPoints: number;
-  achievements: number;
-}
-
 export interface Certificate {
   _id: string;
   course: {
@@ -54,25 +48,6 @@ export interface Certificate {
   updatedAt: string;
 }
 
-export interface Achievement {
-  _id: string;
-  student: string;
-  type: string;
-  title: string;
-  description: string;
-  badgeImage: string;
-  relatedCourse?: {
-    _id: string;
-    title: string;
-  };
-  level: "bronze" | "silver" | "gold" | "platinum";
-  points: number;
-  isPublic: boolean;
-  unlockedAt: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 /**
  * Địa chỉ tệp PDF của một chứng nhận.
  *
@@ -81,7 +56,7 @@ export interface Achievement {
  * là ai. Nối thẳng sang tên miền backend thì chứng nhận riêng tư sẽ trả 403 vì
  * cookie không được gửi kèm.
  */
-export const duongDanPdfChungChi = (id: string) => `/api/certificates/${id}/pdf`;
+export const certificatePdfUrl = (id: string) => `/api/certificates/${id}/pdf`;
 
 export const certificateService = {
   createCertificate: async (enrollmentId: string): Promise<Certificate> => {
@@ -115,29 +90,5 @@ export const certificateService = {
 
   getUserPublicCertificates: async (userId: string): Promise<Certificate[]> => {
     return apiRequest(`/certificates/user/${userId}`);
-  },
-};
-
-export const achievementService = {
-  getMyAchievements: async (): Promise<{
-    totalAchievements: number;
-    totalPoints: number;
-    achievements: Achievement[];
-  }> => {
-    return apiRequest("/certificates/achievements/my-achievements");
-  },
-
-  getUserPublicAchievements: async (
-    userId: string,
-  ): Promise<{
-    totalAchievements: number;
-    totalPoints: number;
-    achievements: Achievement[];
-  }> => {
-    return apiRequest(`/certificates/achievements/user/${userId}`);
-  },
-
-  getLeaderboard: async (limit: number = 10): Promise<LeaderboardRow[]> => {
-    return apiRequest(`/certificates/achievements/leaderboard?limit=${limit}`);
   },
 };

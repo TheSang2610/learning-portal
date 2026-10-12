@@ -13,10 +13,10 @@ const mongoose = require('mongoose');
  * (xem ghi chu o models/DocumentSubject.js).
  */
 
-// Bieu tuong cho phep - khop bang BIEU_TUONG o frontend
+// Bieu tuong cho phep - khop bang ICONS o frontend
 // (src/components/document/DocumentCategories.tsx). Luu ten chu khong luu SVG:
 // admin chon trong danh sach, khong dan duoc ma tuy y vao trang.
-const BIEU_TUONG = [
+const ICONS = [
     'sach', 'luat', 'kinh-doanh', 'kinh-te', 'he-thong', 'lap-trinh', 'toan',
     'khoa-hoc', 'y-te', 'ngoai-ngu', 'chinh-tri', 'ky-thuat', 'thiet-ke', 'giao-duc',
 ];
@@ -28,7 +28,7 @@ const documentCategorySchema = new mongoose.Schema({
         trim: true,
         maxlength: 60,
     },
-    // Khoa chuan hoa (chuanHoaMon) - dung tren dia chi ?nhom= va de chan trung.
+    // Khoa chuan hoa (normalizeSubject) - dung tren dia chi ?nhom= va de chan trung.
     key: {
         type: String,
         required: true,
@@ -36,7 +36,7 @@ const documentCategorySchema = new mongoose.Schema({
     },
     bieuTuong: {
         type: String,
-        enum: BIEU_TUONG,
+        enum: ICONS,
         default: 'sach',
     },
     // Thu tu hien, nho truoc. Bang nhau thi theo ten.
@@ -47,4 +47,4 @@ const documentCategorySchema = new mongoose.Schema({
 }, { timestamps: true });
 
 module.exports = mongoose.model('DocumentCategory', documentCategorySchema);
-module.exports.BIEU_TUONG = BIEU_TUONG;
+module.exports.ICONS = ICONS;

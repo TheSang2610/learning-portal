@@ -9,10 +9,10 @@
  * Nen cho nay lam theo huong khac: viet mot lop bao mong, ai co khoa gi thi cam
  * khoa do. Doi hang chi la sua .env, khong dong vao ma nguon:
  *
- *   AI_NHA_CUNG_CAP=gemini   Google AI Studio - co goi MIEN PHI that
- *   AI_NHA_CUNG_CAP=groq     Groq - cung co goi mien phi, chay nhanh
- *   AI_NHA_CUNG_CAP=openai   tra phi theo luot dung
- *   AI_NHA_CUNG_CAP=claude   tra phi, chat luong cao nhat trong bon
+ *   AI_PROVIDER=gemini   Google AI Studio - co goi MIEN PHI that
+ *   AI_PROVIDER=groq     Groq - cung co goi mien phi, chay nhanh
+ *   AI_PROVIDER=openai   tra phi theo luot dung
+ *   AI_PROVIDER=claude   tra phi, chat luong cao nhat trong bon
  *
  * Khong dat AI_API_KEY thi chuc nang tu tat va bao 503 - khong lam sap duong
  * nao khac.
@@ -26,7 +26,7 @@
 // bon SDK cho bon hang la bon lan phu thuoc, trong khi phan minh dung chi la
 // mot loi goi POST.
 
-// Ten mo hinh mac dinh cho tung hang. Dat AI_MO_HINH de de len.
+// Ten mo hinh mac dinh cho tung hang. Dat AI_MODEL de de len.
 //
 // Google ngung cap gemini-2.5-flash cho khoa API moi (goi thu 13/09/2026 tra ve
 // 404 kem loi "no longer available to new users"). Bai hoc: ten mo hinh la thu
@@ -46,7 +46,7 @@
 // flash-lite re nhat ve token nhung cham gap ba - nguoi dung cho 17 giay truoc
 // mot o chat thi ho dong tab. Ban moi nhat thi dang qua tai. 3.6-flash la cho
 // can bang: nhanh nhat va khong hong lan nao.
-const MAC_DINH = {
+const DEFAULTS = {
     gemini: 'gemini-3.6-flash',
     groq: 'llama-3.3-70b-versatile',
     openai: 'gpt-4o-mini',
@@ -55,13 +55,13 @@ const MAC_DINH = {
 
 // Cat tran phan hoi. Tro giang tra loi dai hon chung nay thi hoc vien khong doc
 // nua, ma tien thi van tinh du.
-const TOKEN_TRA_LOI_TOI_DA = 800;
+const MAX_ANSWER_TOKENS = 800;
 
 // Qua nguong nay coi nhu hong. Vercel cat ham serverless o 60 giay o goi mien
 // phi, nen phai dung truoc no de con kip tra ve mot thong bao tu te.
-const HAN_CHO_MS = 30000;
+const WAIT_TIMEOUT_MS = 30000;
 
-const doiVaiTro = {
+const mapRole = {
     gemini: { nguoiDung: 'user', troLy: 'model' },
     khac: { nguoiDung: 'user', troLy: 'assistant' },
 };
@@ -70,19 +70,19 @@ const doiVaiTro = {
  * Dung request cho tung hang. Tra ve { url, headers, than, doc }.
  * `doc` la ham boc lay chu tu JSON phan hoi.
  */
-const dungRequest = (hang, moHinh, heThong, tinNhan) => {
-    if (hang === 'gemini') {
-        const v = doiVaiTro.gemini;
+const buildRequest = (row, model, system, message) => {
+    if (row === 'gemini') {
+        const v = mapRole.gemini;
         return {
-            url: `https://generativelanguage.googleapis.com/v1beta/models/${moHinh}:generateContent`,
-            headers: (khoa) => ({ 'Content-Type': 'application/json', 'x-goog-api-key': khoa }),
+            url: `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+            headers: (course) => ({ 'Content-Type': 'application/json', 'x-goog-api-key': course }),
             than: {
-                system_instruction: { parts: [{ text: heThong }] },
-                contents: tinNhan.map((m) => ({
+                system_instruction: { parts: [{ text: system }] },
+                contents: message.map((m) => ({
                     role: v[m.vaiTro],
                     parts: [{ text: m.noiDung }],
                 })),
-                generationConfig: { maxOutputTokens: TOKEN_TRA_LOI_TOI_DA },
+                generationConfig: { maxOutputTokens: MAX_ANSWER_TOKENS },
             },
             doc: (j) =>
                 j?.candidates?.[0]?.content?.parts
@@ -92,20 +92,20 @@ const dungRequest = (hang, moHinh, heThong, tinNhan) => {
         };
     }
 
-    if (hang === 'claude') {
-        const v = doiVaiTro.khac;
+    if (row === 'claude') {
+        const v = mapRole.khac;
         return {
             url: 'https://api.anthropic.com/v1/messages',
-            headers: (khoa) => ({
+            headers: (course) => ({
                 'Content-Type': 'application/json',
-                'x-api-key': khoa,
+                'x-api-key': course,
                 'anthropic-version': '2023-06-01',
             }),
             than: {
-                model: moHinh,
-                system: heThong,
-                max_tokens: TOKEN_TRA_LOI_TOI_DA,
-                messages: tinNhan.map((m) => ({ role: v[m.vaiTro], content: m.noiDung })),
+                model: model,
+                system: system,
+                max_tokens: MAX_ANSWER_TOKENS,
+                messages: message.map((m) => ({ role: v[m.vaiTro], content: m.noiDung })),
             },
             doc: (j) =>
                 j?.content
@@ -117,24 +117,24 @@ const dungRequest = (hang, moHinh, heThong, tinNhan) => {
     }
 
     // groq va openai dung chung dang Chat Completions, chi khac dia chi.
-    const v = doiVaiTro.khac;
+    const v = mapRole.khac;
     const url =
-        hang === 'groq'
+        row === 'groq'
             ? 'https://api.groq.com/openai/v1/chat/completions'
             : 'https://api.openai.com/v1/chat/completions';
 
     return {
         url,
-        headers: (khoa) => ({
+        headers: (course) => ({
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${khoa}`,
+            Authorization: `Bearer ${course}`,
         }),
         than: {
-            model: moHinh,
-            max_tokens: TOKEN_TRA_LOI_TOI_DA,
+            model: model,
+            max_tokens: MAX_ANSWER_TOKENS,
             messages: [
-                { role: 'system', content: heThong },
-                ...tinNhan.map((m) => ({ role: v[m.vaiTro], content: m.noiDung })),
+                { role: 'system', content: system },
+                ...message.map((m) => ({ role: v[m.vaiTro], content: m.noiDung })),
             ],
         },
         doc: (j) => j?.choices?.[0]?.message?.content?.trim(),
@@ -142,27 +142,27 @@ const dungRequest = (hang, moHinh, heThong, tinNhan) => {
 };
 
 /** Chuc nang co dang bat khong - dung de controller tra 503 som. */
-const daCauHinh = () =>
-    Boolean(process.env.AI_API_KEY && MAC_DINH[process.env.AI_NHA_CUNG_CAP]);
+const isConfigured = () =>
+    Boolean(process.env.AI_API_KEY && DEFAULTS[process.env.AI_NHA_CUNG_CAP]);
 
 /**
- * Goi mo hinh. Nem Error co `.maHttp` de controller doi thang sang ma tra ve.
+ * Goi mo hinh. Nem Error co `.httpStatus` de controller doi thang sang ma tra ve.
  *
- * @param {string} heThong  loi nhac he thong (tu nhacTroLy.dungNhacHeThong)
+ * @param {string} system  loi nhac he thong (tu nhacTroLy.buildSystemPrompt)
  * @param {Array<{vaiTro:'nguoiDung'|'troLy', noiDung:string}>} tinNhan
  */
-const goiAi = async (heThong, tinNhan) => {
-    const hang = process.env.AI_NHA_CUNG_CAP;
-    const khoa = process.env.AI_API_KEY;
+const callAi = async (system, message) => {
+    const row = process.env.AI_NHA_CUNG_CAP;
+    const course = process.env.AI_API_KEY;
 
-    if (!MAC_DINH[hang] || !khoa) {
-        const loi = new Error('Tro ly AI chua duoc cau hinh tren may chu.');
-        loi.maHttp = 503;
-        throw loi;
+    if (!DEFAULTS[row] || !course) {
+        const err = new Error('Tro ly AI chua duoc cau hinh tren may chu.');
+        err.httpStatus = 503;
+        throw err;
     }
 
-    const moHinh = process.env.AI_MO_HINH || MAC_DINH[hang];
-    const { url, headers, than, doc } = dungRequest(hang, moHinh, heThong, tinNhan);
+    const model = process.env.AI_MO_HINH || DEFAULTS[row];
+    const { url, headers, than: body, doc } = buildRequest(row, model, system, message);
 
     // Thu lai MOT lan khi gap loi thoang qua.
     //
@@ -173,21 +173,21 @@ const goiAi = async (heThong, tinNhan) => {
     //
     // Chi thu lai MOT lan, va chi voi cac ma "loi cua may chu ben kia". Loi
     // 400/401/404 la sai cau hinh cua minh - goi lai bao nhieu lan cung the.
-    const MA_THU_LAI = new Set([429, 500, 502, 503, 504]);
-    const CHO_THU_LAI_MS = 1200;
+    const RETRYABLE_CODES = new Set([429, 500, 502, 503, 504]);
+    const RETRY_DELAY_MS = 1200;
 
-    const goiMot = async () => {
+    const callOnce = async () => {
         // AbortController thay vi de fetch treo: mot request treo tren Vercel
         // van tinh tien va van giu ket noi cua nguoi dung.
-        const bo = new AbortController();
-        const hen = setTimeout(() => bo.abort(), HAN_CHO_MS);
+        const remove = new AbortController();
+        const hen = setTimeout(() => remove.abort(), WAIT_TIMEOUT_MS);
 
         try {
             return await fetch(url, {
                 method: 'POST',
-                headers: headers(khoa),
-                body: JSON.stringify(than),
-                signal: bo.signal,
+                headers: headers(course),
+                body: JSON.stringify(body),
+                signal: remove.signal,
             });
         } finally {
             clearTimeout(hen);
@@ -196,49 +196,49 @@ const goiAi = async (heThong, tinNhan) => {
 
     let res;
     try {
-        res = await goiMot();
+        res = await callOnce();
 
-        if (MA_THU_LAI.has(res.status)) {
-            console.error(`[tro-ly] ${hang} tra ve HTTP ${res.status}, thu lai mot lan`);
-            await new Promise((xong) => setTimeout(xong, CHO_THU_LAI_MS));
-            res = await goiMot();
+        if (RETRYABLE_CODES.has(res.status)) {
+            console.error(`[tro-ly] ${row} tra ve HTTP ${res.status}, thu lai mot lan`);
+            await new Promise((done) => setTimeout(done, RETRY_DELAY_MS));
+            res = await callOnce();
         }
     } catch (e) {
-        const loi = new Error(
+        const err = new Error(
             e.name === 'AbortError'
                 ? 'Tro ly tra loi qua lau, ban thu lai giup.'
                 : 'Khong ket noi duoc toi dich vu AI.',
         );
-        loi.maHttp = 504;
-        throw loi;
+        err.httpStatus = 504;
+        throw err;
     }
 
     if (!res.ok) {
         // CO Y khong dua than loi cua nha cung cap ra ngoai. Than do doi khi
         // chep lai chinh request - ke ca header - va do la cho khoa API nam.
         // Chi ghi ma trang thai vao log de con go loi duoc.
-        console.error(`[tro-ly] ${hang} tra ve HTTP ${res.status}`);
+        console.error(`[tro-ly] ${row} tra ve HTTP ${res.status}`);
 
-        const loi = new Error(
+        const err = new Error(
             res.status === 429
                 ? 'Dich vu AI dang qua tai hoac het han muc mien phi. Thu lai sau.'
                 : 'Dich vu AI tam thoi khong tra loi duoc.',
         );
-        loi.maHttp = res.status === 429 ? 429 : 502;
-        throw loi;
+        err.httpStatus = res.status === 429 ? 429 : 502;
+        throw err;
     }
 
     const json = await res.json();
-    const chu = doc(json);
+    const text = doc(json);
 
-    if (!chu) {
+    if (!text) {
         // Hay gap nhat khi bo loc an toan cua chinh nha cung cap chan phan hoi.
-        const loi = new Error('Tro ly khong tra loi duoc cau nay. Ban thu hoi cach khac.');
-        loi.maHttp = 502;
-        throw loi;
+        const err = new Error('Tro ly khong tra loi duoc cau nay. Ban thu hoi cach khac.');
+        err.httpStatus = 502;
+        throw err;
     }
 
-    return chu;
+    return text;
 };
 
-module.exports = { goiAi, daCauHinh, MAC_DINH, TOKEN_TRA_LOI_TOI_DA, HAN_CHO_MS };
+module.exports = { callAi, daCauHinh: isConfigured, DEFAULTS, MAX_ANSWER_TOKENS, WAIT_TIMEOUT_MS };

@@ -10,12 +10,12 @@
 // co middlewares/csrf.js di kem - dung cai nay ma bo cai kia la doi mot
 // lo hong lay mot lo hong khac.
 
-const TEN_COOKIE = 'token';
+const COOKIE_NAME = 'token';
 
-// Khop voi HAN_TOKEN trong utils/password.js ('1d').
+// Khop voi TOKEN_TTL trong utils/password.js ('1d').
 // De lech nhau thi cookie con song sau khi JWT ben trong da het han: nguoi
 // dung thay minh "van dang nhap" nhung moi request deu 401.
-const HAN_MS = 24 * 60 * 60 * 1000;
+const TTL_MS = 24 * 60 * 60 * 1000;
 
 // ---------------------------------------------------------------------------
 // sameSite
@@ -61,11 +61,11 @@ const sameSiteMongMuon = () => {
     // http://localhost - dat nham la ca may dev khong dang nhap duoc.
     if (!laProd()) return 'lax';
 
-    const dat = String(process.env.COOKIE_SAMESITE || '').trim().toLowerCase();
-    return dat === 'none' || dat === 'strict' ? dat : 'lax';
+    const place = String(process.env.COOKIE_SAMESITE || '').trim().toLowerCase();
+    return place === 'none' || place === 'strict' ? place : 'lax';
 };
 
-const tuyChon = () => {
+const options = () => {
     const sameSite = sameSiteMongMuon();
     return {
         httpOnly: true,
@@ -78,20 +78,20 @@ const tuyChon = () => {
     };
 };
 
-const datCookieToken = (res, token) => {
-    res.cookie(TEN_COOKIE, token, { ...tuyChon(), maxAge: HAN_MS });
+const setTokenCookie = (res, token) => {
+    res.cookie(COOKIE_NAME, token, { ...options(), maxAge: TTL_MS });
 };
 
 // Phai truyen DUNG cac tuy chon luc dat (tru maxAge), neu khong trinh duyet
 // coi day la mot cookie khac va cookie cu van nam nguyen.
-const xoaCookieToken = (res) => {
-    res.clearCookie(TEN_COOKIE, tuyChon());
+const clearTokenCookie = (res) => {
+    res.clearCookie(COOKIE_NAME, options());
 };
 
 // Uu tien cookie; con doc header Bearer de cac cong cu goi API (curl, Postman)
 // va cac ung dung ngoai trinh duyet van dung duoc.
-const layToken = (req) => {
-    if (req.cookies && req.cookies[TEN_COOKIE]) return req.cookies[TEN_COOKIE];
+const getToken = (req) => {
+    if (req.cookies && req.cookies[COOKIE_NAME]) return req.cookies[COOKIE_NAME];
 
     const h = req.headers.authorization;
     if (h && h.startsWith('Bearer ')) return h.split(' ')[1];
@@ -99,4 +99,4 @@ const layToken = (req) => {
     return null;
 };
 
-module.exports = { datCookieToken, xoaCookieToken, layToken, TEN_COOKIE, HAN_MS };
+module.exports = { setTokenCookie, clearTokenCookie, getToken, COOKIE_NAME, TTL_MS };

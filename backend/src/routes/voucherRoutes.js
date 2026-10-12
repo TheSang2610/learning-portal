@@ -2,12 +2,12 @@ const express = require('express');
 const router = express.Router();
 
 const {
-    kiemMa,
-    danhSachMa,
-    taoMa,
-    suaMa,
-    batTatMa,
-    luotDungCuaMa,
+    verifyCode,
+    listVouchers,
+    generateCode,
+    editVoucher,
+    toggleVoucher,
+    voucherUsage,
 } = require('../controllers/voucherController');
 
 const { protect, admin } = require('../middlewares/authMiddleware');
@@ -18,7 +18,7 @@ const { protect, admin } = require('../middlewares/authMiddleware');
 // `protect` chu khong mo cho khach: phep kiem co nhanh "moi nguoi mot lan" nen
 // phai biet nguoi goi la ai. Va mo cho khach la bien duong nay thanh mot cai
 // may do ma - ai cung goi lien tuc de tim ra ma nao con song.
-router.post('/kiem', protect, kiemMa);
+router.post('/kiem', protect, verifyCode);
 
 /* ==========================================================================
    QUAN TRI - tu day tro xuong chi admin
@@ -28,10 +28,10 @@ router.post('/kiem', protect, kiemMa);
 // muon co mot dong thieu, va dong do la mot duong cho bat ky ai sua ma giam gia.
 router.use('/quan-tri', protect, admin);
 
-router.get('/quan-tri', danhSachMa);
-router.post('/quan-tri', taoMa);
-router.get('/quan-tri/:id/luot-dung', luotDungCuaMa);
-router.put('/quan-tri/:id/bat-tat', batTatMa);
-router.put('/quan-tri/:id', suaMa);
+router.get('/quan-tri', listVouchers);
+router.post('/quan-tri', generateCode);
+router.get('/quan-tri/:id/luot-dung', voucherUsage);
+router.put('/quan-tri/:id/bat-tat', toggleVoucher);
+router.put('/quan-tri/:id', editVoucher);
 
 module.exports = router;

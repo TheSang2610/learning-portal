@@ -26,12 +26,12 @@
 // Bo dem KHONG con nam trong bo nho tien trinh nua - xem models/RateLimitCounter.js
 // de biet vi sao Map trong RAM gan nhu vo tac dung tren Vercel.
 
-const { conBiKhoa, ghiNhanSai, xoaKhoa } = require('../utils/rateLimitStore');
+const { stillLocked, recordFailure, unlock } = require('../utils/rateLimitStore');
 
 const WINDOW_MS = 15 * 60 * 1000; // 15 phut
 const MAX_FAILS_EMAIL = 5;        // sai qua 5 lan tren CUNG mot email, tu CUNG mot IP
 const MAX_FAILS_IP = 30;          // sai qua 30 lan tu CUNG mot IP, moi email
-const MAX_FAILS_TAI_KHOAN = 20;   // sai qua 20 lan tren CUNG mot email, moi IP
+const MAX_ACCOUNT_FAILS = 20;   // sai qua 20 lan tren CUNG mot email, moi IP
 
 // req.ip chi dung khi index.js da dat app.set('trust proxy', 1).
 // Thieu dong do thi day la IP cua proxy, va moi khach chung mot o dem.
@@ -51,7 +51,7 @@ const ipOf = (req) => req.ip || req.socket?.remoteAddress || 'unknown';
  * chu dau file). Controller giai ma xong dia chi that thi ghi nhan them mot
  * lan vao khoa nay.
  */
-const khoaTaiKhoan = (email) =>
+const accountKey = (email) =>
     `dangnhap:email:${String(email || '').trim().toLowerCase()}`;
 
 // Tien to 'dangnhap:' vi kho dem la kho DUNG CHUNG: dang ky va doi mat khau
@@ -62,8 +62,8 @@ const keysOf = (req) => {
     const email = String(req.body?.email || '').trim().toLowerCase();
     return {
         theoEmail: `dangnhap:${ip}|${email}`,
-        theoIp: `dangnhap:ip:${ip}`,
-        theoTaiKhoan: `dangnhap:email:${email}`,
+        byIp: `dangnhap:ip:${ip}`,
+        byAccount: `dangnhap:email:${email}`,
     };
 };
 
@@ -72,16 +72,16 @@ const loginRateLimit = async (req, res, next) => {
     const keys = keysOf(req);
 
     // Mot luot doc duy nhat cho ca ba khoa.
-    const giayCon = await conBiKhoa(
-        [keys.theoEmail, keys.theoIp, keys.theoTaiKhoan],
+    const secondsLeft = await stillLocked(
+        [keys.theoEmail, keys.byIp, keys.byAccount],
         now,
     );
 
-    if (giayCon > 0) {
-        res.set('Retry-After', String(giayCon));
+    if (secondsLeft > 0) {
+        res.set('Retry-After', String(secondsLeft));
         return res.status(429).json({
-            message: `Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau ${Math.ceil(giayCon / 60)} phút.`,
-            retryAfter: giayCon,
+            message: `Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau ${Math.ceil(secondsLeft / 60)} phút.`,
+            retryAfter: secondsLeft,
         });
     }
 
@@ -101,9 +101,9 @@ const recordLoginFailure = async (keys) => {
 
     // Ba khoa doc lap nhau nen ghi song song.
     await Promise.all([
-        ghiNhanSai(keys.theoEmail, MAX_FAILS_EMAIL, WINDOW_MS, now),
-        ghiNhanSai(keys.theoIp, MAX_FAILS_IP, WINDOW_MS, now),
-        ghiNhanSai(keys.theoTaiKhoan, MAX_FAILS_TAI_KHOAN, WINDOW_MS, now),
+        recordFailure(keys.theoEmail, MAX_FAILS_EMAIL, WINDOW_MS, now),
+        recordFailure(keys.byIp, MAX_FAILS_IP, WINDOW_MS, now),
+        recordFailure(keys.byAccount, MAX_ACCOUNT_FAILS, WINDOW_MS, now),
     ]);
 };
 
@@ -119,8 +119,8 @@ const recordLoginFailure = async (keys) => {
 const clearLoginAttempts = async (keys) => {
     if (!keys) return;
     await Promise.all([
-        xoaKhoa(keys.theoEmail),
-        xoaKhoa(keys.theoTaiKhoan),
+        unlock(keys.theoEmail),
+        unlock(keys.byAccount),
     ]);
 };
 
@@ -128,9 +128,9 @@ module.exports = {
     loginRateLimit,
     recordLoginFailure,
     clearLoginAttempts,
-    khoaTaiKhoan,
+    accountKey,
     WINDOW_MS,
     MAX_FAILS_EMAIL,
     MAX_FAILS_IP,
-    MAX_FAILS_TAI_KHOAN,
+    MAX_ACCOUNT_FAILS,
 };

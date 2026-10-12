@@ -15,7 +15,7 @@ const sanitizeHtml = require('sanitize-html');
 
 // Nhung the lam nen mot bai bao: de muc, doan, danh sach, anh co chu thich,
 // bang, trich dan, code.
-const THE_CHO_PHEP = [
+const ALLOWED_TAGS = [
     'h1', 'h2', 'h3', 'h4',
     'p', 'br', 'hr',
     'strong', 'b', 'em', 'i', 'u', 's', 'sup', 'sub', 'mark',
@@ -39,7 +39,7 @@ const THE_CHO_PHEP = [
 //             nang bai. Giao dien tu lo trinh bay bang CSS cua minh.
 //   id     -> neo muc luc do trang doc tu sinh, de nguoi dan tu dat thi trung
 //             id voi phan tu that cua trang.
-const THUOC_TINH_CHO_PHEP = {
+const ALLOWED_ATTRS = {
     a: ['href', 'title'],
     img: ['src', 'alt', 'width', 'height'],
     td: ['colspan', 'rowspan'],
@@ -49,7 +49,7 @@ const THUOC_TINH_CHO_PHEP = {
 // Bo CA NOI DUNG ben trong, khong chi cai the. Mac dinh cua thu vien la giu
 // lai phan chu ben trong the bi loai - dung cho <div> nhung sai cho <script>:
 // se con lai nguyen doan ma JavaScript nam tho lo giua bai.
-const THE_BO_CA_RUOT = [
+const STRIP_WITH_CONTENT_TAGS = [
     'script', 'style', 'noscript', 'iframe', 'object', 'embed',
     'template', 'textarea', 'option', 'svg', 'canvas', 'form',
 ];
@@ -61,7 +61,7 @@ const THE_BO_CA_RUOT = [
 // Nen phai cat truoc ca cum. Cat bang bieu thuc chinh quy o day AN TOAN vi no
 // chay TRUOC buoc loc: no chi lam bai sach hon, con quyet dinh cai gi duoc
 // phep ton tai van la cua sanitize-html ben duoi.
-const CUM_RAC = [
+const JUNK_PATTERNS = [
     /<script\b[\s\S]*?<\/script\s*>/gi,
     /<style\b[\s\S]*?<\/style\s*>/gi,
     /<noscript\b[\s\S]*?<\/noscript\s*>/gi,
@@ -80,7 +80,7 @@ function laHtml(chuoi) {
 }
 
 /** Rut lay chu tran de dem tu va cho qua bo loc tu ngu. */
-function boThe(html) {
+function stripTags(html) {
     return String(html || '')
         .replace(/<[^>]+>/g, ' ')
         .replace(/&nbsp;/g, ' ')
@@ -92,14 +92,14 @@ function boThe(html) {
         .trim();
 }
 
-function lamSachHtml(tho) {
+function cleanHtml(tho) {
     let html = String(tho || '');
-    for (const re of CUM_RAC) html = html.replace(re, '');
+    for (const re of JUNK_PATTERNS) html = html.replace(re, '');
 
     html = sanitizeHtml(html, {
-        allowedTags: THE_CHO_PHEP,
-        allowedAttributes: THUOC_TINH_CHO_PHEP,
-        nonTextTags: THE_BO_CA_RUOT,
+        allowedTags: ALLOWED_TAGS,
+        allowedAttributes: ALLOWED_ATTRS,
+        nonTextTags: STRIP_WITH_CONTENT_TAGS,
 
         // Chi ba giao thuc nay. Quan trong nhat la CHAN 'data:' va
         // 'javascript:': <img src="data:image/svg+xml,..."> nhet duoc ma vao
@@ -118,16 +118,16 @@ function lamSachHtml(tho) {
             // giu nguyen chu, chi mat cai neo. Bo thang ca the thi cau van
             // thung mot tu. Day cung la cho chan javascript: chu khong doi
             // den buoc loc dia chi, vi transformTags chay truoc buoc do.
-            a: (tenThe, thuocTinh) => {
-                const dia = String(thuocTinh.href || '').trim();
-                if (!/^(https?:\/\/|mailto:|\/|#)/i.test(dia)) {
+            a: (tagName, attrs) => {
+                const address = String(attrs.href || '').trim();
+                if (!/^(https?:\/\/|mailto:|\/|#)/i.test(address)) {
                     return { tagName: 'span', attribs: {} };
                 }
                 return {
                     tagName: 'a',
                     attribs: {
-                        href: dia,
-                        ...(thuocTinh.title ? { title: thuocTinh.title } : {}),
+                        href: address,
+                        ...(attrs.title ? { title: attrs.title } : {}),
                         target: '_blank',
                         rel: 'nofollow noopener noreferrer',
                     },
@@ -140,7 +140,7 @@ function lamSachHtml(tho) {
         // transformTags them thuoc tinh nen phai khai cho phep, neu khong
         // chinh buoc loc lai go ra.
         allowedAttributes: {
-            ...THUOC_TINH_CHO_PHEP,
+            ...ALLOWED_ATTRS,
             a: ['href', 'title', 'target', 'rel'],
             img: ['src', 'alt', 'width', 'height', 'loading'],
         },
@@ -150,7 +150,7 @@ function lamSachHtml(tho) {
         exclusiveFilter: (khoi) => khoi.tag === 'img' && !khoi.attribs.src,
     });
 
-    return donDep(html);
+    return cleanup(html);
 }
 
 /**
@@ -159,7 +159,7 @@ function lamSachHtml(tho) {
  * Cat mot khoi quang cao di thuong de lai cai vo rong: <p></p>, <figure> mat
  * anh, ba the <br> lien tiep. De nguyen thi bai viet day khoang trong kho hieu.
  */
-function donDep(html) {
+function cleanup(html) {
     return html
         .replace(/<p>(\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, '')
         .replace(/<figure>(\s|<figcaption>\s*<\/figcaption>)*<\/figure>/gi, '')
@@ -186,7 +186,7 @@ function donDep(html) {
  * Nen: thay vi hoi "co giong bai viet khong", cho nay hoi them "co mui nguy
  * hiem khong". Co thi loc, bat ke trong giong gi.
  */
-const CO_MUI_NGUY_HIEM =
+const DANGEROUS_SCHEME =
     /<\s*\/?\s*(script|iframe|object|embed|svg|math|style|link|meta|base|form|noscript|template)\b|\son\w+\s*=|javascript\s*:|data\s*:\s*text\/html/i;
 
 /**
@@ -197,9 +197,9 @@ const CO_MUI_NGUY_HIEM =
  * (trang doc ve van ban thuong bang React, khong dien giai thuc the).
  * Do chinh la ly do cho nay phai co dieu kien chu khong loc tat.
  */
-function chuanHoaNoiDung(tho) {
+function normalizeContent(tho) {
     const s = String(tho || '').trim();
-    return laHtml(s) || CO_MUI_NGUY_HIEM.test(s) ? lamSachHtml(s) : s;
+    return laHtml(s) || DANGEROUS_SCHEME.test(s) ? cleanHtml(s) : s;
 }
 
-module.exports = { laHtml, boThe, lamSachHtml, chuanHoaNoiDung, CO_MUI_NGUY_HIEM };
+module.exports = { laHtml, stripTags, cleanHtml, normalizeContent, DANGEROUS_SCHEME };

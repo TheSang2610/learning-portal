@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { capIdHopLe } = require('../middlewares/validObjectId');
+const { guardObjectIds } = require('../middlewares/validObjectId');
 
 // Chan id sai dinh dang -> 404 thay vi 500. Xem middlewares/validObjectId.js
-capIdHopLe(router);
+guardObjectIds(router);
 const { protect, admin } = require('../middlewares/authMiddleware');
 const {
     // Dashboard
@@ -45,6 +45,7 @@ const {
     confirmOrder,
     rejectOrder
 } = require('../controllers/adminOrderController');
+const { giftCourseToStudent } = require('../controllers/giftCourseController');
 
 router.use(protect, admin);
 
@@ -69,6 +70,7 @@ router.delete('/courses/:id', deleteCourseAdmin);
 router.get('/enrollments', getAllEnrollments);
 router.get('/enrollments/:id', getEnrollmentDetailsAdmin);
 router.put('/enrollments/:id/status', updateEnrollmentStatus);
+router.post('/enrollments/tang-khoa', giftCourseToStudent);
 
 // ============ Certificates Management ============
 router.get('/certificates', getAllCertificates);
@@ -82,7 +84,7 @@ router.delete('/reviews/:id', deleteReviewAdmin);
 // ---------------------------------------------------------------------------
 // Don hang
 //
-// Ma don di qua ':code' chu khong phai ':id', nen capIdHopLe khong dong toi -
+// Ma don di qua ':code' chu khong phai ':id', nen guardObjectIds khong dong toi -
 // dung vay: ma don la dang "DHxxxx", khong phai ObjectId.
 // ---------------------------------------------------------------------------
 router.get('/orders', getOrdersAdmin);

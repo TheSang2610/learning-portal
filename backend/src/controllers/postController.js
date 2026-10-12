@@ -1,26 +1,26 @@
 const Post = require('../models/Post');
 const SavedItem = require('../models/SavedItem');
-const { phanTrang } = require('../utils/queryParams');
-const { CHU_DE, TEN_CHU_DE } = require('../models/Post');
+const { phanTrang: paginate } = require('../utils/queryParams');
+const { TOPICS, TOPIC_NAMES } = require('../models/Post');
 const { checkText } = require('../utils/contentFilter');
-const { taoSlug, tachTags } = require('../utils/textUtils');
-const { chuanHoaNoiDung, boThe } = require('../utils/postHtml');
+const { createSlug, splitTags } = require('../utils/textUtils');
+const { normalizeContent, stripTags } = require('../utils/postHtml');
 
 // Bang dung gioi han cua truong content trong model.
-const NOI_DUNG_TOI_DA = 120000;
+const MAX_CONTENT = 120000;
 
-const TRUONG_DANH_SACH =
+const LIST_FIELDS =
     'title slug excerpt thumbnail topic tags author views createdAt';
 
 // slug phai duy nhat. Trung thi them -2, -3... thay vi bao loi cho nguoi dung:
 // hai bai trung ten la chuyen binh thuong.
-async function slugDuyNhat(title) {
-    const goc = taoSlug(title);
-    let slug = goc;
+async function uniqueSlug(title) {
+    const origin = createSlug(title);
+    let slug = origin;
     let n = 1;
     while (await Post.exists({ slug })) {
         n += 1;
-        slug = `${goc}-${n}`;
+        slug = `${origin}-${n}`;
     }
     return slug;
 }
@@ -29,13 +29,13 @@ async function slugDuyNhat(title) {
 // @route   GET /api/posts?page=1&limit=10&topic=ai-llm&tag=react&q=...
 const getPosts = async (req, res) => {
     try {
-        const { trang: page, soDong: limit, boQua: skip } = phanTrang(req.query, {
-            macDinh: 10,
+        const { trang: page, soDong: limit, skip: skip } = paginate(req.query, {
+            defaults: 10,
             toiDa: 50,
         });
 
         const filter = { isPublished: true };
-        if (req.query.topic && CHU_DE.includes(req.query.topic)) {
+        if (req.query.topic && TOPICS.includes(req.query.topic)) {
             filter.topic = req.query.topic;
         }
         if (req.query.tag) filter.tags = req.query.tag;
@@ -43,7 +43,7 @@ const getPosts = async (req, res) => {
 
         const [posts, total] = await Promise.all([
             Post.find(filter)
-                .select(TRUONG_DANH_SACH)
+                .select(LIST_FIELDS)
                 .populate('author', 'name avatar role')
                 .sort({ createdAt: -1 })
                 .skip(skip)
@@ -61,17 +61,17 @@ const getPosts = async (req, res) => {
 // @route   GET /api/posts/topics
 const getTopics = async (req, res) => {
     try {
-        const dem = await Post.aggregate([
+        const tally = await Post.aggregate([
             { $match: { isPublished: true } },
             { $group: { _id: '$topic', count: { $sum: 1 } } },
         ]);
-        const map = Object.fromEntries(dem.map((d) => [d._id, d.count]));
+        const map = Object.fromEntries(tally.map((d) => [d._id, d.count]));
 
         // Tra ve DU ca 6 chu de ke ca chu de chua co bai: thanh ben canh phai
         // on dinh, khong nhay khi bai viet moi duoc dang.
-        res.json(CHU_DE.map((slug) => ({
+        res.json(TOPICS.map((slug) => ({
             slug,
-            name: TEN_CHU_DE[slug],
+            name: TOPIC_NAMES[slug],
             count: map[slug] || 0,
         })));
     } catch (error) {
@@ -100,12 +100,12 @@ const getPostBySlug = async (req, res) => {
 // Bai qua dai thi chan ngay o day chu khong tha xuong cho Mongoose bao loi:
 // loi validate roi vao khoi catch va tra ve 500, nguoi dung nhan mot man hinh
 // "loi may chu" trong khi loi la cua bai viet va ho sua duoc.
-function loiDoDai(content) {
-    if (content.length <= NOI_DUNG_TOI_DA) return null;
+function lengthError(content) {
+    if (content.length <= MAX_CONTENT) return null;
     return {
         message:
             `Nội dung sau khi lọc còn ${content.length.toLocaleString('vi-VN')} ký tự, ` +
-            `vượt giới hạn ${NOI_DUNG_TOI_DA.toLocaleString('vi-VN')}. Hãy tách thành nhiều bài.`,
+            `vượt giới hạn ${MAX_CONTENT.toLocaleString('vi-VN')}. Hãy tách thành nhiều bài.`,
     };
 }
 
@@ -113,26 +113,26 @@ function loiDoDai(content) {
 // ma toan quang cao / script. Bao dung cai do thay vi bao "chua nhap gi", neu
 // khong ho se dan lai y het lan dau.
 function laHtmlRong(tho) {
-    return Boolean(String(tho || '').trim()) && !chuanHoaNoiDung(tho);
+    return Boolean(String(tho || '').trim()) && !normalizeContent(tho);
 }
 
 // Kiem duyet ca ba truong, khong chi tieu de. Tra ve chuoi loi hoac null.
 // Dung chung cho ca dang moi lan sua: sua bai cung phai qua bo loc, neu khong
 // nguoi ta dang bai sach roi sua thanh bai ban la lot.
-function loiKiemDuyet(title, excerpt, content) {
-    for (const [ten, giaTri] of [
+function moderationError(title, excerpt, content) {
+    for (const [name, value] of [
         ['Tiêu đề', title],
         ['Mô tả ngắn', excerpt],
         // Loc tren CHU MA NGUOI DOC THAY, khong loc tren ma nguon. Bai viet
         // bang HTML thi ten the va dia chi anh cung nam trong chuoi; de nguyen
         // ma cho qua bo loc thi mot dia chi vo tinh chua chuoi cam se lam bai
         // sach bi tu choi, con nguoi co y viet bay van bi bat nhu thuong.
-        ['Nội dung', boThe(content)],
+        ['Nội dung', stripTags(content)],
     ]) {
-        const r = checkText(giaTri);
+        const r = checkText(value);
         if (!r.ok) {
             return {
-                message: `${ten} vi phạm quy định (${r.label}). Vui lòng sửa lại rồi đăng.`,
+                message: `${name} vi phạm quy định (${r.label}). Vui lòng sửa lại rồi đăng.`,
                 category: r.category,
             };
         }
@@ -149,7 +149,7 @@ const createPost = async (req, res) => {
         // Loc ngay o day, TRUOC moi buoc khac. Tu sau cho nay tro di khong con
         // doan HTML tho nao trong luong xu ly, nen khong co duong nao de mot
         // the <script> di lac vao co so du lieu.
-        const content = chuanHoaNoiDung(req.body.content);
+        const content = normalizeContent(req.body.content);
 
         if (!title || !excerpt || !content) {
             return res.status(400).json({
@@ -160,29 +160,29 @@ const createPost = async (req, res) => {
         }
 
         // Cung bo loc dung cho tai lieu chia se.
-        const loi = loiKiemDuyet(title, excerpt, content);
-        if (loi) return res.status(400).json(loi);
+        const err = moderationError(title, excerpt, content);
+        if (err) return res.status(400).json(err);
 
-        const qua = loiDoDai(content);
-        if (qua) return res.status(400).json(qua);
+        const passed = lengthError(content);
+        if (passed) return res.status(400).json(passed);
 
-        const tags = tachTags(req.body.tags);
+        const tags = splitTags(req.body.tags);
 
         const post = await Post.create({
             title,
-            slug: await slugDuyNhat(title),
+            slug: await uniqueSlug(title),
             excerpt,
             content,
             thumbnail: (req.body.thumbnail || '').trim(),
-            topic: CHU_DE.includes(req.body.topic) ? req.body.topic : 'others',
+            topic: TOPICS.includes(req.body.topic) ? req.body.topic : 'others',
             tags,
             author: req.user._id,
             // Khong truyen gi thi dang luon, dung mac dinh cua model.
             isPublished: req.body.isPublished !== false,
         });
 
-        const daLuu = await Post.findById(post._id).populate('author', 'name avatar role');
-        res.status(201).json(daLuu);
+        const saved = await Post.findById(post._id).populate('author', 'name avatar role');
+        res.status(201).json(saved);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -200,13 +200,13 @@ const createPost = async (req, res) => {
 // @route   GET /api/posts/admin/all
 const getAdminPosts = async (req, res) => {
     try {
-        const { trang: page, soDong: limit, boQua: skip } = phanTrang(req.query, {
-            macDinh: 20,
+        const { trang: page, soDong: limit, skip: skip } = paginate(req.query, {
+            defaults: 20,
             toiDa: 50,
         });
 
         const filter = {};
-        if (req.query.topic && CHU_DE.includes(req.query.topic)) {
+        if (req.query.topic && TOPICS.includes(req.query.topic)) {
             filter.topic = req.query.topic;
         }
         if (req.query.status === 'draft') filter.isPublished = false;
@@ -217,7 +217,7 @@ const getAdminPosts = async (req, res) => {
             Post.find(filter)
                 // Khong lay 'content': mot bai toi da 50.000 ky tu, ca trang
                 // danh sach se nang vo ich. Trinh soan lay rieng qua /admin/:id.
-                .select(`${TRUONG_DANH_SACH} isPublished updatedAt`)
+                .select(`${LIST_FIELDS} isPublished updatedAt`)
                 .populate('author', 'name avatar role')
                 .sort({ createdAt: -1 })
                 .skip(skip)
@@ -253,7 +253,7 @@ const updatePost = async (req, res) => {
 
         const title = (req.body.title ?? post.title).trim();
         const excerpt = (req.body.excerpt ?? post.excerpt).trim();
-        const content = chuanHoaNoiDung(req.body.content ?? post.content);
+        const content = normalizeContent(req.body.content ?? post.content);
 
         if (!title || !excerpt || !content) {
             return res.status(400).json({
@@ -263,31 +263,31 @@ const updatePost = async (req, res) => {
             });
         }
 
-        const loi = loiKiemDuyet(title, excerpt, content);
-        if (loi) return res.status(400).json(loi);
+        const err = moderationError(title, excerpt, content);
+        if (err) return res.status(400).json(err);
 
-        const qua = loiDoDai(content);
-        if (qua) return res.status(400).json(qua);
+        const passed = lengthError(content);
+        if (passed) return res.status(400).json(passed);
 
         // Doi tieu de KHONG doi duong dan cua bai da dang: link nguoi ta da
         // chia se ra ngoai se chet. Bai con nhap thi chua ai co link nen sua
         // thoai mai.
         if (!post.isPublished && title !== post.title) {
-            post.slug = await slugDuyNhat(title);
+            post.slug = await uniqueSlug(title);
         }
 
         post.title = title;
         post.excerpt = excerpt;
         post.content = content;
         if (req.body.thumbnail !== undefined) post.thumbnail = String(req.body.thumbnail).trim();
-        if (CHU_DE.includes(req.body.topic)) post.topic = req.body.topic;
-        if (req.body.tags !== undefined) post.tags = tachTags(req.body.tags);
+        if (TOPICS.includes(req.body.topic)) post.topic = req.body.topic;
+        if (req.body.tags !== undefined) post.tags = splitTags(req.body.tags);
         if (typeof req.body.isPublished === 'boolean') post.isPublished = req.body.isPublished;
 
         await post.save();
 
-        const daLuu = await Post.findById(post._id).populate('author', 'name avatar role');
-        res.json(daLuu);
+        const saved = await Post.findById(post._id).populate('author', 'name avatar role');
+        res.json(saved);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -300,8 +300,8 @@ const deletePost = async (req, res) => {
         const post = await Post.findById(req.params.id);
         if (!post) return res.status(404).json({ message: 'Không tìm thấy bài viết' });
 
-        const laTacGia = String(post.author) === String(req.user._id);
-        if (!laTacGia && req.user.role !== 'admin') {
+        const isAuthor = String(post.author) === String(req.user._id);
+        if (!isAuthor && req.user.role !== 'admin') {
             return res.status(403).json({ message: 'Bạn chỉ có thể xóa bài viết của mình' });
         }
 

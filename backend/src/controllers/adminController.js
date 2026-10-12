@@ -11,17 +11,17 @@ const User = require('../models/User');
 // la FALSE - roi di thang toi bcrypt.hash. Va khong ban nao co tran do dai,
 // trong khi bcrypt bo lang moi byte tu 73 tro di.
 const {
-    chuanHoaEmail,
-    emailHopLe,
-    loiMatKhauMoi,
-    kiemTen,
+    normalizeEmail,
+    isValidEmail,
+    newPasswordError,
+    validateName,
 } = require('../utils/validateInput');
-const { chuanHoaSoDienThoai } = require('../utils/phoneNumber');
+const { normalizePhone } = require('../utils/phoneNumber');
 const Course = require('../models/Course');
 const Lesson = require('../models/Lesson');
 const Enrollment = require('../models/Enrollment');
 const Certificate = require('../models/Certificate');
-const { phanTrang, timGan } = require('../utils/queryParams');
+const { phanTrang: paginate, fuzzyRegex } = require('../utils/queryParams');
 const Review = require('../models/Review');
 const Quiz = require('../models/Quiz');
 
@@ -91,23 +91,23 @@ const getDashboardStatistics = async (req, res) => {
 const getAllUsers = async (req, res) => {
     try {
         const { role, status, search } = req.query;
-        const { trang, soDong, boQua } = phanTrang(req.query);
+        const { trang: page, soDong: pageSize, skip } = paginate(req.query);
 
         const filter = {};
         if (role) filter.role = role;
         if (status !== undefined) filter.status = status === 'true';
         if (search) {
             filter.$or = [
-                { name: timGan(search) },
-                { email: timGan(search) },
-                { userId: timGan(search) }
+                { name: fuzzyRegex(search) },
+                { email: fuzzyRegex(search) },
+                { userId: fuzzyRegex(search) }
             ];
         }
 
         const users = await User.find(filter)
             .select('-password')
-            .limit(soDong)
-            .skip(boQua)
+            .limit(pageSize)
+            .skip(skip)
             .sort({ createdAt: -1 });
 
         const total = await User.countDocuments(filter);
@@ -116,9 +116,9 @@ const getAllUsers = async (req, res) => {
             users,
             pagination: {
                 total,
-                page: trang,
-                pages: Math.ceil(total / soDong),
-                limit: soDong
+                page: page,
+                pages: Math.ceil(total / pageSize),
+                limit: pageSize
             }
         });
     } catch (error) {
@@ -234,23 +234,23 @@ const deleteUserAdmin = async (req, res) => {
 const createUserAdmin = async (req, res) => {
     try {
         const { password, role = 'student', status = true, phone, fullname, bio } = req.body;
-        const email = chuanHoaEmail(req.body?.email);
+        const email = normalizeEmail(req.body?.email);
 
         if (req.body?.name === undefined || !email || password === undefined) {
             return res.status(400).json({ message: 'Name, email và password là bắt buộc' });
         }
-        if (!emailHopLe(email)) {
+        if (!isValidEmail(email)) {
             return res.status(400).json({ message: 'Email không hợp lệ' });
         }
-        const loiMk = loiMatKhauMoi(password);
-        if (loiMk) {
-            return res.status(400).json({ message: loiMk });
+        const passwordError = newPasswordError(password);
+        if (passwordError) {
+            return res.status(400).json({ message: passwordError });
         }
-        const kqTen = kiemTen(req.body.name);
-        if (kqTen.loi) {
-            return res.status(400).json({ message: kqTen.loi });
+        const nameResult = validateName(req.body.name);
+        if (nameResult.loi) {
+            return res.status(400).json({ message: nameResult.loi });
         }
-        const name = kqTen.ten;
+        const name = nameResult.ten;
         if (!['student', 'instructor', 'admin'].includes(role)) {
             return res.status(400).json({ message: 'Role không hợp lệ' });
         }
@@ -260,19 +260,19 @@ const createUserAdmin = async (req, res) => {
         // ma minh chua biet so.
         //
         // Nhung DA NHAP thi phai doc ra duoc, va phai luu dang chuan.
-        const soChuan = chuanHoaSoDienThoai(phone);
+        const normalizedPhone = normalizePhone(phone);
 
-        if (phone && !soChuan) {
+        if (phone && !normalizedPhone) {
             return res.status(400).json({ message: 'Số điện thoại không hợp lệ' });
         }
 
         // Hoi ca hai truong trong mot luot. Chi hoi phone khi that su co -
         // khong loc ra thi { phone: undefined } se khop moi tai khoan chua co
         // so dien thoai.
-        const dieuKien = [{ email }];
-        if (soChuan) dieuKien.push({ phone: soChuan });
+        const conditions = [{ email }];
+        if (normalizedPhone) conditions.push({ phone: normalizedPhone });
 
-        const exists = await User.findOne({ $or: dieuKien }).select('email phone').lean();
+        const exists = await User.findOne({ $or: conditions }).select('email phone').lean();
         if (exists) {
             return res.status(400).json({
                 message:
@@ -294,7 +294,7 @@ const createUserAdmin = async (req, res) => {
             // Chuan hoa TRUOC khi luu - xem utils/phoneNumber.js. Luu tho
             // thi quan tri go '+84901234567' va nguoi do khong dang nhap duoc
             // bang so, vi tra cuu luon quy ve dang 0XXXXXXXXX.
-            ...(soChuan ? { phone: soChuan } : {}),
+            ...(normalizedPhone ? { phone: normalizedPhone } : {}),
             ...(fullname ? { fullname } : {}),
             ...(bio ? { bio } : {}),
         });
@@ -314,9 +314,9 @@ const createUserAdmin = async (req, res) => {
 const updateUserAdmin = async (req, res) => {
     try {
         const { name, role, status, password, phone, fullname, bio } = req.body;
-        const email = req.body?.email === undefined ? undefined : chuanHoaEmail(req.body.email);
+        const email = req.body?.email === undefined ? undefined : normalizeEmail(req.body.email);
 
-        if (email !== undefined && !emailHopLe(email)) {
+        if (email !== undefined && !isValidEmail(email)) {
             return res.status(400).json({ message: 'Email không hợp lệ' });
         }
 
@@ -349,9 +349,9 @@ const updateUserAdmin = async (req, res) => {
         }
 
         if (password) {
-            const loiMk = loiMatKhauMoi(password);
-            if (loiMk) {
-                return res.status(400).json({ message: loiMk });
+            const passwordError = newPasswordError(password);
+            if (passwordError) {
+                return res.status(400).json({ message: passwordError });
             }
             user.password = await bcrypt.hash(password, await bcrypt.genSalt(BCRYPT_ROUNDS));
             // Admin dat lai mat khau cho nguoi khac thuong la vi tai khoan do
@@ -361,24 +361,24 @@ const updateUserAdmin = async (req, res) => {
         }
 
         if (name !== undefined) {
-            const kqTen = kiemTen(name);
-            if (kqTen.loi) {
-                return res.status(400).json({ message: kqTen.loi });
+            const nameResult = validateName(name);
+            if (nameResult.loi) {
+                return res.status(400).json({ message: nameResult.loi });
             }
-            user.name = kqTen.ten;
+            user.name = nameResult.ten;
         }
         if (status !== undefined) user.status = status;
         if (phone !== undefined) {
             // Cung ly do voi luc tao: chuan hoa truoc khi luu. Chuoi rong hay
             // doc khong ra so thi xoa han truong di (undefined chu KHONG phai
             // '' hay null - chi muc sparse chi bo qua ban ghi THIEU truong).
-            const soChuan = chuanHoaSoDienThoai(phone);
+            const normalizedPhone = normalizePhone(phone);
 
-            if (phone && !soChuan) {
+            if (phone && !normalizedPhone) {
                 return res.status(400).json({ message: 'So dien thoai khong hop le' });
             }
 
-            user.phone = soChuan || undefined;
+            user.phone = normalizedPhone || undefined;
         }
         if (fullname !== undefined) user.fullname = fullname;
         if (bio !== undefined) user.bio = bio;
@@ -399,22 +399,22 @@ const updateUserAdmin = async (req, res) => {
 const getAllCourses = async (req, res) => {
     try {
         const { isPublished, search } = req.query;
-        const { trang, soDong, boQua } = phanTrang(req.query);
+        const { trang: page, soDong: pageSize, skip } = paginate(req.query);
 
         const filter = {};
         if (isPublished !== undefined) filter.isPublished = isPublished === 'true';
         if (search) {
             filter.$or = [
-                { title: timGan(search) },
-                { description: timGan(search) }
+                { title: fuzzyRegex(search) },
+                { description: fuzzyRegex(search) }
             ];
         }
 
         const courses = await Course.find(filter)
             .populate('instructor', 'name email')
             .populate('category', 'name')
-            .limit(soDong)
-            .skip(boQua)
+            .limit(pageSize)
+            .skip(skip)
             .sort({ createdAt: -1 });
 
         const total = await Course.countDocuments(filter);
@@ -423,9 +423,9 @@ const getAllCourses = async (req, res) => {
             courses,
             pagination: {
                 total,
-                page: trang,
-                pages: Math.ceil(total / soDong),
-                limit: soDong
+                page: page,
+                pages: Math.ceil(total / pageSize),
+                limit: pageSize
             }
         });
     } catch (error) {
@@ -529,7 +529,7 @@ const deleteCourseAdmin = async (req, res) => {
 const getAllEnrollments = async (req, res) => {
     try {
         const { status, courseId, studentId } = req.query;
-        const { trang, soDong, boQua } = phanTrang(req.query);
+        const { trang: page, soDong: pageSize, skip } = paginate(req.query);
 
         const filter = {};
         if (status) filter.status = status;
@@ -539,8 +539,8 @@ const getAllEnrollments = async (req, res) => {
         const enrollments = await Enrollment.find(filter)
             .populate('course', 'title')
             .populate('student', 'name email avatar')
-            .limit(soDong)
-            .skip(boQua)
+            .limit(pageSize)
+            .skip(skip)
             .sort({ createdAt: -1 });
 
         const total = await Enrollment.countDocuments(filter);
@@ -549,9 +549,9 @@ const getAllEnrollments = async (req, res) => {
             enrollments,
             pagination: {
                 total,
-                page: trang,
-                pages: Math.ceil(total / soDong),
-                limit: soDong
+                page: page,
+                pages: Math.ceil(total / pageSize),
+                limit: pageSize
             }
         });
     } catch (error) {
@@ -618,7 +618,7 @@ const updateEnrollmentStatus = async (req, res) => {
 const getAllCertificates = async (req, res) => {
     try {
         const { isValid, studentId, courseId } = req.query;
-        const { trang, soDong, boQua } = phanTrang(req.query);
+        const { trang: page, soDong: pageSize, skip } = paginate(req.query);
 
         const filter = {};
         if (isValid !== undefined) filter.isValid = isValid === 'true';
@@ -628,8 +628,8 @@ const getAllCertificates = async (req, res) => {
         const certificates = await Certificate.find(filter)
             .populate('student', 'name email')
             .populate('course', 'title')
-            .limit(soDong)
-            .skip(boQua)
+            .limit(pageSize)
+            .skip(skip)
             .sort({ issuedAt: -1 });
 
         const total = await Certificate.countDocuments(filter);
@@ -638,9 +638,9 @@ const getAllCertificates = async (req, res) => {
             certificates,
             pagination: {
                 total,
-                page: trang,
-                pages: Math.ceil(total / soDong),
-                limit: soDong
+                page: page,
+                pages: Math.ceil(total / pageSize),
+                limit: pageSize
             }
         });
     } catch (error) {
@@ -695,21 +695,21 @@ const revokeCertificate = async (req, res) => {
 const getAllReviews = async (req, res) => {
     try {
         const { courseId, studentId, rating } = req.query;
-        const { trang, soDong, boQua } = phanTrang(req.query);
+        const { trang: page, soDong: pageSize, skip } = paginate(req.query);
 
         const filter = {};
         if (courseId) filter.course = courseId;
         if (studentId) filter.student = studentId;
         // parseInt('abc') ra NaN, ma Mongo tu choi NaN o truong so -> 500.
         // Chi loc khi that su la mot diem hop le 1..5.
-        const diem = Number.parseInt(rating, 10);
-        if (Number.isInteger(diem) && diem >= 1 && diem <= 5) filter.rating = diem;
+        const score = Number.parseInt(rating, 10);
+        if (Number.isInteger(score) && score >= 1 && score <= 5) filter.rating = score;
 
         const reviews = await Review.find(filter)
             .populate('course', 'title')
             .populate('student', 'name email avatar')
-            .limit(soDong)
-            .skip(boQua)
+            .limit(pageSize)
+            .skip(skip)
             .sort({ createdAt: -1 });
 
         const total = await Review.countDocuments(filter);
@@ -718,9 +718,9 @@ const getAllReviews = async (req, res) => {
             reviews,
             pagination: {
                 total,
-                page: trang,
-                pages: Math.ceil(total / soDong),
-                limit: soDong
+                page: page,
+                pages: Math.ceil(total / pageSize),
+                limit: pageSize
             }
         });
     } catch (error) {

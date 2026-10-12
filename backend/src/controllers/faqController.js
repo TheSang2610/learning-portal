@@ -66,8 +66,8 @@ const createFaq = async (req, res) => {
         }
 
         // Khu vuc chi co nghia voi FAQ khong gan khoa hoc; chi nhan dung hai gia tri.
-        const viTri = !courseId && req.body.viTri === 'taiLieu' ? 'taiLieu' : 'trangChu';
-        const faq = new Faq({ courseId: courseId || null, question, answer, viTri });
+        const position = !courseId && req.body.viTri === 'taiLieu' ? 'taiLieu' : 'trangChu';
+        const faq = new Faq({ courseId: courseId || null, question, answer, viTri: position });
         const savedFaq = await faq.save();
         res.status(201).json({ success: true, data: savedFaq });
     } catch (error) {

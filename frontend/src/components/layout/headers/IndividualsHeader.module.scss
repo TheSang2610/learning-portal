@@ -547,7 +547,7 @@
 
    Khung hinh dat ngay trong file module: CSS module bam ten @keyframes y het
    nhu bam ten class. */
-.hienTruotXuong {
+.showSlideDown {
   animation: hien-truot-xuong 150ms ease-out;
 
   @media (prefers-reduced-motion: reduce) {

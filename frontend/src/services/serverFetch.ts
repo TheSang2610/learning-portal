@@ -15,20 +15,24 @@ import { GOC_API } from "./apiBase";
 /**
  * Goi mot duong API cong khai tu may chu.
  *
- * Hong thi tra ve `macDinh` chu KHONG nem loi. Nem o day se lam hong ca luot
+ * Hong thi tra ve `defaults` chu KHONG nem loi. Nem o day se lam hong ca luot
  * build tren Vercel, va mot muc hong se keo sap ca trang.
  *
  * @param duong  duong day du ke ca "/api", vi du "/api/courses"
- * @param macDinh gia tri tra ve khi goi hong
+ * @param defaults gia tri tra ve khi goi hong
  * @param giay   so giay Next giu ban dem (mac dinh 60)
  */
-export async function layTuMayChu<T>(duong: string, macDinh: T, giay = 60): Promise<T> {
+export async function fetchFromServer<T>(
+  route: string,
+  defaults: T,
+  seconds = 60,
+): Promise<T> {
   try {
-    const res = await fetch(`${GOC_API}${duong}`, { next: { revalidate: giay } });
-    if (!res.ok) return macDinh;
+    const res = await fetch(`${GOC_API}${route}`, { next: { revalidate: seconds } });
+    if (!res.ok) return defaults;
     return (await res.json()) as T;
   } catch {
-    return macDinh;
+    return defaults;
   }
 }
 
@@ -39,5 +43,5 @@ export async function layTuMayChu<T>(duong: string, macDinh: T, giay = 60): Prom
  * hut ma van truyen [] xuong thi muc do hien trong tron va KHONG bao gio thu
  * lai. Tra null thi trinh duyet tu goi nhu cu - giu nguyen duong lui.
  */
-export const hoacNull = <T>(ds: T[] | undefined | null): T[] | null =>
-  ds && ds.length ? ds : null;
+export const hoacNull = <T>(items: T[] | undefined | null): T[] | null =>
+  items && items.length ? items : null;

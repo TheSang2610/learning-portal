@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { capIdHopLe } = require('../middlewares/validObjectId');
+const { guardObjectIds } = require('../middlewares/validObjectId');
 
 // Chan id sai dinh dang -> 404 thay vi 500. Xem middlewares/validObjectId.js
-capIdHopLe(router);
+guardObjectIds(router);
 
-const { luuBaiLam, lichSuBaiLam, chiTietBaiLam } = require('../controllers/practiceController');
+const { saveAttempt, attemptHistory, attemptDetail } = require('../controllers/practiceController');
 
 const { protect } = require('../middlewares/authMiddleware');
 
@@ -13,12 +13,12 @@ const { protect } = require('../middlewares/authMiddleware');
 router.use(protect);
 
 // @route   POST /api/luyen-tap/bai-lam
-router.post('/bai-lam', luuBaiLam);
+router.post('/bai-lam', saveAttempt);
 
 // @route   GET /api/luyen-tap/bai-lam?deId=...
-router.get('/bai-lam', lichSuBaiLam);
+router.get('/bai-lam', attemptHistory);
 
 // @route   GET /api/luyen-tap/bai-lam/:id
-router.get('/bai-lam/:id', chiTietBaiLam);
+router.get('/bai-lam/:id', attemptDetail);
 
 module.exports = router;

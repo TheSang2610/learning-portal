@@ -19,7 +19,7 @@ const mongoose = require('mongoose');
  *   mot gia tri hop le.
  */
 
-const ghiChuSchema = new mongoose.Schema(
+const noteSchema = new mongoose.Schema(
     {
         user: {
             type: mongoose.Schema.Types.ObjectId,
@@ -58,9 +58,9 @@ const ghiChuSchema = new mongoose.Schema(
 // Truy van duy nhat cua man hinh hoc bai: ghi chu CUA MOT NGUOI trong MOT bai.
 // Ca hai truong deu phai co trong index - loc theo lesson khong thoi la quet
 // qua ghi chu cua moi hoc vien khac roi moi bo di.
-ghiChuSchema.index({ user: 1, lesson: 1, mocGiay: 1, createdAt: 1 });
+noteSchema.index({ user: 1, lesson: 1, mocGiay: 1, createdAt: 1 });
 
 // Cho man hinh "tat ca ghi chu cua toi" gom theo khoa.
-ghiChuSchema.index({ user: 1, course: 1, createdAt: -1 });
+noteSchema.index({ user: 1, course: 1, createdAt: -1 });
 
-module.exports = mongoose.model('GhiChuBaiHoc', ghiChuSchema);
+module.exports = mongoose.model('GhiChuBaiHoc', noteSchema);

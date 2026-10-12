@@ -1,29 +1,29 @@
 import { apiRequest } from "./apiHelper";
 
 // Chep theo backend/src/models/Announcement.js.
-export type MucDoThongBaoChung = "thong_tin" | "quan_trong";
-export type VaiTroNhan = "" | "student" | "instructor";
+export type AnnouncementLevel = "thong_tin" | "quan_trong";
+export type RecipientRole = "" | "student" | "instructor";
 
-export interface ThongBaoChung {
+export interface Announcement {
   _id: string;
   tieuDe: string;
   noiDung: string;
   duongDan: string;
-  mucDo: MucDoThongBaoChung;
+  mucDo: AnnouncementLevel;
   createdAt: string;
   // Cac truong duoi chi co o danh sach quan tri.
   dangHien?: boolean;
   hetHan?: string | null;
   guiChuong?: boolean;
-  vaiTro?: VaiTroNhan;
+  vaiTro?: RecipientRole;
   soNguoiNhan?: number;
 }
 
-export interface NoiDungThongBao {
+export interface AnnouncementContent {
   tieuDe: string;
   noiDung?: string;
   duongDan?: string;
-  mucDo?: MucDoThongBaoChung;
+  mucDo?: AnnouncementLevel;
   // Chuoi ISO hoac rong = hien toi khi go tay.
   hetHan?: string;
   hienDauTrang?: boolean;
@@ -35,38 +35,40 @@ export interface NoiDungThongBao {
  * Duong nay KHONG can dang nhap - khach vang lai cung thay. apiRequest giu ket
  * qua GET 30 giay, du cho viec doi trang lien tuc khong goi lai nhieu lan.
  */
-export const layThongBaoChung = async (): Promise<{ danhSach: ThongBaoChung[] }> => {
+export const getAnnouncements = async (): Promise<{ danhSach: Announcement[] }> => {
   return apiRequest("/thong-bao-chung", { method: "GET" });
 };
 
-export const layThongBaoChungQuanTri = async (): Promise<{
-  danhSach: ThongBaoChung[];
+export const getAdminAnnouncements = async (): Promise<{
+  danhSach: Announcement[];
 }> => {
   return apiRequest("/thong-bao-chung/quan-tri", { method: "GET" });
 };
 
 /** Gui mot dot thong bao: dai dau trang va/hoac chuong. */
-export const guiThongBaoQuanTri = async (
-  than: NoiDungThongBao & { guiChuong: boolean; vaiTro?: VaiTroNhan },
-): Promise<{ thongBao: ThongBaoChung; daGui: number }> => {
+export const sendAdminAnnouncement = async (
+  body: AnnouncementContent & { guiChuong: boolean; vaiTro?: RecipientRole },
+): Promise<{ thongBao: Announcement; daGui: number }> => {
   return apiRequest("/thong-bao-chung/quan-tri", {
     method: "POST",
-    body: JSON.stringify(than),
+    body: JSON.stringify(body),
   });
 };
 
 /** Sua noi dung: may chu cap nhat ca dai dau trang lan chuong da gui. */
-export const suaThongBaoQuanTri = async (
+export const editAdminAnnouncement = async (
   id: string,
-  than: NoiDungThongBao,
-): Promise<{ thongBao: ThongBaoChung; daCapNhat: number }> => {
+  body: AnnouncementContent,
+): Promise<{ thongBao: Announcement; daCapNhat: number }> => {
   return apiRequest(`/thong-bao-chung/quan-tri/${id}`, {
     method: "PUT",
-    body: JSON.stringify(than),
+    body: JSON.stringify(body),
   });
 };
 
 /** Thu hoi: xoa khoi dai dau trang va khoi chuong cua moi nguoi da nhan. */
-export const xoaThongBaoQuanTri = async (id: string): Promise<{ daThuHoi: number }> => {
+export const deleteAdminAnnouncement = async (
+  id: string,
+): Promise<{ daThuHoi: number }> => {
   return apiRequest(`/thong-bao-chung/quan-tri/${id}`, { method: "DELETE" });
 };

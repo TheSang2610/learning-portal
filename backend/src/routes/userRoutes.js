@@ -1,10 +1,10 @@
 const express = require('express');
 const multer = require('multer');
 const router = express.Router();
-const { capIdHopLe } = require('../middlewares/validObjectId');
+const { guardObjectIds } = require('../middlewares/validObjectId');
 
 // Chan id sai dinh dang -> 404 thay vi 500. Xem middlewares/validObjectId.js
-capIdHopLe(router);
+guardObjectIds(router);
 const {
     getUsers,
     registerUser,
@@ -20,13 +20,13 @@ const {
 } = require('../controllers/userController');
 const { protect, admin } = require('../middlewares/authMiddleware');
 const { loginRateLimit } = require('../middlewares/loginRateLimit');
-const { gioiHan } = require('../middlewares/rateLimit');
-const { khongLuuCache } = require('../middlewares/cacheControl');
+const { limit } = require('../middlewares/rateLimit');
+const { noStore } = require('../middlewares/cacheControl');
 
 // Toan bo router nay tra du lieu rieng cua tung nguoi va dat cookie phien -
 // khong mot duong nao trong day duoc phep nam lai trong bo dem cua CDN hay
 // trinh duyet. Xem middlewares/cacheControl.js.
-router.use(khongLuuCache);
+router.use(noStore);
 
 // Dang ky khong co "lan sai" de dem nhu dang nhap - ban than viec goi nhieu da
 // la van de: mo hang loat tai khoan rac, va moi luot goi gio con keo theo mot
@@ -37,19 +37,19 @@ router.use(khongLuuCache);
 // lop chan chinh nua, nhung van can, va gio no moi thuc su co hieu luc: bo dem
 // da chuyen sang kho dung chung nen khong con bi moi lambda instance cap lai
 // han muc moi.
-const gioiHanDangKy = gioiHan({
+const registerLimit = limit({
     ten: 'dangky',
-    soLan: 10,
-    cuaSoMs: 60 * 60 * 1000, // 1 gio
+    hits: 10,
+    windowMs: 60 * 60 * 1000, // 1 gio
     thongBao: 'Bạn đã tạo quá nhiều tài khoản từ địa chỉ này. Vui lòng thử lại sau.',
 });
 
 // Google tu xac thuc nen khong do mat khau duoc, nhung moi luot goi deu keo
 // theo mot lan xac minh token voi may chu Google - van nen co tran.
-const gioiHanGoogle = gioiHan({
+const googleLimit = limit({
     ten: 'google',
-    soLan: 30,
-    cuaSoMs: 15 * 60 * 1000,
+    hits: 30,
+    windowMs: 15 * 60 * 1000,
     thongBao: 'Quá nhiều yêu cầu đăng nhập. Vui lòng thử lại sau ít phút.',
 });
 // Quen mat khau: ba duong, ba tran theo IP khac nhau.
@@ -63,40 +63,40 @@ const gioiHanGoogle = gioiHan({
 //
 // Nguong dat rong, vi ca mot truong hoc hay van phong co the ra ngoai chung
 // mot IP qua NAT.
-const gioiHanQuenMk = gioiHan({
+const forgotPasswordLimit = limit({
     ten: 'quenmk',
-    soLan: 20,
-    cuaSoMs: 60 * 60 * 1000, // 1 gio
+    hits: 20,
+    windowMs: 60 * 60 * 1000, // 1 gio
     thongBao: 'Quá nhiều yêu cầu từ địa chỉ này. Vui lòng thử lại sau.',
 });
 
 // Duong nhap ma cho nguong cao hon: nguoi dung that go nham vai lan la
 // chuyen binh thuong, va lop chan do ma that su nam o bo dem theo email.
-const gioiHanKiemMa = gioiHan({
+const codeCheckLimit = limit({
     ten: 'quenmk-kiemma',
-    soLan: 60,
-    cuaSoMs: 60 * 60 * 1000,
+    hits: 60,
+    windowMs: 60 * 60 * 1000,
     thongBao: 'Quá nhiều yêu cầu từ địa chỉ này. Vui lòng thử lại sau.',
 });
 
 const {
-    yeuCauMa,
-    kiemMa,
-    datLaiMatKhau,
+    requestCode,
+    verifyCode,
+    resetPassword,
 } = require('../controllers/passwordResetController');
 
 const { getMyProfile, getMyActivity } = require('../controllers/activityController');
 
 router.get('/instructors', protect, admin, getInstructorsByProvider);
 
-router.route('/').get(protect, admin, getUsers).post(gioiHanDangKy, registerUser);
+router.route('/').get(protect, admin, getUsers).post(registerLimit, registerUser);
 router.post('/login', loginRateLimit, loginUser);
 
 // Quen mat khau. Ba duong nay deu KHONG can dang nhap - do la ca van de: xem
 // hai nguyen tac o dau controllers/passwordResetController.js.
-router.post('/quen-mat-khau', gioiHanQuenMk, yeuCauMa);
-router.post('/quen-mat-khau/kiem-ma', gioiHanKiemMa, kiemMa);
-router.post('/quen-mat-khau/dat-lai', gioiHanKiemMa, datLaiMatKhau);
+router.post('/quen-mat-khau', forgotPasswordLimit, requestCode);
+router.post('/quen-mat-khau/kiem-ma', codeCheckLimit, verifyCode);
+router.post('/quen-mat-khau/dat-lai', codeCheckLimit, resetPassword);
 router.post('/logout', logoutUser);
 router.get('/profile', protect, getMyProfile);
 router.put('/profile', protect, updateUserProfile);
@@ -108,13 +108,13 @@ router.put('/profile', protect, updateUserProfile);
 // cho video bai hoc, qua rong cho mot tam anh dai dien.
 // ---------------------------------------------------------------------------
 const MAX_AVATAR_MB = 5;
-const MIME_ANH = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
-const uploadAnh = multer({
+const uploadImage = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: MAX_AVATAR_MB * 1024 * 1024, files: 1 },
     fileFilter: (req, file, cb) => {
-        if (!MIME_ANH.includes(file.mimetype)) {
+        if (!IMAGE_MIMES.includes(file.mimetype)) {
             return cb(new Error('Chỉ nhận ảnh JPG, PNG, WEBP hoặc GIF'));
         }
         cb(null, true);
@@ -123,8 +123,8 @@ const uploadAnh = multer({
 
 // Multer nem loi ngoai luong try/catch cua controller. Khong bat o day thi
 // nguoi dung nhan 500 khong ro nguyen nhan thay vi "anh qua nang".
-const nhanAnh = (req, res, next) => {
-    uploadAnh.single('avatar')(req, res, (err) => {
+const imageUpload = (req, res, next) => {
+    uploadImage.single('avatar')(req, res, (err) => {
         if (!err) return next();
         if (err.code === 'LIMIT_FILE_SIZE') {
             return res.status(400).json({ message: `Ảnh tối đa ${MAX_AVATAR_MB}MB` });
@@ -133,12 +133,12 @@ const nhanAnh = (req, res, next) => {
     });
 };
 
-router.post('/profile/avatar', protect, nhanAnh, uploadAvatar);
+router.post('/profile/avatar', protect, imageUpload, uploadAvatar);
 
 router.put('/deactivate', protect, deactivateMyAccount);
 router.get('/activity', protect, getMyActivity);
 router.put('/:id/role', protect, admin, updateUserRole);
 router.delete('/:id', protect, admin, deleteUser);
-router.post('/google', gioiHanGoogle, googleLogin);
+router.post('/google', googleLimit, googleLogin);
 
 module.exports = router;

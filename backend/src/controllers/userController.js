@@ -1,34 +1,34 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
-const { BCRYPT_ROUNDS, HAN_TOKEN } = require('../utils/password');
-const { datCookieToken, xoaCookieToken } = require('../utils/cookieToken');
+const { BCRYPT_ROUNDS, TOKEN_TTL } = require('../utils/password');
+const { setTokenCookie, clearTokenCookie } = require('../utils/cookieToken');
 const jwt = require('jsonwebtoken');
 const {
     recordLoginFailure,
     clearLoginAttempts,
-    khoaTaiKhoan,
-    MAX_FAILS_TAI_KHOAN,
-    WINDOW_MS: CUA_SO_DANG_NHAP,
+    accountKey,
+    MAX_ACCOUNT_FAILS,
+    WINDOW_MS: LOGIN_WINDOW,
 } = require('../middlewares/loginRateLimit');
-const { conBiKhoa, ghiNhanSai, xoaKhoa } = require('../utils/rateLimitStore');
+const { stillLocked, recordFailure, unlock } = require('../utils/rateLimitStore');
 const {
-    chuanHoaEmail,
-    emailHopLe,
-    matKhauNhanDuoc,
-    loiMatKhauMoi,
-    kiemTen,
-    kiemPayloadGoogle,
+    normalizeEmail,
+    isValidEmail,
+    receivedPassword,
+    newPasswordError,
+    validateName,
+    verifyGooglePayload,
 } = require('../utils/validateInput');
-const { chuanHoaDinhDanh, boLocTaiKhoan } = require('../utils/loginIdentifier');
-const { chuanHoaSoDienThoai } = require('../utils/phoneNumber');
-const layCloudinary = require('../config/cloudinary');
+const { normalizeIdentifier, accountFilter } = require('../utils/loginIdentifier');
+const { normalizePhone } = require('../utils/phoneNumber');
+const getCloudinary = require('../config/cloudinary');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
 
 // google-auth-library nap mat ~144ms nhung chi mot duong duy nhat can den no
 // (dang nhap bang Google). Nap luoi de moi cold start khac khong phai tra
 // khoan do. Node co dem module san nen chi lan goi dau tien moi cham.
 let googleClient = null;
-const layGoogleClient = () => {
+const getGoogleClient = () => {
   if (!googleClient) {
     const { OAuth2Client } = require('google-auth-library');
     googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -53,12 +53,12 @@ const layGoogleClient = () => {
 // Chuoi duoi la hash bcrypt 12 vong cua mot chuoi ngau nhien 32 byte khong ai
 // biet. Doi chieu voi no ton dung bang thoi gian doi chieu that, nen hai truong
 // hop khong con phan biet duoc qua thoi gian nua.
-const HASH_GIA = '$2b$12$nqNzZcPVRmshfJKx.9XA7.EEeUeY96tTd6ikBm/CddhQrPfG/XsD2';
+const FAKE_HASH = '$2b$12$nqNzZcPVRmshfJKx.9XA7.EEeUeY96tTd6ikBm/CddhQrPfG/XsD2';
 
 // Tran cho viec do mat khau HIEN TAI o duong doi mat khau - xem ghi chu tai
 // cho dung, trong updateUserProfile.
-const MAX_SAI_MAT_KHAU_CU = 5;
-const CUA_SO_DOI_MK = 15 * 60 * 1000;
+const MAX_OLD_PASSWORD_FAILS = 5;
+const PASSWORD_CHANGE_WINDOW = 15 * 60 * 1000;
 
 // Tạo Token JWT (hàm tiện ích nội bộ)
 //
@@ -68,7 +68,7 @@ const CUA_SO_DOI_MK = 15 * 60 * 1000;
 // thi khong phu thuoc vao mac dinh cua mot ban thu vien nao ca.
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: HAN_TOKEN,
+        expiresIn: TOKEN_TTL,
         algorithm: 'HS256',
     });
 };
@@ -83,12 +83,12 @@ const loginUser = async (req, res) => {
         //
         // Truong van ten la `email` de khong pha cac ban giao dien cu dang
         // chay - chi y nghia cua no rong ra.
-        const dinhDanh = chuanHoaDinhDanh(req.body?.email);
+        const identifier = normalizeIdentifier(req.body?.email);
         const password = req.body?.password;
 
         // 1. Thieu tham so -> 400. Truoc day password thieu se lam bcrypt.compare
         //    nem loi va tra ve 500 kem thong bao noi bo cua thu vien.
-        if (!dinhDanh || !matKhauNhanDuoc(password)) {
+        if (!identifier || !receivedPassword(password)) {
             return res.status(400).json({
                 message: 'Vui lòng nhập số điện thoại (hoặc email) và mật khẩu'
             });
@@ -97,8 +97,8 @@ const loginUser = async (req, res) => {
         // 2. Sai hinh dang thi khong can truy van DB.
         //    Tran do dai cung chan luon duong bom phinh bo dem cua
         //    loginRateLimit - khoa cua no la `ip|email`.
-        const boLoc = boLocTaiKhoan(dinhDanh, emailHopLe);
-        if (!boLoc) {
+        const accountQuery = accountFilter(identifier, isValidEmail);
+        if (!accountQuery) {
             return res.status(400).json({
                 message: 'Số điện thoại hoặc email không hợp lệ'
             });
@@ -114,7 +114,7 @@ const loginUser = async (req, res) => {
         //
         // Tra cuu bang dia chi day du thi `email` la khoa duy nhat, luon ra
         // toi da mot ban ghi, nen buoc nay khong doi gi.
-        const khop = await User.find(boLoc).limit(2);
+        const khop = await User.find(accountQuery).limit(2);
         const user = khop.length === 1 ? khop[0] : null;
 
         // 2b. Bo dem theo RIENG tai khoan, tinh tren dia chi THAT.
@@ -134,26 +134,26 @@ const loginUser = async (req, res) => {
         //     la mot loi that: user.email la undefined, nen moi tai khoan
         //     phone-only deu dung CHUNG mot khoa `ip|undefined` - mot nguoi
         //     go sai nam lan la khoa ca dam.
-        const danhTinhThat = user ? (user.email || user.phone || '') : '';
-        const khoaThatSu =
-            danhTinhThat && danhTinhThat !== dinhDanh ? khoaTaiKhoan(danhTinhThat) : null;
+        const realIdentity = user ? (user.email || user.phone || '') : '';
+        const realKey =
+            realIdentity && realIdentity !== identifier ? accountKey(realIdentity) : null;
 
-        if (khoaThatSu) {
-            const giayCon = await conBiKhoa([khoaThatSu]);
-            if (giayCon > 0) {
-                res.set('Retry-After', String(giayCon));
+        if (realKey) {
+            const secondsLeft = await stillLocked([realKey]);
+            if (secondsLeft > 0) {
+                res.set('Retry-After', String(secondsLeft));
                 return res.status(429).json({
-                    message: `Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau ${Math.ceil(giayCon / 60)} phút.`,
-                    retryAfter: giayCon,
+                    message: `Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau ${Math.ceil(secondsLeft / 60)} phút.`,
+                    retryAfter: secondsLeft,
                 });
             }
         }
 
         // 3. LUON doi chieu bcrypt mot lan, ke ca khi khong tim thay tai khoan
         //    hoac tai khoan do dang nhap bang Google (password rong). Xem
-        //    HASH_GIA o dau file: khong lam vay thi thoi gian phan hoi to cao
+        //    FAKE_HASH o dau file: khong lam vay thi thoi gian phan hoi to cao
         //    email nao co that trong he thong.
-        const isMatch = await bcrypt.compare(password, user?.password || HASH_GIA);
+        const isMatch = await bcrypt.compare(password, user?.password || FAKE_HASH);
 
         // 4. Khong ro email, mat khau sai, hay tai khoan chi dang nhap bang
         //    Google - CUNG mot cau tra loi, va deu tinh la mot lan sai.
@@ -170,8 +170,8 @@ const loginUser = async (req, res) => {
             // Ghi vao ca khoa cua dia chi that (neu ho go ten ngan) - xem 2b.
             await Promise.all([
                 recordLoginFailure(req.loginAttemptKey),
-                khoaThatSu
-                    ? ghiNhanSai(khoaThatSu, MAX_FAILS_TAI_KHOAN, CUA_SO_DANG_NHAP)
+                realKey
+                    ? recordFailure(realKey, MAX_ACCOUNT_FAILS, LOGIN_WINDOW)
                     : Promise.resolve(),
             ]);
             return res.status(401).json({
@@ -206,13 +206,13 @@ const loginUser = async (req, res) => {
         // vi muon toi day phai go dung mat khau cua chinh tai khoan do.
         await Promise.all([
             clearLoginAttempts(req.loginAttemptKey),
-            khoaThatSu ? xoaKhoa(khoaThatSu) : Promise.resolve(),
+            realKey ? unlock(realKey) : Promise.resolve(),
         ]);
 
         // Token di bang cookie httpOnly, KHONG nam trong than phan hoi.
         // De no trong than thi JavaScript cua trang doc duoc, va the la mat
         // dung cai loi ich vua doi sang cookie de co.
-        datCookieToken(res, generateToken(user._id));
+        setTokenCookie(res, generateToken(user._id));
 
         res.json({
             _id: user._id,
@@ -259,7 +259,7 @@ const googleLogin = async (req, res) => {
     // vi moi lan go token linh tinh deu thanh mot loi may chu.
     let payload;
     try {
-      const ticket = await layGoogleClient().verifyIdToken({
+      const ticket = await getGoogleClient().verifyIdToken({
         idToken: req.body.credential,
         audience: process.env.GOOGLE_CLIENT_ID,
       });
@@ -268,7 +268,7 @@ const googleLogin = async (req, res) => {
       return res.status(401).json({ message: 'Google credential không hợp lệ' });
     }
 
-    // Kiem noi dung payload: xem kiemPayloadGoogle trong utils/validateInput.js.
+    // Kiem noi dung payload: xem verifyGooglePayload trong utils/validateInput.js.
     //
     // LO HONG DA VA - THIEU email_verified: ban cu chi hoi "payload co email
     // khong" roi lay email do di tim tai khoan va cap token. Google KHONG bao
@@ -277,12 +277,12 @@ const googleLogin = async (req, res) => {
     // mot mien Workspace la tao duoc tai khoan mang dia chi cua nguoi khac,
     // bam "Dang nhap bang Google", va roi thang vao tai khoan cua nan nhan o
     // day - khong can mat khau, khong cham vao bat ky lop bao ve nao khac.
-    const kiem = kiemPayloadGoogle(payload);
-    if (kiem.loi) {
-      return res.status(401).json({ message: kiem.loi });
+    const check = verifyGooglePayload(payload);
+    if (check.loi) {
+      return res.status(401).json({ message: check.loi });
     }
 
-    const { email, sub, ten: name, anh: picture } = kiem;
+    const { email, sub, ten: name, anh: picture } = check;
 
     const googleUserExists = await User.findOne({
         googleId: sub
@@ -312,7 +312,7 @@ const googleLogin = async (req, res) => {
       // { unique, sparse }, ma sparse CHI bo qua null/undefined - khong bo qua
       // chuoi rong. Voi `|| ''` thi tai khoan Google thu hai roi vao nhanh do se
       // dung khoa trung, va te hon, `User.findOne({ googleId: '' })` sau do se
-      // khop nham dung nhung tai khoan do voi nhau. Nay kiemPayloadGoogle da bat
+      // khop nham dung nhung tai khoan do voi nhau. Nay verifyGooglePayload da bat
       // buoc co `sub` nen nhanh do khong con ton tai.
       user = await User.create({
         name,
@@ -320,17 +320,17 @@ const googleLogin = async (req, res) => {
         avatar: '',
         googleId: sub,
         role: 'student',
-        // Google da tu kiem dia chi nay (kiemPayloadGoogle bat buoc
+        // Google da tu kiem dia chi nay (verifyGooglePayload bat buoc
         // email_verified), nen khong phai gui them thu xac minh nao.
         emailVerified: true
       });
     } else {
       // if user exists but doesn't have googleId, attach it (but do not overwrite avatar)
-      let phaiLuu = false;
+      let mustSave = false;
 
       if ((!user.googleId || user.googleId === '') && sub) {
         user.googleId = sub;
-        phaiLuu = true;
+        mustSave = true;
       }
 
       // Dang nhap Google thanh cong LA mot bang chung so huu dia chi email,
@@ -341,10 +341,10 @@ const googleLogin = async (req, res) => {
       // thay vi khi true khi false khi thieu han.
       if (user.emailVerified !== true) {
         user.emailVerified = true;
-        phaiLuu = true;
+        mustSave = true;
       }
 
-      if (phaiLuu) await user.save();
+      if (mustSave) await user.save();
     }
 
     // Tai khoan bi admin khoa thi khong cap token, ke ca dang nhap qua Google
@@ -364,7 +364,7 @@ const googleLogin = async (req, res) => {
       googlePicture: picture || '',         // temporary picture from Google (not persisted)
     };
 
-    datCookieToken(res, generateToken(user._id));
+    setTokenCookie(res, generateToken(user._id));
 
     res.json(responseUser);
 
@@ -383,7 +383,7 @@ const googleLogin = async (req, res) => {
 // het han hoac da hong. Bat dang nhap moi cho dang xuat la vo ly, va se de lai
 // cookie chet trong trinh duyet.
 const logoutUser = (req, res) => {
-    xoaCookieToken(res);
+    clearTokenCookie(res);
     res.json({ message: 'Đã đăng xuất' });
 };
 
@@ -403,7 +403,7 @@ const registerUser = async (req, res) => {
         // hoa thi '+84901234567' va '0901234567' thanh hai ban ghi khac nhau
         // trong CSDL, va nguoi dang ky bang cach nay khong dang nhap duoc
         // bang cach kia.
-        const phone = chuanHoaSoDienThoai(req.body?.phone);
+        const phone = normalizePhone(req.body?.phone);
 
         if (!phone) {
             return res.status(400).json({
@@ -418,10 +418,10 @@ const registerUser = async (req, res) => {
         // { unique, sparse } cua truong email chi bo qua ban ghi THIEU HAN
         // truong do. Luu '' vao thi tai khoan thu hai khong co email se dam
         // vao tai khoan thu nhat bang loi trung khoa.
-        const emailTho = chuanHoaEmail(req.body?.email);
+        const emailTho = normalizeEmail(req.body?.email);
         const email = emailTho || undefined;
 
-        if (email && !emailHopLe(email)) {
+        if (email && !isValidEmail(email)) {
             return res.status(400).json({ message: 'Email không hợp lệ' });
         }
 
@@ -432,20 +432,20 @@ const registerUser = async (req, res) => {
         // bcrypt.hash, noi no nem loi va thanh mot 500. loginUser da ep kieu
         // tu truoc, registerUser thi khong: dung kieu lech nhau ma khong ai
         // nhin thay. Nay ca hai dung chung utils/validateInput.js.
-        const loiMk = loiMatKhauMoi(password);
-        if (loiMk) {
-            return res.status(400).json({ message: loiMk });
+        const passwordError = newPasswordError(password);
+        if (passwordError) {
+            return res.status(400).json({ message: passwordError });
         }
 
         // Ten cung phai kiem kieu va do dai. Truoc day chi kiem "co gia tri
         // khong", nen mot doi tuong hay mot chuoi 1MB deu di thang vao CSDL -
         // trong khi updateUserProfile lai chan o 2..50 ky tu, tuc la dang ky
         // duoc cai ten ma sau do khong bao gio sua lai duoc.
-        const kqTen = kiemTen(req.body.name);
-        if (kqTen.loi) {
-            return res.status(400).json({ message: kqTen.loi });
+        const nameResult = validateName(req.body.name);
+        if (nameResult.loi) {
+            return res.status(400).json({ message: nameResult.loi });
         }
-        const name = kqTen.ten;
+        const name = nameResult.ten;
 
         // Tra cuu TRUOC roi moi bam.
         //
@@ -460,17 +460,17 @@ const registerUser = async (req, res) => {
         // con la 245ms CPU dot khong cong gi - dat tien tren serverless. Xem
         // ghi chu ben duoi ve danh doi nay.
         //
-        // loginUser thi VAN giu HASH_GIA: ben do phan hoi khong noi gi ca, nen
+        // loginUser thi VAN giu FAKE_HASH: ben do phan hoi khong noi gi ca, nen
         // thoi gian van la manh moi that su.
         //
         // Hoi CA HAI truong trong MOT luot thay vi hai luot noi tiep - va chi
         // hoi email khi nguoi dung co nhap. Khong loc ra thi dieu kien thanh
         // { email: undefined }, ma Mongo hieu do la "email bang null" va se
         // khop bat ky tai khoan nao khong co email.
-        const dieuKien = [{ phone }];
-        if (email) dieuKien.push({ email });
+        const conditions = [{ phone }];
+        if (email) conditions.push({ email });
 
-        const daCo = await User.findOne({ $or: dieuKien }).select('phone email').lean();
+        const existing = await User.findOne({ $or: conditions }).select('phone email').lean();
 
         // -------------------------------------------------------------------
         // Dang ky xong la dung nhu tai khoan ngay, khong qua buoc mo hom thu.
@@ -487,17 +487,17 @@ const registerUser = async (req, res) => {
         //
         // HE QUA PHAI BIET: duong dang ky nay lo lai chuyen so dien thoai hay
         // dia chi nao da co tai khoan - go vao la phan biet duoc "da tồn tại"
-        // voi dang ky thanh cong. loginUser VAN bit kin phia no (xem HASH_GIA
+        // voi dang ky thanh cong. loginUser VAN bit kin phia no (xem FAKE_HASH
         // va cac ghi chu o do), nen chi ro ri o day. Day la danh doi da can
         // nhac, khong phai sot.
         // -------------------------------------------------------------------
-        if (daCo) {
+        if (existing) {
             // Noi ro TRUONG NAO trung. Bao chung chung "tài khoản đã tồn tại"
             // thi nguoi dien ca hai o khong biet phai sua o nao, va se thu
             // lai bang cach doi dai mot trong hai.
             return res.status(400).json({
                 message:
-                    daCo.phone === phone
+                    existing.phone === phone
                         ? 'Số điện thoại này đã có tài khoản'
                         : 'Email này đã có tài khoản',
             });
@@ -523,7 +523,7 @@ const registerUser = async (req, res) => {
             ...(email ? { emailVerified: true } : {}),
         });
 
-        datCookieToken(res, generateToken(user._id));
+        setTokenCookie(res, generateToken(user._id));
 
         return res.status(201).json({
             _id: user._id,
@@ -542,10 +542,10 @@ const registerUser = async (req, res) => {
         // error.keyPattern cho biet chi muc nao bi dam, nen van noi dung
         // truong cho nguoi dung thay vi mot cau chung chung.
         if (error.code === 11000) {
-            const truong = Object.keys(error.keyPattern || {})[0];
+            const school = Object.keys(error.keyPattern || {})[0];
             return res.status(400).json({
                 message:
-                    truong === 'phone'
+                    school === 'phone'
                         ? 'Số điện thoại này đã có tài khoản'
                         : 'Email này đã có tài khoản',
             });
@@ -630,7 +630,7 @@ const updateUserProfile = async (req, res) => {
         // cu. Muon mo duong doi email thi phai kem buoc nhap lai mat khau
         // hien tai VA xac minh dia chi moi, la mot viec rieng.
         if (has('email')) {
-            const emailMoi = chuanHoaEmail(req.body.email);
+            const newEmail = normalizeEmail(req.body.email);
 
             if (user.email) {
                 return res.status(400).json({
@@ -638,19 +638,19 @@ const updateUserProfile = async (req, res) => {
                 });
             }
 
-            if (!emailMoi || !emailHopLe(emailMoi)) {
+            if (!newEmail || !isValidEmail(newEmail)) {
                 return res.status(400).json({ message: 'Email không hợp lệ' });
             }
 
             const emailExists = await User.findOne({
-                email: emailMoi,
+                email: newEmail,
                 _id: { $ne: req.user._id },
             });
             if (emailExists) {
                 return res.status(400).json({ message: 'Email đã tồn tại' });
             }
 
-            user.email = emailMoi;
+            user.email = newEmail;
             // Dia chi TU NHAP, chua ai chung minh gi ca. Danh dau false chu
             // khong phai true - khong con cho nao chan theo truong nay, nhung
             // ghi true la ghi vao CSDL mot cau khong dung.
@@ -683,7 +683,7 @@ const updateUserProfile = async (req, res) => {
                 // luu thanh hai gia tri khac nhau: chi muc duy nhat khong
                 // thay trung, va nguoi dung doi so o day xong thi khong dang
                 // nhap duoc bang so nua vi dang luu khac dang tra cuu.
-                const phone = chuanHoaSoDienThoai(tho);
+                const phone = normalizePhone(tho);
 
                 if (!phone) {
                     return res.status(400).json({
@@ -709,14 +709,14 @@ const updateUserProfile = async (req, res) => {
         if (has('bio')) user.bio = String(req.body.bio || '').trim().slice(0, 500);
         // --- Anh dai dien dat bang duong dan ---
         if (has('avatar')) {
-            const moi = String(req.body.avatar || '').trim();
+            const recent = String(req.body.avatar || '').trim();
             // Bo anh cu da tai len de khong de lai file rac tren Cloudinary.
             // Xoa hong thi ke, khong duoc chan viec luu ho so cua nguoi dung.
-            if (user.avatarPublicId && moi !== user.avatar) {
-                await xoaAnhCu(user.avatarPublicId);
+            if (user.avatarPublicId && recent !== user.avatar) {
+                await deleteOldImage(user.avatarPublicId);
                 user.avatarPublicId = '';
             }
-            user.avatar = moi;
+            user.avatar = recent;
         }
 
         if (has('birthday')) {
@@ -744,16 +744,16 @@ const updateUserProfile = async (req, res) => {
             const newPassword = req.body.password;
 
             // Truoc day cho nay chan o 6 ky tu nhung cau bao loi lai chen
-            // DAI_MAT_KHAU_TOI_THIEU (8) vao: mat khau 6-7 ky tu duoc nhan, con
+            // MIN_PASSWORD_LENGTH (8) vao: mat khau 6-7 ky tu duoc nhan, con
             // nguoi doc code thi tin la 8. Dang ky chan 8, doi mat khau chan 6 -
             // tuc la duong doi mat khau la mot cach hop le de ha do manh cua mat
             // khau xuong duoi nguong cua chinh he thong nay.
             //
             // Nay ca ba duong (dang ky, doi mat khau, va bat cu duong nao them
             // sau) dung chung mot ham: xem utils/validateInput.js.
-            const loiMk = loiMatKhauMoi(newPassword);
-            if (loiMk) {
-                return res.status(400).json({ message: loiMk.replace('Mật khẩu', 'Mật khẩu mới') });
+            const passwordError = newPasswordError(newPassword);
+            if (passwordError) {
+                return res.status(400).json({ message: passwordError.replace('Mật khẩu', 'Mật khẩu mới') });
             }
 
             // Tai khoan dang nhap bang Google chua tung dat mat khau -> cho dat lan dau
@@ -762,7 +762,7 @@ const updateUserProfile = async (req, res) => {
             // token chua het han) deu doi duoc mat khau va chiem han tai khoan.
             if (user.password) {
                 const currentPassword = req.body.currentPassword;
-                if (!matKhauNhanDuoc(currentPassword)) {
+                if (!receivedPassword(currentPassword)) {
                     return res.status(400).json({ message: 'Vui lòng nhập mật khẩu hiện tại' });
                 }
 
@@ -779,25 +779,25 @@ const updateUserProfile = async (req, res) => {
                 // Dem theo _id chu khong theo IP: nan nhan la mot tai khoan cu
                 // the, va ke tan cong o ngay tren may cua ho thi IP trung nhau
                 // khong noi len dieu gi.
-                const khoaDoiMk = `doimk:${user._id}`;
-                const giayCon = await conBiKhoa([khoaDoiMk]);
-                if (giayCon > 0) {
-                    res.set('Retry-After', String(giayCon));
+                const passwordChangeKey = `doimk:${user._id}`;
+                const secondsLeft = await stillLocked([passwordChangeKey]);
+                if (secondsLeft > 0) {
+                    res.set('Retry-After', String(secondsLeft));
                     return res.status(429).json({
-                        message: `Bạn đã nhập sai mật khẩu hiện tại quá nhiều lần. Vui lòng thử lại sau ${Math.ceil(giayCon / 60)} phút.`,
-                        retryAfter: giayCon,
+                        message: `Bạn đã nhập sai mật khẩu hiện tại quá nhiều lần. Vui lòng thử lại sau ${Math.ceil(secondsLeft / 60)} phút.`,
+                        retryAfter: secondsLeft,
                     });
                 }
 
                 const ok = await bcrypt.compare(currentPassword, user.password);
                 if (!ok) {
-                    await ghiNhanSai(khoaDoiMk, MAX_SAI_MAT_KHAU_CU, CUA_SO_DOI_MK);
+                    await recordFailure(passwordChangeKey, MAX_OLD_PASSWORD_FAILS, PASSWORD_CHANGE_WINDOW);
                     return res.status(401).json({ message: 'Mật khẩu hiện tại không đúng' });
                 }
 
                 // Nhap dung thi xoa bo dem: nguoi that go nham vai lan roi nho
                 // ra khong bi keo theo han muc cu.
-                await xoaKhoa(khoaDoiMk);
+                await unlock(passwordChangeKey);
 
                 if (await bcrypt.compare(newPassword, user.password)) {
                     return res.status(400).json({ message: 'Mật khẩu mới phải khác mật khẩu hiện tại' });
@@ -851,7 +851,7 @@ const deactivateMyAccount = async (req, res) => {
         // Yeu cau nhap lai mat khau: nut nay lam nguoi dung mat quyen truy cap
         // va chi admin moi mo lai duoc, nen phai chac chan la chinh chu.
         if (user.password) {
-            if (!matKhauNhanDuoc(req.body.password)) {
+            if (!receivedPassword(req.body.password)) {
                 return res.status(400).json({ message: 'Vui lòng nhập mật khẩu để xác nhận' });
             }
             const ok = await bcrypt.compare(req.body.password, user.password);
@@ -921,10 +921,10 @@ const getUsers = async (req, res) => {
 
 // Xoa mot anh da tai len. Khong bao gio nem loi ra ngoai: xoa anh cu that bai
 // khong phai ly do de tu choi luu anh moi cua nguoi dung.
-const xoaAnhCu = async (publicId) => {
+const deleteOldImage = async (publicId) => {
     if (!publicId) return;
     try {
-        await layCloudinary().uploader.destroy(publicId, { invalidate: true });
+        await getCloudinary().uploader.destroy(publicId, { invalidate: true });
     } catch (e) {
         console.error('Khong xoa duoc anh dai dien cu:', publicId, e.message);
     }
@@ -933,7 +933,7 @@ const xoaAnhCu = async (publicId) => {
 // Cloudinary chua cau hinh thi upload nem loi kho hieu tan sau. Kiem o day de
 // tra ve dung nguyen nhan, giong cach lam o documentController.
 const cloudinaryReady = () => {
-    const c = layCloudinary().config();
+    const c = getCloudinary().config();
     return Boolean(c.cloud_name && c.api_key && c.api_secret);
 };
 
@@ -958,12 +958,12 @@ const uploadAvatar = async (req, res) => {
         const user = await User.findById(req.user._id);
         if (!user) return res.status(404).json({ message: 'User không tìm thấy' });
 
-        const anhCu = user.avatarPublicId;
+        const oldImage = user.avatarPublicId;
 
         // Cat vuong quanh khuon mat va ep ve 400x400 ngay tren Cloudinary.
         // Lam o day chu khong phai o trinh duyet: anh 4000px chup bang dien
         // thoai ma de nguyen thi moi lan hien avatar 28px deu tai ve vai MB.
-        const ketQua = await uploadToCloudinary(req.file.buffer, 'image', {
+        const result = await uploadToCloudinary(req.file.buffer, 'image', {
             folder: 'learning-portal/avatars',
             public_id: `avatar-${user._id}-${Date.now()}`,
             use_filename: false,
@@ -974,13 +974,13 @@ const uploadAvatar = async (req, res) => {
             ],
         });
 
-        user.avatar = ketQua.secure_url;
-        user.avatarPublicId = ketQua.public_id;
+        user.avatar = result.secure_url;
+        user.avatarPublicId = result.public_id;
         await user.save();
 
         // Anh cu xoa SAU khi da luu anh moi: doi lai thi upload hong se lam
         // nguoi dung mat luon anh dang co.
-        await xoaAnhCu(anhCu);
+        await deleteOldImage(oldImage);
 
         const fresh = await User.findById(user._id).populate('provider', 'name logo');
         const out = fresh.toObject();

@@ -7,22 +7,22 @@
  * ('["toan","triet"]'). PATCH sua bai thi la JSON that nen nhan thang mang.
  * Chuoi don ("toan") van nhan - may khach cu gui mot mon.
  */
-const docDsMonTho = (v) => {
-    let ds = v;
-    if (typeof ds === 'string') {
-        const s = ds.trim();
+const parseRawSubjects = (v) => {
+    let items = v;
+    if (typeof items === 'string') {
+        const s = items.trim();
         if (s.startsWith('[')) {
             try {
-                ds = JSON.parse(s);
+                items = JSON.parse(s);
             } catch {
                 return [];
             }
         } else {
-            ds = s ? [s] : [];
+            items = s ? [s] : [];
         }
     }
-    if (!Array.isArray(ds)) return [];
-    return ds.filter((x) => typeof x === 'string' && x.trim()).map((x) => x.trim());
+    if (!Array.isArray(items)) return [];
+    return items.filter((x) => typeof x === 'string' && x.trim()).map((x) => x.trim());
 };
 
 /**
@@ -37,11 +37,11 @@ const docDsMonTho = (v) => {
  * doc lai UTF-8 khong ra ky tu loi. Ten da dung (hoac ten ASCII) giu nguyen -
  * khong bao gio lam hong them mot ten dang dung.
  */
-const suaTenFile = (ten) => {
-    const s = String(ten || '');
+const fixFileName = (name) => {
+    const s = String(name || '');
     if (!/[\u0080-ÿ]/.test(s) || /[^\u0000-ÿ]/.test(s)) return s;
     const utf8 = Buffer.from(s, 'latin1').toString('utf8');
     return utf8.includes('�') ? s : utf8;
 };
 
-module.exports = { docDsMonTho, suaTenFile };
+module.exports = { parseRawSubjects, fixFileName };

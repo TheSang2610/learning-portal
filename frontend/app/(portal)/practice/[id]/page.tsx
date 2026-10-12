@@ -1,24 +1,22 @@
 import { notFound } from "next/navigation";
 
-import PracticeSetup from "@/src/components/practice/PracticeSetup";
-import { DE_LUYEN_TAP } from "@/src/components/practice/practiceData";
+import PracticeSetup from "@/src/components/features/portal/practice/PracticeSetup";
+import { quizParams, findQuiz } from "@/src/lib/practice";
 
 interface Props {
   params: Promise<{ id: string }>;
 }
 
 // De la du lieu tinh nen dung san tung trang luc build
-export const generateStaticParams = () => DE_LUYEN_TAP.map((d) => ({ id: d.id }));
+export const generateStaticParams = quizParams;
 
 export async function generateMetadata({ params }: Props) {
-  const { id } = await params;
-  const de = DE_LUYEN_TAP.find((d) => d.id === id);
-  return de ? { title: de.title, description: de.description } : {};
+  const quiz = findQuiz((await params).id);
+  return quiz ? { title: quiz.title, description: quiz.description } : {};
 }
 
 export default async function PracticeDeckPage({ params }: Props) {
-  const { id } = await params;
-  const de = DE_LUYEN_TAP.find((d) => d.id === id);
-  if (!de) notFound();
-  return <PracticeSetup de={de} />;
+  const quiz = findQuiz((await params).id);
+  if (!quiz) notFound();
+  return <PracticeSetup de={quiz} />;
 }

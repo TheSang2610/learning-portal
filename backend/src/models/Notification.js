@@ -39,6 +39,8 @@ const notificationSchema = new mongoose.Schema(
                 'khoa_duoc_mo',
                 'chung_nhan',
                 'tra_loi_hoi_dap',
+                // Chi con o thong bao cu tu thoi co vi coin (bo 08/10/2026).
+                // Giu trong enum de luu lai thong bao cu khong bi loi kiem tra.
                 'coin_duoc_cong',
                 'he_thong',
             ],

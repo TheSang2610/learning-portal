@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { capIdHopLe } = require('../middlewares/validObjectId');
+const { guardObjectIds } = require('../middlewares/validObjectId');
 
 // Chan id sai dinh dang -> 404 thay vi 500. Xem middlewares/validObjectId.js
-capIdHopLe(router);
+guardObjectIds(router);
 
 const {
     getMyEnrolledCourses,

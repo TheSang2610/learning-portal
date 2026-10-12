@@ -1,9 +1,7 @@
-import PracticeHome from "@/src/components/practice/PracticeHome";
+import PracticeHome from "@/src/components/features/portal/practice/PracticeHome";
+import { PRACTICE_PAGE } from "@/src/constants/portal/practice-page";
 
-export const metadata = {
-  title: "Luyện tập trắc nghiệm",
-  description: "Ôn thi trắc nghiệm theo từng môn: chọn môn và làm các đề luyện tập.",
-};
+export const metadata = PRACTICE_PAGE.metadata;
 
 export default function PracticePage() {
   return <PracticeHome />;

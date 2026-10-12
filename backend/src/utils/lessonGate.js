@@ -5,7 +5,7 @@
  *
  *   1. courseId / lessonId co dung dinh dang khong
  *   2. khoa co that khong
- *   3. nguoi goi co quyen xem noi dung khoa do khong  (duocXemNoiDung)
+ *   3. nguoi goi co quyen xem noi dung khoa do khong  (canViewContent)
  *   4. bai co THUOC dung khoa vua kiem quyen khong
  *
  * Buoc 4 la buoc de quen nhat va la buoc nguy hiem nhat. Thieu no thi mot nguoi
@@ -21,15 +21,15 @@ const mongoose = require('mongoose');
 
 const Course = require('../models/Course');
 const Lesson = require('../models/Lesson');
-const { duocXemNoiDung } = require('./contentAccess');
+const { canViewContent } = require('./contentAccess');
 
 /**
  * Tra ve { khoa, bai } khi duoc di tiep, hoac { ma, loi } khi khong.
  *
- * Khong nem ngoai le: noi goi tu quyet dinh ma HTTP, cung kieu voi locCauHoi
- * trong assistantPrompt.js va timNguoiDungTuToken trong authMiddleware.
+ * Khong nem ngoai le: noi goi tu quyet dinh ma HTTP, cung kieu voi filterQuestion
+ * trong assistantPrompt.js va findUserFromToken trong authMiddleware.
  */
-const layBaiTrongKhoa = async (courseId, lessonId, nguoiDung) => {
+const getLessonInCourse = async (courseId, lessonId, user) => {
     if (!mongoose.Types.ObjectId.isValid(courseId)) {
         return { ma: 400, loi: 'Mã khóa học không hợp lệ.' };
     }
@@ -37,32 +37,32 @@ const layBaiTrongKhoa = async (courseId, lessonId, nguoiDung) => {
         return { ma: 400, loi: 'Mã bài học không hợp lệ.' };
     }
 
-    const khoa = await Course.findById(courseId).select('title instructor price');
-    if (!khoa) {
+    const course = await Course.findById(courseId).select('title instructor price');
+    if (!course) {
         return { ma: 404, loi: 'Không tìm thấy khóa học.' };
     }
 
-    if (!(await duocXemNoiDung(khoa, nguoiDung))) {
+    if (!(await canViewContent(course, user))) {
         return {
             ma: 403,
             loi: 'Bạn cần đăng ký khóa học này để dùng chức năng này.',
-            canGhiDanh: true,
+            requiresEnrollment: true,
         };
     }
 
-    const bai = await Lesson.findById(lessonId).select('title courseId');
-    if (!bai || String(bai.courseId) !== String(khoa._id)) {
+    const lesson = await Lesson.findById(lessonId).select('title courseId');
+    if (!lesson || String(lesson.courseId) !== String(course._id)) {
         return { ma: 404, loi: 'Không tìm thấy bài học trong khóa này.' };
     }
 
-    return { khoa, bai };
+    return { khoa: course, bai: lesson };
 };
 
 /** Tra loi HTTP chuan cho truong hop cong tu choi. */
-const traLoiCong = (res, cong) =>
-    res.status(cong.ma).json({
-        message: cong.loi,
-        ...(cong.canGhiDanh ? { requiresEnrollment: true } : {}),
+const bonusReply = (res, add) =>
+    res.status(add.ma).json({
+        message: add.loi,
+        ...(add.requiresEnrollment ? { requiresEnrollment: true } : {}),
     });
 
 /**
@@ -72,10 +72,10 @@ const traLoiCong = (res, cong) =>
  * chi la hoc vien. Gan nhan "Giang vien" cho ho se lam hoc vien tuong do la cau
  * tra loi chinh thuc cua nguoi day mon nay.
  */
-const vaiTroTrongKhoa = (khoa, nguoiDung) => {
-    if (nguoiDung.role === 'admin') return 'quanTri';
-    if (String(khoa.instructor) === String(nguoiDung._id)) return 'giangVien';
+const roleInCourse = (course, user) => {
+    if (user.role === 'admin') return 'quanTri';
+    if (String(course.instructor) === String(user._id)) return 'giangVien';
     return 'hocVien';
 };
 
-module.exports = { layBaiTrongKhoa, traLoiCong, vaiTroTrongKhoa };
+module.exports = { getLessonInCourse, bonusReply, roleInCourse };

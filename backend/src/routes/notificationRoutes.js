@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 
 const {
-    layThongBao,
-    demChuaDoc,
-    danhDauDaDoc,
-    danhDauTatCa,
-    guiThongBaoHeThong,
+    getNotifications,
+    countUnread,
+    markAsRead,
+    markAllAsRead,
+    sendSystemNotification,
 } = require('../controllers/notificationController');
 
 const { protect, admin } = require('../middlewares/authMiddleware');
@@ -17,28 +17,28 @@ const { protect, admin } = require('../middlewares/authMiddleware');
 
 // @route   GET /api/thong-bao
 // @desc    Danh sach thong bao cua chinh minh, moi nhat truoc
-router.get('/', protect, layThongBao);
+router.get('/', protect, getNotifications);
 
 // @route   POST /api/thong-bao/quan-tri/gui
 // @desc    Gui thong bao he thong cho nhieu nguoi
 //
 // Dat TRUOC '/:id/doc' cho chac, du POST va PUT khong dung nhau: them mot dong
 // PUT '/quan-tri/...' sau nay ma quen thu tu la mot loi kho tim.
-router.post('/quan-tri/gui', protect, admin, guiThongBaoHeThong);
+router.post('/quan-tri/gui', protect, admin, sendSystemNotification);
 
 // @route   GET /api/thong-bao/chua-doc
 // @desc    Dem so chua doc cho cham do tren chuong
-router.get('/chua-doc', protect, demChuaDoc);
+router.get('/chua-doc', protect, countUnread);
 
 // @route   PUT /api/thong-bao/doc-het
 // @desc    Danh dau tat ca da doc
 //
 // Dat TRUOC '/:id/doc' la co chu dich - neu de sau thi 'doc-het' se bi '/:id'
 // nuot mat va Express coi 'doc-het' la mot ma thong bao.
-router.put('/doc-het', protect, danhDauTatCa);
+router.put('/doc-het', protect, markAllAsRead);
 
 // @route   PUT /api/thong-bao/:id/doc
 // @desc    Danh dau mot thong bao da doc
-router.put('/:id/doc', protect, danhDauDaDoc);
+router.put('/:id/doc', protect, markAsRead);
 
 module.exports = router;

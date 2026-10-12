@@ -71,24 +71,172 @@ bắt ở máy, đừng để CI bắt hộ.
 
 ## Cấu trúc
 
+Ứng dụng có **ba khu**: quản trị (`/admin/*`), giảng viên (`/instructor/*`) và
+học viên (mọi trang còn lại). URL phẳng — mỗi trang một đoạn sau tên khu, không
+lồng nhau (`/admin/course-create`, không phải `/admin/courses/create`).
+
+### Cây thư mục
+
 ```
-app/                 App Router — 56 trang, 4 nhóm route
-  (admin)/           khu quản trị
-  (portal)/          khu học viên
-  ...
-src/
-  components/        13 nhóm: admin auth certificate common courses
-                     document gpa home layout profile quiz settings ui
-  services/          21 tệp gọi API, mỗi tệp một miền dữ liệu
-  hooks/             hook dùng chung
+learning-portal-frontend/
+├── app/                          # Routing. CHỈ page, layout, route API.
+│   ├── layout.tsx                # Root DUY NHẤT: <html>/<body> + globals.css
+│   ├── layout.module.scss
+│   ├── globals.css               # Bảng màu, biến font, reset
+│   ├── styles/                   # base.css, tokens.css, _breakpoints.scss
+│   ├── api/auth/google/          # Route handler đăng nhập Google
+│   │
+│   ├── admin/                    # "/admin/*"  — 32 trang
+│   │   ├── layout.tsx            #   AdminShell (sidebar + breadcrumb)
+│   │   ├── dashboard/page.tsx    #   "/admin/dashboard"
+│   │   ├── courses/page.tsx      #   "/admin/courses"
+│   │   └── ...
+│   │
+│   ├── instructor/               # "/instructor/*" — 10 trang
+│   │   ├── layout.tsx            #   InstructorShell
+│   │   ├── page.tsx              #   chuyển hướng sang /instructor/courses
+│   │   └── courses/page.tsx ...
+│   │
+│   └── (portal)/                 # Khu học viên. Ngoặc tròn = KHÔNG vào URL;
+│       ├── layout.tsx            #   chỉ để gắn header/footer + font riêng.
+│       ├── page.tsx              #   "/"  ← trang mẫu, xem đây trước
+│       ├── help/page.tsx         #   "/help"
+│       ├── course/page.tsx       #   "/course?slug=..."
+│       ├── user/profile/page.tsx #   "/user/profile"
+│       └── ...                   #   30 trang
+│
+├── public/                       # Ảnh tĩnh (ảnh chụp màn hình trang chủ, logo)
+│
+└── src/
+    ├── components/
+    │   ├── ui/                   # Mảnh giao diện nhỏ, không biết gì về nghiệp vụ:
+    │   │                         #   Avatar, SafeImage, CopyButton, Pager, RichText
+    │   ├── common/               # Khối dùng chung nhiều trang: SectionHeading,
+    │   │                         #   CourseCard, FaqSection, FeedCard, CoinBalance,
+    │   │                         #   RichTextEditor, UserBootstrap...
+    │   ├── layout/               # Header, Footer, TopNav + headers/ (header theo khu)
+    │   └── features/             # Mỗi trang một thư mục, chia theo khu:
+    │       ├── admin/            #   <trang>/ + layout/ (AdminShell)
+    │       ├── instructor/       #   <trang>/ + layout/ (InstructorShell)
+    │       ├── portal/           #   <trang>/ + layout/ (PortalShell)
+    │       └── shared/           #   Trang admin và giảng viên dùng chung
+    │                             #   (lesson-create, quiz-create, quiz-edit — prop `role`)
+    │
+    ├── constants/                # Nội dung tĩnh của từng trang
+    │   ├── admin/                #   <trang>-page.ts + menu.ts
+    │   ├── instructor/           #   <trang>-page.ts + menu.ts
+    │   ├── portal/               #   <trang>-page.ts + layout.ts
+    │   ├── shared/               #   <trang>-page.ts
+    │   └── common.ts course.ts quiz.ts   # chữ dùng chung nhiều khu
+    │
+    ├── hooks/                    # Hook dùng chung: userStore, cart, savedStore,
+    │                             #   useFaqManager, useQuizQuestions, useCourseLessons
+    ├── services/                 # 31 tệp gọi API, mỗi tệp một miền dữ liệu
+    ├── lib/                      # Hàm thuần, không phụ thuộc React:
+    │                             #   format, date, time, slug, post-html, document/...
+    └── types/                    # Type dùng chung: home, help, legal, gpa, cart...
 ```
+
+### Một thư mục feature
+
+```
+src/components/features/portal/home/
+├── index.ts                 # Cửa duy nhất — page.tsx chỉ import từ đây
+├── HomeHero.tsx             # Section: mỗi file một khối của trang
+├── HomeHero.module.scss
+├── HomeCategories.tsx
+├── ...
+├── data.ts                  # (trang server) lấy dữ liệu ở máy chủ
+├── hooks/                   # (trang client) logic + state: useCart, usePayment...
+└── parts/                   # Mảnh nhỏ chỉ section của trang này dùng
+```
+
+### page.tsx gọi section như thế nào
+
+Trang nội dung (trang chủ, blog, help, privacy, terms, GPA, chia sẻ tài liệu)
+**liệt kê từng section** và truyền nội dung từ constants:
+
+```tsx
+// app/(portal)/help/page.tsx
+import {
+  HelpContact,
+  HelpFaqList,
+  HelpHero,
+  HelpShell,
+} from "@/src/components/features/portal/help";
+import { HELP_PAGE } from "@/src/constants/portal/help-page";
+
+export default function HelpPage() {
+  return (
+    <HelpShell>
+      <HelpHero {...HELP_PAGE.hero} />
+      <HelpFaqList {...HELP_PAGE.faq} />
+      <HelpContact {...HELP_PAGE.contact} />
+    </HelpShell>
+  );
+}
+```
+
+`...Shell` là khung nền + cột giữa của trang. Các section nằm bên trong khung đó,
+nhờ vậy page.tsx đọc lên là thấy ngay trang gồm những khối nào, theo thứ tự nào.
+
+Trang **nhiều trạng thái dùng chung** (giỏ hàng, thanh toán, phòng học, các bảng
+CRUD của admin) thì page.tsx gọi **một** component của feature. Lý do: `page.tsx`
+là Server Component, không giữ được state; state nằm trong hook của feature
+(`hooks/useCart.ts`...) rồi chia xuống các `parts/`.
+
+```tsx
+// app/(portal)/cart/page.tsx
+import { Cart } from "@/src/components/features/portal/cart";
+
+export default function CartPage() {
+  return <Cart />;
+}
+```
+
+### Quy ước đặt tên
+
+| Loại                     | Quy ước                                   | Ví dụ                                  |
+| ------------------------ | ----------------------------------------- | -------------------------------------- |
+| File component           | `PascalCase.tsx`, default export cùng tên | `HomeHero.tsx`                         |
+| Section trong feature    | Tiền tố theo trang                        | `HomeHero`, `HelpFaqList`, `BlogPager` |
+| Khung trang              | Hậu tố `Shell`                            | `HelpShell`, `AdminShell`              |
+| SCSS                     | Cùng tên component, `.module.scss`        | `HomeHero.module.scss`                 |
+| Hook                     | `useCamelCase.ts`, named export           | `useCart.ts`                           |
+| Hằng số                  | `SCREAMING_SNAKE_CASE`                    | `HOME_PAGE`, `ADMIN_MENU`              |
+| File constants           | `<khu>/<trang>-page.ts` (kebab)           | `portal/home-page.ts`                  |
+| Type gói nội dung 1 khối | Hậu tố `Data`                             | `HomeHeroData`, `HelpFaqData`          |
+| Khoá object nội dung     | Tiếng Anh                                 | `description`, không phải `moTa`       |
+| Chú thích trong code     | Tiếng Việt không dấu                      | `// Lay du lieu o may chu`             |
+
+**Nội dung truyền xuống Client Component phải là dữ liệu thuần.** Hàm (kể cả
+`(n) => \`${n} khoá học\``) không đi qua ranh giới server → client được — build
+sẽ hỏng. Chữ có biến thì viết bằng mẫu `"{n} khoá học"`và điền bằng`fillTemplate`trong`src/lib/format.ts`. Section chạy trên máy chủ (không có
+`"use client"`) thì dùng hàm bình thường.
+
+### Thêm một trang mới
+
+1. Tạo `app/<khu>/<trang>/page.tsx` (khu học viên: `app/(portal)/<trang>/page.tsx`).
+2. Tạo `src/components/features/<khu>/<trang>/` với `index.ts` và các section.
+3. Đưa toàn bộ chữ, đường dẫn, đường API vào `src/constants/<khu>/<trang>-page.ts`.
+4. Trang admin: thêm mục vào `src/constants/admin/menu.ts` để hiện trên sidebar.
+
+### Hai điều dễ nhầm
+
+- **Chỉ có MỘT root layout** (`app/layout.tsx`). Trước đây mỗi khu tự dựng
+  `<html>` trong nhóm route `(admin)` / `(instructor)` / `(portal)`. Giờ admin và
+  instructor nằm thẳng ở `app/admin`, `app/instructor`. Chỉ khu học viên còn nhóm
+  `(portal)`, vì nó cần header/footer riêng mà không thêm đoạn nào vào URL.
+- **Font Be Vietnam Pro / Lexend chỉ áp cho khu học viên.** Biến font được đặt trên
+  thẻ bọc của `(portal)/layout.tsx` (CSS: `PortalShell.module.scss`), không đặt
+  trên `<html>`, nên trang quản trị vẫn dùng Inter.
 
 `app/` nằm ở thư mục gốc chứ không phải trong `src/` — Next hỗ trợ cả hai, đây là
-lựa chọn có chủ đích và đừng di chuyển nó, vì mọi đường dẫn tương đối trong
-`app/` đang dựa vào vị trí này.
+lựa chọn có chủ đích.
 
 Mỗi tệp trong `services/` gói trọn một miền dữ liệu. Component **không tự gọi
-`fetch`** — luôn đi qua service, để khi đổi cách xác thực chỉ phải sửa một chỗ.
+`fetch`** — luôn đi qua service (hoặc `data.ts` của feature với trang server), để
+khi đổi cách xác thực chỉ phải sửa một chỗ.
 
 ---
 

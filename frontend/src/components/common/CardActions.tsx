@@ -4,9 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Bookmark, Check, Copy, Ellipsis } from "lucide-react";
 
-import { doiLuu, useDaLuu } from "@/src/hooks/savedStore";
-import { useNguoiDungLuu } from "@/src/hooks/userStore";
-import type { LoaiLuu } from "@/src/services/saved";
+import { toggleSave, useSaved } from "@/src/hooks/savedStore";
+import { useStoredUser } from "@/src/hooks/userStore";
+import type { SaveType } from "@/src/services/saved";
 
 import styles from "./CardActions.module.scss";
 // Hai nut o goc phai tren cua the: luu bai va menu ba cham.
@@ -14,30 +14,35 @@ import styles from "./CardActions.module.scss";
 // Nut luu ghi vao TAI KHOAN (bang SavedItem ben backend) va hien lai o trang
 // ca nhan - xem src/hooks/savedStore.ts. Truoc day chi nam trong localStorage.
 
-export interface MucMenu {
+export interface MenuItem {
   nhan: string;
   icon?: ReactNode;
-  onChon: () => void;
-  nguyHiem?: boolean;
+  onSelect: () => void;
+  danger?: boolean;
 }
 
 interface Props {
   href: string;
   tieuDe: string;
   /** Muc them vao menu ba cham, vi du "Xoa" cho chu bai */
-  themMuc?: MucMenu[];
+  addItem?: MenuItem[];
   /** Thu gi se duoc luu. Khong truyen thi khong hien nut luu. */
-  luu?: { loai: LoaiLuu; id: string };
+  luu?: { loai: SaveType; id: string };
 }
 
-export default function CardActions({ href, tieuDe, themMuc = [], luu }: Props) {
-  const user = useNguoiDungLuu();
+export default function CardActions({
+  href,
+  tieuDe: title,
+  addItem = [],
+  luu: save,
+}: Props) {
+  const user = useStoredUser();
   // Hook khong goi co dieu kien duoc - khong co `luu` thi hoi mot khoa rong,
   // ket qua bo qua vi nut khong hien.
-  const daLuu = useDaLuu(luu?.loai ?? "baiViet", luu?.id ?? "");
+  const saved = useSaved(save?.loai ?? "baiViet", save?.id ?? "");
 
-  const bamLuu = () => {
-    if (!luu) return;
+  const clickSave = () => {
+    if (!save) return;
     if (!user) {
       // Mo hop dang nhap ngay tren trang dang xem (AuthModalGate nghe ?auth).
       // pushState chu khong router.push - xem ghi chu trong AuthModalGate.
@@ -48,90 +53,90 @@ export default function CardActions({ href, tieuDe, themMuc = [], luu }: Props) 
       return;
     }
     // Hong mang: kho tu tra nut ve nhu cu, khong can bao them.
-    doiLuu(luu.loai, luu.id).catch(() => {});
+    toggleSave(save.loai, save.id).catch(() => {});
   };
 
-  const [moMenu, setMoMenu] = useState(false);
-  const [daChep, setDaChep] = useState(false);
+  const [openMenu, setOpenMenu] = useState(false);
+  const [copied, setCopied] = useState(false);
   const boc = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!moMenu) return;
-    const khiBamNgoai = (e: MouseEvent) => {
-      if (!boc.current?.contains(e.target as Node)) setMoMenu(false);
+    if (!openMenu) return;
+    const onClickOutside = (e: MouseEvent) => {
+      if (!boc.current?.contains(e.target as Node)) setOpenMenu(false);
     };
-    const khiEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMoMenu(false);
+    const onEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpenMenu(false);
     };
-    document.addEventListener("mousedown", khiBamNgoai);
-    document.addEventListener("keydown", khiEsc);
+    document.addEventListener("mousedown", onClickOutside);
+    document.addEventListener("keydown", onEscape);
     return () => {
-      document.removeEventListener("mousedown", khiBamNgoai);
-      document.removeEventListener("keydown", khiEsc);
+      document.removeEventListener("mousedown", onClickOutside);
+      document.removeEventListener("keydown", onEscape);
     };
-  }, [moMenu]);
+  }, [openMenu]);
 
   const chepLink = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(
         new URL(href, window.location.origin).toString(),
       );
-      setDaChep(true);
-      window.setTimeout(() => setDaChep(false), 1500);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
     } catch {
       // clipboard can trang https hoac quyen nguoi dung - im lang, khong bao loi
     }
-    setMoMenu(false);
+    setOpenMenu(false);
   }, [href]);
 
-  const muc: MucMenu[] = [
+  const item: MenuItem[] = [
     {
-      nhan: daChep ? "Đã sao chép" : "Sao chép liên kết",
-      icon: daChep ? <Check size={15} /> : <Copy size={15} />,
-      onChon: chepLink,
+      nhan: copied ? "Đã sao chép" : "Sao chép liên kết",
+      icon: copied ? <Check size={15} /> : <Copy size={15} />,
+      onSelect: chepLink,
     },
-    ...themMuc,
+    ...addItem,
   ];
 
   return (
     <div ref={boc} className={styles.row}>
-      {luu && (
+      {save && (
         <button
           type="button"
-          onClick={bamLuu}
-          aria-pressed={daLuu}
-          aria-label={daLuu ? `Bỏ lưu ${tieuDe}` : `Lưu ${tieuDe}`}
-          title={daLuu ? "Bỏ lưu" : "Lưu bài"}
-          className={`${styles.button6} ${daLuu ? styles.button : styles.button2}`}
+          onClick={clickSave}
+          aria-pressed={saved}
+          aria-label={saved ? `Bỏ lưu ${title}` : `Lưu ${title}`}
+          title={saved ? "Bỏ lưu" : "Lưu bài"}
+          className={`${styles.button6} ${saved ? styles.button : styles.button2}`}
         >
-          <Bookmark size={17} className={daLuu ? styles.box : undefined} />
+          <Bookmark size={17} className={saved ? styles.box : undefined} />
         </button>
       )}
 
       <button
         type="button"
-        onClick={() => setMoMenu((v) => !v)}
-        aria-expanded={moMenu}
+        onClick={() => setOpenMenu((v) => !v)}
+        aria-expanded={openMenu}
         aria-haspopup="menu"
-        aria-label={`Tùy chọn cho ${tieuDe}`}
+        aria-label={`Tùy chọn cho ${title}`}
         className={styles.button3}
       >
         <Ellipsis size={17} />
       </button>
 
-      {moMenu && (
+      {openMenu && (
         <div role="menu" className={styles.floating}>
-          {muc.map((m) => (
+          {item.map((m) => (
             <button
               key={m.nhan}
               type="button"
               role="menuitem"
               onClick={() => {
-                m.onChon();
-                if (!m.nhan.startsWith("Đã")) setMoMenu(false);
+                m.onSelect();
+                if (!m.nhan.startsWith("Đã")) setOpenMenu(false);
               }}
               className={`${styles.button7} ${
-                m.nguyHiem ? styles.button4 : styles.button5
+                m.danger ? styles.button4 : styles.button5
               }`}
             >
               {m.icon}

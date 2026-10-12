@@ -3,14 +3,14 @@ const mongoose = require('mongoose');
 /**
  * Nhat ky bao co ngan hang nhan tu webhook.
  *
- * VI SAO PHAI CO BANG NAY, khong cong thang coin roi thoi:
+ * VI SAO PHAI CO BANG NAY, khong mo khoa thang roi thoi:
  *
- * 1. CHONG CONG HAI LAN. Nha cung cap webhook nao cung phat lai khi khong nhan
+ * 1. CHONG XU LY HAI LAN. Nha cung cap webhook nao cung phat lai khi khong nhan
  *    duoc 200 - mang chap mot nhip la may chu nhan dung mot bao co hai lan.
  *    Khoa duy nhat tren maGiaoDich bien lan thu hai thanh loi 11000, bat duoc
- *    va bo qua. Khong co bang nay thi moi lan phat lai la mot lan cong coin.
+ *    va bo qua. Khong co bang nay thi moi lan phat lai la mot lan xu ly lai.
  *
- * 2. DOI CHIEU DUOC. Tien ve ma khong khop yeu cau nao (go sai ma, chuyen
+ * 2. DOI CHIEU DUOC. Tien ve ma khong khop don nao (go sai ma, chuyen
  *    thieu tien, chuyen sau khi da huy) van phai luu lai - khong luu thi khoan
  *    tien do bien mat khoi he thong va khong ai tra lai cho nguoi ta duoc.
  *
@@ -40,14 +40,16 @@ const bankTransactionSchema = new mongoose.Schema({
     soTaiKhoan: { type: String, default: '' },
     thoiGianNganHang: { type: Date, default: null },
 
-    // Ma rut ra tu noi dung, null khi khong rut duoc. Tu 04/10/2026 la ma nap
-    // ("NAP...") HOAC ma don hang ("DH..."); ten truong giu nguyen de khong phai
-    // doi du lieu cu.
+    // Ma don hang ("DH...") rut ra tu noi dung, null khi khong rut duoc. Ten
+    // truong con tu thoi co nap coin ("NAP..."), giu nguyen de khong phai doi
+    // du lieu cu.
     maNap: { type: String, default: null, uppercase: true, trim: true },
 
     // Ket qua xu ly. 'chua_khop' la hang doi viec cho quan tri, khong phai loi
     // he thong - phan lon la nguoi dung go thieu ma hoac chuyen thieu tien.
     // 'da_mo_khoa' = tien ve khop mot don hang, don da chuyen 'paid' va khoa da mo.
+    // 'da_cong' chi con o ban ghi cu tu thoi nap coin (bo 08/10/2026) - giu
+    // trong enum, bo ra thi luu lai ban ghi cu do se bi loi kiem tra.
     xuLy: {
         type: String,
         enum: ['da_cong', 'da_mo_khoa', 'chua_khop', 'trung', 'bo_qua'],
@@ -60,15 +62,6 @@ const bankTransactionSchema = new mongoose.Schema({
         ref: 'Order',
         default: null
     },
-
-    // Yeu cau nap duoc cong nho bao co nay, neu co.
-    topUp: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'CoinTopUp',
-        default: null
-    },
-
-    soCoinDaCong: { type: Number, default: 0 },
 
     ghiChu: { type: String, default: '', maxlength: 500 }
 }, { timestamps: true, collection: 'bank_transactions' });

@@ -41,11 +41,11 @@ export type Lesson = LessonData & { _id: string };
  * Dung XMLHttpRequest thay vi fetch vi fetch khong bao tien do upload - video
  * vai tram MB ma khong co thanh % thi nguoi dung tuong treo va dong trang.
  */
-export const uploadVideoKin = async (
+export const uploadPrivateVideo = async (
   file: File,
-  khiTienDo?: (phanTram: number) => void,
+  onProgress?: (percent: number) => void,
 ): Promise<string> => {
-  const ky: {
+  const sign: {
     cloudName: string;
     apiKey: string;
     folder: string;
@@ -56,24 +56,25 @@ export const uploadVideoKin = async (
 
   const fd = new FormData();
   fd.append("file", file);
-  fd.append("api_key", ky.apiKey);
-  fd.append("timestamp", String(ky.timestamp));
-  fd.append("folder", ky.folder);
-  fd.append("type", ky.type);
-  fd.append("signature", ky.signature);
+  fd.append("api_key", sign.apiKey);
+  fd.append("timestamp", String(sign.timestamp));
+  fd.append("folder", sign.folder);
+  fd.append("type", sign.type);
+  fd.append("signature", sign.signature);
 
-  return new Promise<string>((xong, hong) => {
+  return new Promise<string>((done, hong) => {
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", `https://api.cloudinary.com/v1_1/${ky.cloudName}/video/upload`);
+    xhr.open("POST", `https://api.cloudinary.com/v1_1/${sign.cloudName}/video/upload`);
     xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable && khiTienDo)
-        khiTienDo(Math.round((e.loaded / e.total) * 100));
+      if (e.lengthComputable && onProgress)
+        onProgress(Math.round((e.loaded / e.total) * 100));
     };
     xhr.onload = () => {
       try {
-        const kq = JSON.parse(xhr.responseText);
-        if (xhr.status >= 200 && xhr.status < 300 && kq.public_id) xong(kq.public_id);
-        else hong(new Error(kq?.error?.message || "Tải video lên không thành công"));
+        const outcome = JSON.parse(xhr.responseText);
+        if (xhr.status >= 200 && xhr.status < 300 && outcome.public_id)
+          done(outcome.public_id);
+        else hong(new Error(outcome?.error?.message || "Tải video lên không thành công"));
       } catch {
         hong(new Error("Tải video lên không thành công"));
       }
@@ -109,20 +110,5 @@ export const updateLesson = async (
 export const deleteLesson = async (lessonId: string): Promise<{ message: string }> => {
   return apiRequest(`/lessons/${lessonId}`, {
     method: "DELETE",
-  });
-};
-
-export const getLessonBySlug = async (
-  courseSlug: string,
-  lessonSlug: string,
-): Promise<LessonData> => {
-  return apiRequest(`/lessons/course/${courseSlug}/lesson/${lessonSlug}`, {
-    method: "GET",
-  });
-};
-
-export const getLessonsByCourseId = async (courseId: string): Promise<LessonData[]> => {
-  return apiRequest(`/lessons?courseId=${courseId}`, {
-    method: "GET",
   });
 };

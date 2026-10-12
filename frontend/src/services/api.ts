@@ -1,6 +1,6 @@
-import { datNguoiDung, yeuCauNapLai } from "@/src/hooks/userStore";
-import { GOC_API_TRINH_DUYET as GOC_API } from "./apiBase";
-import { clearApiCache, xoaPhien } from "./apiHelper";
+import { storeUser, requireReload } from "@/src/hooks/userStore";
+import { BROWSER_API_BASE as GOC_API } from "./apiBase";
+import { clearApiCache, clearSession } from "./apiHelper";
 
 // Dung chung GOC_API voi apiHelper va serverFetch. Truoc day file nay tu doc
 // bien moi truong theo thu tu NGUOC lai - xem ghi chu trong apiBase.ts.
@@ -8,7 +8,7 @@ const API_URL = `${GOC_API}/api/users`;
 
 interface RegisterUserData {
   name: string;
-  /** Dang chuan 0XXXXXXXXX - xem chuanHoaSoDienThoai trong rules.ts. */
+  /** Dang chuan 0XXXXXXXXX - xem normalizePhone trong rules.ts. */
   phone: string;
   /** Tuy chon. Chuoi rong = khong nhap; may chu se bo han truong nay. */
   email?: string;
@@ -98,8 +98,8 @@ export const registerUser = async (
     // Danh tinh giu trong RAM, khong ghi xuong localStorage nua (xem
     // src/hooks/userStore.ts). Dat tam bon truong tu than phan hoi cho
     // giao dien hien ngay, roi nho nap lai ho so day du.
-    datNguoiDung(data);
-    yeuCauNapLai();
+    storeUser(data);
+    requireReload();
     // Bo dem GET trong apiHelper song 30 giay va chi khoa theo dia chi, khong
     // theo nguoi dung. Dang nhap khong di qua apiRequest nen khong tu xoa - phai
     // xoa tay o day, neu khong nguoi vua dang nhap co the nhan lai du lieu cua
@@ -130,8 +130,8 @@ export const loginUser = async (userData: LoginUserData): Promise<LoginResponse>
     // Danh tinh giu trong RAM, khong ghi xuong localStorage nua (xem
     // src/hooks/userStore.ts). Dat tam bon truong tu than phan hoi cho
     // giao dien hien ngay, roi nho nap lai ho so day du.
-    datNguoiDung(data);
-    yeuCauNapLai();
+    storeUser(data);
+    requireReload();
     // Bo dem GET trong apiHelper song 30 giay va chi khoa theo dia chi, khong
     // theo nguoi dung. Dang nhap khong di qua apiRequest nen khong tu xoa - phai
     // xoa tay o day, neu khong nguoi vua dang nhap co the nhan lai du lieu cua
@@ -162,8 +162,8 @@ export const googleLogin = async (credential: string): Promise<GoogleLoginRespon
     // Danh tinh giu trong RAM, khong ghi xuong localStorage nua (xem
     // src/hooks/userStore.ts). Dat tam bon truong tu than phan hoi cho
     // giao dien hien ngay, roi nho nap lai ho so day du.
-    datNguoiDung(data);
-    yeuCauNapLai();
+    storeUser(data);
+    requireReload();
     // Bo dem GET trong apiHelper song 30 giay va chi khoa theo dia chi, khong
     // theo nguoi dung. Dang nhap khong di qua apiRequest nen khong tu xoa - phai
     // xoa tay o day, neu khong nguoi vua dang nhap co the nhan lai du lieu cua
@@ -193,7 +193,7 @@ export const googleLogin = async (credential: string): Promise<GoogleLoginRespon
 //      dem nguoc - lam vay la pha dung cai dinh giu kin.
 
 /** Buoc 1: xin ma. Luon "thanh cong", ke ca voi dia chi khong co tai khoan. */
-export const xinMaDatLai = async (email: string): Promise<{ message: string }> => {
+export const requestResetCode = async (email: string): Promise<{ message: string }> => {
   const res = await fetch(`${API_URL}/quen-mat-khau`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -203,14 +203,14 @@ export const xinMaDatLai = async (email: string): Promise<{ message: string }> =
 };
 
 /** Buoc 2: nhap ma. Dung thi nhan ve phieu - thu mang quyen dat mat khau moi. */
-export const kiemMaDatLai = async (
+export const verifyResetCode = async (
   email: string,
-  ma: string,
+  code: string,
 ): Promise<{ message: string; phieu: string }> => {
   const res = await fetch(`${API_URL}/quen-mat-khau/kiem-ma`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, ma }),
+    body: JSON.stringify({ email, ma: code }),
   });
   return parseResponse(res);
 };
@@ -222,26 +222,26 @@ export const kiemMaDatLai = async (
  * nguoi dung go lai mat khau vua dat mot lan nua tren man hinh dang nhap la
  * cach re nhat de ho nho no, va de ho phat hien ngay neu vua go nham.
  */
-export const datLaiMatKhau = async (
-  phieu: string,
-  matKhauMoi: string,
-  xacNhan: string,
+export const resetPassword = async (
+  ticket: string,
+  newPassword: string,
+  confirm: string,
 ): Promise<{ message: string }> => {
   const res = await fetch(`${API_URL}/quen-mat-khau/dat-lai`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ phieu, matKhauMoi, xacNhan }),
+    body: JSON.stringify({ phieu: ticket, matKhauMoi: newPassword, xacNhan: confirm }),
   });
   return parseResponse(res);
 };
 
 export const logout = (): Promise<void> => {
-  // Dung xoaPhien: no goi ca /users/logout de may chu xoa cookie httpOnly,
+  // Dung clearSession: no goi ca /users/logout de may chu xoa cookie httpOnly,
   // don bo dem GET, va ban su kien cho cac header cap nhat lai.
   //
   // Tra ve Promise cua no: noi goi phai await truoc khi dieu huong, neu khong
   // request bi huy giua chung va cookie con nguyen.
-  return xoaPhien();
+  return clearSession();
 };
 
 export interface User {

@@ -12,7 +12,7 @@ const BCRYPT_ROUNDS = 12;
 
 // Do dai mat khau toi thieu. Chi ap dung cho mat khau dat MOI - mat khau cu
 // ngan hon van dang nhap duoc binh thuong, khong ai bi khoa ra ngoai.
-const DAI_MAT_KHAU_TOI_THIEU = 8;
+const MIN_PASSWORD_LENGTH = 8;
 
 // Do dai TOI DA cua mat khau dat MOI, tinh bang byte.
 //
@@ -21,7 +21,7 @@ const DAI_MAT_KHAU_TOI_THIEU = 8;
 // ky tu deu duoc tinh la de ho hieu nham ve chinh cai bao ve cua ho - hai mat
 // khau chi khac nhau tu ky tu 73 tro di la mot mat khau duy nhat duoi mat
 // may chu.
-const DAI_MAT_KHAU_TOI_DA = 72;
+const MAX_PASSWORD_LENGTH = 72;
 
 // Tran cho mat khau NHAN VAO luc dang nhap - cao hon han tran o tren, va co
 // ly do khac han.
@@ -33,7 +33,7 @@ const DAI_MAT_KHAU_TOI_DA = 72;
 //
 // Van phai co MOT cai tran: khong co no thi mot than request 1MB deu dan tuc
 // la bat may chu chay bcrypt tren 1MB, moi lan, mien phi.
-const DAI_MAT_KHAU_NHAN_TOI_DA = 1024;
+const MAX_PASSWORD_INPUT_LENGTH = 1024;
 
 // Han song cua token dang nhap.
 //
@@ -41,12 +41,12 @@ const DAI_MAT_KHAU_NHAN_TOI_DA = 1024;
 // ke trom dung duoc bao lau". Doi mat khau van cat duoc phien cu ngay lap tuc
 // (xem passwordChangedAt trong models/User.js), nhung do la hanh dong co y cua
 // nguoi dung - con day la gioi han tu dong.
-const HAN_TOKEN = '1d';
+const TOKEN_TTL = '1d';
 
 module.exports = {
     BCRYPT_ROUNDS,
-    DAI_MAT_KHAU_TOI_THIEU,
-    DAI_MAT_KHAU_TOI_DA,
-    DAI_MAT_KHAU_NHAN_TOI_DA,
-    HAN_TOKEN,
+    MIN_PASSWORD_LENGTH,
+    MAX_PASSWORD_LENGTH,
+    MAX_PASSWORD_INPUT_LENGTH,
+    TOKEN_TTL,
 };

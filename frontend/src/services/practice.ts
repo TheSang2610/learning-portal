@@ -1,7 +1,7 @@
 import { apiRequest } from "./apiHelper";
 
 // Chep theo backend/src/models/PracticeAttempt.js.
-export interface BaiLamTomTat {
+export interface AttemptSummary {
   _id: string;
   deId: string;
   soDung: number;
@@ -11,7 +11,7 @@ export interface BaiLamTomTat {
   createdAt: string;
 }
 
-export interface BaiLam extends BaiLamTomTat {
+export interface Attempt extends AttemptSummary {
   /** Vi tri cau (theo thu tu da hien) trong file de, dem tu 0 */
   cau: number[];
   /** Thu tu dap an da hien cua tung cau; [] = giu nguyen */
@@ -20,19 +20,21 @@ export interface BaiLam extends BaiLamTomTat {
   chon: number[][];
 }
 
-export type BaiLamGuiLen = Omit<BaiLam, "_id" | "createdAt" | "soCau">;
+export type AttemptSubmission = Omit<Attempt, "_id" | "createdAt" | "soCau">;
 
 /** Luu mot lan lam bai - chi cho nguoi da dang nhap. */
-export const luuBaiLam = async (
-  bai: BaiLamGuiLen,
+export const saveAttempt = async (
+  lesson: AttemptSubmission,
 ): Promise<{ _id: string; createdAt: string }> =>
-  apiRequest("/luyen-tap/bai-lam", { method: "POST", body: JSON.stringify(bai) });
+  apiRequest("/luyen-tap/bai-lam", { method: "POST", body: JSON.stringify(lesson) });
 
 /** Cac lan lam bai CUA TOI trong mot de, moi nhat truoc. */
-export const lichSuBaiLam = async (deId: string): Promise<{ danhSach: BaiLamTomTat[] }> =>
-  apiRequest(`/luyen-tap/bai-lam?${new URLSearchParams({ deId }).toString()}`, {
+export const attemptHistory = async (
+  quizId: string,
+): Promise<{ danhSach: AttemptSummary[] }> =>
+  apiRequest(`/luyen-tap/bai-lam?${new URLSearchParams({ deId: quizId }).toString()}`, {
     method: "GET",
   });
 
-export const chiTietBaiLam = async (id: string): Promise<{ bai: BaiLam }> =>
+export const attemptDetail = async (id: string): Promise<{ bai: Attempt }> =>
   apiRequest(`/luyen-tap/bai-lam/${encodeURIComponent(id)}`, { method: "GET" });

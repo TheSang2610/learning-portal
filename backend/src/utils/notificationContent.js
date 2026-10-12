@@ -10,36 +10,36 @@
  *      duoc: CI khong co secret nao, cai gi cham toi mang la khong kiem duoc.
  */
 
-const DAI_TIEU_DE_TOI_DA = 200;
-const DAI_NOI_DUNG_TOI_DA = 1000;
-const DAI_DUONG_DAN_TOI_DA = 500;
+const MAX_TITLE_LENGTH = 200;
+const MAX_CONTENT_LENGTH = 1000;
+const MAX_PATH_LENGTH = 500;
 
 /**
  * Chi nhan duong dan NOI BO.
  *
  * Duong dan cua thong bao di thang vao mot the <a> o giao dien. Neu de lot mot
- * dia chi ben ngoai vao day thi bat ky cho nao goi guiThongBao() cung tro thanh
+ * dia chi ben ngoai vao day thi bat ky cho nao goi sendNotification() cung tro thanh
  * mot duong phat tan lien ket - va nguoi dung bam vi tin cai chuong cua chinh
  * trang minh dang dung.
  *
  * Chan luon ca '//example.com': trinh duyet hieu do la dia chi ngoai theo dung
  * giao thuc hien tai, du no bat dau bang dau gach cheo.
  */
-const duongDanNoiBo = (dia) => {
-    if (typeof dia !== 'string') return '';
+const isInternalPath = (address) => {
+    if (typeof address !== 'string') return '';
 
-    const sach = dia.trim();
-    if (!sach.startsWith('/')) return '';
-    if (sach.startsWith('//')) return '';
-    if (sach.length > DAI_DUONG_DAN_TOI_DA) return '';
+    const clean = address.trim();
+    if (!clean.startsWith('/')) return '';
+    if (clean.startsWith('//')) return '';
+    if (clean.length > MAX_PATH_LENGTH) return '';
 
-    return sach;
+    return clean;
 };
 
-const catChu = (chu, toiDa) => {
-    if (typeof chu !== 'string') return '';
-    const sach = chu.trim().replace(/\s+/g, ' ');
-    return sach.length <= toiDa ? sach : sach.slice(0, toiDa - 1) + '…';
+const truncate = (text, max) => {
+    if (typeof text !== 'string') return '';
+    const clean = text.trim().replace(/\s+/g, ' ');
+    return clean.length <= max ? clean : clean.slice(0, max - 1) + '…';
 };
 
 /**
@@ -56,7 +56,7 @@ const BANG = {
         noiDung: d.tenKhoa
             ? `Khóa học "${d.tenKhoa}" đã được mở. Bạn có thể vào học ngay.`
             : 'Khóa học bạn mua đã được mở. Bạn có thể vào học ngay.',
-        duongDan: d.slugKhoa ? `/course?slug=${encodeURIComponent(d.slugKhoa)}` : '/user/profile',
+        duongDan: d.courseSlug ? `/course?slug=${encodeURIComponent(d.courseSlug)}` : '/user/profile',
     }),
 
     don_bi_tu_choi: (d) => ({
@@ -64,7 +64,7 @@ const BANG = {
         noiDung: d.lyDo
             ? `Đơn hàng của bạn chưa được duyệt. Lý do: ${d.lyDo}`
             : 'Đơn hàng của bạn chưa được duyệt. Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.',
-        duongDan: '/user/coin',
+        duongDan: '/help',
     }),
 
     khoa_duoc_mo: (d) => ({
@@ -72,7 +72,7 @@ const BANG = {
         noiDung: d.tenKhoa
             ? `Bạn đã có quyền vào học khóa "${d.tenKhoa}".`
             : 'Bạn đã có quyền vào học khóa này.',
-        duongDan: d.slugKhoa ? `/course?slug=${encodeURIComponent(d.slugKhoa)}` : '/courses',
+        duongDan: d.courseSlug ? `/course?slug=${encodeURIComponent(d.courseSlug)}` : '/courses',
     }),
 
     chung_nhan: (d) => ({
@@ -89,18 +89,9 @@ const BANG = {
             ? `Có câu trả lời mới cho câu hỏi của bạn ở bài "${d.tenBai}".`
             : 'Có câu trả lời mới cho câu hỏi của bạn.',
         duongDan:
-            d.idKhoa && d.idBai
-                ? `/learn?courseId=${encodeURIComponent(d.idKhoa)}&lessonId=${encodeURIComponent(d.idBai)}`
+            d.courseId && d.lessonId
+                ? `/learn?courseId=${encodeURIComponent(d.courseId)}&lessonId=${encodeURIComponent(d.lessonId)}`
                 : '/user/profile',
-    }),
-
-    coin_duoc_cong: (d) => ({
-        tieuDe: 'Ví coin vừa được cộng',
-        noiDung:
-            typeof d.soCoin === 'number'
-                ? `Đã cộng ${d.soCoin.toLocaleString('vi-VN')} coin vào ví của bạn.`
-                : 'Ví coin của bạn vừa được cộng thêm.',
-        duongDan: '/user/coin',
     }),
 
     he_thong: (d) => ({
@@ -110,25 +101,25 @@ const BANG = {
     }),
 };
 
-const LOAI_HOP_LE = Object.keys(BANG);
+const VALID_TYPES = Object.keys(BANG);
 
 /**
  * Tra ve { ok, loi, thongBao } chu khong nem ngoai le.
  *
- * Cung kieu voi locCauHoi trong assistantPrompt.js: noi goi tu quyet dinh lam gi khi
+ * Cung kieu voi filterQuestion trong assistantPrompt.js: noi goi tu quyet dinh lam gi khi
  * hong. Voi thong bao thi cau tra loi gan nhu luon la "bo qua va di tiep" -
  * khong the vi mot thong bao hong ma lam that bai viec duyet don.
  */
-const dungThongBao = (loai, duLieu = {}) => {
-    const dung = BANG[loai];
-    if (!dung) {
+const buildNotification = (loai, data = {}) => {
+    const correct = BANG[loai];
+    if (!correct) {
         return { ok: false, loi: `Loai thong bao khong hop le: ${loai}` };
     }
 
-    const tho = dung(duLieu || {});
-    const tieuDe = catChu(tho.tieuDe, DAI_TIEU_DE_TOI_DA);
+    const tho = correct(data || {});
+    const title = truncate(tho.tieuDe, MAX_TITLE_LENGTH);
 
-    if (!tieuDe) {
+    if (!title) {
         return { ok: false, loi: 'Thong bao khong co tieu de.' };
     }
 
@@ -136,19 +127,19 @@ const dungThongBao = (loai, duLieu = {}) => {
         ok: true,
         thongBao: {
             loai,
-            tieuDe,
-            noiDung: catChu(tho.noiDung, DAI_NOI_DUNG_TOI_DA),
-            duongDan: duongDanNoiBo(tho.duongDan),
+            tieuDe: title,
+            noiDung: truncate(tho.noiDung, MAX_CONTENT_LENGTH),
+            duongDan: isInternalPath(tho.duongDan),
         },
     };
 };
 
 module.exports = {
-    dungThongBao,
-    duongDanNoiBo,
-    catChu,
-    LOAI_HOP_LE,
-    DAI_TIEU_DE_TOI_DA,
-    DAI_NOI_DUNG_TOI_DA,
-    DAI_DUONG_DAN_TOI_DA,
+    buildNotification,
+    isInternalPath,
+    truncate,
+    VALID_TYPES,
+    MAX_TITLE_LENGTH,
+    MAX_CONTENT_LENGTH,
+    MAX_PATH_LENGTH,
 };

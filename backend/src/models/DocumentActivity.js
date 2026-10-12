@@ -35,7 +35,7 @@ const documentActivitySchema = new mongoose.Schema({
     // xuong van de lai dau "nguoi nay quan tam mon X" - ly do ban dau van dung.
     //
     // Mang vi mot tai lieu co nhieu mon. Ban ghi cu la chuoi - script
-    // migrate-document-files-subjects.js doi sang mang; tongHopLichSu van doc
+    // migrate-document-files-subjects.js doi sang mang; summarizeHistory van doc
     // duoc ca hai dang.
     monHocKey: {
         type: [String],
@@ -57,7 +57,7 @@ const documentActivitySchema = new mongoose.Schema({
 
     // Khoa chong ghi trung: "<user>:<loai>:<tai lieu hoac tu khoa>:<so khung>",
     // moi khung dai 30 phut. Chi muc UNIQUE ben duoi bat CSDL tu chan ban ghi
-    // thu hai trong cung mot khung. Xem ghiHoatDong trong controller.
+    // thu hai trong cung mot khung. Xem logActivity trong controller.
     //
     // KHONG co default: ban ghi tao TRUOC khi co truong nay thi khong co no -
     // va phai de thieu han, xem ghi chu `sparse` o chi muc.

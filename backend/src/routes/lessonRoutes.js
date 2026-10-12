@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { capIdHopLe } = require('../middlewares/validObjectId');
+const { guardObjectIds } = require('../middlewares/validObjectId');
 
 // Chan id sai dinh dang -> 404 thay vi 500. Xem middlewares/validObjectId.js
-capIdHopLe(router);
+guardObjectIds(router);
 const { uploadLessonFiles } = require('../utils/uploadCloud');
 const { 
     addLesson, 
@@ -11,7 +11,7 @@ const {
     getLessonBySlug, 
     updateLesson,
     deleteLesson,
-    layChuKyVideo
+    getVideoSignature
 } = require('../controllers/lessonController');
 
 const { protect, instructor } = require('../middlewares/authMiddleware');
@@ -28,6 +28,6 @@ router.route('/:id')
 router.post('/', protect, instructor, uploadLessonFiles, addLesson);
 
 // Chu ky de trinh duyet upload video thang len kho kin - xem utils/privateVideo.js.
-router.post('/chu-ky-video', protect, instructor, layChuKyVideo);
+router.post('/chu-ky-video', protect, instructor, getVideoSignature);
 
 module.exports = router;

@@ -2,16 +2,16 @@
 //
 // Danh sach tu trong contentFilter.js chac chan se con duoc them bot. Moi lan
 // them mot tu la mot lan co the chan nham tai lieu that - nen truoc khi sua
-// danh sach, them cau vao PHAI_QUA/PHAI_CHAN roi chay lai file nay.
+// danh sach, them cau vao MUST_PASS/MUST_BLOCK roi chay lai file nay.
 //
-// PHAI_QUA quan trong hon PHAI_CHAN: chan nham mot bai giang hop le lam nguoi
+// MUST_PASS quan trong hon MUST_BLOCK: chan nham mot bai giang hop le lam nguoi
 // dung bo di, con lot mot cau chui thi con nut bao cao va admin xoa duoc.
 
 const { checkText } = require('./contentFilter');
 
 // Nhung cau nay PHAI duoc dang. Phan lon la bay thuc te: bo dau tieng Viet
 // lam tu chui trung voi tu thong dung trong moi truong hoc.
-const PHAI_QUA = [
+const MUST_PASS = [
     'Đề cương ôn tập các môn học kỳ 1',
     'Gửi các bạn tài liệu ôn thi',
     'Hướng dẫn cài đặt tài khoản admin',
@@ -39,7 +39,7 @@ const PHAI_QUA = [
 ];
 
 // Nhung cau nay PHAI bi chan, ca khi go co dau lan khong dau.
-const PHAI_CHAN = [
+const MUST_BLOCK = [
     'đm cái đề này khó quá',
     'thằng chó đó ra đề ngu',
     'anh em vào chửi thằng này đi',
@@ -64,32 +64,32 @@ const PHAI_CHAN = [
     'bon bac ky lam an gian doi',
 ];
 
-let chanNham = 0;
-let lotLuoi = 0;
+let falseBlock = 0;
+let slipThrough = 0;
 
-for (const cau of PHAI_QUA) {
-    const r = checkText(cau);
+for (const questionItem of MUST_PASS) {
+    const r = checkText(questionItem);
     if (!r.ok) {
-        console.log(`  CHAN NHAM: ${JSON.stringify(cau)}  (dinh tu: "${r.matched}")`);
-        chanNham++;
+        console.log(`  CHAN NHAM: ${JSON.stringify(questionItem)}  (dinh tu: "${r.matched}")`);
+        falseBlock++;
     }
 }
 
-for (const cau of PHAI_CHAN) {
-    const r = checkText(cau);
+for (const questionItem of MUST_BLOCK) {
+    const r = checkText(questionItem);
     if (r.ok) {
-        console.log(`  LOT LUOI : ${JSON.stringify(cau)}`);
-        lotLuoi++;
+        console.log(`  LOT LUOI : ${JSON.stringify(questionItem)}`);
+        slipThrough++;
     }
 }
 
 console.log(
-    `hop le: ${PHAI_QUA.length - chanNham}/${PHAI_QUA.length} qua  |  ` +
-    `vi pham: ${PHAI_CHAN.length - lotLuoi}/${PHAI_CHAN.length} bi chan`,
+    `hop le: ${MUST_PASS.length - falseBlock}/${MUST_PASS.length} qua  |  ` +
+    `vi pham: ${MUST_BLOCK.length - slipThrough}/${MUST_BLOCK.length} bi chan`,
 );
 
-if (chanNham || lotLuoi) {
-    console.error(`\nTHAT BAI - chan nham ${chanNham}, lot luoi ${lotLuoi}`);
+if (falseBlock || slipThrough) {
+    console.error(`\nTHAT BAI - chan nham ${falseBlock}, lot luoi ${slipThrough}`);
     process.exit(1);
 }
 console.log('OK');

@@ -11,4 +11,7 @@
 # frontend/) - khi do chay luon o goc. Truoc day "cd frontend" o day lam hong
 # moi lan commit trong kho tach.
 if [ -d frontend ]; then cd frontend || exit 1; fi
-npx lint-staged
+# --max-arg-length: chia danh sach file thanh nhieu lan goi nho. Windows gioi
+# han mot dong lenh ~8191 ky tu; commit doi cho hang tram file (duong dan tuyet
+# doi dai) vuot moc do va prettier chet voi "The command line is too long".
+npx lint-staged --max-arg-length 4000

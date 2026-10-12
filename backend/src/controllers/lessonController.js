@@ -4,8 +4,8 @@ const Quiz = require('../models/Quiz');
 const QuizAttempt = require('../models/QuizAttempt');
 const { protect } = require('../middlewares/authMiddleware');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
-const { duocXemNoiDung } = require('../utils/contentAccess');
-const { idVideoHopLe, ganLinkPhat, thamSoUploadVideo } = require('../utils/privateVideo');
+const { canViewContent } = require('../utils/contentAccess');
+const { isValidVideoId, attachPlaybackUrl, videoUploadParams } = require('../utils/privateVideo');
 
 // @desc    Chu ky de trinh duyet upload video THANG len kho kin Cloudinary
 // @route   POST /api/lessons/chu-ky-video
@@ -13,9 +13,9 @@ const { idVideoHopLe, ganLinkPhat, thamSoUploadVideo } = require('../utils/priva
 //
 // Video bai giang khong di qua backend: Vercel chi nhan request ~4.5 MB nen
 // upload qua day thi video that (vai tram MB) hong tren ban production.
-const layChuKyVideo = async (req, res) => {
+const getVideoSignature = async (req, res) => {
     try {
-        return res.json(thamSoUploadVideo());
+        return res.json(videoUploadParams());
     } catch (error) {
         console.error('layChuKyVideo:', error.message);
         return res.status(503).json({ message: 'Máy chủ chưa cấu hình kho lưu video' });
@@ -69,9 +69,9 @@ const addLesson = async (req, res) => {
             }
 
             if (req.files['document'] && req.files['document'][0]) {
-                const docFile = req.files['document'][0];
-                const docUpload = await uploadToCloudinary(docFile.buffer, 'raw');
-                documentUrl = docUpload.secure_url; 
+                const documentFile = req.files['document'][0];
+                const documentUpload = await uploadToCloudinary(documentFile.buffer, 'raw');
+                documentUrl = documentUpload.secure_url; 
             }
         }
 
@@ -79,7 +79,7 @@ const addLesson = async (req, res) => {
         // Co ma nay thi bo videoUrl: bai hoc chi co mot nguon video.
         let videoPublicId = '';
         if (req.body.videoPublicId) {
-            if (!idVideoHopLe(req.body.videoPublicId)) {
+            if (!isValidVideoId(req.body.videoPublicId)) {
                 return res.status(400).json({ message: 'Mã video không hợp lệ, vui lòng tải video lên lại' });
             }
             videoPublicId = req.body.videoPublicId;
@@ -95,7 +95,7 @@ const addLesson = async (req, res) => {
             $push: { lessons: lesson._id }
         });
 
-        res.status(201).json(ganLinkPhat(lesson));
+        res.status(201).json(attachPlaybackUrl(lesson, req.user));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -115,14 +115,14 @@ const getLessonById = async (req, res) => {
         // tai khoan mien phi bat ky goi thang vao day la lay duoc videoUrl cua
         // khoa co phi - di vong hoan toan qua cong 402 o enrollInCourse.
         const course = await Course.findById(lesson.courseId).select('instructor');
-        if (!(await duocXemNoiDung(course, req.user))) {
+        if (!(await canViewContent(course, req.user))) {
             return res.status(403).json({
                 message: 'Bạn cần đăng ký khóa học này để xem nội dung bài học',
                 requiresEnrollment: true,
             });
         }
 
-        res.status(200).json(ganLinkPhat(lesson));
+        res.status(200).json(attachPlaybackUrl(lesson, req.user));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -148,14 +148,14 @@ const getLessonBySlug = async (req, res) => {
 
         // Cung mot cong nhu getLessonById - hai duong dan khac nhau toi cung
         // mot tai san thi phai khoa ca hai, khoa mot cai la nhu khong khoa.
-        if (!(await duocXemNoiDung(course, req.user))) {
+        if (!(await canViewContent(course, req.user))) {
             return res.status(403).json({
                 message: 'Bạn cần đăng ký khóa học này để xem nội dung bài học',
                 requiresEnrollment: true,
             });
         }
 
-        res.status(200).json(ganLinkPhat(lesson));
+        res.status(200).json(attachPlaybackUrl(lesson, req.user));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -178,13 +178,14 @@ const updateLesson = async (req, res) => {
             return res.status(403).json({ message: 'Bạn không có quyền chỉnh sửa bài học này' });
         }
 
-        // Form sua bai nhan videoUrl la LINK KY cua video kho kin (ganLinkPhat).
-        // Bam luu khong doi gi thi form gui nguyen link do len - nhan no la luu
-        // mot link ky thanh link cong khai va mat videoPublicId. Bo qua no.
+        // Form sua bai nhan videoUrl la LINK PHAT cua video kho kin (attachPlaybackUrl):
+        // truoc 10/10/2026 la link ky Cloudinary, nay la /api/video/... kem ve het
+        // han sau 2 gio. Bam luu khong doi gi thi form gui nguyen link do len -
+        // nhan no la ghi mot link song 2 gio vao CSDL. Bo qua ca hai dang.
         if (
             lesson.videoPublicId &&
             typeof req.body.videoUrl === 'string' &&
-            req.body.videoUrl.includes('/video/authenticated/')
+            (req.body.videoUrl.includes('/video/authenticated/') || req.body.videoUrl.startsWith('/api/video/'))
         ) {
             delete req.body.videoUrl;
         }
@@ -200,9 +201,9 @@ const updateLesson = async (req, res) => {
             }
 
             if (req.files['document'] && req.files['document'][0]) {
-                const docFile = req.files['document'][0];
-                const docUpload = await uploadToCloudinary(docFile.buffer, 'raw');
-                lesson.documentUrl = docUpload.secure_url;
+                const documentFile = req.files['document'][0];
+                const documentUpload = await uploadToCloudinary(documentFile.buffer, 'raw');
+                lesson.documentUrl = documentUpload.secure_url;
             } else {
                 lesson.documentUrl = req.body.documentUrl !== undefined ? req.body.documentUrl : lesson.documentUrl;
             }
@@ -219,12 +220,12 @@ const updateLesson = async (req, res) => {
         
         // Nguon video moi: ma kho kin thang tu trinh duyet, HOAC file / link
         // moi thay cho video kin cu. Bai hoc chi giu mot nguon.
-        const idMoi = req.body.videoPublicId;
-        if (typeof idMoi === 'string' && idMoi) {
-            if (!idVideoHopLe(idMoi)) {
+        const newId = req.body.videoPublicId;
+        if (typeof newId === 'string' && newId) {
+            if (!isValidVideoId(newId)) {
                 return res.status(400).json({ message: 'Mã video không hợp lệ, vui lòng tải video lên lại' });
             }
-            lesson.videoPublicId = idMoi;
+            lesson.videoPublicId = newId;
             lesson.videoUrl = '';
         } else if (
             req.files?.video?.[0] ||
@@ -237,7 +238,7 @@ const updateLesson = async (req, res) => {
         lesson.order = order !== undefined ? order : lesson.order;
 
         const updatedLesson = await lesson.save();
-        res.status(200).json(ganLinkPhat(updatedLesson));
+        res.status(200).json(attachPlaybackUrl(updatedLesson, req.user));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -272,4 +273,4 @@ const deleteLesson = async (req, res) => {
     }
 };
 
-module.exports = { addLesson, getLessonById, getLessonBySlug, updateLesson, deleteLesson, layChuKyVideo };
+module.exports = { addLesson, getLessonById, getLessonBySlug, updateLesson, deleteLesson, getVideoSignature };

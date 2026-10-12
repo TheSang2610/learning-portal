@@ -1,17 +1,17 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { layToken } = require('../utils/cookieToken');
+const { getToken } = require('../utils/cookieToken');
 
 // Giai token va tra ve nguoi dung, HOAC mot ma loi - khong tu tra loi HTTP.
 //
-// Tach ra khoi `protect` de `docNguoiDungNeuCo` dung chung dung mot bo kiem
+// Tach ra khoi `protect` de `optionalUser` dung chung dung mot bo kiem
 // tra. Neu de hai noi tu kiem lay thi som muon cung lech nhau, va cai lech o
 // tang xac thuc thi khong ai nhin thay cho toi luc bi loi dung.
-const timNguoiDungTuToken = async (req) => {
+const findUserFromToken = async (req) => {
     // 1. Lay token: uu tien cookie httpOnly, sau do moi den header Bearer.
     //    Cookie la duong chinh cua trinh duyet; header giu lai cho curl,
     //    Postman va cac ung dung ngoai trinh duyet. Xem utils/cookieToken.js.
-    const token = layToken(req);
+    const token = getToken(req);
     if (!token) return { loi: 'khong_co_token' };
 
     let decoded;
@@ -28,13 +28,13 @@ const timNguoiDungTuToken = async (req) => {
         return { loi: 'token_hong' };
     }
 
-    const nguoiDung = await User.findById(decoded.id).select('-password');
-    if (!nguoiDung) return { loi: 'khong_co_user' };
+    const user = await User.findById(decoded.id).select('-password');
+    if (!user) return { loi: 'khong_co_user' };
 
-    // Token cap truoc khi bi khoa van song het han cua no (HAN_TOKEN trong
+    // Token cap truoc khi bi khoa van song het han cua no (TOKEN_TTL trong
     // utils/password.js, hien la 1 ngay), nen phai kiem tra trang thai o day
     // chu khong chi luc dang nhap.
-    if (nguoiDung.status === false) return { loi: 'bi_khoa' };
+    if (user.status === false) return { loi: 'bi_khoa' };
 
     // Token cap TRUOC lan doi mat khau gan nhat thi khong con gia tri.
     //
@@ -43,16 +43,16 @@ const timNguoiDungTuToken = async (req) => {
     // nan nhan da doi mat khau ngay sau khi phat hien.
     //
     // decoded.iat tinh bang GIAY, passwordChangedAt tinh bang mili giay.
-    if (nguoiDung.passwordChangedAt && decoded.iat) {
-        const doiLuc = Math.floor(nguoiDung.passwordChangedAt.getTime() / 1000);
-        if (decoded.iat < doiLuc) return { loi: 'doi_mat_khau' };
+    if (user.passwordChangedAt && decoded.iat) {
+        const changedAt = Math.floor(user.passwordChangedAt.getTime() / 1000);
+        if (decoded.iat < changedAt) return { loi: 'doi_mat_khau' };
     }
 
-    return { nguoiDung };
+    return { nguoiDung: user };
 };
 
 // Moi ma loi ung voi dung mot cau tra loi - giu nguyen status va cau chu cu.
-const TRA_LOI_LOI = {
+const ERROR_RESPONSES = {
     khong_co_token: [401, 'Không có token, truy cập bị từ chối'],
     het_han: [401, 'Token đã hết hạn, vui lòng đăng nhập lại'],
     token_hong: [401, 'Token không hợp lệ'],
@@ -63,14 +63,14 @@ const TRA_LOI_LOI = {
 
 const protect = async (req, res, next) => {
     try {
-        const { nguoiDung, loi } = await timNguoiDungTuToken(req);
+        const { nguoiDung: user, loi: err } = await findUserFromToken(req);
 
-        if (loi) {
-            const [ma, cau] = TRA_LOI_LOI[loi];
-            return res.status(ma).json({ message: cau });
+        if (err) {
+            const [code, questionItem] = ERROR_RESPONSES[err];
+            return res.status(code).json({ message: questionItem });
         }
 
-        req.user = nguoiDung;
+        req.user = user;
         next();
     } catch (error) {
         console.error('JWT Error:', error.message);
@@ -86,10 +86,10 @@ const protect = async (req, res, next) => {
 // biet nguoi xem la ai thi buoc phai cat video cua ca hoc vien that.
 //
 // Token hong hay het han o day KHONG phai loi - chi la khach vang lai.
-const docNguoiDungNeuCo = async (req, res, next) => {
+const optionalUser = async (req, res, next) => {
     try {
-        const { nguoiDung } = await timNguoiDungTuToken(req);
-        if (nguoiDung) req.user = nguoiDung;
+        const { nguoiDung: user } = await findUserFromToken(req);
+        if (user) req.user = user;
     } catch (error) {
         console.error('Doc token tuy chon that bai:', error.message);
     }
@@ -112,4 +112,4 @@ const instructor = (req, res, next) => {
     }
 };
 
-module.exports = { protect, docNguoiDungNeuCo, admin, instructor, timNguoiDungTuToken, TRA_LOI_LOI };
+module.exports = { protect, optionalUser, admin, instructor, findUserFromToken, ERROR_RESPONSES };

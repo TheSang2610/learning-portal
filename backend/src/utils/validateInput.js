@@ -13,9 +13,9 @@
 // Cac ham o day deu la ham thuan, khong cham CSDL, nen test duoc truc tiep.
 
 const {
-  DAI_MAT_KHAU_TOI_THIEU,
-  DAI_MAT_KHAU_TOI_DA,
-  DAI_MAT_KHAU_NHAN_TOI_DA,
+  MIN_PASSWORD_LENGTH,
+  MAX_PASSWORD_LENGTH,
+  MAX_PASSWORD_INPUT_LENGTH,
 } = require('./password');
 
 // RFC 5321 dat tran mot dia chi thu o 254 ky tu.
@@ -24,12 +24,12 @@ const {
 // CSDL, va de bo dem cua loginRateLimit khong bi bom phinh: khoa cua no la
 // `ip|email`, nen "email" rac dai vo han la mot duong lam tran bo nho tien
 // trinh ma khong can dang nhap lan nao.
-const DAI_EMAIL_TOI_DA = 254;
+const MAX_EMAIL_LENGTH = 254;
 
 // Ten hien thi. Khop voi gioi han trong updateUserProfile - de lech thi dang ky
 // duoc mot cai ten ma sau do khong bao gio sua lai duoc.
-const DAI_TEN_TOI_THIEU = 2;
-const DAI_TEN_TOI_DA = 50;
+const MIN_NAME_LENGTH = 2;
+const MAX_NAME_LENGTH = 50;
 
 // Email luon luu/tra cuu o dang chu thuong da trim -> tranh tao trung tai khoan
 // va tranh truong hop go hoa mot chu la khong dang nhap duoc.
@@ -38,13 +38,13 @@ const DAI_TEN_TOI_DA = 50;
 // '[object Object]' nen khong loc duoc vao truy van Mongo, nhung no cung nuot
 // im lang moi kieu du lieu sai roi de cho khac tu doan. Tu choi thang thi ro
 // rang hon va khong con cho nao phai doan.
-const chuanHoaEmail = (v) => (typeof v === 'string' ? v.trim().toLowerCase() : '');
+const normalizeEmail = (v) => (typeof v === 'string' ? v.trim().toLowerCase() : '');
 
 // Kiem dinh dang co ban, khong dung regex phuc tap de tranh ReDoS.
-const emailHopLe = (email) =>
+const isValidEmail = (email) =>
   typeof email === 'string' &&
   email.length > 0 &&
-  email.length <= DAI_EMAIL_TOI_DA &&
+  email.length <= MAX_EMAIL_LENGTH &&
   /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
 
 // Mat khau NHAN VAO luc dang nhap.
@@ -56,8 +56,8 @@ const emailHopLe = (email) =>
 //
 // Van phai co MOT cai tran, chi la de cao hon nhieu: khong co no thi mot than
 // request 1MB deu dan tuc la bat may chu bam bcrypt tren 1MB moi lan.
-const matKhauNhanDuoc = (v) =>
-  typeof v === 'string' && v.length > 0 && v.length <= DAI_MAT_KHAU_NHAN_TOI_DA;
+const receivedPassword = (v) =>
+  typeof v === 'string' && v.length > 0 && v.length <= MAX_PASSWORD_INPUT_LENGTH;
 
 // Mat khau dat MOI (dang ky, doi mat khau). Tra ve cau bao loi, hoac null neu dat.
 //
@@ -65,30 +65,30 @@ const matKhauNhanDuoc = (v) =>
 // Nghia la "matkhau...<72 byte>...A" va "matkhau...<72 byte>...B" la mot mat
 // khau duy nhat duoi mat may chu. De nguoi dung dat mat khau dai roi tin rang
 // phan duoi cung duoc tinh la de ho hieu nham ve chinh cai bao ve cua ho.
-const loiMatKhauMoi = (v) => {
+const newPasswordError = (v) => {
   if (typeof v !== 'string') return 'Mật khẩu không hợp lệ';
-  if (v.length < DAI_MAT_KHAU_TOI_THIEU) {
-    return `Mật khẩu phải có ít nhất ${DAI_MAT_KHAU_TOI_THIEU} ký tự`;
+  if (v.length < MIN_PASSWORD_LENGTH) {
+    return `Mật khẩu phải có ít nhất ${MIN_PASSWORD_LENGTH} ký tự`;
   }
   // Do bang BYTE chu khong phai ky tu: bcrypt dem byte, ma tieng Viet co dau
   // moi chu ton 2-3 byte. Dem theo ky tu thi mot mat khau 60 chu tieng Viet
   // (~150 byte) van lot qua roi bi cat am tham.
-  if (Buffer.byteLength(v, 'utf8') > DAI_MAT_KHAU_TOI_DA) {
-    return `Mật khẩu tối đa ${DAI_MAT_KHAU_TOI_DA} ký tự`;
+  if (Buffer.byteLength(v, 'utf8') > MAX_PASSWORD_LENGTH) {
+    return `Mật khẩu tối đa ${MAX_PASSWORD_LENGTH} ký tự`;
   }
   return null;
 };
 
 // Ten hien thi. Tra ve { ten } hoac { loi }.
-const kiemTen = (v) => {
-  const ten = typeof v === 'string' ? v.trim() : '';
-  if (ten.length < DAI_TEN_TOI_THIEU) {
-    return { loi: `Tên hiển thị phải có ít nhất ${DAI_TEN_TOI_THIEU} ký tự` };
+const validateName = (v) => {
+  const name = typeof v === 'string' ? v.trim() : '';
+  if (name.length < MIN_NAME_LENGTH) {
+    return { loi: `Tên hiển thị phải có ít nhất ${MIN_NAME_LENGTH} ký tự` };
   }
-  if (ten.length > DAI_TEN_TOI_DA) {
-    return { loi: `Tên hiển thị tối đa ${DAI_TEN_TOI_DA} ký tự` };
+  if (name.length > MAX_NAME_LENGTH) {
+    return { loi: `Tên hiển thị tối đa ${MAX_NAME_LENGTH} ký tự` };
   }
-  return { ten };
+  return { ten: name };
 };
 
 // ---------------------------------------------------------------------------
@@ -112,35 +112,35 @@ const kiemTen = (v) => {
 // KHONG duoc index sparse bo qua, nen tai khoan thu hai roi vao nhanh do se
 // dung khoa trung - va te hon, `User.findOne({ googleId: '' })` sau do se khop
 // nham dung nhung tai khoan do voi nhau.
-const kiemPayloadGoogle = (payload) => {
-  const LOI_CHUNG = { loi: 'Google credential không hợp lệ' };
+const verifyGooglePayload = (payload) => {
+  const COMMON_ERRORS = { loi: 'Google credential không hợp lệ' };
 
-  if (!payload || typeof payload !== 'object') return LOI_CHUNG;
+  if (!payload || typeof payload !== 'object') return COMMON_ERRORS;
 
-  const email = chuanHoaEmail(payload.email);
-  if (!emailHopLe(email)) return LOI_CHUNG;
+  const email = normalizeEmail(payload.email);
+  if (!isValidEmail(email)) return COMMON_ERRORS;
 
   // google-auth-library tra ve boolean, nhung vai phien ban / vai nha cung cap
   // proxy tra chuoi 'true'. Nhan ca hai, va CHI hai gia tri do.
-  const daXacMinh = payload.email_verified === true || payload.email_verified === 'true';
-  if (!daXacMinh) {
+  const verified = payload.email_verified === true || payload.email_verified === 'true';
+  if (!verified) {
     return { loi: 'Email Google này chưa được xác minh nên không dùng để đăng nhập được' };
   }
 
   const sub = typeof payload.sub === 'string' ? payload.sub.trim() : '';
-  if (!sub) return LOI_CHUNG;
+  if (!sub) return COMMON_ERRORS;
 
   // Ten do Google cung cap se duoc GHI VAO CSDL. Cat theo dung gioi han cua
   // truong name thay vi tu choi: khong dang nhap duoc chi vi ten dai la vo ly.
-  const tenTho = typeof payload.name === 'string' ? payload.name.trim() : '';
-  const ten = (tenTho || email.split('@')[0]).slice(0, DAI_TEN_TOI_DA);
+  const rawName = typeof payload.name === 'string' ? payload.name.trim() : '';
+  const name = (rawName || email.split('@')[0]).slice(0, MAX_NAME_LENGTH);
 
   // Anh KHONG duoc luu, chi chuyen thang ve trinh duyet - noi no se thanh
   // thuoc tinh src cua mot the img. Vi vay phai chac chan no la http(s):
   // mot gia tri kieu 'javascript:...' o dung cho do la mot lo XSS.
-  const anh = laHttpUrl(payload.picture) ? payload.picture : '';
+  const image = laHttpUrl(payload.picture) ? payload.picture : '';
 
-  return { email, sub, ten, anh };
+  return { email, sub, ten: name, anh: image };
 };
 
 const laHttpUrl = (v) => {
@@ -154,14 +154,14 @@ const laHttpUrl = (v) => {
 };
 
 module.exports = {
-  chuanHoaEmail,
-  emailHopLe,
-  matKhauNhanDuoc,
-  loiMatKhauMoi,
-  kiemTen,
-  kiemPayloadGoogle,
+  normalizeEmail,
+  isValidEmail,
+  receivedPassword,
+  newPasswordError,
+  validateName,
+  verifyGooglePayload,
   laHttpUrl,
-  DAI_EMAIL_TOI_DA,
-  DAI_TEN_TOI_THIEU,
-  DAI_TEN_TOI_DA,
+  MAX_EMAIL_LENGTH,
+  MIN_NAME_LENGTH,
+  MAX_NAME_LENGTH,
 };

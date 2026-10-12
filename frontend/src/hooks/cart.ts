@@ -20,9 +20,9 @@ import { useCallback, useEffect, useState } from "react";
  * trang trang xoa vi mot cai gio hang.
  */
 
-const KHOA = "gioHang.aLMS";
+const KEY = "gioHang.aLMS";
 
-export interface MonTrongGio {
+export interface CartItem {
   courseId: string;
   title: string;
   slug?: string;
@@ -36,21 +36,21 @@ export interface MonTrongGio {
 // Su kien 'storage' cua trinh duyet CHI ban ra o tab KHAC, khong ban ra o
 // chinh tab vua ghi - nen chi nghe 'storage' thi cai so tren bieu tuong gio
 // hang khong nhuc nhich khi bam Them ngay tren trang do.
-const SU_KIEN = "gioHangDoi";
+const EVENT_NAME = "gioHangDoi";
 
-const doc = (): MonTrongGio[] => {
+const doc = (): CartItem[] => {
   if (typeof window === "undefined") return [];
 
   try {
-    const tho = window.localStorage.getItem(KHOA);
+    const tho = window.localStorage.getItem(KEY);
     if (!tho) return [];
 
-    const ds = JSON.parse(tho);
-    if (!Array.isArray(ds)) return [];
+    const items = JSON.parse(tho);
+    if (!Array.isArray(items)) return [];
 
     // Loc lai tung phan tu: du lieu nay do trinh duyet giu, co the la ban cu
     // tu mot phien ban truoc hoac bi sua tay.
-    return ds.filter(
+    return items.filter(
       (m) => m && typeof m.courseId === "string" && typeof m.title === "string",
     );
   } catch {
@@ -58,65 +58,65 @@ const doc = (): MonTrongGio[] => {
   }
 };
 
-const ghi = (ds: MonTrongGio[]) => {
+const write = (items: CartItem[]) => {
   try {
-    window.localStorage.setItem(KHOA, JSON.stringify(ds));
+    window.localStorage.setItem(KEY, JSON.stringify(items));
   } catch {
     // Het dung luong hoac bi chan. Gio hang trong RAM van dung duoc het phien
     // nay, chi la khong song qua lan tai trang.
   }
 
-  window.dispatchEvent(new Event(SU_KIEN));
+  window.dispatchEvent(new Event(EVENT_NAME));
 };
 
-export function useGioHang() {
+export function useCartStore() {
   // Khoi tao RONG chu khong doc localStorage ngay.
   //
   // Doc ngay thi HTML dung san o may chu (luon rong) lech voi lan ve dau o
   // trinh duyet, va React bao loi khong khop. Doc trong effect thi ca hai ben
   // deu bat dau tu rong.
-  const [gio, setGio] = useState<MonTrongGio[]>([]);
+  const [hour, setHour] = useState<CartItem[]>([]);
 
   useEffect(() => {
-    const capNhat = () => setGio(doc());
+    const update = () => setHour(doc());
 
     // Lan doc dau tien day sang microtask thay vi goi thang trong than effect:
     // goi thang la mot vong ve lai noi tiep ngay sau lan ve dau, va
     // react-hooks/set-state-in-effect chan dung cho nay.
-    queueMicrotask(capNhat);
+    queueMicrotask(update);
 
-    window.addEventListener(SU_KIEN, capNhat);
+    window.addEventListener(EVENT_NAME, update);
     // 'storage' cho tab khac - mo hai tab thi ca hai cung thay mot gio.
-    window.addEventListener("storage", capNhat);
+    window.addEventListener("storage", update);
 
     return () => {
-      window.removeEventListener(SU_KIEN, capNhat);
-      window.removeEventListener("storage", capNhat);
+      window.removeEventListener(EVENT_NAME, update);
+      window.removeEventListener("storage", update);
     };
   }, []);
 
-  const them = useCallback((mon: Omit<MonTrongGio, "themLuc">) => {
-    const hienCo = doc();
+  const them = useCallback((subjectItem: Omit<CartItem, "themLuc">) => {
+    const existing = doc();
 
     // Da co thi khong them lan hai. Khoa hoc khong co so luong - mua hai lan
     // cung mot khoa la vo nghia.
-    if (hienCo.some((m) => m.courseId === mon.courseId)) return;
+    if (existing.some((m) => m.courseId === subjectItem.courseId)) return;
 
-    ghi([...hienCo, { ...mon, themLuc: Date.now() }]);
+    write([...existing, { ...subjectItem, themLuc: Date.now() }]);
   }, []);
 
-  const bo = useCallback((courseId: string) => {
-    ghi(doc().filter((m) => m.courseId !== courseId));
+  const remove = useCallback((courseId: string) => {
+    write(doc().filter((m) => m.courseId !== courseId));
   }, []);
 
-  const doSach = useCallback(() => ghi([]), []);
+  const clear = useCallback(() => write([]), []);
 
-  const coTrongGio = useCallback(
-    (courseId: string) => gio.some((m) => m.courseId === courseId),
-    [gio],
+  const isInCart = useCallback(
+    (courseId: string) => hour.some((m) => m.courseId === courseId),
+    [hour],
   );
 
-  const tongTien = gio.reduce((t, m) => t + (m.gia || 0), 0);
+  const totalPrice = hour.reduce((t, m) => t + (m.gia || 0), 0);
 
-  return { gio, them, bo, doSach, coTrongGio, tongTien, soMon: gio.length };
+  return { gio: hour, them, bo: remove, clear, isInCart, totalPrice, soMon: hour.length };
 }

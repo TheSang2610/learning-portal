@@ -8,14 +8,18 @@ const test = require('node:test');
 const assert = require('node:assert');
 
 const Enrollment = require('../models/Enrollment');
-const { duocXemNoiDung, catNoiDung } = require('./contentAccess');
+const { canViewContent, stripContent } = require('./contentAccess');
 
-const KHOA = { _id: 'khoa1', instructor: 'gv1' };
+const KEY = { _id: 'khoa1', instructor: 'gv1', price: 799000 };
 
 // Gia lap Enrollment.exists de khong can CSDL. Tra ve `co` cho lan goi tiep theo.
-const voiGhiDanh = async (co, viec) => {
+let lastFilter = null;
+const withEnrollment = async (size, viec) => {
     const that = Enrollment.exists;
-    Enrollment.exists = async () => (co ? { _id: 'gd1' } : null);
+    Enrollment.exists = async (filter) => {
+        lastFilter = filter;
+        return size ? { _id: 'gd1' } : null;
+    };
     try {
         return await viec();
     } finally {
@@ -23,60 +27,72 @@ const voiGhiDanh = async (co, viec) => {
     }
 };
 
+test('khoa CO PHI: chi tinh ghi danh con han', async () => {
+    await withEnrollment(true, () => canViewContent(KEY, { _id: 'u1', role: 'student' }));
+    assert.ok(lastFilter.$or, 'phai loc theo expiresAt');
+});
+
+test('khoa MIEN PHI (ke ca tung co phi): bo qua han hoc', async () => {
+    const free = { ...KEY, price: 0 };
+    const allowed = await withEnrollment(true, () => canViewContent(free, { _id: 'u1', role: 'student' }));
+    assert.equal(allowed, true);
+    assert.equal(lastFilter.$or, undefined);
+});
+
 test('khach vang lai (khong dang nhap) khong duoc xem noi dung', async () => {
-    assert.equal(await duocXemNoiDung(KHOA, undefined), false);
-    assert.equal(await duocXemNoiDung(KHOA, null), false);
+    assert.equal(await canViewContent(KEY, undefined), false);
+    assert.equal(await canViewContent(KEY, null), false);
 });
 
 test('khong co khoa hoc thi khong duoc xem', async () => {
-    assert.equal(await duocXemNoiDung(null, { _id: 'u1', role: 'admin' }), false);
+    assert.equal(await canViewContent(null, { _id: 'u1', role: 'admin' }), false);
 });
 
 test('admin xem duoc du khong ghi danh', async () => {
-    const duoc = await voiGhiDanh(false, () =>
-        duocXemNoiDung(KHOA, { _id: 'admin1', role: 'admin' }),
+    const allowed = await withEnrollment(false, () =>
+        canViewContent(KEY, { _id: 'admin1', role: 'admin' }),
     );
-    assert.equal(duoc, true);
+    assert.equal(allowed, true);
 });
 
 test('giang vien cua chinh khoa do xem duoc du khong ghi danh', async () => {
-    const duoc = await voiGhiDanh(false, () =>
-        duocXemNoiDung(KHOA, { _id: 'gv1', role: 'instructor' }),
+    const allowed = await withEnrollment(false, () =>
+        canViewContent(KEY, { _id: 'gv1', role: 'instructor' }),
     );
-    assert.equal(duoc, true);
+    assert.equal(allowed, true);
 });
 
 test('giang vien KHOA KHAC thi khong duoc xem', async () => {
-    const duoc = await voiGhiDanh(false, () =>
-        duocXemNoiDung(KHOA, { _id: 'gv2', role: 'instructor' }),
+    const allowed = await withEnrollment(false, () =>
+        canViewContent(KEY, { _id: 'gv2', role: 'instructor' }),
     );
-    assert.equal(duoc, false);
+    assert.equal(allowed, false);
 });
 
 test('instructor da populate thanh doi tuong van nhan ra la chu khoa', async () => {
-    const khoa = { _id: 'khoa1', instructor: { _id: 'gv1', name: 'Thay A' } };
-    const duoc = await voiGhiDanh(false, () =>
-        duocXemNoiDung(khoa, { _id: 'gv1', role: 'instructor' }),
+    const course = { _id: 'khoa1', instructor: { _id: 'gv1', name: 'Thay A' } };
+    const allowed = await withEnrollment(false, () =>
+        canViewContent(course, { _id: 'gv1', role: 'instructor' }),
     );
-    assert.equal(duoc, true);
+    assert.equal(allowed, true);
 });
 
 test('hoc vien DA ghi danh thi xem duoc', async () => {
-    const duoc = await voiGhiDanh(true, () =>
-        duocXemNoiDung(KHOA, { _id: 'hv1', role: 'student' }),
+    const allowed = await withEnrollment(true, () =>
+        canViewContent(KEY, { _id: 'hv1', role: 'student' }),
     );
-    assert.equal(duoc, true);
+    assert.equal(allowed, true);
 });
 
 test('hoc vien CHUA ghi danh thi khong xem duoc - day la lo hong cu', async () => {
-    const duoc = await voiGhiDanh(false, () =>
-        duocXemNoiDung(KHOA, { _id: 'hv2', role: 'student' }),
+    const allowed = await withEnrollment(false, () =>
+        canViewContent(KEY, { _id: 'hv2', role: 'student' }),
     );
-    assert.equal(duoc, false);
+    assert.equal(allowed, false);
 });
 
 test('catNoiDung bo video, bai viet va tai lieu; giu muc luc', () => {
-    const bai = catNoiDung({
+    const lesson = stripContent({
         _id: 'b1',
         title: 'Bai 1',
         order: 1,
@@ -86,27 +102,27 @@ test('catNoiDung bo video, bai viet va tai lieu; giu muc luc', () => {
         documentUrl: 'https://res.cloudinary.com/bimat.pdf',
     });
 
-    assert.equal(bai.videoUrl, undefined);
-    assert.equal(bai.content, undefined);
-    assert.equal(bai.documentUrl, undefined);
-    assert.equal(bai.biKhoa, true);
+    assert.equal(lesson.videoUrl, undefined);
+    assert.equal(lesson.content, undefined);
+    assert.equal(lesson.documentUrl, undefined);
+    assert.equal(lesson.biKhoa, true);
 
     // Muc luc phai con - do la thu thuyet phuc nguoi ta dang ky.
-    assert.equal(bai.title, 'Bai 1');
-    assert.equal(bai.order, 1);
-    assert.equal(bai.duration, '12:40');
+    assert.equal(lesson.title, 'Bai 1');
+    assert.equal(lesson.order, 1);
+    assert.equal(lesson.duration, '12:40');
 });
 
 test('catNoiDung khong sua tai lieu goc', () => {
-    const goc = { _id: 'b1', title: 'Bai 1', videoUrl: 'https://co.that/video.mp4' };
-    catNoiDung(goc);
-    assert.equal(goc.videoUrl, 'https://co.that/video.mp4');
+    const origin = { _id: 'b1', title: 'Bai 1', videoUrl: 'https://co.that/video.mp4' };
+    stripContent(origin);
+    assert.equal(origin.videoUrl, 'https://co.that/video.mp4');
 });
 
 test('catNoiDung chiu duoc tai lieu Mongoose (co toObject)', () => {
-    const bai = catNoiDung({
+    const lesson = stripContent({
         toObject: () => ({ _id: 'b1', title: 'Bai 1', videoUrl: 'https://co.that/video.mp4' }),
     });
-    assert.equal(bai.videoUrl, undefined);
-    assert.equal(bai.title, 'Bai 1');
+    assert.equal(lesson.videoUrl, undefined);
+    assert.equal(lesson.title, 'Bai 1');
 });

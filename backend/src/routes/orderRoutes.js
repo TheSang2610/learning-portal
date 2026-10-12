@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { capIdHopLe } = require('../middlewares/validObjectId');
+const { guardObjectIds } = require('../middlewares/validObjectId');
 
 // Chan id sai dinh dang -> 404 thay vi 500. Xem middlewares/validObjectId.js
-capIdHopLe(router);
+guardObjectIds(router);
 
 const {
     createOrder,
@@ -11,7 +11,7 @@ const {
     getOrderByCode,
     getMyOrders,
     cancelOrder,
-    baoDaChuyenKhoan
+    reportTransfer
 } = require('../controllers/orderController');
 
 const { protect } = require('../middlewares/authMiddleware');
@@ -43,6 +43,6 @@ router.put('/:code/cancel', cancelOrder);
 
 // @route   PUT /api/orders/:code/da-chuyen
 // @desc    Hoc vien bao da chuyen khoan -> gui mail cho quan tri doi chieu
-router.put('/:code/da-chuyen', baoDaChuyenKhoan);
+router.put('/:code/da-chuyen', reportTransfer);
 
 module.exports = router;

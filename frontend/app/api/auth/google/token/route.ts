@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { TEN_COOKIE_STATE, tuyChonCookieState } from "../state";
+import { STATE_COOKIE_NAME, stateCookieOptions } from "../state";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 // khong co oracle nao de do, nhung mot ham so sanh bi mat viet dung thi khong
 // bao gio thua - va nguoi doc sau khong phai dung lai tu hoi vi sao cho nay
 // dung ===.
-const bangNhau = (a: string, b: string) => {
+const safeEqual = (a: string, b: string) => {
   if (a.length !== b.length) return false;
   let khac = 0;
   for (let i = 0; i < a.length; i += 1) khac |= a.charCodeAt(i) ^ b.charCodeAt(i);
@@ -38,9 +38,9 @@ export async function GET(req: Request) {
   // dau luong (xem ../route.ts). `code` cua ke tan cong khong bao gio di kem
   // cookie cua nan nhan, nen buoc nay chan dung kieu tan cong do.
   const kho = await cookies();
-  const stateLuu = kho.get(TEN_COOKIE_STATE)?.value;
+  const storedState = kho.get(STATE_COOKIE_NAME)?.value;
 
-  if (!state || !stateLuu || !bangNhau(state, stateLuu)) {
+  if (!state || !storedState || !safeEqual(state, storedState)) {
     return NextResponse.json(
       { error: "Phiên đăng nhập Google không hợp lệ hoặc đã hết hạn. Vui lòng thử lại." },
       { status: 400 },
@@ -82,8 +82,8 @@ export async function GET(req: Request) {
   // State la dung mot lan. Xoa ngay sau khi da doi chieu, du buoc doi ma co
   // thanh cong hay khong: de lai thi mot `code` khac van con cho de dung ban
   // state do lan nua, tuc la buoc kiem tren chi con la hinh thuc.
-  const xoaState = (res: NextResponse) => {
-    res.cookies.set(TEN_COOKIE_STATE, "", { ...tuyChonCookieState(), maxAge: 0 });
+  const clearState = (res: NextResponse) => {
+    res.cookies.set(STATE_COOKIE_NAME, "", { ...stateCookieOptions(), maxAge: 0 });
     return res;
   };
 
@@ -92,7 +92,7 @@ export async function GET(req: Request) {
     // ca client_id va manh moi ve cau hinh phia may chu - nhung thu chi nguoi
     // van hanh can biet, con nguoi dung thi khong lam gi duoc voi chung.
     console.error("Google token exchange failed:", tokenData);
-    return xoaState(
+    return clearState(
       NextResponse.json({ error: "Token exchange failed" }, { status: 500 }),
     );
   }
@@ -101,7 +101,7 @@ export async function GET(req: Request) {
   // Day la thu duy nhat can chuyen tiep: backend tu kiem chu ky va tu doc
   // email tu do.
   if (!tokenData.id_token) {
-    return xoaState(
+    return clearState(
       NextResponse.json({ error: "Google khong tra ve id_token" }, { status: 500 }),
     );
   }
@@ -122,5 +122,5 @@ export async function GET(req: Request) {
   // Nay chi tra id_token ve trinh duyet, trinh duyet tu goi backend. Backend
   // kiem chu ky Google roi dat cookie thang cho trinh duyet - dung mot duong
   // voi nut "Dang nhap bang Google" o trang chu.
-  return xoaState(NextResponse.json({ idToken: tokenData.id_token }));
+  return clearState(NextResponse.json({ idToken: tokenData.id_token }));
 }

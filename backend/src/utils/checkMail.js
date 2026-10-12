@@ -1,7 +1,7 @@
 require('dotenv').config();
 
-const { daCauHinh, guiMail, MAIL_ADMIN } = require('../config/mail');
-const { soanMailBaoChuyenKhoan } = require('./orderMail');
+const { daCauHinh: isConfigured, sendMail, MAIL_ADMIN } = require('../config/mail');
+const { composeTransferReportMail } = require('./orderMail');
 
 /**
  * Gui thu mot mail de kiem cau hinh Gmail.
@@ -24,7 +24,7 @@ const chay = async () => {
     console.log('MAIL_ADMIN        :', MAIL_ADMIN || '(chua dat, se gui ve MAIL_USER)');
     console.log('');
 
-    if (!daCauHinh()) {
+    if (!isConfigured()) {
         console.error('THIEU CAU HINH. Dat MAIL_USER va MAIL_APP_PASSWORD trong .env roi chay lai.');
         console.error('');
         console.error('MAIL_APP_PASSWORD KHONG phai mat khau Gmail thuong. Gmail chan');
@@ -36,27 +36,27 @@ const chay = async () => {
 
     // Dung dung mau mail that de thu: neu mau co loi cu phap HTML hay thieu
     // truong thi lo ra ngay o day, chu khong doi toi luc co don hang that.
-    const mau = soanMailBaoChuyenKhoan({
-        maDon: 'THU0000',
+    const mau = composeTransferReportMail({
+        orderCode: 'THU0000',
         soTien: 799000,
-        tenHocVien: 'Mail thu tu he thong',
-        emailHocVien: 'khong-phai-don-that@example.com',
+        studentName: 'Mail thu tu he thong',
+        studentEmail: 'khong-phai-don-that@example.com',
         tenKhoa: 'Đây chỉ là mail thử, không có đơn hàng nào',
-        baoLuc: new Date(),
+        reportedAt: new Date(),
         daQuaHan: false,
-        duongDanQuanTri: process.env.FRONTEND_URL
+        adminUrl: process.env.FRONTEND_URL
             ? `${process.env.FRONTEND_URL.replace(/\/+$/, '')}/admin/orders`
             : ''
     });
 
     console.log('Dang gui thu toi', MAIL_ADMIN, '...');
-    const kq = await guiMail({
+    const outcome = await sendMail({
         tieuDe: `[aLMS] MAIL THU - ${mau.tieuDe}`,
-        chuHtml: mau.chuHtml,
-        chuThuong: mau.chuThuong
+        htmlBody: mau.htmlBody,
+        plainText: mau.plainText
     });
 
-    if (kq.daGui) {
+    if (outcome.daGui) {
         console.log('');
         console.log('GUI THANH CONG. Mo hop thu', MAIL_ADMIN, 'de xem.');
         console.log('Khong thay thi kiem ca thu muc Spam.');
@@ -64,7 +64,7 @@ const chay = async () => {
     }
 
     console.error('');
-    console.error('GUI THAT BAI:', kq.lyDo);
+    console.error('GUI THAT BAI:', outcome.lyDo);
     console.error('');
     console.error('Hay gap nhat:');
     console.error('  - "Invalid login" -> dung mat khau Gmail thuong thay vi App password');
@@ -73,7 +73,7 @@ const chay = async () => {
     process.exit(1);
 };
 
-chay().catch((loi) => {
-    console.error('Loi khong doan truoc:', loi.message);
+chay().catch((err) => {
+    console.error('Loi khong doan truoc:', err.message);
     process.exit(1);
 });

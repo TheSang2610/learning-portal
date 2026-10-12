@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const { capIdHopLe } = require('../middlewares/validObjectId');
+const { guardObjectIds } = require('../middlewares/validObjectId');
 
 // Chan id sai dinh dang -> 404 thay vi 500. Xem middlewares/validObjectId.js
-capIdHopLe(router);
+guardObjectIds(router);
 
 // 1. Import chính xác middleware uploadCloud từ file của bạn
 const { uploadCloud } = require("../utils/uploadCloud"); 
-const { datCache } = require('../middlewares/cacheControl');
+const { setCache } = require('../middlewares/cacheControl');
 
 const { 
     getProviders, 
@@ -21,7 +21,7 @@ const { protect, admin } = require("../middlewares/authMiddleware");
 
 // Tuyến đường cơ sở: /api/providers
 router.route("/")
-    .get(datCache(300), getProviders) // Công khai cho học viên xem danh sách logo đối tác
+    .get(setCache(300), getProviders) // Công khai cho học viên xem danh sách logo đối tác
     .post(protect, admin, uploadCloud.single("logo"), createProvider); // 🎯 Dùng uploadCloud.single để bắt file ảnh logo
 
 router.route("/:id")

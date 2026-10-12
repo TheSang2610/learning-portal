@@ -20,9 +20,9 @@
 
 const { thoat } = require('./orderMail');
 
-const KHUNG = (thanBai) => `
+const KHUNG = (postBody) => `
 <div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:15px;line-height:1.6;color:#0f172a;max-width:520px">
-${thanBai}
+${postBody}
 <hr style="border:0;border-top:1px solid #e2e8f0;margin:24px 0">
 <p style="color:#64748b;font-size:13px;margin:0">Thư này được gửi tự động từ aLMS. Vui lòng không trả lời.</p>
 </div>`.trim();
@@ -33,35 +33,35 @@ ${thanBai}
  * @param {object} tin
  * @param {string} tin.ten    ten nguoi dung tu dat - PHAI thoat HTML
  * @param {string} tin.ma     ma 6 chu so
- * @param {number} [tin.soPhut] han cua ma, tinh bang phut
+ * @param {number} [tin.minutes] han cua ma, tinh bang phut
  */
-const soanMailMaDatLai = ({ ten, ma, soPhut = 10 }) => {
-    const tenAn = thoat(ten);
-    const maAn = thoat(ma);
+const composeResetCodeMail = ({ ten: name, ma: code, minutes = 10 }) => {
+    const maskedName = thoat(name);
+    const maskedCode = thoat(code);
 
     return {
         // Ma KHONG nam tren tieu de. Tieu de hien ra o man hinh khoa dien
         // thoai va o danh sach hom thu - tuc la bat ky ai cam may len cung doc
         // duoc ma ma khong can mo khoa may.
         tieuDe: 'Mã đặt lại mật khẩu aLMS',
-        chuHtml: KHUNG(`
-<p>Chào ${tenAn},</p>
+        htmlBody: KHUNG(`
+<p>Chào ${maskedName},</p>
 <p>Có người vừa yêu cầu đặt lại mật khẩu cho tài khoản aLMS của bạn. Nếu là bạn, hãy nhập mã dưới đây vào trang đăng nhập:</p>
 <p style="margin:24px 0">
-  <span style="display:inline-block;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:14px 24px;font-size:30px;font-weight:700;letter-spacing:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace">${maAn}</span>
+  <span style="display:inline-block;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:14px 24px;font-size:30px;font-weight:700;letter-spacing:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace">${maskedCode}</span>
 </p>
-<p>Mã có hiệu lực trong ${soPhut} phút và chỉ dùng được một lần.</p>
+<p>Mã có hiệu lực trong ${minutes} phút và chỉ dùng được một lần.</p>
 <p style="color:#64748b">Nếu không phải bạn yêu cầu, hãy bỏ qua thư này — mật khẩu của bạn không hề thay đổi. Nhưng nếu thư kiểu này đến nhiều lần, hãy đổi sang một mật khẩu mạnh hơn.</p>
 <p style="color:#64748b"><strong>Đừng gửi mã này cho bất kỳ ai.</strong> Nhân viên aLMS không bao giờ hỏi mã của bạn.</p>`),
-        chuThuong: [
-            `Chào ${ten},`,
+        plainText: [
+            `Chào ${name},`,
             '',
             'Có người vừa yêu cầu đặt lại mật khẩu cho tài khoản aLMS của bạn.',
             'Nếu là bạn, hãy nhập mã sau vào trang đăng nhập:',
             '',
-            `    ${ma}`,
+            `    ${code}`,
             '',
-            `Mã có hiệu lực trong ${soPhut} phút và chỉ dùng được một lần.`,
+            `Mã có hiệu lực trong ${minutes} phút và chỉ dùng được một lần.`,
             '',
             'Nếu không phải bạn yêu cầu, hãy bỏ qua thư này - mật khẩu của bạn',
             'không hề thay đổi.',
@@ -79,18 +79,18 @@ const soanMailMaDatLai = ({ ten, ma, soPhut = 10 }) => {
  * controllers/passwordResetController.js - day la mot quyet dinh cua chu du an,
  * khong phai sot.
  */
-const soanMailSaiQuaNhieu = ({ ten }) => {
-    const tenAn = thoat(ten);
+const composeTooManyFailsMail = ({ ten: name }) => {
+    const maskedName = thoat(name);
 
     return {
         tieuDe: 'Tạm dừng đặt lại mật khẩu aLMS',
-        chuHtml: KHUNG(`
-<p>Chào ${tenAn},</p>
+        htmlBody: KHUNG(`
+<p>Chào ${maskedName},</p>
 <p>Mã đặt lại mật khẩu vừa bị nhập sai quá nhiều lần, nên chúng tôi tạm dừng việc đặt lại mật khẩu cho tài khoản này.</p>
 <p><strong>Bạn hãy thử lại sau.</strong> Mã cũ đã hết hiệu lực — lần sau bạn cần yêu cầu một mã mới.</p>
 <p style="color:#64748b">Nếu không phải bạn làm việc này, mật khẩu của bạn vẫn an toàn và không hề thay đổi — người kia không vào được tài khoản. Dù vậy, chúng tôi khuyên bạn đăng nhập và đổi sang một mật khẩu mạnh hơn khi có thể.</p>`),
-        chuThuong: [
-            `Chào ${ten},`,
+        plainText: [
+            `Chào ${name},`,
             '',
             'Mã đặt lại mật khẩu vừa bị nhập sai quá nhiều lần, nên chúng tôi tạm',
             'dừng việc đặt lại mật khẩu cho tài khoản này.',
@@ -125,28 +125,28 @@ const soanMailSaiQuaNhieu = ({ ten }) => {
  *
  * Vi vay thu phai noi ro phai lam gi tiep, chu khong chi thong bao suong.
  */
-const soanMailDaDoiMatKhau = ({ ten, luc }) => {
-    const tenAn = thoat(ten);
-    const d = luc instanceof Date ? luc : new Date(luc);
+const composePasswordChangedMail = ({ ten: name, at }) => {
+    const maskedName = thoat(name);
+    const d = at instanceof Date ? at : new Date(at);
     // Gio Viet Nam: nguoi doc phai doi chieu duoc voi "luc do minh dang lam gi".
-    const gio = Number.isNaN(d.getTime())
+    const hour = Number.isNaN(d.getTime())
         ? 'không rõ'
         : d.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-    const gioAn = thoat(gio);
+    const hideHours = thoat(hour);
 
     return {
         tieuDe: 'Mật khẩu aLMS của bạn vừa được đổi',
-        chuHtml: KHUNG(`
-<p>Chào ${tenAn},</p>
-<p>Mật khẩu tài khoản aLMS của bạn vừa được đổi lúc <strong>${gioAn}</strong> qua chức năng quên mật khẩu.</p>
+        htmlBody: KHUNG(`
+<p>Chào ${maskedName},</p>
+<p>Mật khẩu tài khoản aLMS của bạn vừa được đổi lúc <strong>${hideHours}</strong> qua chức năng quên mật khẩu.</p>
 <p><strong>Nếu là bạn:</strong> không cần làm gì thêm. Mọi thiết bị đang đăng nhập đã bị đăng xuất, bạn hãy đăng nhập lại bằng mật khẩu mới.</p>
 <p style="margin:16px 0;padding:12px;border-radius:10px;background:#fef2f2;color:#991b1b">
   <strong>Nếu KHÔNG phải bạn:</strong> có người đang giữ quyền vào hộp thư này. Hãy đổi mật khẩu hộp thư trước, rồi dùng lại chức năng quên mật khẩu của aLMS để giành lại tài khoản.
 </p>`),
-        chuThuong: [
-            `Chào ${ten},`,
+        plainText: [
+            `Chào ${name},`,
             '',
-            `Mật khẩu tài khoản aLMS của bạn vừa được đổi lúc ${gio} qua chức năng`,
+            `Mật khẩu tài khoản aLMS của bạn vừa được đổi lúc ${hour} qua chức năng`,
             'quên mật khẩu.',
             '',
             'Nếu là bạn: không cần làm gì thêm. Mọi thiết bị đang đăng nhập đã bị',
@@ -159,4 +159,4 @@ const soanMailDaDoiMatKhau = ({ ten, luc }) => {
     };
 };
 
-module.exports = { soanMailMaDatLai, soanMailSaiQuaNhieu, soanMailDaDoiMatKhau };
+module.exports = { composeResetCodeMail, composeTooManyFailsMail, composePasswordChangedMail };

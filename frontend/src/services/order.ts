@@ -1,8 +1,8 @@
 import { apiRequest } from "./apiHelper";
 
-export type TrangThaiDon = "pending" | "paid" | "cancelled" | "expired";
+export type OrderStatus = "pending" | "paid" | "cancelled" | "expired";
 
-export interface ThongTinChuyenKhoan {
+export interface TransferInfo {
   nganHang: string;
   soTaiKhoan: string;
   tenTaiKhoan: string;
@@ -13,7 +13,7 @@ export interface ThongTinChuyenKhoan {
   daCauHinh: boolean;
 }
 
-export interface KhoaHocTrongDon {
+export interface OrderCourse {
   _id: string;
   title: string;
   slug: string;
@@ -21,9 +21,9 @@ export interface KhoaHocTrongDon {
   price: number;
 }
 
-export interface DonHang {
+export interface Order {
   code: string;
-  status: TrangThaiDon;
+  status: OrderStatus;
   amount: number;
   expiresAt: string;
   /**
@@ -43,13 +43,13 @@ export interface DonHang {
    */
   daBaoChuyenKhoanLuc: string | null;
   createdAt: string;
-  course: KhoaHocTrongDon | null;
+  course: OrderCourse | null;
   /**
    * Đơn thanh toán cả giỏ hàng: mọi khóa trong đơn (đã gồm `course`).
    * Đơn mua lẻ để mảng rỗng — khi đó chỉ hiện `course`.
    */
-  courses: KhoaHocTrongDon[];
-  chuyenKhoan: ThongTinChuyenKhoan | null;
+  courses: OrderCourse[];
+  chuyenKhoan: TransferInfo | null;
 
   /** Giá trước khi giảm. Bằng `amount` khi không dùng mã. */
   giaGoc: number;
@@ -64,16 +64,16 @@ export interface DonHang {
  * không sinh đơn mới — nếu không, người dùng bấm Mua hai lần sẽ có hai mã khác
  * nhau và chuyển tiền theo mã cũ thì đơn mới không bao giờ khớp.
  */
-export const taoDonHang = async (
+export const createOrder = async (
   courseId: string,
-  maGiamGia?: string,
-): Promise<{ order: DonHang }> =>
+  voucher?: string,
+): Promise<{ order: Order }> =>
   apiRequest("/orders", {
     method: "POST",
     // Chi gui `maGiamGia` khi that su co: gui chuoi rong thi may chu vao nhanh
     // ap ma roi tra 400 "Bạn chưa nhập mã giảm giá" cho mot nguoi khong he
     // dinh dung ma nao.
-    body: JSON.stringify(maGiamGia ? { courseId, maGiamGia } : { courseId }),
+    body: JSON.stringify(voucher ? { courseId, maGiamGia: voucher } : { courseId }),
   });
 
 /**
@@ -83,26 +83,21 @@ export const taoDonHang = async (
  * trên trang giỏ hàng. Gọi lại với đúng bộ khóa đó thì máy chủ trả lại đơn đang
  * chờ thay vì sinh mã mới.
  */
-export const taoDonGioHang = async (
+export const createCartOrder = async (
   courseIds: string[],
-  giam?: { maGiamGia: string; courseIdGiam: string },
-): Promise<{ order: DonHang }> =>
+  discount?: { maGiamGia: string; courseIdGiam: string },
+): Promise<{ order: Order }> =>
   apiRequest("/orders/gio-hang", {
     method: "POST",
-    body: JSON.stringify(giam?.maGiamGia ? { courseIds, ...giam } : { courseIds }),
+    body: JSON.stringify(
+      discount?.maGiamGia ? { courseIds, ...discount } : { courseIds },
+    ),
   });
 
-export const layDonTheoMa = async (code: string): Promise<{ order: DonHang }> =>
+export const getOrderByCode = async (code: string): Promise<{ order: Order }> =>
   apiRequest(`/orders/${encodeURIComponent(code)}`);
 
-export const layDonCuaToi = async (): Promise<{
-  orders: DonHang[];
-  page: number;
-  limit: number;
-  total: number;
-}> => apiRequest("/orders/my");
-
-export const huyDon = async (code: string): Promise<{ message: string }> =>
+export const cancelOrder = async (code: string): Promise<{ message: string }> =>
   apiRequest(`/orders/${encodeURIComponent(code)}/cancel`, { method: "PUT" });
 
 /**
@@ -111,7 +106,7 @@ export const huyDon = async (code: string): Promise<{ message: string }> =>
  * KHÔNG đổi đơn sang "đã thanh toán": đây là lời khai của người mua, chỉ quản
  * trị nhìn thấy tiền trong sao kê mới được xác nhận.
  */
-export const baoDaChuyenKhoan = async (
+export const reportTransfer = async (
   code: string,
 ): Promise<{
   message: string;
@@ -125,12 +120,12 @@ export const baoDaChuyenKhoan = async (
 // Phần dành cho quản trị
 // ---------------------------------------------------------------------------
 
-export interface DonHangAdmin {
+export interface AdminOrder {
   /** Lúc học viên bấm "Tôi đã chuyển khoản". `null` = chưa bấm. */
   daBaoChuyenKhoanLuc?: string | null;
   _id: string;
   code: string;
-  status: TrangThaiDon;
+  status: OrderStatus;
   amount: number;
   expiresAt: string;
   paidAt: string | null;
@@ -143,13 +138,13 @@ export interface DonHangAdmin {
   confirmedBy: { _id: string; name: string } | null;
 }
 
-export const layDonHangAdmin = async (tuyChon?: {
-  status?: TrangThaiDon | "";
+export const getAdminOrders = async (options?: {
+  status?: OrderStatus | "";
   search?: string;
   page?: number;
   limit?: number;
 }): Promise<{
-  orders: DonHangAdmin[];
+  orders: AdminOrder[];
   page: number;
   limit: number;
   total: number;
@@ -158,15 +153,15 @@ export const layDonHangAdmin = async (tuyChon?: {
   daBaoCount: number;
 }> => {
   const q = new URLSearchParams();
-  if (tuyChon?.status) q.set("status", tuyChon.status);
-  if (tuyChon?.search) q.set("search", tuyChon.search);
-  if (tuyChon?.page) q.set("page", String(tuyChon.page));
-  if (tuyChon?.limit) q.set("limit", String(tuyChon.limit));
-  const duoi = q.toString();
-  return apiRequest(`/admin/orders${duoi ? `?${duoi}` : ""}`);
+  if (options?.status) q.set("status", options.status);
+  if (options?.search) q.set("search", options.search);
+  if (options?.page) q.set("page", String(options.page));
+  if (options?.limit) q.set("limit", String(options.limit));
+  const extension = q.toString();
+  return apiRequest(`/admin/orders${extension ? `?${extension}` : ""}`);
 };
 
-export const xacNhanDon = async (
+export const confirmOrder = async (
   code: string,
   note?: string,
 ): Promise<{ message: string }> =>
@@ -175,7 +170,7 @@ export const xacNhanDon = async (
     body: JSON.stringify({ note: note ?? "" }),
   });
 
-export const tuChoiDon = async (
+export const rejectOrder = async (
   code: string,
   note?: string,
 ): Promise<{ message: string }> =>
@@ -185,5 +180,5 @@ export const tuChoiDon = async (
   });
 
 /** 1399000 -> "1.399.000đ", đúng cách viết tiền Việt. */
-export const dinhDangTien = (soTien: number): string =>
-  `${Number(soTien || 0).toLocaleString("vi-VN")}đ`;
+export const formatMoney = (amount: number): string =>
+  `${Number(amount || 0).toLocaleString("vi-VN")}đ`;

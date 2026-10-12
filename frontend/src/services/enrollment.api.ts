@@ -21,6 +21,8 @@ export interface LessonProgress {
 
 export interface Enrollment {
   _id: string;
+  /** Han hoc khoa co phi; null = khong gioi han. */
+  expiresAt?: string | null;
   course: string | Course;
   // GET /enrollments/:courseId/students populate san (name email avatar);
   // cac endpoint khac tra ve ObjectId dang chuoi.
@@ -39,7 +41,7 @@ export interface Enrollment {
 // (xem ghi chu trong enrollmentController). Nen kieu tra ve la hop cua hai hinh
 // dang, va noi goi buoc phai kiem tra isEnrolled truoc khi doc lessonProgress.
 export type EnrollmentByCourseResponse =
-  | ({ isEnrolled: true } & Enrollment)
+  | ({ isEnrolled: true; expired?: boolean; daysLeft?: number | null } & Enrollment)
   | { isEnrolled: false; message: string; data: null };
 
 export interface ProgressStats {
@@ -146,14 +148,4 @@ export const completeCourse = async (courseId: string): Promise<Enrollment> => {
   return apiRequest(`/enrollments/${courseId}/complete-course`, {
     method: "PUT",
   });
-};
-
-export const dropCourse = async (courseId: string): Promise<Enrollment> => {
-  return apiRequest(`/enrollments/${courseId}/drop`, {
-    method: "PUT",
-  });
-};
-
-export const getCourseStudents = async (courseId: string): Promise<Enrollment[]> => {
-  return apiRequest(`/enrollments/${courseId}/students`);
 };

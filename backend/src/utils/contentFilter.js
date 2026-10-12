@@ -170,8 +170,8 @@ function checkText(input) {
   const base = normalize(input);
   if (!base) return { ok: true };
 
-  const noDia = stripDiacritics(base);
-  const leet = undoLeet(noDia);
+  const trimScheme = stripDiacritics(base);
+  const leet = undoLeet(trimScheme);
   const joined = joinSpacedLetters(leet);
 
   const passes = [
@@ -183,9 +183,9 @@ function checkText(input) {
     [INCITEMENT, base, 'incitement'],
     [EVASION_PRONE, joined, 'profanity'],
     // Cum khong dau: chay tren van ban da bo dau, bat nguoi go khong dau.
-    [VN_STRIPPED_PROFANITY, noDia, 'profanity'],
-    [VN_STRIPPED_HATE, noDia, 'hate'],
-    [VN_STRIPPED_INCITEMENT, noDia, 'incitement'],
+    [VN_STRIPPED_PROFANITY, trimScheme, 'profanity'],
+    [VN_STRIPPED_HATE, trimScheme, 'hate'],
+    [VN_STRIPPED_INCITEMENT, trimScheme, 'incitement'],
   ];
 
   for (const [list, text, category] of passes) {
@@ -203,7 +203,7 @@ function checkText(input) {
  * Kiem tra ca tieu de lan noi dung. Tra ve loi dau tien tim thay.
  */
 function checkDocument({ title, description }) {
-  for (const [field, value, ten] of [
+  for (const [field, value, name] of [
     ['title', title, 'Tiêu đề'],
     ['description', description, 'Nội dung'],
   ]) {
@@ -214,7 +214,7 @@ function checkDocument({ title, description }) {
         field,
         category: r.category,
         message:
-          `${ten} vi phạm quy định (${r.label}). ` +
+          `${name} vi phạm quy định (${r.label}). ` +
           `Vui lòng sửa lại rồi đăng.`,
       };
     }

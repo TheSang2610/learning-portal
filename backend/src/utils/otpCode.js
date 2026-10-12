@@ -21,7 +21,7 @@
 // Noi cach khac: SHA-256 dung cho bi mat KHONG DOAN DUOC, bcrypt dung cho bi
 // mat DOAN DUOC. OTP thuoc loai thu hai.
 //
-// Ban than viec do truc tuyen thi da bi chan boi SO_LAN_SAI_TOI_DA roi - ba
+// Ban than viec do truc tuyen thi da bi chan boi MAX_WRONG_ATTEMPTS roi - ba
 // lan tren mot trieu kha nang. Phan bcrypt o day la de phong truong hop CSDL
 // lot ra ngoai, khong phai de chan nguoi go tay.
 //
@@ -45,36 +45,36 @@
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const { BCRYPT_ROUNDS } = require('./password');
-const { bamToken } = require('./verificationToken');
+const { hashToken } = require('./verificationToken');
 
-const SO_CHU_SO = 6;
+const DIGIT_COUNT = 6;
 
 // Han cua ma, tinh tu luc gui thu.
 //
 // 10 phut: du de mo hom thu tren dien thoai, ngan de mot cai ma bo quen trong
 // hom thu khong con song. Cang ngan thi cua so do truc tuyen cang hep.
-const HAN_MA_MS = 10 * 60 * 1000;
+const CODE_TTL_MS = 10 * 60 * 1000;
 
 // Han cua phieu dat lai, tinh tu luc nhap dung ma.
 //
 // Ngan hon han cua ma: toi buoc nay nguoi dung dang ngoi truoc man hinh go
 // mat khau moi, khong con phai di mo hom thu nua.
-const HAN_PHIEU_MS = 5 * 60 * 1000;
+const TICKET_TTL_MS = 5 * 60 * 1000;
 
 // So lan nhap SAI ma toi da truoc khi khoa.
-const SO_LAN_SAI_TOI_DA = 3;
+const MAX_WRONG_ATTEMPTS = 3;
 
 // So lan GUI thu toi da trong mot cua so - tuc la mot lan dau + mot lan gui
 // lai. Gui thu la viec ton kem va gay phien cho chu hom thu (hom thu Gmail
 // cua du an cung chi gui duoc khoang 500 thu mot ngay), nen no phai co tran
 // rieng, khong an theo tran so lan nhap sai.
-const SO_LAN_GUI_TOI_DA = 2;
+const MAX_SENDS = 2;
 
 // Khoa bao lau khi cham mot trong hai nguong tren.
 //
 // CHU Y - con so nay CO Y khong bao gio duoc noi cho nguoi dung biet. Xem ghi
 // chu "khong noi con bao lau" trong controllers/passwordResetController.js.
-const KHOA_MS = 60 * 60 * 1000;
+const LOCK_MS = 60 * 60 * 1000;
 
 /**
  * Sinh mot ma moi.
@@ -87,12 +87,12 @@ const KHOA_MS = 60 * 60 * 1000;
  * cho "dep" la vut bo 10% khong gian ma va noi thang cho ke do biet chu so
  * dau khong bao gio la 0.
  */
-const taoMa = () => String(crypto.randomInt(0, 10 ** SO_CHU_SO)).padStart(SO_CHU_SO, '0');
+const generateCode = () => String(crypto.randomInt(0, 10 ** DIGIT_COUNT)).padStart(DIGIT_COUNT, '0');
 
-const MAU_MA = new RegExp(`^\\d{${SO_CHU_SO}}$`);
+const CODE_PATTERN = new RegExp(`^\\d{${DIGIT_COUNT}}$`);
 
 /** Ma nguoi dung go vao co dung hinh dang khong. Kiem truoc khi cham CSDL. */
-const maHopLe = (v) => typeof v === 'string' && MAU_MA.test(v);
+const isValidCode = (v) => typeof v === 'string' && CODE_PATTERN.test(v);
 
 /**
  * San bang thoi gian phan hoi cua mot duong.
@@ -123,31 +123,31 @@ const maHopLe = (v) => typeof v === 'string' && MAU_MA.test(v);
  * tran theo IP o tang route (20 luot mot gio): quet hang nghin dia chi tu mot
  * may la khong kha thi.
  */
-const SAN_THOI_GIAN_MS = 1500;
+const TIME_FLOOR_MS = 1500;
 
-const sanThoiGian = async (batDau, toiThieuMs = SAN_THOI_GIAN_MS) => {
-    const conLai = toiThieuMs - (Date.now() - batDau);
-    if (conLai > 0) await new Promise((xong) => setTimeout(xong, conLai));
+const timeFloor = async (start, minMs = TIME_FLOOR_MS) => {
+    const remaining = minMs - (Date.now() - start);
+    if (remaining > 0) await new Promise((done) => setTimeout(done, remaining));
 };
 
-const bamMa = (ma) => bcrypt.hash(String(ma), BCRYPT_ROUNDS);
+const hashCode = (code) => bcrypt.hash(String(code), BCRYPT_ROUNDS);
 
 /**
  * Doi chieu ma. Luon tra ve boolean, khong bao gio nem.
  *
  * `bam` rong (chua tung yeu cau ma, hoac ma da bi tieu) van phai chay qua mot
  * lan bcrypt.compare voi ban bam gia - neu tra ve ngay thi thoi gian phan hoi
- * to cao dia chi nao dang co ma cho. Cung bai hoc voi HASH_GIA o loginUser.
+ * to cao dia chi nao dang co ma cho. Cung bai hoc voi FAKE_HASH o loginUser.
  */
 // Ban bam THAT cua mot chuoi 32 byte ngau nhien khong ai giu lai. Phai la mot
 // ban bam hop le, khong duoc bia: bcrypt.compare voi chuoi rac tra ve false
 // NGAY LAP TUC, tuc la no khong ton thoi gian - dung cai ma bien nay sinh ra
 // de xoa di.
-const HASH_GIA = '$2b$12$2b1pTma3u0ZwmTNwZCJ4ROMiMaLzpRGAkbnu.yo5Rlay8StSGMc6.';
+const FAKE_HASH = '$2b$12$2b1pTma3u0ZwmTNwZCJ4ROMiMaLzpRGAkbnu.yo5Rlay8StSGMc6.';
 
-const khopMa = async (ma, bam) => {
+const codeMatches = async (code, hash) => {
     try {
-        return await bcrypt.compare(String(ma), bam || HASH_GIA);
+        return await bcrypt.compare(String(code), hash || FAKE_HASH);
     } catch {
         return false;
     }
@@ -158,23 +158,23 @@ const khopMa = async (ma, bam) => {
  * @returns {{ phieu: string, bam: string, hetHan: Date }}
  *   `phieu` di ve trinh duyet, `bam` di vao CSDL. Khong bao gio nguoc lai.
  */
-const taoPhieu = (now = Date.now()) => {
-    const phieu = crypto.randomBytes(32).toString('hex');
-    return { phieu, bam: bamToken(phieu), hetHan: new Date(now + HAN_PHIEU_MS) };
+const createTicket = (now = Date.now()) => {
+    const ticket = crypto.randomBytes(32).toString('hex');
+    return { phieu: ticket, hash: hashToken(ticket), hetHan: new Date(now + TICKET_TTL_MS) };
 };
 
 module.exports = {
-    taoMa,
-    maHopLe,
-    bamMa,
-    khopMa,
-    taoPhieu,
-    sanThoiGian,
-    SAN_THOI_GIAN_MS,
-    SO_CHU_SO,
-    HAN_MA_MS,
-    HAN_PHIEU_MS,
-    SO_LAN_SAI_TOI_DA,
-    SO_LAN_GUI_TOI_DA,
-    KHOA_MS,
+    generateCode,
+    isValidCode,
+    hashCode,
+    codeMatches,
+    createTicket,
+    timeFloor,
+    TIME_FLOOR_MS,
+    DIGIT_COUNT,
+    CODE_TTL_MS,
+    TICKET_TTL_MS,
+    MAX_WRONG_ATTEMPTS,
+    MAX_SENDS,
+    LOCK_MS,
 };

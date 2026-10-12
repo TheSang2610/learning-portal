@@ -24,7 +24,7 @@ const documentSubjectSchema = new mongoose.Schema(
             maxlength: [80, 'Tên môn học tối đa 80 ký tự'],
         },
 
-        // Khoa so sanh (chuanHoaMon trong utils/rankDocuments.js). UNIQUE o day
+        // Khoa so sanh (normalizeSubject trong utils/rankDocuments.js). UNIQUE o day
         // la cho chan "Toán" va "toan" thanh hai mon.
         key: {
             type: String,

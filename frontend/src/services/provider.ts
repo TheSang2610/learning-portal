@@ -36,9 +36,3 @@ export const deleteProviderAdmin = async (id: string): Promise<{ message: string
     method: "DELETE",
   });
 };
-
-export const getProviderBySlug = async (slug: string): Promise<ProviderData> => {
-  return apiRequest(`/providers/slug/${slug}`, {
-    method: "GET",
-  });
-};

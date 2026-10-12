@@ -78,6 +78,13 @@ const courseSchema = new mongoose.Schema({
         default: 0
     },
 
+    // So ngay duoc hoc sau khi thanh toan (chi khoa co phi). Quan tri sua tung khoa.
+    accessDays: {
+        type: Number,
+        default: 30,
+        min: 1,
+        max: 3650
+    },
     isPublished: {
         type: Boolean,
         default: false
@@ -90,21 +97,20 @@ const courseSchema = new mongoose.Schema({
         }
     ],
 
-    isPopular: {
-        type: Boolean,
-        default: false
+    // Ba muc trang chu tu xep theo luot xem - xem utils/viewCount.js.
+    luotXem: {
+        type: Number,
+        default: 0
     },
-
-    isTrending: {
-        type: Boolean,
-        default: false
+    luotXemThang: {
+        type: Number,
+        default: 0
     },
-
-    isNewRelease: {
-        type: Boolean,
-        default: false
+    thangLuotXem: {
+        type: String,
+        default: ''
     }
-    
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Course', courseSchema);

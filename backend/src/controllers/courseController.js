@@ -1,32 +1,37 @@
 const mongoose = require('mongoose');
 
 const Course = require('../models/Course');
-const { taoGhiDanh } = require('../utils/enrollment');
+const { createEnrollment } = require('../utils/enrollment');
 const User = require('../models/User');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
-const { duocXemNoiDung, catNoiDung } = require('../utils/contentAccess');
-const { ganLinkPhat } = require('../utils/privateVideo');
+const { canViewContent, stripContent } = require('../utils/contentAccess');
+const { attachPlaybackUrl } = require('../utils/privateVideo');
 const Enrollment = require('../models/Enrollment');
 const Category = require('../models/categoryModel');
-const { xepHangGoiY } = require('../utils/rankSuggestions');
-const { phanTrang, timGan } = require('../utils/queryParams');
+const { rankSuggestions } = require('../utils/rankSuggestions');
+const { phanTrang: paginate, fuzzyRegex } = require('../utils/queryParams');
+const { monthKey, incrementViewCount, compareTrending, fillTrending } = require('../utils/viewCount');
+
+// Thu tu muc "Pho bien nhat". Khoa chua ai xem (du lieu cu truoc khi co bo dem)
+// thi xet tiep so hoc vien, roi khoa moi hon.
+const POPULAR_ORDER = { luotXem: -1, studentsCount: -1, createdAt: -1 };
 
 // Tra khoa hoc ve cho nguoi goi, cat video/bai viet neu ho chua co quyen.
 //
 // Muc luc van giu nguyen: ten bai, thu tu, thoi luong - do la thu thuyet phuc
 // nguoi ta dang ky. Chi cat dung phan noi dung.
-const traKhoaTheoQuyen = async (khoa, nguoiDung, res) => {
-    const duoc = await duocXemNoiDung(khoa, nguoiDung);
-    const doi = khoa.toObject();
+const sendCourseForUser = async (courseDoc, user, res) => {
+    const allowed = await canViewContent(courseDoc, user);
+    const copy = courseDoc.toObject();
 
     // Duoc xem: video kho kin doi sang link ky (utils/privateVideo.js).
-    if (duoc) {
-        doi.lessons = (doi.lessons || []).map((b) => ganLinkPhat(b));
-        return res.json(doi);
+    if (allowed) {
+        copy.lessons = (copy.lessons || []).map((b) => attachPlaybackUrl(b, user));
+        return res.json(copy);
     }
 
-    doi.lessons = (doi.lessons || []).map(catNoiDung);
-    return res.json(doi);
+    copy.lessons = (copy.lessons || []).map(stripContent);
+    return res.json(copy);
 };
 
 // Hàm tạo Slug URL thân thiện
@@ -118,14 +123,14 @@ const createCourse = async (req, res) => {
 const getCourses = async (req, res) => {
     try {
         const { page, limit, search, category } = req.query || {};
-        const coLoc = [page, limit, search, category].some((t) => t !== undefined);
+        const hasFilter = [page, limit, search, category].some((t) => t !== undefined);
 
-        const dieuKien = { isPublished: true };
+        const conditions = { isPublished: true };
 
-        // Tim theo ten. timGan() thoat ky tu regex - khong co no thi mot dau '('
+        // Tim theo ten. fuzzyRegex() thoat ky tu regex - khong co no thi mot dau '('
         // trong o tim kiem la mot mau regex hong va ca truy van nem 500.
         if (typeof search === 'string' && search.trim()) {
-            dieuKien.title = timGan(search.trim());
+            conditions.title = fuzzyRegex(search.trim());
         }
 
         // Loc theo slug danh muc chu khong theo id: dia chi /courses?category=web
@@ -138,37 +143,37 @@ const getCourses = async (req, res) => {
             // tuong danh muc do chua het tung ay.
             if (!dm) {
                 return res.json(
-                    coLoc ? { danhSach: [], trang: 1, soDong: 0, tong: 0, conNua: false } : [],
+                    hasFilter ? { danhSach: [], trang: 1, soDong: 0, tong: 0, conNua: false } : [],
                 );
             }
 
             // `category` trong Course la MANG, nen phep so sanh nay khop khi
             // mang co chua id do.
-            dieuKien.category = dm._id;
+            conditions.category = dm._id;
         }
 
-        if (!coLoc) {
-            const courses = await Course.find(dieuKien)
+        if (!hasFilter) {
+            const courses = await Course.find(conditions)
                 .populate('instructor', 'name')
                 .populate('category', 'name')
                 .populate('provider');
             return res.json(courses);
         }
 
-        const { trang, soDong, boQua } = phanTrang(req.query, { macDinh: 24, toiDa: 100 });
+        const { trang: pageNumber, soDong: pageSize, skip } = paginate(req.query, { defaults: 24, toiDa: 100 });
 
-        const [danhSach, tong] = await Promise.all([
-            Course.find(dieuKien)
+        const [list, total] = await Promise.all([
+            Course.find(conditions)
                 .sort({ createdAt: -1 })
-                .skip(boQua)
-                .limit(soDong)
+                .skip(skip)
+                .limit(pageSize)
                 .populate('instructor', 'name')
                 .populate('category', 'name')
                 .populate('provider'),
-            Course.countDocuments(dieuKien),
+            Course.countDocuments(conditions),
         ]);
 
-        res.json({ danhSach, trang, soDong, tong, conNua: boQua + danhSach.length < tong });
+        res.json({ danhSach: list, trang: pageNumber, soDong: pageSize, tong: total, conNua: skip + list.length < total });
     } catch (error) {
         console.error('[courses]', error.message);
         res.status(500).json({ message: 'Lỗi lấy danh sách khóa học' });
@@ -189,7 +194,7 @@ const getCourseById = async (req, res) => {
             });
 
         if (course) {
-            await traKhoaTheoQuyen(course, req.user, res);
+            await sendCourseForUser(course, req.user, res);
         } else {
             res.status(404).json({ message: 'Không tìm thấy khóa học' });
         }
@@ -212,7 +217,12 @@ const getCourseBySlug = async (req, res) => {
             });
 
         if (course) {
-            await traKhoaTheoQuyen(course, req.user, res);
+            // Moi lan mo trang khoa hoc hay trang hoc (ca F5) la mot luot - ca hai
+            // trang deu tai khoa qua dung duong nay. Khong await: dem luot hong
+            // thi nguoi dung van phai xem duoc khoa hoc.
+            Course.updateOne({ _id: course._id }, incrementViewCount(monthKey()), { updatePipeline: true })
+                .catch((err) => console.error('Loi dem luot xem:', err.message));
+            await sendCourseForUser(course, req.user, res);
         } else {
             res.status(404).json({ message: 'Không tìm thấy khóa học hoặc khóa học chưa được xuất bản.' });
         }
@@ -293,6 +303,14 @@ const updateCourse = async (req, res) => {
         // Cập nhật các thông tin cơ bản khác
         if (req.body.description !== undefined) updateData.description = req.body.description;
         if (req.body.price !== undefined) updateData.price = Number(req.body.price);
+        // Thoi han hoc: chi quan tri dat (utils/accessPeriod.js).
+        if (req.body.accessDays !== undefined && req.user.role === 'admin') {
+            const days = Number(req.body.accessDays);
+            if (!Number.isInteger(days) || days < 1 || days > 3650) {
+                return res.status(400).json({ message: 'Thời hạn học phải là số ngày từ 1 đến 3650' });
+            }
+            updateData.accessDays = days;
+        }
         if (req.body.level !== undefined) updateData.level = req.body.level;
 
         // Xử lý thông tin Đơn vị đối tác / Trường học liên kết
@@ -366,14 +384,14 @@ const enrollInCourse = async (req, res) => {
         // van goi thang duong nay bang curl.
         if (course.price > 0) {
             const Order = require('../models/Order');
-            // donChuaKhoa: khoa co the nam trong don gio hang (truong `courses`).
-            const donDaTra = await Order.findOne({
-                ...require('../utils/orderCourses').donChuaKhoa(courseId),
+            // ordersContainingCourse: khoa co the nam trong don gio hang (truong `courses`).
+            const paidOrder = await Order.findOne({
+                ...require('../utils/orderCourses').ordersContainingCourse(courseId),
                 student: req.user._id,
                 status: 'paid'
             });
 
-            if (!donDaTra) {
+            if (!paidOrder) {
                 // 402 Payment Required - dung nghia den cua ma trang thai nay.
                 return res.status(402).json({
                     message: 'Khóa học này có phí, vui lòng thanh toán trước',
@@ -383,18 +401,18 @@ const enrollInCourse = async (req, res) => {
             }
         }
 
-        const { enrollment, moiTao } = await taoGhiDanh(courseId, req.user._id);
+        const { enrollment, created } = await createEnrollment(courseId, req.user._id);
 
-        if (!moiTao) {
+        if (!created) {
             return res.status(400).json({ message: 'Bạn đã đăng ký khóa học này rồi' });
         }
 
-        const capNhat = await Course.findById(courseId).select('studentsCount');
+        const update = await Course.findById(courseId).select('studentsCount');
 
         return res.status(200).json({
             message: 'Đăng ký khóa học thành công',
             enrollment,
-            studentsCount: capNhat?.studentsCount
+            studentsCount: update?.studentsCount
         });
     } catch (error) {
         console.error('enrollInCourse:', error.message);
@@ -445,17 +463,29 @@ const getHomeSections = async (req, res) => {
         // Ba truy van doc lap nhau. Truoc day dung 3 lan `await` lien tiep nen
         // chung chay tuan tu: tong thoi gian = 3 x round-trip toi Atlas (~440ms).
         // Promise.all cho ca ba di cung luc -> chi con ~1 round-trip.
-        const withRefs = (filter) =>
+        //
+        // Ba muc tu xep, admin khong ghim tay nua:
+        //  - Pho bien nhat: tong luot xem tu truoc toi nay (khong reset).
+        //  - Dang thinh hanh: luot xem trong thang nay (sang thang moi tu ve 0).
+        //  - Moi phat hanh: khoa tao sau nam tren.
+        const COURSE_COUNT = 5;
+        const month = monthKey();
+        const withRefs = (filter, sort, limit = COURSE_COUNT) =>
             Course.find(filter)
+                .sort(sort)
                 .populate('instructor', 'name')
-                .populate('provider', 'name logo')
-                .limit(5);
+                .populate('provider', 'name logo slug')
+                .limit(limit);
 
-        const [mostPopular, trendingNow, newReleases] = await Promise.all([
-            withRefs({ isPublished: true, isPopular: true }),
-            withRefs({ isPublished: true, isTrending: true }),
-            withRefs({ isPublished: true, isNewRelease: true }),
+        const [mostPopular, hotThisMonth, newReleases] = await Promise.all([
+            withRefs({ isPublished: true }, POPULAR_ORDER),
+            withRefs(
+                { isPublished: true, thangLuotXem: month, luotXemThang: { $gt: 0 } },
+                { luotXemThang: -1, ...POPULAR_ORDER },
+            ),
+            withRefs({ isPublished: true }, { createdAt: -1 }),
         ]);
+        const trendingNow = fillTrending(hotThisMonth, mostPopular, COURSE_COUNT);
 
         res.status(200).json({
             success: true,
@@ -470,42 +500,6 @@ const getHomeSections = async (req, res) => {
     }
 };
 
-const updateCourseTags = async (req, res) => {
-    try {
-        const { isPopular, isTrending, isNewRelease } = req.body;
-
-        // Tạo object chứa các trường cần cập nhật
-        const updateData = {};
-        if (isPopular !== undefined) updateData.isPopular = !!isPopular;
-        if (isTrending !== undefined) updateData.isTrending = !!isTrending;
-        if (isNewRelease !== undefined) updateData.isNewRelease = !!isNewRelease;
-
-        // Cập nhật trực tiếp xuống DB (Bypass qua mọi loại validate hoặc check quyền)
-        const updatedCourse = await Course.findByIdAndUpdate(
-            req.params.id,
-            { $set: updateData },
-            { new: true, runValidators: false }
-        );
-
-        if (!updatedCourse) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Không tìm thấy khóa học cần xử lý.' 
-            });
-        }
-
-        // Trả về kết quả xanh cho Frontend nhận diện
-        res.status(200).json({
-            success: true,
-            message: "Cập nhật cấu hình hiển thị trang chủ thành công!",
-            data: updatedCourse
-        });
-    } catch (error) {
-        console.error("Lỗi cập nhật tags:", error.message);
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
 // =========================================================================
 // BAN QUẢN TRỊ (ADMIN) - 3 HÀM ĐỔ DATA DANH SÁCH RA VIEW QUẢN LÝ
 // =========================================================================
@@ -513,7 +507,7 @@ const updateCourseTags = async (req, res) => {
 const getAdminPopularCourses = async (req, res) => {
     try {
         const courses = await Course.find({ isPublished: true })
-            .sort({ isPopular: -1, studentsCount: -1 })
+            .sort(POPULAR_ORDER)
             .populate('instructor', 'name email')
             .populate('category', 'name');
         res.status(200).json(courses);
@@ -524,11 +518,12 @@ const getAdminPopularCourses = async (req, res) => {
 
 const getAdminTrendingCourses = async (req, res) => {
     try {
+        // Xep trong JS vi luot thang cu phai tinh la 0 - Mongo sort thang tren
+        // luotXemThang se dua khoa hot thang truoc len dau.
         const courses = await Course.find({ isPublished: true })
-            .sort({ isTrending: -1, rating: -1, studentsCount: -1 })
             .populate('instructor', 'name email')
             .populate('category', 'name');
-        res.status(200).json(courses);
+        res.status(200).json(courses.sort(compareTrending(monthKey())));
     } catch (error) {
         res.status(500).json({ message: 'Lỗi lấy danh sách xu hướng admin', error: error.message });
     }
@@ -537,7 +532,7 @@ const getAdminTrendingCourses = async (req, res) => {
 const getAdminNewReleasesCourses = async (req, res) => {
     try {
         const courses = await Course.find({ isPublished: true })
-            .sort({ isNewRelease: -1, createdAt: -1 })
+            .sort({ createdAt: -1 })
             .populate('instructor', 'name email')
             .populate('category', 'name');
         res.status(200).json(courses);
@@ -557,13 +552,13 @@ const getAdminNewReleasesCourses = async (req, res) => {
 // Vi sao phai gioi han: ba buoc duoi day la mot phep lan theo do thi (nguoi ->
 // khoa -> nguoi khac -> khoa khac). Khong chan thi mot khoa co vai nghin hoc
 // vien se keo ca bang Enrollment ve RAM chi de goi y sau o khoa hoc.
-const goiYKhoaHoc = async (req, res) => {
+const suggestCourses = async (req, res) => {
     try {
-        const soLuong = Math.min(Math.max(parseInt(req.query.soLuong, 10) || 6, 1), 24);
+        const count = Math.min(Math.max(parseInt(req.query.soLuong, 10) || 6, 1), 24);
 
-        const daHoc = new Set();
-        const danhMucDangHoc = new Set();
-        const demHocCung = new Map();
+        const learned = new Set();
+        const learningCategories = new Set();
+        const countCoLearners = new Map();
 
         // `courseId` = "goi y KHOA LIEN QUAN voi khoa dang xem", dung cho trang
         // chi tiet khoa hoc. Khac han goi y o trang chu:
@@ -574,37 +569,37 @@ const goiYKhoaHoc = async (req, res) => {
         //   - Nguoi hoc cung dem tu hoc vien cua DUNG khoa do - day moi la
         //     "nguoi mua khoa nay cung mua khoa kia" theo dung nghia.
         //   - Chinh khoa dang xem bi loai khoi ket qua.
-        const khoaDangXem = req.query.courseId;
-        const coKhoaGoc = mongoose.Types.ObjectId.isValid(khoaDangXem);
+        const viewingCourse = req.query.courseId;
+        const hasSourceCourse = mongoose.Types.ObjectId.isValid(viewingCourse);
 
-        if (coKhoaGoc) {
-            daHoc.add(String(khoaDangXem));
+        if (hasSourceCourse) {
+            learned.add(String(viewingCourse));
 
-            const goc = await Course.findById(khoaDangXem).select('category').lean();
-            if (goc?.category) {
-                const ds = Array.isArray(goc.category) ? goc.category : [goc.category];
-                for (const c of ds) danhMucDangHoc.add(String(c));
+            const origin = await Course.findById(viewingCourse).select('category').lean();
+            if (origin?.category) {
+                const items = Array.isArray(origin.category) ? origin.category : [origin.category];
+                for (const c of items) learningCategories.add(String(c));
             }
 
-            const cungKhoa = await Enrollment.find({ course: khoaDangXem })
+            const sameCourse = await Enrollment.find({ course: viewingCourse })
                 .select('student')
                 .limit(500)
                 .lean();
 
-            const idHo = [...new Set(cungKhoa.map((g) => String(g.student)))];
+            const theirIds = [...new Set(sameCourse.map((g) => String(g.student)))];
 
-            if (idHo.length > 0) {
-                const khoaKhac = await Enrollment.find({
-                    student: { $in: idHo },
-                    course: { $ne: khoaDangXem },
+            if (theirIds.length > 0) {
+                const otherCourses = await Enrollment.find({
+                    student: { $in: theirIds },
+                    course: { $ne: viewingCourse },
                 })
                     .select('course')
                     .limit(1000)
                     .lean();
 
-                for (const g of khoaKhac) {
+                for (const g of otherCourses) {
                     const id = String(g.course);
-                    demHocCung.set(id, (demHocCung.get(id) || 0) + 1);
+                    countCoLearners.set(id, (countCoLearners.get(id) || 0) + 1);
                 }
             }
         }
@@ -612,57 +607,57 @@ const goiYKhoaHoc = async (req, res) => {
         if (req.user) {
             // Van loai bo khoa da hoc du dang o che do "khoa lien quan": goi y
             // dung thu nguoi ta da mua la loi de thay nhat cua ca muc nay.
-            const cuaToi = await Enrollment.find({ student: req.user._id })
+            const mine = await Enrollment.find({ student: req.user._id })
                 .select('course')
                 .limit(50)
                 .lean();
 
-            for (const g of cuaToi) daHoc.add(String(g.course));
+            for (const g of mine) learned.add(String(g.course));
 
             // Che do "khoa lien quan" da tu dung tin hieu cua rieng no o tren,
             // khong tron them tin hieu tu lich su hoc vao nua.
-            if (!coKhoaGoc && daHoc.size > 0) {
-                const idCuaToi = [...daHoc];
+            if (!hasSourceCourse && learned.size > 0) {
+                const myIds = [...learned];
 
-                const khoaCuaToi = await Course.find({ _id: { $in: idCuaToi } })
+                const myCourses = await Course.find({ _id: { $in: myIds } })
                     .select('category')
                     .lean();
 
-                for (const k of khoaCuaToi) {
-                    if (k.category) danhMucDangHoc.add(String(k.category));
+                for (const k of myCourses) {
+                    if (k.category) learningCategories.add(String(k.category));
                 }
 
                 // Nguoi khac cung hoc mot trong nhung khoa cua minh.
-                const banHoc = await Enrollment.find({
-                    course: { $in: idCuaToi },
+                const studyCopy = await Enrollment.find({
+                    course: { $in: myIds },
                     student: { $ne: req.user._id },
                 })
                     .select('student')
                     .limit(500)
                     .lean();
 
-                const idBanHoc = [...new Set(banHoc.map((g) => String(g.student)))];
+                const studyCopyId = [...new Set(studyCopy.map((g) => String(g.student)))];
 
-                if (idBanHoc.length > 0) {
-                    const khoaCuaHo = await Enrollment.find({
-                        student: { $in: idBanHoc },
-                        course: { $nin: idCuaToi },
+                if (studyCopyId.length > 0) {
+                    const theirCourses = await Enrollment.find({
+                        student: { $in: studyCopyId },
+                        course: { $nin: myIds },
                     })
                         .select('course')
                         .limit(1000)
                         .lean();
 
-                    for (const g of khoaCuaHo) {
+                    for (const g of theirCourses) {
                         const id = String(g.course);
-                        demHocCung.set(id, (demHocCung.get(id) || 0) + 1);
+                        countCoLearners.set(id, (countCoLearners.get(id) || 0) + 1);
                     }
                 }
             }
         }
 
-        const ungVien = await Course.find({
+        const candidates = await Course.find({
             isPublished: true,
-            ...(daHoc.size ? { _id: { $nin: [...daHoc] } } : {}),
+            ...(learned.size ? { _id: { $nin: [...learned] } } : {}),
         })
             .select('title slug thumbnail price category instructor createdAt')
             .populate('instructor', 'name')
@@ -672,26 +667,26 @@ const goiYKhoaHoc = async (req, res) => {
 
         // So hoc vien cua tung khoa ung vien, dem mot luot bang aggregate thay
         // vi mot truy van cho moi khoa.
-        const demHocVien = await Enrollment.aggregate([
-            { $match: { course: { $in: ungVien.map((k) => k._id) } } },
+        const countStudents = await Enrollment.aggregate([
+            { $match: { course: { $in: candidates.map((k) => k._id) } } },
             { $group: { _id: '$course', so: { $sum: 1 } } },
         ]);
 
-        const bangHocVien = new Map(demHocVien.map((d) => [String(d._id), d.so]));
+        const studentTable = new Map(countStudents.map((d) => [String(d._id), d.so]));
 
-        const keo = ungVien.map((k) => ({
+        const pull = candidates.map((k) => ({
             ...k,
-            soHocVien: bangHocVien.get(String(k._id)) || 0,
+            studentCount: studentTable.get(String(k._id)) || 0,
         }));
 
-        const ketQua = xepHangGoiY(keo, { daHoc, danhMucDangHoc, demHocCung }, soLuong);
+        const result = rankSuggestions(pull, { learned, learningCategories, countCoLearners }, count);
 
         res.status(200).json({
-            danhSach: ketQua,
+            danhSach: result,
             // De giao dien biet nen ghi "Gợi ý cho bạn" hay "Đang được quan tâm".
             // Che do khoa lien quan luon coi la da ca nhan hoa: goi y do dua
             // tren chinh khoa nguoi dung dang xem.
-            caNhanHoa: coKhoaGoc || (!!req.user && daHoc.size > 0),
+            caNhanHoa: hasSourceCourse || (!!req.user && learned.size > 0),
         });
     } catch (error) {
         console.error('[goi-y]', error.message);
@@ -702,7 +697,7 @@ const goiYKhoaHoc = async (req, res) => {
 module.exports = {
     createCourse,
     getCourses,
-    goiYKhoaHoc,
+    suggestCourses,
     getCourseById, 
     getCourseBySlug, 
     getInstructorCourses, 
@@ -711,7 +706,6 @@ module.exports = {
     deleteCourse,
     enrollInCourse,
     getHomeSections,
-    updateCourseTags,
     getAdminPopularCourses,
     getAdminTrendingCourses,
     getAdminNewReleasesCourses

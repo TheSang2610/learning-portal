@@ -3,8 +3,8 @@
  * Viec doc ghi nam o documentController.
  */
 
-const DAI_TOI_THIEU = 2;
-const DAI_TOI_DA = 2000;
+const MIN_LENGTH = 2;
+const MAX_LENGTH = 2000;
 
 /**
  * Chuan hoa va kiem do dai mot binh luan.
@@ -15,20 +15,20 @@ const DAI_TOI_DA = 2000;
  *
  * Tra ve { ok: true, noiDung } hoac { ok: false, message }.
  */
-const kiemTraBinhLuan = (tho) => {
-    const noiDung = (typeof tho === 'string' ? tho : '')
+const validateComment = (tho) => {
+    const content = (typeof tho === 'string' ? tho : '')
         .replace(/\r\n?/g, '\n')
         .replace(/[ \t]+\n/g, '\n')
         .replace(/\n{3,}/g, '\n\n')
         .trim();
 
-    if (noiDung.length < DAI_TOI_THIEU) {
+    if (content.length < MIN_LENGTH) {
         return { ok: false, message: 'Bình luận quá ngắn.' };
     }
-    if (noiDung.length > DAI_TOI_DA) {
-        return { ok: false, message: `Bình luận tối đa ${DAI_TOI_DA} ký tự.` };
+    if (content.length > MAX_LENGTH) {
+        return { ok: false, message: `Bình luận tối đa ${MAX_LENGTH} ký tự.` };
     }
-    return { ok: true, noiDung };
+    return { ok: true, noiDung: content };
 };
 
 /**
@@ -37,7 +37,7 @@ const kiemTraBinhLuan = (tho) => {
  * Chi MOT cap: tra loi vao mot tra loi thi gan vao binh luan GOC cua no, de
  * cuoc tro chuyen van nam chung mot cho thay vi thut vao mai.
  */
-const idBinhLuanGoc = (dich) => String(dich.traLoi || dich._id);
+const rootCommentId = (destination) => String(destination.traLoi || destination._id);
 
 /**
  * Dung cay mot cap tu danh sach phang (sap CU NHAT truoc).
@@ -49,26 +49,26 @@ const idBinhLuanGoc = (dich) => String(dich.traLoi || dich._id);
  *
  * Tra loi mo coi (binh luan goc da mat) bi bo.
  */
-const dungCayBinhLuan = (binhLuan, { laAdmin = false } = {}) => {
-    const ds = Array.isArray(binhLuan) ? binhLuan.filter(Boolean) : [];
-    const hien = (b) => laAdmin || !b.daAn;
+const buildCommentTree = (comment, { laAdmin = false } = {}) => {
+    const items = Array.isArray(comment) ? comment.filter(Boolean) : [];
+    const visible = (b) => laAdmin || !b.daAn;
 
-    const goc = ds.filter((b) => !b.traLoi && hien(b)).map((b) => ({ ...b, traLoi: null, cacTraLoi: [] }));
-    const theoId = new Map(goc.map((g) => [String(g._id), g]));
+    const origin = items.filter((b) => !b.traLoi && visible(b)).map((b) => ({ ...b, traLoi: null, cacTraLoi: [] }));
+    const theoId = new Map(origin.map((g) => [String(g._id), g]));
 
-    for (const b of ds) {
-        if (!b.traLoi || !hien(b)) continue;
+    for (const b of items) {
+        if (!b.traLoi || !visible(b)) continue;
         const cha = theoId.get(String(b.traLoi));
         if (cha) cha.cacTraLoi.push(b);
     }
 
-    return goc;
+    return origin;
 };
 
 module.exports = {
-    kiemTraBinhLuan,
-    idBinhLuanGoc,
-    dungCayBinhLuan,
-    DAI_TOI_THIEU,
-    DAI_TOI_DA,
+    validateComment,
+    rootCommentId,
+    buildCommentTree,
+    MIN_LENGTH,
+    MAX_LENGTH,
 };

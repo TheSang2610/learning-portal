@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 
 // Mot bai chia se duoc toi da 5 file (vd. chuong 1..5) va gan toi da 5 mon
 // (vd. "Toán", "Toán cao cấp", "Toán rời rạc").
-const SO_FILE_TOI_DA = 5;
-const SO_MON_TOI_DA = 5;
+const MAX_FILES = 5;
+const MAX_SUBJECTS = 5;
 
 // Mot file dinh kem. _id: false - file khong co trang rieng, duoc goi theo VI
 // TRI trong mang (GET /api/documents/:id/file?i=2).
@@ -44,8 +44,8 @@ const documentSchema = new mongoose.Schema({
     files: {
         type: [fileSchema],
         validate: {
-            validator: (v) => Array.isArray(v) && v.length <= SO_FILE_TOI_DA,
-            message: `Mỗi tài liệu có tối đa ${SO_FILE_TOI_DA} file`,
+            validator: (v) => Array.isArray(v) && v.length <= MAX_FILES,
+            message: `Mỗi tài liệu có tối đa ${MAX_FILES} file`,
         },
     },
 
@@ -77,14 +77,14 @@ const documentSchema = new mongoose.Schema({
     //
     // Khong bat buoc o tang schema vi tai lieu dang TRUOC khi co truong nay
     // khong co mon. Bat buoc voi tai lieu MOI thi kiem o createDocument.
-    // Mang TEN mon (toi da SO_MON_TOI_DA), lay tu danh sach admin quan ly.
+    // Mang TEN mon (toi da MAX_SUBJECTS), lay tu danh sach admin quan ly.
     monHoc: {
         type: [String],
         default: []
     },
 
     // Khoa so sanh cua monHoc: bo dau, chu thuong, gop dau cach. Xem
-    // chuanHoaMon trong utils/rankDocuments.js. Loc theo mon va goi y "cung
+    // normalizeSubject trong utils/rankDocuments.js. Loc theo mon va goi y "cung
     // mon" deu so bang truong nay, khong so monHoc - nguoi go tay thi "Toán",
     // "toan", "TOÁN " la ba chuoi khac nhau nhung la mot mon.
     //
@@ -135,5 +135,5 @@ documentSchema.index({ createdAt: -1 });
 documentSchema.index({ title: 'text', description: 'text' });
 
 module.exports = mongoose.model('Document', documentSchema);
-module.exports.SO_FILE_TOI_DA = SO_FILE_TOI_DA;
-module.exports.SO_MON_TOI_DA = SO_MON_TOI_DA;
+module.exports.MAX_FILES = MAX_FILES;
+module.exports.MAX_SUBJECTS = MAX_SUBJECTS;

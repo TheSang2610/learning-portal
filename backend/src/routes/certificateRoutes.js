@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { capIdHopLe } = require('../middlewares/validObjectId');
+const { guardObjectIds } = require('../middlewares/validObjectId');
 
 // Chan id sai dinh dang -> 404 thay vi 500. Xem middlewares/validObjectId.js
-capIdHopLe(router);
+guardObjectIds(router);
 
 const {
     createCertificate,
     getMyCertificates,
     getCertificateById,
-    taiChungChiPdf,
+    downloadCertificatePdf,
     verifyCertificate,
     updateCertificate,
     getUserPublicCertificates,
@@ -18,7 +18,7 @@ const {
     getLeaderboard
 } = require('../controllers/certificateController');
 
-const { protect, docNguoiDungNeuCo } = require('../middlewares/authMiddleware');
+const { protect, optionalUser } = require('../middlewares/authMiddleware');
 
 // 🔥 ĐỘT TIÊN: Routes không có params hoặc params cụ thể
 router.post('/', protect, createCertificate);
@@ -36,10 +36,10 @@ router.get('/user/:userId', getUserPublicCertificates);
 
 router.get('/achievements/user/:userId', getUserPublicAchievements);
 
-// docNguoiDungNeuCo chu khong phai protect: chung nhan de cong khai thi nguoi
+// optionalUser chu khong phai protect: chung nhan de cong khai thi nguoi
 // tuyen dung khong co tai khoan van mo xem duoc. Chung nhan rieng tu van bi
 // controller chan - no doi dung chu hoac quan tri.
-router.get('/:id/pdf', docNguoiDungNeuCo, taiChungChiPdf);
+router.get('/:id/pdf', optionalUser, downloadCertificatePdf);
 
 router.put('/:id', protect, updateCertificate);
 

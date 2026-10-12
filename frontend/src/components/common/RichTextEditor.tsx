@@ -34,34 +34,34 @@ import styles from "./RichTextEditor.module.scss";
  * ho go tay va khong biet HTML - nen phai thay chu dam ngay khi bam dam.
  *
  * Ket qua van la HTML, di qua dung duong lam sach cu: may chu goi
- * chuanHoaNoiDung() trong documentController truoc khi luu, va trang doc goi
- * lamSachHtml() truoc khi hien. Doi trinh soan KHONG mo them mot loi vao nao.
+ * normalizeContent() trong documentController truoc khi luu, va trang doc goi
+ * cleanHtml() truoc khi hien. Doi trinh soan KHONG mo them mot loi vao nao.
  */
 
 interface Props {
   giaTri: string;
-  doiGiaTri: (html: string) => void;
+  setValue: (html: string) => void;
   toiDa: number;
   placeholder?: string;
   /**
    * Tai mot anh len, tra ve URL. Co thi thanh cong cu hien nut "Chen anh" -
    * de viet bai huong dan kieu blog: buoc 1 + anh chup man hinh, buoc 2...
    */
-  taiAnh?: (file: File) => Promise<string>;
+  uploadImage?: (file: File) => Promise<string>;
 }
 
 /** Mot nut tren thanh cong cu. */
-function Nut({
+function Button({
   Icon,
-  nhan,
-  dangBat,
-  khiBam,
-  tat,
+  nhan: label,
+  active,
+  onClick,
+  tat: off,
 }: {
   Icon: LucideIcon;
   nhan: string;
-  dangBat?: boolean;
-  khiBam: () => void;
+  active?: boolean;
+  onClick: () => void;
   tat?: boolean;
 }) {
   return (
@@ -72,157 +72,157 @@ function Nut({
       onMouseDown={(e) => e.preventDefault()}
       // Giu con tro dang o trong bai. Khong chan mousedown thi bam nut lam mat
       // vung boi den, va lenh dam/nghieng khong biet ap vao doan nao.
-      onClick={khiBam}
-      disabled={tat}
-      aria-pressed={dangBat}
-      title={nhan}
-      aria-label={nhan}
-      className={`${styles.nut} ${dangBat ? styles.nutBat : ""}`}
+      onClick={onClick}
+      disabled={off}
+      aria-pressed={active}
+      title={label}
+      aria-label={label}
+      className={`${styles.button} ${active ? styles.activeButton : ""}`}
     >
       <Icon size={16} />
     </button>
   );
 }
 
-function ThanhCongCu({
+function Toolbar({
   editor,
-  taiAnh,
+  uploadImage,
 }: {
   editor: Editor;
-  taiAnh?: (file: File) => Promise<string>;
+  uploadImage?: (file: File) => Promise<string>;
 }) {
-  const oChonAnh = useRef<HTMLInputElement>(null);
-  const [dangTaiAnh, setDangTaiAnh] = useState(false);
+  const imageInput = useRef<HTMLInputElement>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
-  const chenAnh = async (file: File) => {
-    if (!taiAnh) return;
+  const insertImage = async (file: File) => {
+    if (!uploadImage) return;
     try {
-      setDangTaiAnh(true);
-      const url = await taiAnh(file);
+      setUploadingImage(true);
+      const url = await uploadImage(file);
       // alt = ten file bo duoi: co con hon khong - nguoi viet sua duoc sau.
       const alt = file.name.replace(/\.[^.]+$/, "");
       editor.chain().focus().setImage({ src: url, alt }).createParagraphNear().run();
     } catch (err) {
       window.alert(err instanceof Error ? err.message : "Không tải được ảnh.");
     } finally {
-      setDangTaiAnh(false);
+      setUploadingImage(false);
     }
   };
 
-  const datLienKet = () => {
-    const cu = editor.getAttributes("link").href as string | undefined;
-    const nhap = window.prompt(
+  const setLink = () => {
+    const old = editor.getAttributes("link").href as string | undefined;
+    const draft = window.prompt(
       "Dán địa chỉ liên kết (để trống để bỏ liên kết):",
-      cu ?? "",
+      old ?? "",
     );
-    if (nhap === null) return;
-    if (nhap.trim() === "") {
+    if (draft === null) return;
+    if (draft.trim() === "") {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
       return;
     }
     // Chi nhan http/https. Thieu buoc nay thi dan duoc "javascript:..." vao va
     // no thanh mot duong bam chay ma lenh tren trinh duyet nguoi doc.
-    let dia = nhap.trim();
-    if (!/^https?:\/\//i.test(dia)) dia = `https://${dia}`;
-    editor.chain().focus().extendMarkRange("link").setLink({ href: dia }).run();
+    let address = draft.trim();
+    if (!/^https?:\/\//i.test(address)) address = `https://${address}`;
+    editor.chain().focus().extendMarkRange("link").setLink({ href: address }).run();
   };
 
   return (
     <div className={styles.thanh} role="toolbar" aria-label="Định dạng nội dung">
-      <Nut
+      <Button
         Icon={Bold}
         nhan="Chữ đậm"
-        dangBat={editor.isActive("bold")}
-        khiBam={() => editor.chain().focus().toggleBold().run()}
+        active={editor.isActive("bold")}
+        onClick={() => editor.chain().focus().toggleBold().run()}
       />
-      <Nut
+      <Button
         Icon={Italic}
         nhan="Chữ nghiêng"
-        dangBat={editor.isActive("italic")}
-        khiBam={() => editor.chain().focus().toggleItalic().run()}
+        active={editor.isActive("italic")}
+        onClick={() => editor.chain().focus().toggleItalic().run()}
       />
-      <Nut
+      <Button
         Icon={UnderlineIcon}
         nhan="Gạch chân"
-        dangBat={editor.isActive("underline")}
-        khiBam={() => editor.chain().focus().toggleUnderline().run()}
+        active={editor.isActive("underline")}
+        onClick={() => editor.chain().focus().toggleUnderline().run()}
       />
-      <Nut
+      <Button
         Icon={Strikethrough}
         nhan="Gạch ngang"
-        dangBat={editor.isActive("strike")}
-        khiBam={() => editor.chain().focus().toggleStrike().run()}
+        active={editor.isActive("strike")}
+        onClick={() => editor.chain().focus().toggleStrike().run()}
       />
 
       <span className={styles.vach} aria-hidden="true" />
 
       {/* Bat dau tu H2 chu khong phai H1: H1 cua trang la ten tai lieu, mot
           trang chi nen co mot H1. */}
-      <Nut
+      <Button
         Icon={Heading2}
         nhan="Tiêu đề lớn"
-        dangBat={editor.isActive("heading", { level: 2 })}
-        khiBam={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+        active={editor.isActive("heading", { level: 2 })}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
       />
-      <Nut
+      <Button
         Icon={Heading3}
         nhan="Tiêu đề nhỏ"
-        dangBat={editor.isActive("heading", { level: 3 })}
-        khiBam={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+        active={editor.isActive("heading", { level: 3 })}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
       />
 
       <span className={styles.vach} aria-hidden="true" />
 
-      <Nut
+      <Button
         Icon={List}
         nhan="Danh sách gạch đầu dòng"
-        dangBat={editor.isActive("bulletList")}
-        khiBam={() => editor.chain().focus().toggleBulletList().run()}
+        active={editor.isActive("bulletList")}
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
       />
-      <Nut
+      <Button
         Icon={ListOrdered}
         nhan="Danh sách đánh số"
-        dangBat={editor.isActive("orderedList")}
-        khiBam={() => editor.chain().focus().toggleOrderedList().run()}
+        active={editor.isActive("orderedList")}
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
       />
-      <Nut
+      <Button
         Icon={Quote}
         nhan="Trích dẫn"
-        dangBat={editor.isActive("blockquote")}
-        khiBam={() => editor.chain().focus().toggleBlockquote().run()}
+        active={editor.isActive("blockquote")}
+        onClick={() => editor.chain().focus().toggleBlockquote().run()}
       />
 
       <span className={styles.vach} aria-hidden="true" />
 
-      <Nut
+      <Button
         Icon={Link2}
         nhan="Chèn liên kết"
-        dangBat={editor.isActive("link")}
-        khiBam={datLienKet}
+        active={editor.isActive("link")}
+        onClick={setLink}
       />
-      <Nut
+      <Button
         Icon={Eraser}
         nhan="Xóa định dạng"
-        khiBam={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}
+        onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}
       />
 
-      {taiAnh && (
+      {uploadImage && (
         <>
           <span className={styles.vach} aria-hidden="true" />
-          <Nut
-            Icon={dangTaiAnh ? Loader2 : ImagePlus}
-            nhan={dangTaiAnh ? "Đang tải ảnh…" : "Chèn ảnh (ảnh chụp màn hình…)"}
-            tat={dangTaiAnh}
-            khiBam={() => oChonAnh.current?.click()}
+          <Button
+            Icon={uploadingImage ? Loader2 : ImagePlus}
+            nhan={uploadingImage ? "Đang tải ảnh…" : "Chèn ảnh (ảnh chụp màn hình…)"}
+            tat={uploadingImage}
+            onClick={() => imageInput.current?.click()}
           />
           <input
-            ref={oChonAnh}
+            ref={imageInput}
             type="file"
             accept="image/png,image/jpeg,image/webp,image/gif"
             hidden
             onChange={(e) => {
               const f = e.target.files?.[0];
-              if (f) void chenAnh(f);
+              if (f) void insertImage(f);
               e.target.value = "";
             }}
           />
@@ -233,11 +233,11 @@ function ThanhCongCu({
 }
 
 export default function RichTextEditor({
-  giaTri,
-  doiGiaTri,
-  toiDa,
+  giaTri: value,
+  setValue,
+  toiDa: max,
   placeholder,
-  taiAnh,
+  uploadImage,
 }: Props) {
   const editor = useEditor({
     // Tat kha nang dung ngay o may chu: TipTap dung do dac cua DOM that de dung
@@ -262,14 +262,14 @@ export default function RichTextEditor({
       // cung chi giu anh tai qua he thong (utils/documentImages.js).
       Image.configure({ inline: false, allowBase64: false }),
     ],
-    content: giaTri,
+    content: value,
     editorProps: {
       attributes: {
         class: styles.vung,
         ...(placeholder ? { "data-placeholder": placeholder } : {}),
       },
     },
-    onUpdate: ({ editor }) => doiGiaTri(editor.getHTML()),
+    onUpdate: ({ editor }) => setValue(editor.getHTML()),
   });
 
   if (!editor) {
@@ -281,19 +281,19 @@ export default function RichTextEditor({
   // bao "con 120 ky tu" trong khi 3000 ky tu kia la <p> va <strong> thi ho
   // khong hieu vi sao. Gioi han that van la do dai HTML - may chu chan o do -
   // nen o duoi con mot dong bao rieng khi sap cham tran.
-  const soChu = editor.getText().length;
-  const doDaiHtml = editor.getHTML().length;
-  const sapTran = doDaiHtml > toiDa * 0.9;
+  const charCount = editor.getText().length;
+  const htmlLength = editor.getHTML().length;
+  const nearLimit = htmlLength > max * 0.9;
 
   return (
     <div className={styles.khung}>
-      <ThanhCongCu editor={editor} taiAnh={taiAnh} />
+      <Toolbar editor={editor} uploadImage={uploadImage} />
       <EditorContent editor={editor} />
       <div className={styles.chan}>
-        <span>{soChu} ký tự</span>
-        {sapTran && (
-          <span className={styles.canhBao}>
-            Sắp chạm giới hạn ({doDaiHtml}/{toiDa} gồm cả thẻ định dạng)
+        <span>{charCount} ký tự</span>
+        {nearLimit && (
+          <span className={styles.warning}>
+            Sắp chạm giới hạn ({htmlLength}/{max} gồm cả thẻ định dạng)
           </span>
         )}
       </div>

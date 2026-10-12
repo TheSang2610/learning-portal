@@ -10,7 +10,7 @@
 //
 // GHI THAT:
 //
-//   AP_DUNG=1 node src/utils/sampleData.js
+//   APPLIES_TO=1 node src/utils/sampleData.js
 //
 // Chay lai nhieu lan khong sao: chi dong vao bai co video gia, va chi tao bai
 // tap cho bai chua co.
@@ -44,18 +44,18 @@ const VIDEO = [
 
 // Video "gia": can thay. Bo qua moi dia chi khac - nguoi dung co the da tu tai
 // video that len Cloudinary, ghi de len la mat.
-const laVideoGia = (url) =>
+const isFakeVideo = (url) =>
     !url || !String(url).trim() || String(url).includes('cdn.example.com');
 
 // Bai tap 3 cau cho mot bai giang. Cau hoi bam theo tieu de bai de khong phai
 // 48 ban sao giong het nhau.
-const taoCauHoi = (tenBai) => [
+const createQuestion = (lessonTitle) => [
     {
         _id: new mongoose.Types.ObjectId(),
-        text: `Nội dung chính của bài "${tenBai}" là gì?`,
+        text: `Nội dung chính của bài "${lessonTitle}" là gì?`,
         type: 'multiple_choice',
         options: [
-            { text: `Các khái niệm cốt lõi được trình bày trong "${tenBai}"`, isCorrect: true },
+            { text: `Các khái niệm cốt lõi được trình bày trong "${lessonTitle}"`, isCorrect: true },
             { text: 'Lịch sử hình thành của ngành công nghệ thông tin', isCorrect: false },
             { text: 'Hướng dẫn cài đặt hệ điều hành', isCorrect: false },
             { text: 'Cách đăng ký tài khoản trên hệ thống', isCorrect: false },
@@ -76,7 +76,7 @@ const taoCauHoi = (tenBai) => [
     },
     {
         _id: new mongoose.Types.ObjectId(),
-        text: `Hãy tóm tắt trong 2-3 câu điều bạn học được từ bài "${tenBai}".`,
+        text: `Hãy tóm tắt trong 2-3 câu điều bạn học được từ bài "${lessonTitle}".`,
         type: 'short_answer',
         correctAnswer: 'Câu trả lời mở - giảng viên chấm tay.',
         explanation: 'Không có đáp án cố định; viết theo cách hiểu của bạn.',
@@ -85,69 +85,69 @@ const taoCauHoi = (tenBai) => [
 ];
 
 const chay = async () => {
-    const apDung = process.env.AP_DUNG === '1';
+    const applyTo = process.env.AP_DUNG === '1';
 
     await connectDB();
 
-    const dsBai = await Lesson.find().sort({ courseId: 1, order: 1 }).lean();
-    if (dsBai.length === 0) {
+    const lessonList = await Lesson.find().sort({ courseId: 1, order: 1 }).lean();
+    if (lessonList.length === 0) {
         console.log('Khong co bai giang nao.');
         return;
     }
 
     // --- Phan 1: video ----------------------------------------------------
 
-    const canSuaVideo = dsBai.filter((b) => laVideoGia(b.videoUrl));
+    const needsVideoEdit = lessonList.filter((b) => isFakeVideo(b.videoUrl));
 
-    console.log(`Bai giang            : ${dsBai.length}`);
-    console.log(`  video gia can thay : ${canSuaVideo.length}`);
-    console.log(`  video that giu lai : ${dsBai.length - canSuaVideo.length}`);
+    console.log(`Bai giang            : ${lessonList.length}`);
+    console.log(`  video gia can thay : ${needsVideoEdit.length}`);
+    console.log(`  video that giu lai : ${lessonList.length - needsVideoEdit.length}`);
 
-    if (apDung && canSuaVideo.length > 0) {
+    if (applyTo && needsVideoEdit.length > 0) {
         // Chia deu theo thu tu chu khong ngau nhien: chay lai lan hai ra dung
         // ket qua nhu lan dau, de doi chieu khi co gi sai.
-        const lenh = canSuaVideo.map((bai, i) => ({
+        const lenh = needsVideoEdit.map((lesson, i) => ({
             updateOne: {
-                filter: { _id: bai._id },
+                filter: { _id: lesson._id },
                 update: { $set: { videoUrl: VIDEO[i % VIDEO.length] } },
             },
         }));
-        const kq = await Lesson.bulkWrite(lenh);
-        console.log(`  -> da cap nhat     : ${kq.modifiedCount} bai`);
+        const outcome = await Lesson.bulkWrite(lenh);
+        console.log(`  -> da cap nhat     : ${outcome.modifiedCount} bai`);
     }
 
     // --- Phan 2: bai tap --------------------------------------------------
 
-    const daCoQuiz = await Quiz.find({ lesson: { $ne: null } }).select('lesson').lean();
-    const tapDaCo = new Set(daCoQuiz.map((q) => String(q.lesson)));
-    const canTaoQuiz = dsBai.filter((b) => !tapDaCo.has(String(b._id)));
+    const hasQuiz = await Quiz.find({ lesson: { $ne: null } }).select('lesson').lean();
+    const existingSet = new Set(hasQuiz.map((q) => String(q.lesson)));
+    const needsQuiz = lessonList.filter((b) => !existingSet.has(String(b._id)));
 
     console.log(`Bai tap`);
-    console.log(`  bai da co bai tap  : ${dsBai.length - canTaoQuiz.length}`);
-    console.log(`  bai can tao them   : ${canTaoQuiz.length}`);
+    console.log(`  bai da co bai tap  : ${lessonList.length - needsQuiz.length}`);
+    console.log(`  bai can tao them   : ${needsQuiz.length}`);
 
-    if (apDung && canTaoQuiz.length > 0) {
-        let dem = 0;
-        for (const bai of canTaoQuiz) {
-            const cauHoi = taoCauHoi(bai.title);
+    if (applyTo && needsQuiz.length > 0) {
+        let tally = 0;
+        for (const lesson of needsQuiz) {
+            const question = createQuestion(lesson.title);
             await Quiz.create({
-                course: bai.courseId,
-                lesson: bai._id,
-                title: `Bài tập: ${bai.title}`,
-                description: `Bài tập ngắn kiểm tra kiến thức của bài "${bai.title}".`,
-                questions: cauHoi,
+                course: lesson.courseId,
+                lesson: lesson._id,
+                title: `Bài tập: ${lesson.title}`,
+                description: `Bài tập ngắn kiểm tra kiến thức của bài "${lesson.title}".`,
+                questions: question,
                 passingScore: 70,
                 timeLimit: 10,
                 attempts: 3,
                 showAnswers: true,
                 isPublished: true,
             });
-            dem += 1;
+            tally += 1;
         }
-        console.log(`  -> da tao          : ${dem} bai tap`);
+        console.log(`  -> da tao          : ${tally} bai tap`);
     }
 
-    if (!apDung) {
+    if (!applyTo) {
         console.log('');
         console.log('Day moi la chay thu, CHUA ghi gi. Ghi that thi chay:');
         console.log('  AP_DUNG=1 node src/utils/sampleData.js');
@@ -155,8 +155,8 @@ const chay = async () => {
 };
 
 chay()
-    .catch((loi) => {
-        console.error('That bai:', loi.message);
+    .catch((err) => {
+        console.error('That bai:', err.message);
         process.exitCode = 1;
     })
     .finally(() => mongoose.connection.close());

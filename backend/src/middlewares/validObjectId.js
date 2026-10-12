@@ -14,13 +14,13 @@ const mongoose = require('mongoose');
 // Chi nhung tham so THUC SU la ObjectId. Cac tham so con lai (`slug`,
 // `courseSlug`, `lessonSlug`, `code`, `verificationCode`) la chuoi tu do -
 // dem chung vao day se lam hong cac duong tra cuu theo slug.
-const THAM_SO_ID = ['id', 'courseId', 'studentId', 'attemptId', 'userId'];
+const ID_PARAMS = ['id', 'courseId', 'studentId', 'attemptId', 'userId'];
 
 // Goi ngay sau khi tao router, truoc khi khai bao cac duong.
-const capIdHopLe = (router) => {
-    for (const ten of THAM_SO_ID) {
-        router.param(ten, (req, res, next, giaTri) => {
-            if (!mongoose.Types.ObjectId.isValid(giaTri)) {
+const guardObjectIds = (router) => {
+    for (const name of ID_PARAMS) {
+        router.param(name, (req, res, next, value) => {
+            if (!mongoose.Types.ObjectId.isValid(value)) {
                 return res.status(404).json({ message: 'Không tìm thấy' });
             }
             next();
@@ -29,4 +29,4 @@ const capIdHopLe = (router) => {
     return router;
 };
 
-module.exports = { capIdHopLe, THAM_SO_ID };
+module.exports = { guardObjectIds, ID_PARAMS };

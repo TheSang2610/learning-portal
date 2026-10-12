@@ -8,7 +8,7 @@
 //   1. Chon noi luu: CSDL khi co ket noi, Map trong bo nho khi khong.
 //   2. Boc cac phep tang/khoa/xoa thanh mot API duy nhat, tra ve moc thoi gian
 //      dang so mili giay de ben goi khong phai phan biet Date voi number.
-//   3. Giu phan CHINH SACH (conBiKhoa / ghiNhanSai) o mot cho, de ba noi dang
+//   3. Giu phan CHINH SACH (stillLocked / recordFailure) o mot cho, de ba noi dang
 //      dung no - dang nhap, dang ky, doi mat khau - khong the lech luat nhau.
 //
 // KHONG BAO GIO de mot loi cua kho nay lam hong duong dang nhap. Bo dem hong
@@ -21,7 +21,7 @@ const RateLimitCounter = require('../models/RateLimitCounter');
 
 // Bo dem du phong, dung khi khong co CSDL (test, script roi le, hoac luc Atlas
 // tu choi). Cung chinh la hanh vi cu - khong tot hon, nhung khong te hon.
-const boNho = new Map();
+const memoryStore = new Map();
 
 // readyState: 0 chua/khong ket noi, 1 da ket noi, 2 dang ket noi, 3 dang ngat.
 //
@@ -30,18 +30,18 @@ const boNho = new Map();
 // dung co che ma moi truy van khac trong du an van dang dua vao - nen gui lenh
 // luc nay la an toan. Chi khi readyState = 0 (chua tung ket noi, hoac ket noi
 // that bai) moi phai lui ve bo nho.
-const coCsdl = () => mongoose.connection?.readyState !== 0;
+const hasDb = () => mongoose.connection?.readyState !== 0;
 
 // Mongo tra Date, bo nho giu number. Quy ve mili giay ngay tai cua ra.
-const soMs = (v) => (v instanceof Date ? v.getTime() : v);
+const ms = (v) => (v instanceof Date ? v.getTime() : v);
 
-const chuanHoa = (rec) => {
+const normalize = (rec) => {
     if (!rec) return null;
     return {
         count: rec.count || 0,
-        firstAt: soMs(rec.firstAt),
-        blockedUntil: rec.blockedUntil ? soMs(rec.blockedUntil) : null,
-        expiresAt: soMs(rec.expiresAt),
+        firstAt: ms(rec.firstAt),
+        blockedUntil: rec.blockedUntil ? ms(rec.blockedUntil) : null,
+        expiresAt: ms(rec.expiresAt),
     };
 };
 
@@ -50,79 +50,79 @@ const chuanHoa = (rec) => {
 // --------------------------------------------------------------------------
 
 // Chan tran de mot ke spam khoa/email khong bom phinh bo nho lambda.
-const MAX_BAN_GHI = 10000;
+const MAX_RECORDS = 10000;
 
-const donBoNho = (now) => {
-    for (const [k, v] of boNho) {
-        if (v.expiresAt <= now) boNho.delete(k);
+const cleanMemory = (now) => {
+    for (const [k, v] of memoryStore) {
+        if (v.expiresAt <= now) memoryStore.delete(k);
     }
 };
 
-const docNhieuBoNho = (khoas, now) => {
-    const kq = new Map();
+const readManyMemory = (khoas, now) => {
+    const outcome = new Map();
     for (const k of khoas) {
-        const rec = boNho.get(k);
-        if (rec && rec.expiresAt > now) kq.set(k, chuanHoa(rec));
+        const rec = memoryStore.get(k);
+        if (rec && rec.expiresAt > now) outcome.set(k, normalize(rec));
     }
-    return kq;
+    return outcome;
 };
 
-const tangBoNho = (khoa, cuaSoMs, now) => {
-    if (boNho.size > MAX_BAN_GHI) donBoNho(now);
+const incrementMemory = (course, windowMs, now) => {
+    if (memoryStore.size > MAX_RECORDS) cleanMemory(now);
 
-    const rec = boNho.get(khoa);
+    const rec = memoryStore.get(course);
 
     // Cua so cu da het han (hoac chua tung co) -> mo cua so moi tu 1.
     if (!rec || rec.expiresAt <= now) {
-        const moi = { count: 1, firstAt: now, blockedUntil: null, expiresAt: now + cuaSoMs };
-        boNho.set(khoa, moi);
-        return chuanHoa(moi);
+        const recent = { count: 1, firstAt: now, blockedUntil: null, expiresAt: now + windowMs };
+        memoryStore.set(course, recent);
+        return normalize(recent);
     }
 
     rec.count += 1;
-    return chuanHoa(rec);
+    return normalize(rec);
 };
 
 // --------------------------------------------------------------------------
 // CSDL
 // --------------------------------------------------------------------------
 
-const docNhieuCsdl = async (khoas, now) => {
+const readManyDb = async (khoas, now) => {
     const docs = await RateLimitCounter.find({
         _id: { $in: khoas },
         expiresAt: { $gt: new Date(now) },
     }).lean();
 
-    const kq = new Map();
-    for (const d of docs) kq.set(d._id, chuanHoa(d));
-    return kq;
+    const outcome = new Map();
+    for (const d of docs) outcome.set(d._id, normalize(d));
+    return outcome;
 };
 
 // So vong thu lai khi dung phai mot request khac dang mo cung mot cua so.
 // Moi vong that bai deu keo theo mot ke khac VUA THANG CONG, nen ba vong la
 // qua du - khong co canh vong lap dai o day.
-const SO_LAN_THU = 3;
+const MAX_RETRIES = 3;
 
-const tangCsdl = async (khoa, cuaSoMs, now) => {
+const incrementDb = async (course, windowMs, now) => {
     const nowD = new Date(now);
-    const cuaSoMoi = () => ({
+    const newWindow = () => ({
         count: 1,
         firstAt: nowD,
         blockedUntil: null,
-        expiresAt: new Date(now + cuaSoMs),
+        expiresAt: new Date(now + windowMs),
     });
 
-    for (let lan = 0; lan < SO_LAN_THU; lan += 1) {
+    for (let attempts = 0; attempts < MAX_RETRIES; attempts += 1) {
         // Buoc 1: tang tai cho, va CHI khi cua so hien tai con song. Dieu kien
         // expiresAt > now nam ngay trong bo loc nen phep doc-roi-ghi la mot
         // lenh nguyen tu cua Mongo: hai request song song khong the cung doc
         // ra 4 roi cung ghi 5.
         const rec = await RateLimitCounter.findOneAndUpdate(
-            { _id: khoa, expiresAt: { $gt: nowD } },
+            { _id: course, expiresAt: { $gt: nowD } },
             { $inc: { count: 1 } },
             { returnDocument: 'after' },
         ).lean();
-        if (rec) return chuanHoa(rec);
+        if (rec) return normalize(rec);
 
         // Buoc 2: khong co cua so nao dang song -> mo cua so moi.
         //
@@ -144,15 +144,15 @@ const tangCsdl = async (khoa, cuaSoMs, now) => {
         // so DA HET HAN. Con cua so dang song thi khong khop, upsert chuyen
         // sang chen moi, dung ngay khoa trung _id -> E11000 -> quay lai buoc 1
         // de CONG DON len ban ghi cua ke vua thang, thay vi xoa no di.
-        const moi = cuaSoMoi();
+        const recent = newWindow();
 
         try {
             await RateLimitCounter.updateOne(
-                { _id: khoa, expiresAt: { $lte: nowD } },
-                { $set: moi },
+                { _id: course, expiresAt: { $lte: nowD } },
+                { $set: recent },
                 { upsert: true },
             );
-            return chuanHoa(moi);
+            return normalize(recent);
         } catch (e) {
             if (e?.code !== 11000) throw e;
             // Ke khac vua mo cua so truoc mot nhip. Vong sau se tang len tren no.
@@ -162,64 +162,64 @@ const tangCsdl = async (khoa, cuaSoMs, now) => {
     // Cuc hiem: ba vong lien tiep deu dung vao dua khac. Tra ve mot ban ghi
     // hop le chu khong nem loi - bo dem lech mot luot con hon lam hong ca
     // duong dang nhap.
-    return chuanHoa(cuaSoMoi());
+    return normalize(newWindow());
 };
 
 // --------------------------------------------------------------------------
 // API chung
 // --------------------------------------------------------------------------
 
-const docNhieu = async (khoas, now) => {
-    if (coCsdl()) {
+const readMany = async (khoas, now) => {
+    if (hasDb()) {
         try {
-            return await docNhieuCsdl(khoas, now);
+            return await readManyDb(khoas, now);
         } catch (e) {
             console.error('khoGioiHan.docNhieu:', e.message);
         }
     }
-    return docNhieuBoNho(khoas, now);
+    return readManyMemory(khoas, now);
 };
 
-const tang = async (khoa, cuaSoMs, now) => {
-    if (coCsdl()) {
+const increment = async (course, windowMs, now) => {
+    if (hasDb()) {
         try {
-            return await tangCsdl(khoa, cuaSoMs, now);
+            return await incrementDb(course, windowMs, now);
         } catch (e) {
             console.error('khoGioiHan.tang:', e.message);
         }
     }
-    return tangBoNho(khoa, cuaSoMs, now);
+    return incrementMemory(course, windowMs, now);
 };
 
-const datKhoa = async (khoa, denKhiNao) => {
-    if (coCsdl()) {
+const lockAccount = async (course, until) => {
+    if (hasDb()) {
         try {
             await RateLimitCounter.updateOne(
-                { _id: khoa },
-                { $set: { blockedUntil: new Date(denKhiNao), expiresAt: new Date(denKhiNao) } },
+                { _id: course },
+                { $set: { blockedUntil: new Date(until), expiresAt: new Date(until) } },
             );
             return;
         } catch (e) {
             console.error('khoGioiHan.datKhoa:', e.message);
         }
     }
-    const rec = boNho.get(khoa);
+    const rec = memoryStore.get(course);
     if (rec) {
-        rec.blockedUntil = denKhiNao;
-        rec.expiresAt = denKhiNao;
+        rec.blockedUntil = until;
+        rec.expiresAt = until;
     }
 };
 
-const xoaKhoa = async (khoa) => {
-    if (coCsdl()) {
+const unlock = async (course) => {
+    if (hasDb()) {
         try {
-            await RateLimitCounter.deleteOne({ _id: khoa });
+            await RateLimitCounter.deleteOne({ _id: course });
             return;
         } catch (e) {
             console.error('khoGioiHan.xoaKhoa:', e.message);
         }
     }
-    boNho.delete(khoa);
+    memoryStore.delete(course);
 };
 
 // --------------------------------------------------------------------------
@@ -231,8 +231,8 @@ const xoaKhoa = async (khoa) => {
  * khoa. Doc mot lan cho ca danh sach de khong bien moi luot dang nhap thanh ba
  * luot di CSDL.
  */
-const conBiKhoa = async (khoas, now = Date.now()) => {
-    const recs = await docNhieu(khoas, now);
+const stillLocked = async (khoas, now = Date.now()) => {
+    const recs = await readMany(khoas, now);
 
     let xa = 0;
     for (const rec of recs.values()) {
@@ -247,23 +247,23 @@ const conBiKhoa = async (khoas, now = Date.now()) => {
 /**
  * Ghi nhan mot lan sai tren mot khoa. Cham nguong thi khoa het mot cua so nua.
  */
-const ghiNhanSai = async (khoa, nguong, cuaSoMs, now = Date.now()) => {
-    const rec = await tang(khoa, cuaSoMs, now);
+const recordFailure = async (course, nguong, windowMs, now = Date.now()) => {
+    const rec = await increment(course, windowMs, now);
     if (rec.count >= nguong && !rec.blockedUntil) {
-        await datKhoa(khoa, now + cuaSoMs);
+        await lockAccount(course, now + windowMs);
     }
     return rec;
 };
 
 // Chi dung cho test: xoa sach trang thai giua cac lan chay.
-const _resetForTest = () => boNho.clear();
+const _resetForTest = () => memoryStore.clear();
 
 module.exports = {
-    docNhieu,
-    tang,
-    datKhoa,
-    xoaKhoa,
-    conBiKhoa,
-    ghiNhanSai,
+    readMany,
+    tang: increment,
+    lockAccount,
+    unlock,
+    stillLocked,
+    recordFailure,
     _resetForTest,
 };

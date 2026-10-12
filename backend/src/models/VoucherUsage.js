@@ -12,11 +12,11 @@ const mongoose = require('mongoose');
  *   Index duy nhat { ma, user } o day lam viec do thay: ban ghi thu hai bi
  *   CSDL tu choi, du hai yeu cau chay song song hoan toan.
  *
- * `donHang` de doi soat va de HOAN LUOT khi don bi huy - xem hoanLuotDungMa
+ * `donHang` de doi soat va de HOAN LUOT khi don bi huy - xem refundVoucherUsage
  * trong maGiamGiaController.
  */
 
-const luotDungSchema = new mongoose.Schema(
+const usageSchema = new mongoose.Schema(
     {
         ma: {
             type: mongoose.Schema.Types.ObjectId,
@@ -41,7 +41,7 @@ const luotDungSchema = new mongoose.Schema(
             min: 0,
         },
 
-        // Rong khi mua bang coin (khong sinh don chuyen khoan).
+        // Rong o ban ghi cu tu thoi mua bang coin (khong sinh don chuyen khoan).
         donHang: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Order',
@@ -52,9 +52,9 @@ const luotDungSchema = new mongoose.Schema(
 );
 
 // RANG BUOC CHINH cua bang nay. Xem ghi chu dau file.
-luotDungSchema.index({ ma: 1, user: 1 }, { unique: true });
+usageSchema.index({ ma: 1, user: 1 }, { unique: true });
 
 // Cho man hinh quan tri: ai da dung mot ma cu the.
-luotDungSchema.index({ ma: 1, createdAt: -1 });
+usageSchema.index({ ma: 1, createdAt: -1 });
 
-module.exports = mongoose.model('LuotDungMa', luotDungSchema);
+module.exports = mongoose.model('LuotDungMa', usageSchema);

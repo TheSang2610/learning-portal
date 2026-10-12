@@ -30,7 +30,7 @@
   padding: calc(var(--spacing) * 2);
 }
 
-.nut {
+.button {
   display: inline-grid;
   place-items: center;
   width: 32px;
@@ -57,7 +57,7 @@
 
 /* Nut dang bat phai NHIN RA NGAY la dang bat: day la thu duy nhat cho biet
    doan chu dang boi den co dinh dang gi. */
-.nutBat {
+.activeButton {
   background-color: var(--color-blue-600);
   color: #fff;
 
@@ -174,7 +174,7 @@
   color: var(--color-slate-500);
 }
 
-.canhBao {
+.warning {
   color: #b45309;
 }
 

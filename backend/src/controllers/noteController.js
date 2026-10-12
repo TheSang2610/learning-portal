@@ -14,52 +14,52 @@
 
 const mongoose = require('mongoose');
 
-const GhiChuBaiHoc = require('../models/LessonNote');
-const { layBaiTrongKhoa, traLoiCong } = require('../utils/lessonGate');
+const LessonNote = require('../models/LessonNote');
+const { getLessonInCourse, bonusReply } = require('../utils/lessonGate');
 
-const DAI_TOI_DA = 5000;
+const MAX_LENGTH = 5000;
 
 // Tran so ghi chu moi bai. Khong phai de tiet kiem dung luong ma de chan viec
 // mot script go hang nghin dong lam phinh bang - mot nguoi ghi chu that khong
 // bao gio vuot con so nay trong mot bai.
-const SO_TOI_DA_MOI_BAI = 200;
+const MAX_PER_LESSON = 200;
 
 /** Chuan hoa moc giay: bo gia tri rac, giu null khi khong co video. */
-const chuanMoc = (tho) => {
+const normalizeTimestamp = (tho) => {
     if (tho === null || tho === undefined || tho === '') return null;
 
-    const so = Number(tho);
+    const count = Number(tho);
     // Number('') la 0 nen phai chan chuoi rong o tren. NaN va so am deu la rac.
-    if (!Number.isFinite(so) || so < 0) return null;
+    if (!Number.isFinite(count) || count < 0) return null;
 
     // Lam tron xuong giay: video tra ve so thap phan, ma "phut 12 giay 7.348"
     // khong noi them duoc gi.
-    return Math.floor(so);
+    return Math.floor(count);
 };
 
 // @desc    Ghi chu cua toi trong mot bai
 // @route   GET /api/ghi-chu?courseId=...&lessonId=...
 // @access  nguoi da ghi danh (chi thay ghi chu CUA MINH)
-const layGhiChu = async (req, res) => {
+const getNotes = async (req, res) => {
     try {
         const { courseId, lessonId } = req.query || {};
-        const cong = await layBaiTrongKhoa(courseId, lessonId, req.user);
-        if (cong.loi) return traLoiCong(res, cong);
+        const add = await getLessonInCourse(courseId, lessonId, req.user);
+        if (add.loi) return bonusReply(res, add);
 
         // Xep theo moc giay truoc, roi den thoi diem tao.
         //
         // Sap theo thoi gian tao se lam danh sach nhay lung tung so voi video:
         // nguoi dung tua lai phut 3 ghi them mot dong thi dong do nam cuoi, du
         // no thuoc doan dau bai. Ghi chu khong co moc (bai doc) xuong duoi cung.
-        const danhSach = await GhiChuBaiHoc.find({
+        const list = await LessonNote.find({
             user: req.user._id,
-            lesson: cong.bai._id,
+            lesson: add.bai._id,
         })
             .sort({ mocGiay: 1, createdAt: 1 })
-            .limit(SO_TOI_DA_MOI_BAI)
+            .limit(MAX_PER_LESSON)
             .lean();
 
-        res.status(200).json({ danhSach });
+        res.status(200).json({ danhSach: list });
     } catch (error) {
         console.error('[ghi-chu]', error.message);
         res.status(500).json({ message: 'Không đọc được ghi chú.' });
@@ -69,43 +69,43 @@ const layGhiChu = async (req, res) => {
 // @desc    Them ghi chu
 // @route   POST /api/ghi-chu
 // @access  nguoi da ghi danh
-const themGhiChu = async (req, res) => {
+const addNote = async (req, res) => {
     try {
-        const { courseId, lessonId, noiDung, mocGiay } = req.body || {};
+        const { courseId, lessonId, noiDung: content, mocGiay: timestampSec } = req.body || {};
 
-        const chu = typeof noiDung === 'string' ? noiDung.trim() : '';
-        if (!chu) {
+        const text = typeof content === 'string' ? content.trim() : '';
+        if (!text) {
             return res.status(400).json({ message: 'Bạn chưa nhập nội dung ghi chú.' });
         }
-        if (chu.length > DAI_TOI_DA) {
+        if (text.length > MAX_LENGTH) {
             return res
                 .status(400)
-                .json({ message: `Ghi chú quá dài (tối đa ${DAI_TOI_DA} ký tự).` });
+                .json({ message: `Ghi chú quá dài (tối đa ${MAX_LENGTH} ký tự).` });
         }
 
-        const cong = await layBaiTrongKhoa(courseId, lessonId, req.user);
-        if (cong.loi) return traLoiCong(res, cong);
+        const add = await getLessonInCourse(courseId, lessonId, req.user);
+        if (add.loi) return bonusReply(res, add);
 
-        const daCo = await GhiChuBaiHoc.countDocuments({
+        const existing = await LessonNote.countDocuments({
             user: req.user._id,
-            lesson: cong.bai._id,
+            lesson: add.bai._id,
         });
 
-        if (daCo >= SO_TOI_DA_MOI_BAI) {
+        if (existing >= MAX_PER_LESSON) {
             return res.status(400).json({
-                message: `Bài này đã đạt tối đa ${SO_TOI_DA_MOI_BAI} ghi chú. Xóa bớt rồi thêm lại nhé.`,
+                message: `Bài này đã đạt tối đa ${MAX_PER_LESSON} ghi chú. Xóa bớt rồi thêm lại nhé.`,
             });
         }
 
-        const moi = await GhiChuBaiHoc.create({
+        const recent = await LessonNote.create({
             user: req.user._id,
-            course: cong.khoa._id,
-            lesson: cong.bai._id,
-            noiDung: chu,
-            mocGiay: chuanMoc(mocGiay),
+            course: add.khoa._id,
+            lesson: add.bai._id,
+            noiDung: text,
+            mocGiay: normalizeTimestamp(timestampSec),
         });
 
-        res.status(201).json({ ghiChu: moi.toObject() });
+        res.status(201).json({ ghiChu: recent.toObject() });
     } catch (error) {
         console.error('[ghi-chu]', error.message);
         res.status(500).json({ message: 'Không lưu được ghi chú.' });
@@ -115,37 +115,37 @@ const themGhiChu = async (req, res) => {
 // @desc    Sua ghi chu
 // @route   PUT /api/ghi-chu/:id
 // @access  chu ghi chu
-const suaGhiChu = async (req, res) => {
+const editNote = async (req, res) => {
     try {
         const { id } = req.params;
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: 'Mã ghi chú không hợp lệ.' });
         }
 
-        const chu = typeof req.body?.noiDung === 'string' ? req.body.noiDung.trim() : '';
-        if (!chu) {
+        const text = typeof req.body?.noiDung === 'string' ? req.body.noiDung.trim() : '';
+        if (!text) {
             return res.status(400).json({ message: 'Bạn chưa nhập nội dung ghi chú.' });
         }
-        if (chu.length > DAI_TOI_DA) {
+        if (text.length > MAX_LENGTH) {
             return res
                 .status(400)
-                .json({ message: `Ghi chú quá dài (tối đa ${DAI_TOI_DA} ký tự).` });
+                .json({ message: `Ghi chú quá dài (tối đa ${MAX_LENGTH} ký tự).` });
         }
 
         // Dieu kien loc co CA `user`. Thieu no thi ai doan dung id cung sua duoc
         // ghi chu cua nguoi khac - va khong co man hinh nao lam lo id ra, nhung
         // id Mongo khong phai bi mat va khong duoc coi la mot lop bao ve.
-        const kq = await GhiChuBaiHoc.findOneAndUpdate(
+        const outcome = await LessonNote.findOneAndUpdate(
             { _id: id, user: req.user._id },
-            { noiDung: chu },
+            { noiDung: text },
             { new: true },
         ).lean();
 
-        if (!kq) {
+        if (!outcome) {
             return res.status(404).json({ message: 'Không tìm thấy ghi chú.' });
         }
 
-        res.status(200).json({ ghiChu: kq });
+        res.status(200).json({ ghiChu: outcome });
     } catch (error) {
         console.error('[ghi-chu]', error.message);
         res.status(500).json({ message: 'Không sửa được ghi chú.' });
@@ -155,16 +155,16 @@ const suaGhiChu = async (req, res) => {
 // @desc    Xoa ghi chu
 // @route   DELETE /api/ghi-chu/:id
 // @access  chu ghi chu
-const xoaGhiChu = async (req, res) => {
+const deleteNote = async (req, res) => {
     try {
         const { id } = req.params;
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: 'Mã ghi chú không hợp lệ.' });
         }
 
-        const kq = await GhiChuBaiHoc.findOneAndDelete({ _id: id, user: req.user._id });
+        const outcome = await LessonNote.findOneAndDelete({ _id: id, user: req.user._id });
 
-        if (!kq) {
+        if (!outcome) {
             return res.status(404).json({ message: 'Không tìm thấy ghi chú.' });
         }
 
@@ -182,27 +182,27 @@ const xoaGhiChu = async (req, res) => {
 // KHONG qua cong bai hoc: day la du lieu cua chinh nguoi goi, khong phai noi
 // dung khoa hoc. Neu hoc vien het han xem mot khoa thi ghi chu ho tu go van la
 // cua ho - chan o day la lay mat ghi chep cua nguoi ta.
-const ghiChuCuaToi = async (req, res) => {
+const myNotes = async (req, res) => {
     try {
-        const trang = Math.max(parseInt(req.query.trang, 10) || 1, 1);
-        const soDong = 50;
+        const page = Math.max(parseInt(req.query.trang, 10) || 1, 1);
+        const pageSize = 50;
 
-        const [danhSach, tong] = await Promise.all([
-            GhiChuBaiHoc.find({ user: req.user._id })
+        const [list, total] = await Promise.all([
+            LessonNote.find({ user: req.user._id })
                 .sort({ createdAt: -1 })
-                .skip((trang - 1) * soDong)
-                .limit(soDong)
+                .skip((page - 1) * pageSize)
+                .limit(pageSize)
                 .populate('course', 'title slug')
                 .populate('lesson', 'title')
                 .lean(),
-            GhiChuBaiHoc.countDocuments({ user: req.user._id }),
+            LessonNote.countDocuments({ user: req.user._id }),
         ]);
 
         res.status(200).json({
-            danhSach,
-            trang,
-            tong,
-            conNua: trang * soDong < tong,
+            danhSach: list,
+            trang: page,
+            tong: total,
+            conNua: page * pageSize < total,
         });
     } catch (error) {
         console.error('[ghi-chu]', error.message);
@@ -211,12 +211,12 @@ const ghiChuCuaToi = async (req, res) => {
 };
 
 module.exports = {
-    layGhiChu,
-    themGhiChu,
-    suaGhiChu,
-    xoaGhiChu,
-    ghiChuCuaToi,
-    chuanMoc,
-    DAI_TOI_DA,
-    SO_TOI_DA_MOI_BAI,
+    getNotes,
+    addNote,
+    editNote,
+    deleteNote,
+    myNotes,
+    normalizeTimestamp,
+    MAX_LENGTH,
+    MAX_PER_LESSON,
 };

@@ -1,45 +1,45 @@
 const Order = require('../models/Order');
-const { taoGhiDanh } = require('../utils/enrollment');
-const { phanTrang, timGan } = require('../utils/queryParams');
-const { capNhatNeuHetHan } = require('./orderController');
+const { createEnrollment } = require('../utils/enrollment');
+const { phanTrang: paginate, fuzzyRegex } = require('../utils/queryParams');
+const { expireIfDue } = require('./orderController');
 const Course = require('../models/Course');
 const User = require('../models/User');
-const { guiMail } = require('../config/mail');
-const { soanMailDonDaXacNhan } = require('../utils/orderMail');
-const { guiThongBao } = require('./notificationController');
-const { cacKhoaCuaDon } = require('../utils/orderCourses');
+const { sendMail } = require('../config/mail');
+const { composeOrderConfirmedMail } = require('../utils/orderMail');
+const { sendNotification } = require('./notificationController');
+const { orderCourses } = require('../utils/orderCourses');
 
-const TRANG_THAI_HOP_LE = new Set(['pending', 'paid', 'cancelled', 'expired']);
+const VALID_STATUSES = new Set(['pending', 'paid', 'cancelled', 'expired']);
 
 // @desc    Danh sach don hang cho quan tri
 // @route   GET /api/admin/orders
 // @access  admin
 const getOrdersAdmin = async (req, res) => {
     try {
-        const { trang, soDong, boQua } = phanTrang(req.query);
+        const { trang: page, soDong: pageSize, skip } = paginate(req.query);
 
-        const loc = {};
-        if (TRANG_THAI_HOP_LE.has(req.query.status)) {
-            loc.status = req.query.status;
+        const query = {};
+        if (VALID_STATUSES.has(req.query.status)) {
+            query.status = req.query.status;
         }
-        // Tim theo ma don. timGan() thoat ky tu dac biet truoc khi dua vao
+        // Tim theo ma don. fuzzyRegex() thoat ky tu dac biet truoc khi dua vao
         // $regex - khong thoat thi mot dau "(" nguoi dung go vao la regex hong
         // va Mongo nem loi.
         if (req.query.search) {
-            loc.code = timGan(String(req.query.search).toUpperCase());
+            query.code = fuzzyRegex(String(req.query.search).toUpperCase());
         }
 
-        const [ds, tong, dangCho, daBao] = await Promise.all([
-            Order.find(loc)
+        const [items, total, pending, reported] = await Promise.all([
+            Order.find(query)
                 .populate('course', 'title slug price')
                 .populate('courses', 'title slug price')
                 .populate('student', 'name email avatar')
                 .populate('confirmedBy', 'name')
                 .sort({ createdAt: -1 })
-                .skip(boQua)
-                .limit(soDong)
+                .skip(skip)
+                .limit(pageSize)
                 .lean(),
-            Order.countDocuments(loc),
+            Order.countDocuments(query),
             Order.countDocuments({ status: 'pending' }),
             // Don co nguoi DANG NGOI CHO: ho da bam "toi da chuyen khoan" va
             // dang doi doi chieu. Dem rieng vi day moi la con so quan tri can
@@ -51,12 +51,12 @@ const getOrdersAdmin = async (req, res) => {
         ]);
 
         return res.status(200).json({
-            orders: ds,
-            page: trang,
-            limit: soDong,
-            total: tong,
-            pendingCount: dangCho,
-            daBaoCount: daBao
+            orders: items,
+            page: page,
+            limit: pageSize,
+            total: total,
+            pendingCount: pending,
+            daBaoCount: reported
         });
     } catch (error) {
         console.error('getOrdersAdmin:', error.message);
@@ -78,68 +78,73 @@ const getOrdersAdmin = async (req, res) => {
  * hoac ben khac vua xu ly). Loi CSDL luc ghi danh thi tra don ve 'pending' roi
  * nem tiep: de don 'paid' ma khoa chua mo la hoc vien mat tien ma khong ai biet.
  */
-const TRANG_THAI_NHAN_TIEN = ['pending', 'expired'];
+const PAYABLE_STATUSES = ['pending', 'expired'];
 
-const moKhoaChoDon = async (donId, { confirmedBy = null, note, tenNguoiXacNhan = '' } = {}) => {
+const unlockOrder = async (orderId, { confirmedBy = null, note, confirmerName = '' } = {}) => {
     const $set = { status: 'paid', paidAt: new Date(), confirmedBy };
     if (typeof note === 'string') $set.note = note.slice(0, 500);
 
-    const don = await Order.findOneAndUpdate(
-        { _id: donId, status: { $in: TRANG_THAI_NHAN_TIEN } },
+    const order = await Order.findOneAndUpdate(
+        { _id: orderId, status: { $in: PAYABLE_STATUSES } },
         { $set },
         { new: true }
     );
-    if (!don) return { ok: false };
+    if (!order) return { ok: false };
 
     // Mo MOI khoa trong don. Don gio hang ma chi doc don.course thi hoc vien
     // tra tien ba khoa nhung chi duoc mo mot - xem utils/orderCourses.js.
-    const idKhoa = cacKhoaCuaDon(don);
-    let moiTao = false;
+    const courseId = orderCourses(order);
+    let created = false;
+    // Khoa co phi: mo trong accessDays ngay (mac dinh 30) - utils/accessPeriod.js.
+    const daysById = new Map(
+        (await Course.find({ _id: { $in: courseId } }).select('accessDays').lean())
+            .map((k) => [String(k._id), k.accessDays || 30])
+    );
     try {
-        for (const id of idKhoa) {
-            const kq = await taoGhiDanh(id, don.student);
-            if (kq.moiTao) moiTao = true;
+        for (const id of courseId) {
+            const outcome = await createEnrollment(id, order.student, { accessDays: daysById.get(String(id)) || 30 });
+            if (outcome.created) created = true;
         }
-    } catch (loi) {
+    } catch (err) {
         await Order.updateOne(
-            { _id: don._id },
+            { _id: order._id },
             { $set: { status: 'pending', paidAt: null, confirmedBy: null } }
         ).catch(() => {});
-        throw loi;
+        throw err;
     }
 
-    // Bao mail SAU khi da luu xong. Mail hong thi guiMail tu nuot loi va ghi
+    // Bao mail SAU khi da luu xong. Mail hong thi sendMail tu nuot loi va ghi
     // console - khong duoc de mot loi gui mail lam hong viec da mo khoa.
-    const [dsKhoa, hocVien] = await Promise.all([
-        Course.find({ _id: { $in: idKhoa } }).select('title slug'),
-        User.findById(don.student).select('name email')
+    const [courseList, student] = await Promise.all([
+        Course.find({ _id: { $in: courseId } }).select('title slug'),
+        User.findById(order.student).select('name email')
     ]);
     // Don gio hang gop ten moi khoa, con duong dan thi tro ve khoa dau tien.
-    const khoa = dsKhoa.length
-        ? { title: dsKhoa.map((k) => k.title).join(', '), slug: dsKhoa[0].slug }
+    const course = courseList.length
+        ? { title: courseList.map((k) => k.title).join(', '), slug: courseList[0].slug }
         : null;
 
-    await guiMail(
-        soanMailDonDaXacNhan({
-            maDon: don.code,
-            soTien: don.amount,
-            tenHocVien: hocVien?.name || hocVien?.email || 'Không rõ',
-            emailHocVien: hocVien?.email || '',
-            tenKhoa: khoa?.title || 'Khóa học',
-            xacNhanLuc: don.paidAt,
-            nguoiXacNhan: tenNguoiXacNhan || 'Tự động theo báo có ngân hàng',
-            daCoKhoaTuTruoc: !moiTao
+    await sendMail(
+        composeOrderConfirmedMail({
+            orderCode: order.code,
+            soTien: order.amount,
+            studentName: student?.name || student?.email || 'Không rõ',
+            studentEmail: student?.email || '',
+            tenKhoa: course?.title || 'Khóa học',
+            confirmedAt: order.paidAt,
+            confirmedByName: confirmerName || 'Tự động theo báo có ngân hàng',
+            alreadyOwned: !created
         })
     );
 
     // Chuong thong bao song song voi mail: mail de vao thu rac, chuong thi hoc
-    // vien thay ngay lan sau mo trang. guiThongBao() khong bao gio nem.
-    await guiThongBao(don.student, 'don_duoc_duyet', {
-        tenKhoa: khoa?.title,
-        slugKhoa: khoa?.slug
+    // vien thay ngay lan sau mo trang. sendNotification() khong bao gio nem.
+    await sendNotification(order.student, 'don_duoc_duyet', {
+        tenKhoa: course?.title,
+        courseSlug: course?.slug
     });
 
-    return { ok: true, don, moiTao };
+    return { ok: true, don: order, created };
 };
 
 // @desc    Xac nhan da nhan tien -> mo khoa hoc cho hoc vien
@@ -147,40 +152,40 @@ const moKhoaChoDon = async (donId, { confirmedBy = null, note, tenNguoiXacNhan =
 // @access  admin
 const confirmOrder = async (req, res) => {
     try {
-        const ma = String(req.params.code || '').toUpperCase().trim();
-        const don = await Order.findOne({ code: ma });
+        const code = String(req.params.code || '').toUpperCase().trim();
+        const order = await Order.findOne({ code: code });
 
-        if (!don) {
+        if (!order) {
             return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
         }
 
-        if (don.status === 'paid') {
+        if (order.status === 'paid') {
             return res.status(400).json({ message: 'Đơn này đã được xác nhận trước đó' });
         }
 
         // Don qua han VAN xac nhan duoc: tien da vao tai khoan roi thi khong
         // the tu choi chi vi nguoi ta chuyen cham vai phut. Han 15 phut la de
         // don thoi khong treo mai tren man hinh, khong phai de tu choi tien.
-        if (don.status === 'cancelled') {
+        if (order.status === 'cancelled') {
             return res.status(400).json({ message: 'Đơn này đã bị hủy' });
         }
 
-        const kq = await moKhoaChoDon(don._id, {
+        const outcome = await unlockOrder(order._id, {
             confirmedBy: req.user._id,
             note: typeof req.body?.note === 'string' ? req.body.note : undefined,
-            tenNguoiXacNhan: req.user?.name || ''
+            confirmerName: req.user?.name || ''
         });
 
         // Ben khac (webhook ngan hang) vua xac nhan don nay truoc mot nhip.
-        if (!kq.ok) {
+        if (!outcome.ok) {
             return res.status(400).json({ message: 'Đơn này vừa được xác nhận (có thể tự động theo báo có ngân hàng)' });
         }
 
         return res.status(200).json({
-            message: kq.moiTao
+            message: outcome.created
                 ? 'Đã xác nhận thanh toán và mở khóa học cho học viên'
                 : 'Đã xác nhận thanh toán. Học viên vốn đã có khóa học này.',
-            order: kq.don
+            order: outcome.don
         });
     } catch (error) {
         console.error('confirmOrder:', error.message);
@@ -193,25 +198,25 @@ const confirmOrder = async (req, res) => {
 // @access  admin
 const rejectOrder = async (req, res) => {
     try {
-        const ma = String(req.params.code || '').toUpperCase().trim();
-        const don = await Order.findOne({ code: ma });
+        const code = String(req.params.code || '').toUpperCase().trim();
+        const order = await Order.findOne({ code: code });
 
-        if (!don) {
+        if (!order) {
             return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
         }
 
-        if (don.status === 'paid') {
+        if (order.status === 'paid') {
             return res.status(400).json({
                 message: 'Đơn đã thanh toán thì không hủy ở đây được, phải xử lý hoàn tiền riêng'
             });
         }
 
-        don.status = 'cancelled';
-        don.confirmedBy = req.user._id;
+        order.status = 'cancelled';
+        order.confirmedBy = req.user._id;
         if (typeof req.body?.note === 'string') {
-            don.note = req.body.note.slice(0, 500);
+            order.note = req.body.note.slice(0, 500);
         }
-        await don.save();
+        await order.save();
 
         // Bao cho hoc vien biet don khong duoc duyet. Khong bao thi ho ngoi cho
         // mot khoa hoc se khong bao gio mo.
@@ -219,9 +224,9 @@ const rejectOrder = async (req, res) => {
         // `note` la chu quan tri vien go tay nen dua nguyen van vao cho hoc vien
         // doc: day la ly do that, con mot cau chung chung thi khong giup ho biet
         // phai lam gi tiep. Do dai da bi cat con 500 o tren.
-        await guiThongBao(don.student, 'don_bi_tu_choi', { lyDo: don.note });
+        await sendNotification(order.student, 'don_bi_tu_choi', { lyDo: order.note });
 
-        return res.status(200).json({ message: 'Đã hủy đơn hàng', order: don });
+        return res.status(200).json({ message: 'Đã hủy đơn hàng', order: order });
     } catch (error) {
         console.error('rejectOrder:', error.message);
         return res.status(500).json({ message: 'Không hủy được đơn hàng' });
@@ -233,23 +238,23 @@ const rejectOrder = async (req, res) => {
 // @access  admin
 const getOrderAdmin = async (req, res) => {
     try {
-        const ma = String(req.params.code || '').toUpperCase().trim();
-        const don = await Order.findOne({ code: ma })
+        const code = String(req.params.code || '').toUpperCase().trim();
+        const order = await Order.findOne({ code: code })
             .populate('course', 'title slug price thumbnail')
             .populate('student', 'name email avatar')
             .populate('confirmedBy', 'name');
 
-        if (!don) {
+        if (!order) {
             return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
         }
 
-        await capNhatNeuHetHan(don);
+        await expireIfDue(order);
 
-        return res.status(200).json({ order: don });
+        return res.status(200).json({ order: order });
     } catch (error) {
         console.error('getOrderAdmin:', error.message);
         return res.status(500).json({ message: 'Không đọc được đơn hàng' });
     }
 };
 
-module.exports = { getOrdersAdmin, getOrderAdmin, confirmOrder, rejectOrder, moKhoaChoDon };
+module.exports = { getOrdersAdmin, getOrderAdmin, confirmOrder, rejectOrder, unlockOrder };

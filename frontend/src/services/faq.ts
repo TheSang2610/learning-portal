@@ -1,12 +1,12 @@
 import { apiRequest } from "./apiHelper";
 
 /** Khu vuc hien FAQ khong gan khoa hoc. */
-export type ViTriFaq = "trangChu" | "taiLieu";
+export type FaqArea = "trangChu" | "taiLieu";
 
 export interface FaqItem {
   _id?: string;
   courseId?: string | null;
-  viTri?: ViTriFaq;
+  viTri?: FaqArea;
   question: string;
   answer: string;
   createdAt?: string;
@@ -15,7 +15,7 @@ export interface FaqItem {
 
 export interface FaqData {
   courseId?: string | null;
-  viTri?: ViTriFaq;
+  viTri?: FaqArea;
   question: string;
   answer: string;
 }

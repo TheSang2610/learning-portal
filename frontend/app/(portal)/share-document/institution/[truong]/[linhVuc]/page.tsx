@@ -1,41 +1,34 @@
 import { notFound } from "next/navigation";
 
-import ShareDocumentClient, {
-  type BoLoc,
-} from "@/src/components/document/ShareDocumentClient";
+import type { Filters } from "@/src/components/features/portal/share-document/parts/ShareDocumentClient";
 import {
-  docLoai,
-  docTuKhoa,
-  doiKhoa,
-  layChiTietTruong,
-  layDsMon,
-  layDsNhom,
-  layDsTruong,
-  layTrangDau,
-} from "@/src/components/document/taiLieuMayChu";
-
-import styles from "../../../all-document/page.module.scss";
+  readType,
+  readKeyword,
+  swapKey,
+} from "@/src/components/features/portal/share-document/serverDocuments";
+import {
+  DocumentBrowser,
+  getSchoolFieldData,
+  findScope,
+} from "@/src/components/features/portal/share-document";
+import { SHARE_DOCUMENT } from "@/src/constants/portal/share-document-page";
 
 type Params = Promise<{ truong: string; linhVuc: string }>;
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 /** Truong + linh vuc tren dia chi -> ban ghi that; khong co thi null (404). */
-async function timPhamVi(params: Params) {
+async function scopeFromParams(params: Params) {
   const p = await params;
-  const khoaTruong = doiKhoa(p.truong);
-  const khoaNhom = doiKhoa(p.linhVuc);
-  const [dsTruong, dsNhom] = await Promise.all([layDsTruong(), layDsNhom()]);
-  const truong = dsTruong.find((t) => t.key === khoaTruong);
-  const nhom = dsNhom.find((n) => n.key === khoaNhom);
-  return truong && nhom ? { truong, nhom, dsTruong, dsNhom } : null;
+  return findScope(swapKey(p.truong), swapKey(p.linhVuc));
 }
 
 export async function generateMetadata({ params }: { params: Params }) {
-  const pv = await timPhamVi(params);
-  if (!pv) return { title: "Không tìm thấy" };
+  const pv = await scopeFromParams(params);
+  const C = SHARE_DOCUMENT.institutionCategory;
+  if (!pv) return { title: C.notFoundTitle };
   return {
-    title: `${pv.nhom.ten} - ${pv.truong.ten}`,
-    description: `Tài liệu ${pv.nhom.ten} do sinh viên ${pv.truong.ten} chia sẻ.`,
+    title: C.title(pv.nhom.ten, pv.truong.ten),
+    description: C.description(pv.nhom.ten, pv.truong.ten),
   };
 }
 
@@ -52,38 +45,27 @@ export default async function InstitutionCategoryPage({
   params: Params;
   searchParams: SearchParams;
 }) {
-  const [pv, sp] = await Promise.all([timPhamVi(params), searchParams]);
+  const [pv, sp] = await Promise.all([scopeFromParams(params), searchParams]);
   if (!pv) notFound();
 
-  const loc: BoLoc = {
-    q: docTuKhoa(sp.q),
-    mon: doiKhoa(sp.mon),
+  const query: Filters = {
+    q: readKeyword(sp.q),
+    mon: swapKey(sp.mon),
     nhom: pv.nhom.key,
     truong: pv.truong.key,
-    loai: docLoai(sp.loai),
+    loai: readType(sp.loai),
   };
-  const [initialData, dsMon, ct] = await Promise.all([
-    layTrangDau(loc),
-    layDsMon(),
-    layChiTietTruong(pv.truong.key),
-  ]);
-  // Mon cua truong trong linh vuc nay - o chon mon va o "N môn học".
-  const monPhamVi = (ct?.monHoc ?? [])
-    .filter((m) => m.nhom === pv.nhom._id)
-    .map(({ key, ten, soTaiLieu }) => ({ key, ten, soTaiLieu }));
+  const d = await getSchoolFieldData(pv, query);
 
   return (
-    <div className={styles.page}>
-      <ShareDocumentClient
-        key={`${loc.q}|${loc.mon}|${loc.nhom}|${loc.truong}|${loc.loai}`}
-        initialData={initialData}
-        boLocBanDau={loc}
-        dsNhom={pv.dsNhom}
-        dsTruong={pv.dsTruong}
-        dsMonBanDau={dsMon}
-        phamVi={{ truong: pv.truong.key, nhom: pv.nhom.key }}
-        monPhamVi={monPhamVi}
-      />
-    </div>
+    <DocumentBrowser
+      initialData={d.initialData}
+      initialFilters={query}
+      groupList={pv.groupList}
+      schoolList={pv.schoolList}
+      initialSubjects={d.subjectList}
+      scope={{ truong: pv.truong.key, nhom: pv.nhom.key }}
+      scopedSubjects={d.scopedSubjects}
+    />
   );
 }

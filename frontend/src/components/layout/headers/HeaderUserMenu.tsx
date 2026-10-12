@@ -1,17 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { xoaPhien } from "@/src/services/apiHelper";
+import { clearSession } from "@/src/services/apiHelper";
 import { ChevronDown, User, Settings, LogOut, BookOpen } from "lucide-react";
-import AnhDaiDien from "@/src/components/ui/Avatar";
-import SoDuCoin from "@/src/components/common/CoinBalance";
-import { HIEN_COIN } from "@/src/services/tinhNang";
+import Avatar from "@/src/components/ui/Avatar";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useNguoiDungLuu, useDangTaiNguoiDung } from "@/src/hooks/userStore";
-import { duongDanDangNhap } from "@/src/components/auth/loginUrl";
-import ChuongThongBao from "@/src/components/notifications/NotificationBell";
-import NutGioHang from "@/src/components/cart/CartButton";
+import { useStoredUser, useUserLoading } from "@/src/hooks/userStore";
+import { loginUrl } from "@/src/components/features/portal/auth/loginUrl";
+import NotificationBell from "@/src/components/layout/headers/NotificationBell";
+import CartButton from "@/src/components/layout/headers/CartButton";
 
 import styles from "./HeaderUserMenu.module.scss";
 // Tach rieng khoi IndividualsHeader de moi header trang deu co menu tai khoan.
@@ -19,17 +17,17 @@ import styles from "./HeaderUserMenu.module.scss";
 // duong vao ho so, cai dat va nut dang xuat.
 
 export default function HeaderUserMenu({
-  coGioHang = true,
+  hasCart = true,
 }: {
   /** false: an nut gio hang - vd. khu tai lieu, noi khong ban gi. */
-  coGioHang?: boolean;
+  hasCart?: boolean;
 } = {}) {
   // Truoc day component nay tu doc localStorage.userInfo va tu nghe ba su
   // kien (storage / userInfoChanged / pageshow). Gio danh tinh nam trong kho
-  // chung o RAM, <NapNguoiDung /> lo viec nap va dong bo - xem
+  // chung o RAM, <UserBootstrap /> lo viec nap va dong bo - xem
   // src/hooks/userStore.ts.
-  const user = useNguoiDungLuu();
-  const dangTai = useDangTaiNguoiDung();
+  const user = useStoredUser();
+  const loading = useUserLoading();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -39,10 +37,10 @@ export default function HeaderUserMenu({
   // hoc ma bam Dang nhap la bi nem ve trang chu, dang nhap xong dung o do va
   // phai tu tim lai khoa hoc luc nay. Hop dang nhap gio nam o layout cua ca
   // khu hoc vien nen ?auth co tac dung o moi trang - xem AuthModalGate.
-  const duongDan = usePathname();
-  const thamSo = useSearchParams();
-  const duongDangNhap = duongDanDangNhap(duongDan, thamSo, undefined, "login");
-  const duongDangKy = duongDanDangNhap(duongDan, thamSo, undefined, "register");
+  const path = usePathname();
+  const params = useSearchParams();
+  const loginHref = loginUrl(path, params, undefined, "login");
+  const registerUrl = loginUrl(path, params, undefined, "register");
 
   useEffect(() => {
     const onClickOutside = (e: MouseEvent) => {
@@ -53,11 +51,11 @@ export default function HeaderUserMenu({
   }, []);
 
   const logout = async () => {
-    // PHAI await: xoaPhien() cho may chu tra ve header xoa cookie. Dieu huong
+    // PHAI await: clearSession() cho may chu tra ve header xoa cookie. Dieu huong
     // ngay se huy request va cookie con nguyen - xem ghi chu o apiHelper.
     // Giao dien da chuyen sang trang thai dang xuat truoc do roi nen khong ai
     // thay do tre nay.
-    await xoaPhien();
+    await clearSession();
     window.location.href = "/";
   };
 
@@ -72,7 +70,7 @@ export default function HeaderUserMenu({
   // dung that, nen cai o giu cho nay khong giu duoc gi: tai xong la ca dam ben
   // trai no nhay mot phat. Sai san tu ban tieng Anh (cum do da rong ~175px).
   // Doi chu tren hai nut thi phai do lai con so nay.
-  if (dangTai) {
+  if (loading) {
     return <div className={styles.box} aria-hidden="true" />;
   }
 
@@ -89,12 +87,12 @@ export default function HeaderUserMenu({
         {/* Khach cung xem duoc gio hang: ho them khoa vao gio roi moi dang nhap
             de thanh toan, khong phai nguoc lai. Gio nam o localStorage nen
             khong mat khi dang nhap. */}
-        {coGioHang && <NutGioHang />}
+        {hasCart && <CartButton />}
 
-        <Link href={duongDangNhap} className={styles.box2}>
+        <Link href={loginHref} className={styles.box2}>
           Đăng nhập
         </Link>
-        <Link href={duongDangKy} className={styles.box3}>
+        <Link href={registerUrl} className={styles.box3}>
           Đăng ký<span className={styles.label}> miễn phí</span>
         </Link>
       </div>
@@ -112,29 +110,25 @@ export default function HeaderUserMenu({
   //
   // Lay phan truoc @ cua email lam ten: do la thu nguoi dung nhan ra duoc, con
   // "Tài khoản" chi la buoc cuoi cho truong hop khong con gi de bam vao.
-  const tenHienThi = user.name?.trim() || user.email?.split("@")[0] || "Tài khoản";
+  const displayName = user.name?.trim() || user.email?.split("@")[0] || "Tài khoản";
 
   return (
     // Chuong nam NGOAI cai ref cua menu tai khoan. Gop chung mot ref thi cu
     // bam chuong se bi tinh la "bam ben trong menu" nen menu tai khoan dang mo
     // se khong dong - hai bang chong len nhau.
     <div className={styles.row2}>
-      {coGioHang && <NutGioHang />}
-      <ChuongThongBao />
+      {hasCart && <CartButton />}
+      <NotificationBell />
 
       <div className={styles.box4} ref={ref}>
         <button onClick={() => setOpen(!open)} className={styles.button}>
-          <AnhDaiDien src={src} ten={tenHienThi} size={40} nenChuCai={styles.box8} />
+          <Avatar src={src} ten={displayName} size={40} letterBackground={styles.box8} />
 
-          {/* So du coin thay cho ten vai tro o dong duoi.
-            "student" la thu nguoi dung da biet (ho tu dang ky ma), con so coin
-            thi doi lien tuc va anh huong toi viec ho co mua duoc khoa hay
-            khong - dang cho hon nhieu. Vai tro chi con hien voi admin va giang
-            vien, la hai nhom that su can biet minh dang o quyen nao. */}
+          {/* Vai tro chi hien voi admin va giang vien, la hai nhom that su can
+            biet minh dang o quyen nao. "student" thi nguoi dung da biet. */}
           <div className={styles.box5}>
-            <span className={styles.label2}>{tenHienThi}</span>
+            <span className={styles.label2}>{displayName}</span>
             <span className={styles.row3}>
-              {HIEN_COIN && <SoDuCoin />}
               {user.role !== "student" && (
                 <span className={styles.label3}>{user.role}</span>
               )}
@@ -147,14 +141,14 @@ export default function HeaderUserMenu({
           <div className={styles.floating}>
             <div className={styles.box6}>
               <div className={styles.row4}>
-                <AnhDaiDien
+                <Avatar
                   src={src}
-                  ten={tenHienThi}
+                  ten={displayName}
                   size={48}
-                  nenChuCai={styles.box9}
+                  letterBackground={styles.box9}
                 />
                 <div className={styles.box7}>
-                  <p className={styles.text}>{tenHienThi}</p>
+                  <p className={styles.text}>{displayName}</p>
                   <p className={styles.text2}>{user.email}</p>
                 </div>
               </div>

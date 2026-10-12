@@ -21,58 +21,58 @@ const mongoose = require('mongoose');
 const connectDB = require('../config/db');
 const Document = require('../models/Document');
 const Post = require('../models/Post');
-const { chuanHoaNoiDung, CO_MUI_NGUY_HIEM } = require('./postHtml');
+const { normalizeContent, DANGEROUS_SCHEME } = require('./postHtml');
 
 // Moi bang, va truong nao cua no duoc do ra man hinh duoi dang HTML.
-const CAN_QUET = [
+const SCAN_TARGETS = [
     { ten: 'Tài liệu', model: Document, truong: 'description' },
     { ten: 'Bài viết', model: Post, truong: 'content' },
 ];
 
 const chay = async () => {
-    const suaThat = process.argv.includes('--sua');
+    const applyFix = process.argv.includes('--sua');
 
     await connectDB();
 
-    let tongBan = 0;
-    let tongSua = 0;
+    let totalRecords = 0;
+    let totalFixed = 0;
 
-    for (const { ten, model, truong } of CAN_QUET) {
+    for (const { ten: name, model, truong: school } of SCAN_TARGETS) {
         // Chi keo ve _id, tieu de va dung truong can xet - khong keo ca ban ghi.
-        const dsach = await model.find({}, { [truong]: 1, title: 1 }).lean();
+        const dsach = await model.find({}, { [school]: 1, title: 1 }).lean();
 
-        const ban = dsach.filter((b) => CO_MUI_NGUY_HIEM.test(String(b[truong] || '')));
-        tongBan += ban.length;
+        const record = dsach.filter((b) => DANGEROUS_SCHEME.test(String(b[school] || '')));
+        totalRecords += record.length;
 
-        console.log(`\n${ten}: ${dsach.length} bản ghi, ${ban.length} có dấu hiệu nguy hiểm`);
+        console.log(`\n${name}: ${dsach.length} bản ghi, ${record.length} có dấu hiệu nguy hiểm`);
 
-        for (const b of ban) {
-            const tho = String(b[truong] || '');
-            const sach = chuanHoaNoiDung(tho);
-            const dau = (tho.match(CO_MUI_NGUY_HIEM) || [''])[0];
+        for (const b of record) {
+            const tho = String(b[school] || '');
+            const clean = normalizeContent(tho);
+            const head = (tho.match(DANGEROUS_SCHEME) || [''])[0];
 
             console.log(`  ${b._id}  ${String(b.title || '').slice(0, 40)}`);
-            console.log(`     dấu hiệu: ${JSON.stringify(dau)}   ${tho.length} -> ${sach.length} ký tự`);
+            console.log(`     dấu hiệu: ${JSON.stringify(head)}   ${tho.length} -> ${clean.length} ký tự`);
 
-            if (suaThat) {
-                await model.updateOne({ _id: b._id }, { $set: { [truong]: sach } });
-                tongSua += 1;
+            if (applyFix) {
+                await model.updateOne({ _id: b._id }, { $set: { [school]: clean } });
+                totalFixed += 1;
             }
         }
     }
 
     console.log(
-        `\nTổng: ${tongBan} bản ghi có dấu hiệu.` +
-            (suaThat
-                ? ` Đã sửa ${tongSua}.`
+        `\nTổng: ${totalRecords} bản ghi có dấu hiệu.` +
+            (applyFix
+                ? ` Đã sửa ${totalFixed}.`
                 : ' Chưa sửa gì — thêm --sua nếu muốn ghi đè.')
     );
 
     await mongoose.connection.close();
 };
 
-chay().catch(async (loi) => {
-    console.error('Quét thất bại:', loi.message);
+chay().catch(async (err) => {
+    console.error('Quét thất bại:', err.message);
     try {
         await mongoose.connection.close();
     } catch {

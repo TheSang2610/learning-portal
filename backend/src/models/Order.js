@@ -5,13 +5,13 @@ const mongoose = require('mongoose');
 // Bo han 0/O va 1/I/L: nguoi dung phai GO LAI ma nay vao noi dung chuyen khoan
 // neu khong quet duoc QR. Go nham mot ky tu la tien den noi ma khong khop don
 // nao, va viec do chi phat hien ra khi co nguoi khieu nai.
-const BANG_CHU = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-const DAI_MA = 4;
+const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const CODE_LENGTH = 4;
 
 // 15 phut - dung bang F8 va du de mo app ngan hang chuyen khoan.
 // Ngan hon thi nguoi dung dang go dở bi huy don; dai hon thi mot nguoi co the
 // om nhieu don treo cung luc.
-const HAN_GIU_DON_MS = 15 * 60 * 1000;
+const ORDER_HOLD_MS = 15 * 60 * 1000;
 
 const orderSchema = new mongoose.Schema({
     // Ma nguoi dung ghi vao noi dung chuyen khoan, vi du "DH79ME".
@@ -32,7 +32,7 @@ const orderSchema = new mongoose.Schema({
 
     // Don thanh toan CA GIO HANG: moi khoa trong don, tinh ca `course` o tren.
     // Don mua le de rong - don cu truoc 04/10/2026 cung rong, nen moi cho can
-    // danh sach khoa cua don phai goi cacKhoaCuaDon() (utils/orderCourses.js)
+    // danh sach khoa cua don phai goi orderCourses() (utils/orderCourses.js)
     // chu khong doc thang truong nay.
     //
     // Giu `course` = khoa dau tien thay vi bo han: trang quan tri, mail va moi
@@ -145,19 +145,19 @@ orderSchema.index(
 orderSchema.index({ status: 1, createdAt: -1 });
 
 /** Don da qua han chua? Tinh luc doc, khong cho tac vu nen quet. */
-orderSchema.methods.daHetHan = function () {
+orderSchema.methods.expired = function () {
     return this.status === 'pending' && this.expiresAt.getTime() < Date.now();
 };
 
 /** Sinh mot ma don ngau nhien, dang DH + 4 ky tu. */
-const sinhMa = () => {
-    let ma = 'DH';
-    for (let i = 0; i < DAI_MA; i += 1) {
-        ma += BANG_CHU[Math.floor(Math.random() * BANG_CHU.length)];
+const generateCode = () => {
+    let code = 'DH';
+    for (let i = 0; i < CODE_LENGTH; i += 1) {
+        code += ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
     }
-    return ma;
+    return code;
 };
 
 module.exports = mongoose.model('Order', orderSchema);
-module.exports.sinhMa = sinhMa;
-module.exports.HAN_GIU_DON_MS = HAN_GIU_DON_MS;
+module.exports.generateCode = generateCode;
+module.exports.ORDER_HOLD_MS = ORDER_HOLD_MS;

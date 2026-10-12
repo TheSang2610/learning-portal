@@ -7,15 +7,15 @@
  */
 
 const schemas = require("./schemas");
-const { banhRa } = require("./paths");
+const { expanded } = require("./paths");
 
 // May chu duoc liet ke trong tai lieu. Doc tu bien moi truong de ban tren
 // Render/Railway khong hien dia chi localhost cua may lap trinh.
-const mayChu = [];
+const servers = [];
 if (process.env.API_PUBLIC_URL) {
-  mayChu.push({ url: process.env.API_PUBLIC_URL, description: "Máy chủ đang chạy thật" });
+  servers.push({ url: process.env.API_PUBLIC_URL, description: "Máy chủ đang chạy thật" });
 }
-mayChu.push({ url: "http://localhost:5000", description: "Máy của lập trình viên" });
+servers.push({ url: "http://localhost:5000", description: "Máy của lập trình viên" });
 
 const spec = {
   openapi: "3.0.3",
@@ -57,7 +57,7 @@ const spec = {
       url: "https://github.com/TheSang2610",
     },
   },
-  servers: mayChu,
+  servers: servers,
   tags: [
     { name: "Người dùng", description: "Đăng ký, đăng nhập, hồ sơ" },
     { name: "Khóa học", description: "Danh mục khóa, chi tiết, ghi danh" },
@@ -72,13 +72,12 @@ const spec = {
     { name: "Hỏi đáp", description: "Câu hỏi thường gặp" },
     { name: "Tài liệu", description: "Tài liệu do người dùng chia sẻ" },
     { name: "Bài viết", description: "Blog" },
-    { name: "Băng quảng cáo", description: "Băng hiển thị do admin đặt" },
     { name: "Quản trị", description: "Toàn bộ nhóm này chỉ Admin gọi được" },
   ],
   components: {
     securitySchemes: {
       // Ten cookie do backend dat khi dang nhap.
-      cookiePhien: {
+      sessionCookie: {
         type: "apiKey",
         in: "cookie",
         name: "token",
@@ -90,8 +89,8 @@ const spec = {
   },
   // Mac dinh moi endpoint deu can phien; endpoint cong khai tu ghi de bang
   // `security: []` trong paths.js.
-  security: [{ cookiePhien: [] }],
-  paths: banhRa(),
+  security: [{ sessionCookie: [] }],
+  paths: expanded(),
 };
 
 module.exports = spec;

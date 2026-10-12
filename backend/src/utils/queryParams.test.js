@@ -1,57 +1,57 @@
 const test = require('node:test');
 const assert = require('node:assert');
 
-const { phanTrang, thoatRegex, timGan } = require('./queryParams');
+const { phanTrang: paginate, thoatRegex, fuzzyRegex } = require('./queryParams');
 
 // --- phanTrang -------------------------------------------------------------
 
 test('phanTrang: khong co tham so thi ve mac dinh trang 1, 10 dong', () => {
-    assert.deepStrictEqual(phanTrang({}), { trang: 1, soDong: 10, boQua: 0 });
+    assert.deepStrictEqual(paginate({}), { trang: 1, soDong: 10, skip: 0 });
 });
 
 test('phanTrang: doc duoc chuoi so tu query string', () => {
-    assert.deepStrictEqual(phanTrang({ page: '3', limit: '25' }), {
+    assert.deepStrictEqual(paginate({ page: '3', limit: '25' }), {
         trang: 3,
         soDong: 25,
-        boQua: 50,
+        skip: 50,
     });
 });
 
 // Day la loi that: ?page=-5 tung lam ca 5 duong /api/admin/* tra 500,
 // vi skip am thi Mongo tu choi cau truy van.
 test('phanTrang: page am khong duoc tao skip am', () => {
-    const r = phanTrang({ page: -5 });
+    const r = paginate({ page: -5 });
     assert.strictEqual(r.trang, 1);
-    assert.ok(r.boQua >= 0, 'boQua khong duoc am');
+    assert.ok(r.skip >= 0, 'boQua khong duoc am');
 });
 
 test('phanTrang: page/limit khong phai so thi lui ve mac dinh', () => {
-    assert.deepStrictEqual(phanTrang({ page: 'abc', limit: 'xyz' }), {
+    assert.deepStrictEqual(paginate({ page: 'abc', limit: 'xyz' }), {
         trang: 1,
         soDong: 10,
-        boQua: 0,
+        skip: 0,
     });
 });
 
 test('phanTrang: limit=0 khong bi hieu la "lay tat ca"', () => {
-    assert.strictEqual(phanTrang({ limit: 0 }).soDong, 10);
+    assert.strictEqual(paginate({ limit: 0 }).soDong, 10);
 });
 
 test('phanTrang: limit qua lon bi keo ve tran', () => {
-    assert.strictEqual(phanTrang({ limit: 100000 }).soDong, 100);
+    assert.strictEqual(paginate({ limit: 100000 }).soDong, 100);
 });
 
 test('phanTrang: tran mac dinh la 100 - vua du cho trang duyet danh gia', () => {
-    assert.strictEqual(phanTrang({ limit: 100 }).soDong, 100);
+    assert.strictEqual(paginate({ limit: 100 }).soDong, 100);
 });
 
 test('phanTrang: so le duoc lam tron xuong', () => {
-    assert.strictEqual(phanTrang({ page: 2.7 }).trang, 2);
+    assert.strictEqual(paginate({ page: 2.7 }).trang, 2);
 });
 
 test('phanTrang: doi duoc tran va mac dinh', () => {
-    assert.strictEqual(phanTrang({ limit: 500 }, { toiDa: 20 }).soDong, 20);
-    assert.strictEqual(phanTrang({}, { macDinh: 50 }).soDong, 50);
+    assert.strictEqual(paginate({ limit: 500 }, { toiDa: 20 }).soDong, 20);
+    assert.strictEqual(paginate({}, { defaults: 50 }).soDong, 50);
 });
 
 // --- thoatRegex ------------------------------------------------------------
@@ -94,12 +94,12 @@ test('thoatRegex: null/undefined thanh chuoi rong chu khong nem loi', () => {
     assert.strictEqual(thoatRegex(undefined), '');
 });
 
-// --- timGan ----------------------------------------------------------------
+// --- fuzzyRegex ----------------------------------------------------------------
 
 test('timGan: tra ve dung hinh dang filter cua Mongo', () => {
-    assert.deepStrictEqual(timGan('sang'), { $regex: 'sang', $options: 'i' });
+    assert.deepStrictEqual(fuzzyRegex('sang'), { $regex: 'sang', $options: 'i' });
 });
 
 test('timGan: khong phan biet hoa thuong', () => {
-    assert.strictEqual(timGan('Sang').$options, 'i');
+    assert.strictEqual(fuzzyRegex('Sang').$options, 'i');
 });

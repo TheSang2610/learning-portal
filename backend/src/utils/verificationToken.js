@@ -22,13 +22,13 @@ const crypto = require('crypto');
 
 // 24 gio. Du dai cho nguoi mo thu vao hom sau, du ngan de mot lien ket bi bo
 // quen trong hom thu khong con song mai.
-const HAN_MS = 24 * 60 * 60 * 1000;
+const TTL_MS = 24 * 60 * 60 * 1000;
 
 // 32 byte = 256 bit ngau nhien. Khong the do duoc trong bat ky khoang thoi
 // gian nao co nghia, nen duong dung no khong can chong do kieu mat khau.
-const SO_BYTE = 32;
+const BYTE_COUNT = 32;
 
-const bamToken = (token) =>
+const hashToken = (token) =>
     crypto.createHash('sha256').update(String(token ?? '')).digest('hex');
 
 /**
@@ -36,9 +36,9 @@ const bamToken = (token) =>
  * @returns {{ token: string, bam: string, hetHan: Date }}
  *   `token` di vao email, `bam` di vao CSDL. Khong bao gio nguoc lai.
  */
-const taoToken = (now = Date.now()) => {
-    const token = crypto.randomBytes(SO_BYTE).toString('hex');
-    return { token, bam: bamToken(token), hetHan: new Date(now + HAN_MS) };
+const createToken = (now = Date.now()) => {
+    const token = crypto.randomBytes(BYTE_COUNT).toString('hex');
+    return { token, hash: hashToken(token), hetHan: new Date(now + TTL_MS) };
 };
 
-module.exports = { taoToken, bamToken, HAN_MS, SO_BYTE };
+module.exports = { createToken, hashToken, TTL_MS, BYTE_COUNT };

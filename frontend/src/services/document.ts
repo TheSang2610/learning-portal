@@ -46,24 +46,24 @@ export interface SharedDocument {
  * Ngay sau khi doi dinh dang, trang co the nhan ban cu - khong chuan hoa thi
  * `doc.files.length` nem loi va ca trang thanh 500.
  */
-export function chuanHoaTaiLieu<T extends Partial<SharedDocument>>(d: T): T {
-  const cu = d as T & {
+export function normalizeDocument<T extends Partial<SharedDocument>>(d: T): T {
+  const old = d as T & {
     fileExt?: DocumentFile["fileExt"];
     fileSize?: number;
     fileName?: string;
     monHoc?: unknown;
   };
-  const files: DocumentFile[] = Array.isArray(cu.files)
-    ? cu.files
-    : cu.fileExt
-      ? [{ fileExt: cu.fileExt, fileSize: cu.fileSize ?? 0, fileName: cu.fileName }]
+  const files: DocumentFile[] = Array.isArray(old.files)
+    ? old.files
+    : old.fileExt
+      ? [{ fileExt: old.fileExt, fileSize: old.fileSize ?? 0, fileName: old.fileName }]
       : [];
-  const monHoc = Array.isArray(cu.monHoc)
-    ? (cu.monHoc as string[])
-    : typeof cu.monHoc === "string" && cu.monHoc
-      ? [cu.monHoc]
+  const subject = Array.isArray(old.monHoc)
+    ? (old.monHoc as string[])
+    : typeof old.monHoc === "string" && old.monHoc
+      ? [old.monHoc]
       : [];
-  return { ...d, files, monHoc };
+  return { ...d, files, monHoc: subject };
 }
 
 export interface CommentAuthor {
@@ -94,10 +94,10 @@ export interface CommentListResponse {
 }
 
 /** Tab loai tai lieu o trang tat ca tai lieu (?loai=). */
-export type LoaiTaiLieu = "pdf" | "word" | "baiViet";
+export type DocumentType = "pdf" | "word" | "baiViet";
 
 /** So lieu cua bo loc dang xem - GET /api/documents?thongKe=1. */
-export interface ThongKeDanhSach {
+export interface ListStats {
   tong: number;
   luotTai: number;
   soNguoiChiaSe: number;
@@ -112,7 +112,7 @@ export interface DocumentListResponse {
   page: number;
   totalPages: number;
   /** Chi co khi goi kem thongKe: true. Tinh tren bo loc CHUA tach loai. */
-  thongKe?: ThongKeDanhSach;
+  thongKe?: ListStats;
 }
 
 /** Mot mon hoc trong danh sach admin quan ly, kem so tai lieu dang hien. */
@@ -127,8 +127,8 @@ export interface DocumentSubject {
   nhom?: string | null;
 }
 
-/** Bieu tuong cua linh vuc - khop BIEU_TUONG ben backend (models/DocumentCategory.js). */
-export type BieuTuongLinhVuc =
+/** Bieu tuong cua linh vuc - khop ICONS ben backend (models/DocumentCategory.js). */
+export type FieldIcon =
   | "sach"
   | "luat"
   | "kinh-doanh"
@@ -156,7 +156,7 @@ export interface DocumentUniversity {
 }
 
 /** Mot mon co tai lieu cua mot truong. */
-export interface MonCuaTruong {
+export interface SchoolSubject {
   key: string;
   ten: string;
   soTaiLieu: number;
@@ -165,22 +165,22 @@ export interface MonCuaTruong {
 }
 
 /** Mot linh vuc co mon cua truong - o "Danh mục môn học" trang truong. */
-export interface LinhVucTruong {
+export interface SchoolField {
   _id: string;
   key: string;
   ten: string;
-  bieuTuong: BieuTuongLinhVuc;
+  bieuTuong: FieldIcon;
   soMon: number;
   soTaiLieu: number;
 }
 
 /** GET /api/documents/truong/:khoa - trang /share-document/institution/<khoa>. */
-export interface ChiTietTruong {
+export interface SchoolDetail {
   truong: DocumentUniversity;
   /** Danh muc mon cua truong + mon da co bai cua truong, nhieu tai lieu truoc. */
-  monHoc: MonCuaTruong[];
+  monHoc: SchoolSubject[];
   /** Linh vuc co mon cua truong. */
-  linhVuc: LinhVucTruong[];
+  linhVuc: SchoolField[];
   /** Vai truong khac, nhieu tai lieu truoc. */
   truongKhac: DocumentUniversity[];
 }
@@ -201,7 +201,7 @@ export interface DocumentCategory {
   _id: string;
   key: string;
   ten: string;
-  bieuTuong: BieuTuongLinhVuc;
+  bieuTuong: FieldIcon;
   thuTu: number;
   soMon: number;
   /** So tai lieu KHAC NHAU co it nhat mot mon thuoc linh vuc. */
@@ -241,7 +241,7 @@ export const documentService = {
     nhom?: string;
     // Khoa truong (DocumentUniversity.key).
     truong?: string;
-    loai?: LoaiTaiLieu | "";
+    loai?: DocumentType | "";
     sapXep?: "luotTai" | "phoBien";
     thongKe?: boolean;
   }): Promise<DocumentListResponse> => {
@@ -256,11 +256,11 @@ export const documentService = {
     if (params?.sapXep) sp.append("sapXep", params.sapXep);
     if (params?.thongKe) sp.append("thongKe", "1");
     const qs = sp.toString() ? `?${sp.toString()}` : "";
-    const kq: DocumentListResponse = await apiRequest(`/documents${qs}`, {
+    const outcome: DocumentListResponse = await apiRequest(`/documents${qs}`, {
       method: "GET",
     });
-    // Duong nay qua CDN (luu 60 giay) - xem chuanHoaTaiLieu.
-    return { ...kq, documents: (kq.documents ?? []).map(chuanHoaTaiLieu) };
+    // Duong nay qua CDN (luu 60 giay) - xem normalizeDocument.
+    return { ...outcome, documents: (outcome.documents ?? []).map(normalizeDocument) };
   },
 
   /**
@@ -283,7 +283,7 @@ export const documentService = {
     fd.append("title", data.title);
     fd.append("description", data.description);
     // Multipart khong co kieu mang - gui mot chuoi JSON, may chu tu doc
-    // (docDsMonTho ben backend).
+    // (parseRawSubjects ben backend).
     fd.append("monHoc", JSON.stringify(data.monHoc));
     // Cung ten truong "files" cho moi file - Multer gom lai thanh mang.
     data.files.forEach((f) => fd.append("files", f));
@@ -298,11 +298,11 @@ export const documentService = {
   uploadImage: async (file: File): Promise<string> => {
     const fd = new FormData();
     fd.append("anh", file);
-    const kq: { url: string } = await apiRequest("/documents/anh", {
+    const outcome: { url: string } = await apiRequest("/documents/anh", {
       method: "POST",
       body: fd,
     });
-    return kq.url;
+    return outcome.url;
   },
 
   /** Tang so luot tai. Loi o day khong quan trong nen goi xong bo qua. */
@@ -333,14 +333,14 @@ export const documentService = {
     if (params?.id) sp.append("id", params.id);
     if (params?.limit) sp.append("limit", String(params.limit));
     const qs = sp.toString() ? `?${sp.toString()}` : "";
-    const kq: RecommendationResponse = await apiRequest(`/documents/goi-y${qs}`, {
+    const outcome: RecommendationResponse = await apiRequest(`/documents/goi-y${qs}`, {
       method: "GET",
     });
-    // Moi duong tra tai lieu ra deu phai qua chuanHoaTaiLieu, khong chi
+    // Moi duong tra tai lieu ra deu phai qua normalizeDocument, khong chi
     // getDocuments. Bai kieu blog co the khong co `files` (khong kem file) -
-    // the TheTaiLieuDoc doc `doc.files.length` la sap ca trang. Loi that
+    // the DocumentCard doc `doc.files.length` la sap ca trang. Loi that
     // 04/10/2026 o hang "Xem gần đây" cua /share-document/all-document.
-    return { ...kq, documents: (kq.documents ?? []).map(chuanHoaTaiLieu) };
+    return { ...outcome, documents: (outcome.documents ?? []).map(normalizeDocument) };
   },
 
   /**
@@ -361,11 +361,11 @@ export const documentService = {
 
   /** Lich su xem/tai cua chinh minh. Bat buoc dang nhap. */
   getMyHistory: async (): Promise<{ items: HistoryItem[] }> => {
-    const kq: { items: HistoryItem[] } = await apiRequest("/documents/lich-su", {
+    const outcome: { items: HistoryItem[] } = await apiRequest("/documents/lich-su", {
       method: "GET",
     });
     // Xem ghi chu o getRecommendations.
-    return { ...kq, items: (kq.items ?? []).map(chuanHoaTaiLieu) };
+    return { ...outcome, items: (outcome.items ?? []).map(normalizeDocument) };
   },
 
   /** Xoa toan bo lich su cua chinh minh (ca lich su tim). */
@@ -399,11 +399,11 @@ export const documentService = {
     if (params?.page) sp.append("page", String(params.page));
     if (params?.limit) sp.append("limit", String(params.limit));
     const qs = sp.toString() ? `?${sp.toString()}` : "";
-    const kq: DocumentListResponse = await apiRequest(`/documents/cua-toi${qs}`, {
+    const outcome: DocumentListResponse = await apiRequest(`/documents/cua-toi${qs}`, {
       method: "GET",
     });
     // Xem ghi chu o getRecommendations.
-    return { ...kq, documents: (kq.documents ?? []).map(chuanHoaTaiLieu) };
+    return { ...outcome, documents: (outcome.documents ?? []).map(normalizeDocument) };
   },
 
   // ----------------------------- quan tri -----------------------------
@@ -419,49 +419,49 @@ export const documentService = {
     if (params?.limit) sp.append("limit", String(params.limit));
     if (params?.q?.trim()) sp.append("q", params.q.trim());
     const qs = sp.toString() ? `?${sp.toString()}` : "";
-    const kq: DocumentListResponse = await apiRequest(`/documents/quan-tri${qs}`, {
+    const outcome: DocumentListResponse = await apiRequest(`/documents/quan-tri${qs}`, {
       method: "GET",
     });
     // Xem ghi chu o getRecommendations.
-    return { ...kq, documents: (kq.documents ?? []).map(chuanHoaTaiLieu) };
+    return { ...outcome, documents: (outcome.documents ?? []).map(normalizeDocument) };
   },
 
   /** An / hien tai lieu. Chi admin. */
-  setHidden: async (id: string, daAn: boolean): Promise<{ daAn: boolean }> => {
+  setHidden: async (id: string, hidden: boolean): Promise<{ daAn: boolean }> => {
     return apiRequest(`/documents/${id}/an`, {
       method: "PATCH",
-      body: JSON.stringify({ daAn }),
+      body: JSON.stringify({ daAn: hidden }),
     });
   },
 
   // --------------------- danh sach mon (admin) ---------------------
 
-  createSubject: async (ten: string): Promise<DocumentSubject> => {
+  createSubject: async (name: string): Promise<DocumentSubject> => {
     return apiRequest("/documents/mon-hoc", {
       method: "POST",
-      body: JSON.stringify({ ten }),
+      body: JSON.stringify({ ten: name }),
     });
   },
 
   /** Doi ten mon. May chu tu cap nhat moi tai lieu dang dung mon nay. */
   renameSubject: async (
     id: string,
-    ten: string,
+    name: string,
   ): Promise<DocumentSubject & { soTaiLieuDaCapNhat: number }> => {
     return apiRequest(`/documents/mon-hoc/${id}`, {
       method: "PUT",
-      body: JSON.stringify({ ten }),
+      body: JSON.stringify({ ten: name }),
     });
   },
 
   /** Xep mon vao linh vuc (null = bo khoi linh vuc). */
   setSubjectCategory: async (
     id: string,
-    nhom: string | null,
+    group: string | null,
   ): Promise<DocumentSubject> => {
     return apiRequest(`/documents/mon-hoc/${id}`, {
       method: "PUT",
-      body: JSON.stringify({ nhom }),
+      body: JSON.stringify({ nhom: group }),
     });
   },
 
@@ -471,20 +471,20 @@ export const documentService = {
     return apiRequest("/documents/truong", { method: "GET" });
   },
 
-  createUniversity: async (ten: string): Promise<DocumentUniversity> => {
+  createUniversity: async (name: string): Promise<DocumentUniversity> => {
     return apiRequest("/documents/truong", {
       method: "POST",
-      body: JSON.stringify({ ten }),
+      body: JSON.stringify({ ten: name }),
     });
   },
 
   renameUniversity: async (
     id: string,
-    ten: string,
+    name: string,
   ): Promise<DocumentUniversity & { soTaiLieuDaCapNhat: number }> => {
     return apiRequest(`/documents/truong/${id}`, {
       method: "PUT",
-      body: JSON.stringify({ ten }),
+      body: JSON.stringify({ ten: name }),
     });
   },
 
@@ -509,7 +509,7 @@ export const documentService = {
 
   createCategory: async (data: {
     ten: string;
-    bieuTuong?: BieuTuongLinhVuc;
+    bieuTuong?: FieldIcon;
   }): Promise<DocumentCategory> => {
     return apiRequest("/documents/linh-vuc", {
       method: "POST",
@@ -519,7 +519,7 @@ export const documentService = {
 
   updateCategory: async (
     id: string,
-    data: { ten?: string; bieuTuong?: BieuTuongLinhVuc; thuTu?: number },
+    data: { ten?: string; bieuTuong?: FieldIcon; thuTu?: number },
   ): Promise<DocumentCategory> => {
     return apiRequest(`/documents/linh-vuc/${id}`, {
       method: "PUT",
@@ -546,12 +546,12 @@ export const documentService = {
   /** Viet binh luan, hoac tra loi neu co `traLoi`. Bat buoc dang nhap. */
   createComment: async (
     id: string,
-    noiDung: string,
-    traLoi?: string,
+    content: string,
+    reply?: string,
   ): Promise<{ binhLuan: DocumentComment }> => {
     return apiRequest(`/documents/${id}/binh-luan`, {
       method: "POST",
-      body: JSON.stringify({ noiDung, traLoi }),
+      body: JSON.stringify({ noiDung: content, traLoi: reply }),
     });
   },
 
@@ -563,11 +563,11 @@ export const documentService = {
   /** An / hien binh luan. Chi admin. */
   setCommentHidden: async (
     commentId: string,
-    daAn: boolean,
+    hidden: boolean,
   ): Promise<{ daAn: boolean }> => {
     return apiRequest(`/documents/binh-luan/${commentId}/an`, {
       method: "PATCH",
-      body: JSON.stringify({ daAn }),
+      body: JSON.stringify({ daAn: hidden }),
     });
   },
 };

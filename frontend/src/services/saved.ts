@@ -1,10 +1,10 @@
 import { apiRequest } from "./apiHelper";
 
 /** Hai loai noi dung luu duoc - khop SavedItem.LOAI ben backend. */
-export type LoaiLuu = "baiViet" | "taiLieu";
+export type SaveType = "baiViet" | "taiLieu";
 
-export interface MucDaLuu {
-  loai: LoaiLuu;
+export interface SavedItem {
+  loai: SaveType;
   id: string;
   luuLuc: string;
   tieuDe: string;
@@ -22,20 +22,23 @@ export interface MucDaLuu {
 
 /** Bai viet / tai lieu da luu cua chinh minh. Bat buoc dang nhap. */
 export const savedService = {
-  layDaLuu: async (): Promise<{ items: MucDaLuu[] }> =>
+  layDaLuu: async (): Promise<{ items: SavedItem[] }> =>
     apiRequest("/da-luu", { method: "GET" }),
 
   /** Chi id - de to mau nut luu tren cac danh sach. */
-  layId: async (): Promise<Record<LoaiLuu, string[]>> =>
+  getId: async (): Promise<Record<SaveType, string[]>> =>
     apiRequest("/da-luu/id", { method: "GET" }),
 
-  luu: async (loai: LoaiLuu, id: string): Promise<{ daLuu: boolean }> =>
+  luu: async (loai: SaveType, id: string): Promise<{ daLuu: boolean }> =>
     apiRequest("/da-luu", { method: "POST", body: JSON.stringify({ loai, id }) }),
 
-  boLuu: async (loai: LoaiLuu, id: string): Promise<{ daLuu: boolean }> =>
+  boLuu: async (loai: SaveType, id: string): Promise<{ daLuu: boolean }> =>
     apiRequest(`/da-luu/${loai}/${id}`, { method: "DELETE" }),
 
   /** Chuyen danh sach luu cu trong localStorage vao tai khoan. */
-  nhap: async (duongDan: string[]): Promise<{ daNhap: number }> =>
-    apiRequest("/da-luu/nhap", { method: "POST", body: JSON.stringify({ duongDan }) }),
+  nhap: async (path: string[]): Promise<{ daNhap: number }> =>
+    apiRequest("/da-luu/nhap", {
+      method: "POST",
+      body: JSON.stringify({ duongDan: path }),
+    }),
 };

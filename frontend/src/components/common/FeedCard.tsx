@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { CircleCheck } from "lucide-react";
 import SafeImage from "@/src/components/ui/SafeImage";
-import AnhDaiDien from "@/src/components/ui/Avatar";
-import CardActions, { type MucMenu } from "@/src/components/common/CardActions";
-import type { LoaiLuu } from "@/src/services/saved";
-import { tomTatHtml } from "@/src/components/common/postHtml";
+import Avatar from "@/src/components/ui/Avatar";
+import CardActions, { type MenuItem } from "@/src/components/common/CardActions";
+import type { SaveType } from "@/src/services/saved";
+import { summaryHtml } from "@/src/lib/post-html";
 import type { ReactNode } from "react";
 
 import styles from "./FeedCard.module.scss";
@@ -18,38 +18,38 @@ import styles from "./FeedCard.module.scss";
 interface Props {
   href: string;
   tacGia: string;
-  anhTacGia?: string | null;
+  authorAvatar?: string | null;
   /** Dau tich xanh canh ten - danh cho giang vien / quan tri */
-  daXacThuc?: boolean;
+  verified?: boolean;
   tieuDe: string;
   /** Mo ta chu thuong (vd. excerpt cua blog). */
   moTa?: string;
   /**
    * Mo ta la HTML (vd. noi dung TipTap cua tai lieu). The hien doan tom tat
-   * GIU in dam/nghieng - xem tomTatHtml. Truyen cai nay thi bo qua `moTa`.
+   * GIU in dam/nghieng - xem summaryHtml. Truyen cai nay thi bo qua `moTa`.
    */
-  moTaHtml?: string;
+  descriptionHtml?: string;
   /** Dong duoi cung: tag, thoi gian, so luot... */
   meta: ReactNode;
   anh?: { src: string; alt: string } | null;
   /** Muc rieng cua tung trang trong menu ba cham, vi du "Xoa" */
-  themMuc?: MucMenu[];
+  addItem?: MenuItem[];
   /** Thu nut luu se luu vao trang ca nhan. Khong truyen thi an nut luu. */
-  luu?: { loai: LoaiLuu; id: string };
+  luu?: { loai: SaveType; id: string };
 }
 
 export default function FeedCard({
   href,
-  tacGia,
-  anhTacGia,
-  daXacThuc = false,
-  tieuDe,
-  moTa,
-  moTaHtml,
+  tacGia: author,
+  authorAvatar,
+  verified = false,
+  tieuDe: title,
+  moTa: description,
+  descriptionHtml,
   meta,
-  anh,
-  themMuc,
-  luu,
+  anh: image,
+  addItem,
+  luu: save,
 }: Props) {
   return (
     <article className={styles.article}>
@@ -58,14 +58,19 @@ export default function FeedCard({
         <div className={styles.row2}>
           <span
             aria-hidden
-            className={`${styles.label3} ${daXacThuc ? styles.label : ""}`}
+            className={`${styles.label3} ${verified ? styles.label : ""}`}
           >
-            <AnhDaiDien src={anhTacGia} ten={tacGia} size={28} nenChuCai={styles.box7} />
+            <Avatar
+              src={authorAvatar}
+              ten={author}
+              size={28}
+              letterBackground={styles.box7}
+            />
           </span>
 
-          <span className={styles.label2}>{tacGia}</span>
+          <span className={styles.label2}>{author}</span>
 
-          {daXacThuc && (
+          {verified && (
             // fill + stroke trang: ra dung dau tich tron dac nhu ban mau,
             // thay vi vien rong mac dinh cua lucide.
             <CircleCheck
@@ -79,7 +84,7 @@ export default function FeedCard({
         {/* Nam tren lop phu cua tieu de (z-10), neu khong thi bam nut lai
             dieu huong sang trang chi tiet. */}
         <div className={styles.box2}>
-          <CardActions href={href} tieuDe={tieuDe} themMuc={themMuc} luu={luu} />
+          <CardActions href={href} tieuDe={title} addItem={addItem} luu={save} />
         </div>
       </div>
 
@@ -92,29 +97,29 @@ export default function FeedCard({
           <h2 className={styles.heading}>
             <Link href={href} className={styles.box4}>
               <span className={styles.floating} aria-hidden />
-              {tieuDe}
+              {title}
             </Link>
           </h2>
 
-          {moTaHtml ? (
+          {descriptionHtml ? (
             <p
               className={styles.text}
-              // tomTatHtml chi de lai 6 the dinh dang tran va doi moi "<" con
+              // summaryHtml chi de lai 6 the dinh dang tran va doi moi "<" con
               // lai thanh &lt; - khong chen duoc the nao khac. Xem ham do.
-              dangerouslySetInnerHTML={{ __html: tomTatHtml(moTaHtml) }}
+              dangerouslySetInnerHTML={{ __html: summaryHtml(descriptionHtml) }}
             />
           ) : (
-            moTa && <p className={styles.text}>{moTa}</p>
+            description && <p className={styles.text}>{description}</p>
           )}
 
           <div className={styles.row4}>{meta}</div>
         </div>
 
-        {anh && (
+        {image && (
           <Link href={href} tabIndex={-1} aria-hidden className={styles.box5}>
             <SafeImage
-              src={anh.src}
-              alt={anh.alt}
+              src={image.src}
+              alt={image.alt}
               fill
               sizes="196px"
               className={styles.box6}

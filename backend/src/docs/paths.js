@@ -6,7 +6,7 @@
  * nhet vao la thanh 1500 dong chu thich lan giua 130 dong ma that.
  *
  * O day moi endpoint la MOT dong. Them route moi thi them mot dong, va ham
- * banhRa() lo phan lap lai: doi ":id" thanh "{id}", khai tham so duong dan,
+ * expanded() lo phan lap lai: doi ":id" thanh "{id}", khai tham so duong dan,
  * gan o khoa, va them cac ma loi tuong ung voi muc quyen.
  *
  * Cot quyen:
@@ -16,7 +16,7 @@
  *   'ad' chi admin (middleware admin, hoac controller tu chan)
  */
 
-const QUYEN = {
+const ACCESS = {
   "": "Công khai",
   dn: "Cần đăng nhập",
   gv: "Giảng viên hoặc Admin",
@@ -127,11 +127,6 @@ const BANG = [
     than: { isPublished: "boolean" },
     ghiChu: "Route chỉ gắn protect, nhưng controller tự chặn: tài khoản không phải admin nhận 403.",
   }],
-  ["patch", "/api/courses/:id/tags", "ad", "Gắn thẻ cho khóa học", {
-    tag: "Khóa học",
-    than: { tags: "array" },
-    tra: "KhoaHoc",
-  }],
   ["post", "/api/courses/:id/enroll", "dn", "Ghi danh vào khóa học", {
     tag: "Khóa học",
     tra: "GhiDanh",
@@ -208,6 +203,19 @@ const BANG = [
   }],
   ["get", "/api/orders/:code", "dn", "Xem đơn theo mã", { tag: "Đơn hàng", tra: "DonHang" }],
   ["put", "/api/orders/:code/cancel", "dn", "Hủy đơn", { tag: "Đơn hàng", tra: "DonHang" }],
+  ["get", "/api/video/:lessonId/master.m3u8", "", "Phát video bài giảng kho kín qua máy chủ (HLS)", {
+    tag: "Bài học",
+    ghiChu: "Cần vé ?t= (gắn với người xem, hết hạn sau 2 giờ) VÀ cookie đăng nhập của đúng người đó. Danh sách con và từng đoạn video đi qua /p.m3u8 và /s.",
+  }],
+  ["put", "/api/quizzes/:id/reset-mine", "dn", "Tự đặt lại bài làm của mình để làm lại", {
+    tag: "Trắc nghiệm",
+    ghiChu: "Người đang có quyền học khóa. Lượt cũ đổi sang reset (không tính lượt) nhưng vẫn nằm trong lịch sử.",
+  }],
+  ["post", "/api/ngan-hang/webhook", "", "Webhook báo có ngân hàng (SePay/Casso), tự mở khóa đơn khi tiền về", {
+    tag: "Đơn hàng",
+    ghiChu: "Không đăng nhập; xác thực bằng khóa bí mật trong header. Đường cũ /api/coin/webhook/ngan-hang vẫn nhận.",
+  }],
+  ["get", "/api/ngan-hang/quan-tri/bao-co", "ad", "Nhật ký báo có ngân hàng", { tag: "Quản trị", q: ["xuLy", "page", "limit"] }],
 
   // ----------------------------- Trac nghiem ------------------------------
   ["get", "/api/quizzes/course/:courseId", "dn", "Các bài trắc nghiệm của khóa", {
@@ -272,10 +280,6 @@ const BANG = [
   ["delete", "/api/faqs/:id", "gv", "Xóa câu hỏi", { tag: "Hỏi đáp" }],
 
   // ---------------------------- Bang quang cao ----------------------------
-  ["get", "/api/banners", "", "Danh sách băng quảng cáo", { tag: "Băng quảng cáo", tra: ["BangQuangCao"] }],
-  ["post", "/api/banners", "ad", "Tạo băng", { tag: "Băng quảng cáo", file: true, tra: "BangQuangCao" }],
-  ["put", "/api/banners/:id", "ad", "Sửa băng", { tag: "Băng quảng cáo", file: true, tra: "BangQuangCao" }],
-  ["delete", "/api/banners/:id", "ad", "Xóa băng", { tag: "Băng quảng cáo" }],
 
   // ------------------------------- Tai lieu -------------------------------
   ["get", "/api/documents", "", "Danh sách tài liệu", { tag: "Tài liệu", tra: ["TaiLieu"], q: ["page", "limit"] }],
@@ -313,7 +317,7 @@ const BANG = [
   }],
 
   // ------------------------------ Tro giang AI ------------------------------
-  // Ca ba deu `protect`. `hoi` con di qua duocXemNoiDung() vi loi nhac gui cho
+  // Ca ba deu `protect`. `hoi` con di qua canViewContent() vi loi nhac gui cho
   // mo hinh co chua nguyen van noi dung bai hoc - xem assistantController.js.
   ["post", "/api/tro-ly/hoi", "dn", "Hoi tro giang AI ve bai hoc", {
     tag: "Trợ giảng AI",
@@ -344,6 +348,7 @@ const BANG = [
   ["get", "/api/admin/enrollments", "ad", "Danh sách ghi danh", { tag: "Quản trị", tra: ["GhiDanh"] }],
   ["get", "/api/admin/enrollments/:id", "ad", "Chi tiết ghi danh", { tag: "Quản trị", tra: "GhiDanh" }],
   ["put", "/api/admin/enrollments/:id/status", "ad", "Đổi trạng thái ghi danh", { tag: "Quản trị", than: { status: "string" } }],
+  ["post", "/api/admin/enrollments/tang-khoa", "ad", "Tặng khóa học cho học viên", { tag: "Quản trị", than: { userId: "string", courseId: "string" } }],
   ["get", "/api/admin/certificates", "ad", "Danh sách chứng nhận", { tag: "Quản trị", tra: ["ChungNhan"] }],
   ["get", "/api/admin/certificates/:verificationCode/verify", "ad", "Tra cứu chứng nhận", { tag: "Quản trị", tra: "ChungNhan" }],
   ["put", "/api/admin/certificates/:id/revoke", "ad", "Thu hồi chứng nhận", { tag: "Quản trị" }],
@@ -361,103 +366,103 @@ const BANG = [
 
 // ---------------------------------------------------------------------------
 
-const kieuDon = (t) =>
+const orderSchema = (t) =>
   t === "file"
     ? { type: "string", format: "binary" }
     : t === "array"
       ? { type: "array", items: { type: "string" } }
       : { type: t };
 
-const thanYeuCau = (o) => {
-  if (!o.than) return undefined;
+const requestBody = (item) => {
+  if (!item.than) return undefined;
   const schema =
-    typeof o.than === "string"
-      ? { $ref: "#/components/schemas/" + o.than }
+    typeof item.than === "string"
+      ? { $ref: "#/components/schemas/" + item.than }
       : {
           type: "object",
           properties: Object.fromEntries(
-            Object.entries(o.than).map(([k, v]) => [k, kieuDon(v)]),
+            Object.entries(item.than).map(([k, v]) => [k, orderSchema(v)]),
           ),
         };
   return {
     required: true,
-    content: { [o.file ? "multipart/form-data" : "application/json"]: { schema } },
+    content: { [item.file ? "multipart/form-data" : "application/json"]: { schema } },
   };
 };
 
-const traVe = (o) => {
-  if (!o.tra) return { description: "Thành công" };
-  const ten = Array.isArray(o.tra) ? o.tra[0] : o.tra;
-  const ref = { $ref: "#/components/schemas/" + ten };
+const returns = (item) => {
+  if (!item.tra) return { description: "Thành công" };
+  const name = Array.isArray(item.tra) ? item.tra[0] : item.tra;
+  const ref = { $ref: "#/components/schemas/" + name };
   return {
     description: "Thành công",
     content: {
       "application/json": {
-        schema: Array.isArray(o.tra) ? { type: "array", items: ref } : ref,
+        schema: Array.isArray(item.tra) ? { type: "array", items: ref } : ref,
       },
     },
   };
 };
 
-const loi = (ma, mo) => ({
-  description: mo,
+const err = (code, open) => ({
+  description: open,
   content: { "application/json": { schema: { $ref: "#/components/schemas/Loi" } } },
 });
 
 /**
  * Banh bang gon thanh doi tuong `paths` cua OpenAPI.
  */
-function banhRa() {
+function expanded() {
   const paths = {};
 
-  for (const [phuongThuc, duongDan, quyen, tomTat, tuyChon = {}] of BANG) {
+  for (const [method, path, access, summary, options = {}] of BANG) {
     // ":courseId" -> "{courseId}"
-    const duongOpenApi = duongDan.replace(/:([A-Za-z0-9_]+)/g, "{$1}");
-    const tenThamSo = [...duongDan.matchAll(/:([A-Za-z0-9_]+)/g)].map((m) => m[1]);
+    const openApiPath = path.replace(/:([A-Za-z0-9_]+)/g, "{$1}");
+    const paramName = [...path.matchAll(/:([A-Za-z0-9_]+)/g)].map((m) => m[1]);
 
-    const thamSo = tenThamSo.map((ten) => ({
-      name: ten,
+    const params = paramName.map((name) => ({
+      name: name,
       in: "path",
       required: true,
       schema: { type: "string" },
     }));
 
-    for (const q of tuyChon.q || []) {
-      thamSo.push({ name: q, in: "query", required: false, schema: { type: "string" } });
+    for (const q of options.q || []) {
+      params.push({ name: q, in: "query", required: false, schema: { type: "string" } });
     }
 
-    const moTa = [
-      "**Quyền:** " + QUYEN[quyen],
-      tuyChon.ghiChu ? "\n\n" + tuyChon.ghiChu : "",
+    const description = [
+      "**Quyền:** " + ACCESS[access],
+      options.ghiChu ? "\n\n" + options.ghiChu : "",
     ].join("");
 
-    const responses = { 200: traVe(tuyChon) };
-    if (phuongThuc === "post") {
+    const responses = { 200: returns(options) };
+    if (method === "post") {
       responses[201] = responses[200];
     }
-    if (quyen !== "") {
-      responses[401] = loi(401, "Chưa đăng nhập hoặc phiên đã hết hạn");
+    if (access !== "") {
+      responses[401] = err(401, "Chưa đăng nhập hoặc phiên đã hết hạn");
     }
-    if (quyen === "gv" || quyen === "ad") {
-      responses[403] = loi(403, "Đăng nhập rồi nhưng không đủ quyền");
+    if (access === "gv" || access === "ad") {
+      responses[403] = err(403, "Đăng nhập rồi nhưng không đủ quyền");
     }
-    if (tenThamSo.length > 0) {
-      responses[404] = loi(404, "Không tìm thấy");
+    if (paramName.length > 0) {
+      responses[404] = err(404, "Không tìm thấy");
     }
 
-    paths[duongOpenApi] ||= {};
-    paths[duongOpenApi][phuongThuc] = {
-      tags: [tuyChon.tag],
-      summary: tomTat,
-      description: moTa,
-      ...(thamSo.length ? { parameters: thamSo } : {}),
-      ...(tuyChon.than ? { requestBody: thanYeuCau(tuyChon) } : {}),
+    paths[openApiPath] ||= {};
+    paths[openApiPath][method] = {
+      tags: [options.tag],
+      summary: summary,
+      description: description,
+      ...(params.length ? { parameters: params } : {}),
+      ...(options.than ? { requestBody: requestBody(options) } : {}),
       responses,
-      ...(quyen === "" ? { security: [] } : {}),
+      ...(access === "" ? { security: [] } : {}),
     };
   }
 
   return paths;
 }
 
-module.exports = { BANG, banhRa, QUYEN };
+module.exports = { BANG, expanded, ACCESS };

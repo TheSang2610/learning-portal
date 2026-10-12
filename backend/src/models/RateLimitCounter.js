@@ -38,7 +38,7 @@ const rateLimitCounterSchema = new mongoose.Schema(
         // Khac null nghia la dang bi khoa toi thoi diem nay.
         blockedUntil: { type: Date, default: null },
 
-        // Thoi diem ban ghi het y nghia = max(firstAt + cuaSo, blockedUntil).
+        // Thoi diem ban ghi het y nghia = max(firstAt + window, blockedUntil).
         // Vua la moc TTL cho Mongo, vua la moc "mo cua so dem moi" cho ma nguon.
         expiresAt: { type: Date, required: true },
     },

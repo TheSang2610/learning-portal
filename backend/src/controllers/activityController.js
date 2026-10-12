@@ -49,20 +49,20 @@ const getMyProfile = async (req, res) => {
         // Do cung la ly do protect() khong nap san truong nay - de no trong
         // req.user la moi route lo tay `res.json(req.user)` deu lam ro mat
         // khau da bam cua nguoi dung.
-        const chiMatKhau = await User.findById(req.user._id).select('password').lean();
-        if (!chiMatKhau) {
+        const passwordOnly = await User.findById(req.user._id).select('password').lean();
+        if (!passwordOnly) {
             return res.status(404).json({ message: 'User không tồn tại' });
         }
-        out.hasPassword = Boolean(chiMatKhau.password);
+        out.hasPassword = Boolean(passwordOnly.password);
         delete out.password;
 
         // Chi hoi don vi khi co don vi. Phan lon hoc vien khong thuoc don vi
         // nao nen nhanh nay gan nhu luon duoc bo qua.
         if (out.provider) {
-            const donVi = await Provider.findById(out.provider)
+            const unit = await Provider.findById(out.provider)
                 .select('name logo')
                 .lean();
-            if (donVi) out.provider = donVi;
+            if (unit) out.provider = unit;
         }
 
         res.json(out);

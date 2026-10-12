@@ -21,15 +21,15 @@ const MAIL_USER = process.env.MAIL_USER || '';
 const MAIL_APP_PASSWORD = process.env.MAIL_APP_PASSWORD || '';
 const MAIL_ADMIN = process.env.MAIL_ADMIN || MAIL_USER;
 
-const daCauHinh = () => Boolean(MAIL_USER && MAIL_APP_PASSWORD);
+const isConfigured = () => Boolean(MAIL_USER && MAIL_APP_PASSWORD);
 
 // Tao mot lan roi dung lai. Tao moi lan gui thi moi mail phai bat tay TLS lai
 // tu dau voi Gmail - cham va de bi chan vi mo qua nhieu ket noi.
-let hopThu = null;
-const layHopThu = () => {
-    if (!daCauHinh()) return null;
-    if (!hopThu) {
-        hopThu = nodemailer.createTransport({
+let mailbox = null;
+const getMailbox = () => {
+    if (!isConfigured()) return null;
+    if (!mailbox) {
+        mailbox = nodemailer.createTransport({
             service: 'gmail',
             auth: { user: MAIL_USER, pass: MAIL_APP_PASSWORD },
 
@@ -40,7 +40,7 @@ const layHopThu = () => {
             // chay cua no - goi Hobby la 10 giay: neu SMTP treo, Vercel cat ham
             // GIUA CHUNG va nguoi dung khong nhan duoc phan hoi nao ca, trang
             // dang ky dung im. Dat tran ngan hon han do thi truong hop xau nhat
-            // tro thanh "guiMail tra ve that bai" - va guiMail nuot loi, nen
+            // tro thanh "sendMail tra ve that bai" - va sendMail nuot loi, nen
             // nguoi dung van nhan duoc cau tra loi binh thuong, chi la khong co
             // thu.
             //
@@ -57,7 +57,7 @@ const layHopThu = () => {
             socketTimeout: 6000
         });
     }
-    return hopThu;
+    return mailbox;
 };
 
 /**
@@ -68,7 +68,7 @@ const layHopThu = () => {
  * duoc danh dau dung - ho se chuyen khoan lai lan nua. Mat tien that vi mot
  * loi gui mail la doi khong dang.
  *
- * `nguoiNhan` de trong thi gui ve hom thu quan tri - do la moi cach dung cu cua
+ * `recipient` de trong thi gui ve hom thu quan tri - do la moi cach dung cu cua
  * ham nay (bao don hang, bao chuyen khoan). Truyen dia chi vao thi gui thang
  * cho NGUOI DUNG: duong xac minh email can dieu do.
  *
@@ -80,25 +80,25 @@ const layHopThu = () => {
  *
  * Tra ve { daGui, lyDo } de noi goi bao lai cho quan tri biet ma con duong lui.
  */
-const guiMail = async ({ tieuDe, chuHtml, chuThuong, nguoiNhan }) => {
-    if (!daCauHinh()) {
-        console.warn('guiMail: chua dat MAIL_USER / MAIL_APP_PASSWORD, bo qua:', tieuDe);
+const sendMail = async ({ tieuDe: title, htmlBody, plainText, recipient }) => {
+    if (!isConfigured()) {
+        console.warn('guiMail: chua dat MAIL_USER / MAIL_APP_PASSWORD, bo qua:', title);
         return { daGui: false, lyDo: 'chua_cau_hinh' };
     }
 
     try {
-        await layHopThu().sendMail({
+        await getMailbox().sendMail({
             from: `"aLMS" <${MAIL_USER}>`,
-            to: nguoiNhan || MAIL_ADMIN,
-            subject: tieuDe,
-            text: chuThuong,
-            html: chuHtml
+            to: recipient || MAIL_ADMIN,
+            subject: title,
+            text: plainText,
+            html: htmlBody
         });
         return { daGui: true, lyDo: '' };
-    } catch (loi) {
-        console.error('guiMail that bai:', loi.message);
-        return { daGui: false, lyDo: loi.message };
+    } catch (err) {
+        console.error('guiMail that bai:', err.message);
+        return { daGui: false, lyDo: err.message };
     }
 };
 
-module.exports = { daCauHinh, guiMail, MAIL_ADMIN };
+module.exports = { daCauHinh: isConfigured, sendMail, MAIL_ADMIN };

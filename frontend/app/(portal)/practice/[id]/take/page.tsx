@@ -1,25 +1,26 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import PracticeTest from "@/src/components/practice/PracticeTest";
-import { DE_LUYEN_TAP } from "@/src/components/practice/practiceData";
+import PracticeTest from "@/src/components/features/portal/practice/PracticeTest";
+import { PRACTICE_PAGE } from "@/src/constants/portal/practice-page";
+import { quizParams, findQuiz } from "@/src/lib/practice";
 
 interface Props {
   params: Promise<{ id: string }>;
 }
 
-export const generateStaticParams = () => DE_LUYEN_TAP.map((d) => ({ id: d.id }));
+export const generateStaticParams = quizParams;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params;
-  const de = DE_LUYEN_TAP.find((d) => d.id === id);
+  const quiz = findQuiz((await params).id);
   // Phong lam bai cua tung nguoi, khong can may tim kiem lap chi muc
-  return de ? { title: `Làm bài: ${de.title}`, robots: { index: false } } : {};
+  return quiz
+    ? { title: PRACTICE_PAGE.takeTitle(quiz.title), robots: { index: false } }
+    : {};
 }
 
 export default async function PracticeTakePage({ params }: Props) {
-  const { id } = await params;
-  const de = DE_LUYEN_TAP.find((d) => d.id === id);
-  if (!de) notFound();
-  return <PracticeTest de={de} />;
+  const quiz = findQuiz((await params).id);
+  if (!quiz) notFound();
+  return <PracticeTest de={quiz} />;
 }

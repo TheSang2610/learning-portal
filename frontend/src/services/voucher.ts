@@ -1,13 +1,13 @@
 import { apiRequest } from "./apiHelper";
 
 // Chep theo backend/src/models/Voucher.js.
-export type LoaiGiamGia = "phanTram" | "soTien";
+export type DiscountType = "phanTram" | "soTien";
 
-export interface MaGiamGia {
+export interface Voucher {
   _id: string;
   ma: string;
   moTa: string;
-  loai: LoaiGiamGia;
+  loai: DiscountType;
   giaTri: number;
   donToiThieu: number;
   giamToiDa: number | null;
@@ -21,7 +21,7 @@ export interface MaGiamGia {
   createdAt: string;
 }
 
-export interface KetQuaKiemMa {
+export interface VoucherCheckResult {
   // false KHONG phai la loi mang: "ma nay khong dung duoc" la mot ket qua hop
   // le cua viec kiem tra. May chu tra 200 kem `cau` giai thich, nen cho goi
   // khong can bat ngoai le de hien mot thong bao binh thuong.
@@ -35,16 +35,16 @@ export interface KetQuaKiemMa {
 /**
  * Kiem ma truoc khi thanh toan. KHONG tru luot nao.
  *
- * Luot chi bi tru luc that su dat don hoac tru coin - luc do gui kem
- * `maGiamGia` trong than yeu cau cua hai duong do.
+ * Luot chi bi tru luc that su dat don - luc do gui kem `maGiamGia` trong
+ * than yeu cau tao don.
  */
-export const kiemMaGiamGia = async (
-  ma: string,
+export const checkVoucher = async (
+  code: string,
   courseId: string,
-): Promise<KetQuaKiemMa> => {
+): Promise<VoucherCheckResult> => {
   return apiRequest("/ma-giam-gia/kiem", {
     method: "POST",
-    body: JSON.stringify({ ma, courseId }),
+    body: JSON.stringify({ ma: code, courseId }),
   });
 };
 
@@ -52,23 +52,23 @@ export const kiemMaGiamGia = async (
    QUAN TRI
    ========================================================================== */
 
-export interface TrangMaGiamGia {
-  danhSach: MaGiamGia[];
+export interface VoucherPage {
+  danhSach: Voucher[];
   trang: number;
   tong: number;
   conNua: boolean;
 }
 
-export const danhSachMa = async (trang = 1): Promise<TrangMaGiamGia> => {
-  return apiRequest(`/ma-giam-gia/quan-tri?trang=${trang}`, { method: "GET" });
+export const listVouchers = async (page = 1): Promise<VoucherPage> => {
+  return apiRequest(`/ma-giam-gia/quan-tri?trang=${page}`, { method: "GET" });
 };
 
 // Than gui len khi tao/sua. `ma` chi dung luc TAO - may chu khong cho doi chuoi
 // ma sau khi da phat, vi doi la lam hong moi cho da chia se ma do.
-export interface ThanMaGiamGia {
+export interface VoucherPayload {
   ma?: string;
   moTa?: string;
-  loai: LoaiGiamGia;
+  loai: DiscountType;
   giaTri: number;
   donToiThieu?: number;
   giamToiDa?: number | null;
@@ -80,28 +80,28 @@ export interface ThanMaGiamGia {
   hoatDong?: boolean;
 }
 
-export const taoMa = async (than: ThanMaGiamGia): Promise<{ ma: MaGiamGia }> => {
+export const generateCode = async (body: VoucherPayload): Promise<{ ma: Voucher }> => {
   return apiRequest("/ma-giam-gia/quan-tri", {
     method: "POST",
-    body: JSON.stringify(than),
+    body: JSON.stringify(body),
   });
 };
 
-export const suaMa = async (
+export const editVoucher = async (
   id: string,
-  than: ThanMaGiamGia,
-): Promise<{ ma: MaGiamGia }> => {
+  body: VoucherPayload,
+): Promise<{ ma: Voucher }> => {
   return apiRequest(`/ma-giam-gia/quan-tri/${id}`, {
     method: "PUT",
-    body: JSON.stringify(than),
+    body: JSON.stringify(body),
   });
 };
 
-export const batTatMa = async (id: string): Promise<{ ma: MaGiamGia }> => {
+export const toggleVoucher = async (id: string): Promise<{ ma: Voucher }> => {
   return apiRequest(`/ma-giam-gia/quan-tri/${id}/bat-tat`, { method: "PUT" });
 };
 
-export interface LuotDung {
+export interface Usage {
   _id: string;
   user: { _id: string; name?: string; email?: string } | null;
   course: { _id: string; title: string } | null;
@@ -109,8 +109,8 @@ export interface LuotDung {
   createdAt: string;
 }
 
-export const luotDungCuaMa = async (
+export const voucherUsage = async (
   id: string,
-): Promise<{ danhSach: LuotDung[]; tongGiam: number }> => {
+): Promise<{ danhSach: Usage[]; tongGiam: number }> => {
   return apiRequest(`/ma-giam-gia/quan-tri/${id}/luot-dung`, { method: "GET" });
 };

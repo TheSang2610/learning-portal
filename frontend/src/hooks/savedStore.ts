@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
-import { useNguoiDungLuu } from "./userStore";
-import { savedService, type LoaiLuu } from "@/src/services/saved";
+import { useStoredUser } from "./userStore";
+import { savedService, type SaveType } from "@/src/services/saved";
 
 // Trang thai "da luu" dung chung cho MOI nut luu tren trang.
 //
@@ -11,99 +11,99 @@ import { savedService, type LoaiLuu } from "@/src/services/saved";
 //
 // Gan voi TAI KHOAN chu khong con nam trong localStorage: truoc day doi may la
 // mat het, va trang ca nhan khong doc duoc. Danh sach cu trong localStorage
-// ("feedBookmarks") duoc chuyen vao tai khoan mot lan roi xoa - xem nhapCu().
+// ("feedBookmarks") duoc chuyen vao tai khoan mot lan roi xoa - xem legacyDraft().
 
-const KHOA_CU = "feedBookmarks";
+const LEGACY_KEY = "feedBookmarks";
 
-let tapDaLuu = new Set<string>();
+let savedSet = new Set<string>();
 // Da nap cho nguoi dung nao. Doi tai khoan / dang xuat thi nap lai tu dau.
-let napChoUser: string | null | undefined;
-const nguoiNghe = new Set<() => void>();
-const bao = () => nguoiNghe.forEach((f) => f());
+let loadForUser: string | null | undefined;
+const listeners = new Set<() => void>();
+const notify = () => listeners.forEach((f) => f());
 
-const khoa = (loai: LoaiLuu, id: string) => `${loai}:${id}`;
+const course = (loai: SaveType, id: string) => `${loai}:${id}`;
 
-async function nhapCu() {
-  let ds: unknown;
+async function legacyDraft() {
+  let items: unknown;
   try {
-    const raw = localStorage.getItem(KHOA_CU);
-    ds = raw ? JSON.parse(raw) : null;
+    const raw = localStorage.getItem(LEGACY_KEY);
+    items = raw ? JSON.parse(raw) : null;
   } catch {
     return;
   }
-  if (!Array.isArray(ds) || ds.length === 0) return;
-  await savedService.nhap(ds.filter((x) => typeof x === "string"));
+  if (!Array.isArray(items) || items.length === 0) return;
+  await savedService.nhap(items.filter((x) => typeof x === "string"));
   // Chi xoa SAU khi may chu nhan: hong mang thi lan sau thu lai, khong mat.
   try {
-    localStorage.removeItem(KHOA_CU);
+    localStorage.removeItem(LEGACY_KEY);
   } catch {
     // Trinh duyet chan luu tru - lan sau nhap lai, may chu tu bo trung.
   }
 }
 
-function napDaLuu(userId: string | null) {
-  if (napChoUser === userId) return;
-  napChoUser = userId;
-  tapDaLuu = new Set();
-  bao();
+function loadSaved(userId: string | null) {
+  if (loadForUser === userId) return;
+  loadForUser = userId;
+  savedSet = new Set();
+  notify();
   if (!userId) return;
 
   (async () => {
-    await nhapCu().catch(() => {});
-    const ds = await savedService.layId();
+    await legacyDraft().catch(() => {});
+    const items = await savedService.getId();
     // Trong luc cho, nguoi dung da doi tai khoan - bo ket qua cu.
-    if (napChoUser !== userId) return;
-    tapDaLuu = new Set([
-      ...ds.baiViet.map((id) => khoa("baiViet", id)),
-      ...ds.taiLieu.map((id) => khoa("taiLieu", id)),
+    if (loadForUser !== userId) return;
+    savedSet = new Set([
+      ...items.baiViet.map((id) => course("baiViet", id)),
+      ...items.taiLieu.map((id) => course("taiLieu", id)),
     ]);
-    bao();
+    notify();
   })().catch(() => {
     // Khong tai duoc thi nut hien "chua luu" - bam van luu duoc binh thuong.
   });
 }
 
-function dangKy(f: () => void) {
-  nguoiNghe.add(f);
-  return () => nguoiNghe.delete(f);
+function subscribe(f: () => void) {
+  listeners.add(f);
+  return () => listeners.delete(f);
 }
 
 /**
  * Bat / tat luu. Doi tren man hinh NGAY (lac quan), hong thi tra lai nhu cu.
  * Tra ve trang thai moi.
  */
-export async function doiLuu(loai: LoaiLuu, id: string): Promise<boolean> {
-  const k = khoa(loai, id);
-  const truoc = tapDaLuu.has(k);
-  const datTrangThai = (co: boolean) => {
-    tapDaLuu = new Set(tapDaLuu);
-    if (co) tapDaLuu.add(k);
-    else tapDaLuu.delete(k);
-    bao();
+export async function toggleSave(loai: SaveType, id: string): Promise<boolean> {
+  const k = course(loai, id);
+  const before = savedSet.has(k);
+  const setStatus = (size: boolean) => {
+    savedSet = new Set(savedSet);
+    if (size) savedSet.add(k);
+    else savedSet.delete(k);
+    notify();
   };
 
-  datTrangThai(!truoc);
+  setStatus(!before);
   try {
-    if (truoc) await savedService.boLuu(loai, id);
+    if (before) await savedService.boLuu(loai, id);
     else await savedService.luu(loai, id);
-    return !truoc;
+    return !before;
   } catch (err) {
-    datTrangThai(truoc);
+    setStatus(before);
     throw err;
   }
 }
 
 /** Muc nay da duoc nguoi dang dang nhap luu chua. Khach: luon false. */
-export function useDaLuu(loai: LoaiLuu, id: string): boolean {
-  const idNguoiDung = useNguoiDungLuu()?._id ?? null;
+export function useSaved(loai: SaveType, id: string): boolean {
+  const currentUserId = useStoredUser()?._id ?? null;
 
   useEffect(() => {
-    napDaLuu(idNguoiDung);
-  }, [idNguoiDung]);
+    loadSaved(currentUserId);
+  }, [currentUserId]);
 
   return useSyncExternalStore(
-    dangKy,
-    () => tapDaLuu.has(khoa(loai, id)),
+    subscribe,
+    () => savedSet.has(course(loai, id)),
     () => false,
   );
 }

@@ -9,10 +9,10 @@
 
 /**
  * @param {Array<{_id, title, description?, questions?: Array, course?: {_id, title, slug}}>} quizzes
- * @param {Map<string, number>} soLuotTheoQuiz  id quiz -> so luot da nop bai
- * @returns {Array<{_id: string, title: string, description: string, soCau: number, soLuotLam: number, khoa: {_id: string, title: string, slug: string}}>}
+ * @param {Map<string, number>} attemptsByQuiz  id quiz -> so luot da nop bai
+ * @returns {Array<{_id: string, title: string, description: string, soCau: number, attemptCount: number, khoa: {_id: string, title: string, slug: string}}>}
  */
-function ghepBaiLuyenTap(quizzes, soLuotTheoQuiz) {
+function attachPracticeQuiz(quizzes, attemptsByQuiz) {
     return quizzes
         // Quiz ma khoa hoc da bi xoa / chua xuat ban thi populate tra ve null:
         // khong co khoa de dan toi thi khong liet ke.
@@ -22,7 +22,7 @@ function ghepBaiLuyenTap(quizzes, soLuotTheoQuiz) {
             title: q.title,
             description: q.description || '',
             soCau: Array.isArray(q.questions) ? q.questions.length : 0,
-            soLuotLam: soLuotTheoQuiz.get(String(q._id)) || 0,
+            attemptCount: attemptsByQuiz.get(String(q._id)) || 0,
             khoa: {
                 _id: String(q.course._id),
                 title: q.course.title,
@@ -32,7 +32,7 @@ function ghepBaiLuyenTap(quizzes, soLuotTheoQuiz) {
         // Quiz khong co cau nao thi khong co gi de luyen
         .filter((b) => b.soCau > 0)
         // Nhieu nguoi lam nhat len dau; bang luot thi theo ten cho on dinh
-        .sort((a, b) => b.soLuotLam - a.soLuotLam || a.title.localeCompare(b.title, 'vi'));
+        .sort((a, b) => b.attemptCount - a.attemptCount || a.title.localeCompare(b.title, 'vi'));
 }
 
-module.exports = { ghepBaiLuyenTap };
+module.exports = { attachPracticeQuiz };

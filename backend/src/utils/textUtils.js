@@ -12,7 +12,7 @@
 // Dai ̀-ͯ la cac dau thanh va dau mu, chung tach thanh ky tu rieng
 // sau khi normalize('NFD'). Viet bang ma escape chu khong go thang, vi go thang
 // thi chung vo hinh trong trinh soan thao.
-const taoSlug = (chuoi, { dai = 80, macDinh = 'bai-viet' } = {}) =>
+const createSlug = (chuoi, { dai: length = 80, defaults = 'bai-viet' } = {}) =>
     // `?? ''` chu khong phai tham so mac dinh: tham so mac dinh chi chay khi
     // dau vao la undefined, con null thi lot qua. Ban cu viet (s = '') roi goi
     // s.normalize() nen nem TypeError voi null; neu chi doi sang String(s) thi
@@ -25,15 +25,15 @@ const taoSlug = (chuoi, { dai = 80, macDinh = 'bai-viet' } = {}) =>
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '')
-        .slice(0, dai)
+        .slice(0, length)
         // Cat theo do dai co the de lai dau '-' o cuoi: "abc-def" cat 4 -> "abc-"
-        .replace(/-+$/, '') || macDinh;
+        .replace(/-+$/, '') || defaults;
 
 // Tach tags tu mang hoac tu chuoi dang "a, b, c". Toi da 5 the.
-const tachTags = (v) =>
+const splitTags = (v) =>
     (Array.isArray(v) ? v : String(v || '').split(','))
         .map((t) => String(t).trim())
         .filter(Boolean)
         .slice(0, 5);
 
-module.exports = { taoSlug, tachTags };
+module.exports = { createSlug, splitTags };

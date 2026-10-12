@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { capIdHopLe } = require('../middlewares/validObjectId');
+const { guardObjectIds } = require('../middlewares/validObjectId');
 
 // Chan id sai dinh dang -> 404 thay vi 500. Xem middlewares/validObjectId.js
-capIdHopLe(router);
+guardObjectIds(router);
 
 const {
     createQuiz,
@@ -17,6 +17,7 @@ const {
     getQuizAttemptResult,
     getQuizAttempts,
     allowStudentRetry,
+    resetMyAttempts,
     getQuizStats
 } = require('../controllers/quizController');
 
@@ -56,6 +57,8 @@ router.put('/:id', instructor, updateQuiz);
 router.put('/:id/publish', instructor, publishQuiz);
 
 router.put('/:id/allow-retry/:studentId', instructor, allowStudentRetry);
+// Nguoi dang co quyen hoc khoa tu dat lai bai lam cua minh (controller kiem quyen).
+router.put('/:id/reset-mine', resetMyAttempts);
 
 // @route    DELETE /api/quizzes/:id
 router.delete('/:id', instructor, deleteQuiz);

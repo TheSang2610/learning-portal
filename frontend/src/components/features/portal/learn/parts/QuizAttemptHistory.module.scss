@@ -1,0 +1,163 @@
+// Lich su lam bai kiem tra (QuizAttemptHistory.tsx).
+.card {
+  border: 1px solid var(--color-slate-200);
+  border-radius: var(--radius-2xl);
+  background-color: var(--color-white);
+  padding: 20px;
+}
+.heading {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-slate-900);
+}
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.item {
+  border: 1px solid var(--color-slate-200);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.row {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: 14px;
+  color: var(--color-slate-700);
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--color-slate-50);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--color-blue-600);
+    outline-offset: -2px;
+  }
+}
+.attemptNo {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-slate-900);
+}
+.when {
+  color: var(--color-slate-500);
+}
+.percent {
+  margin-left: auto;
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+.badge {
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  line-height: 20px;
+  font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+}
+.badgePass {
+  background-color: var(--color-emerald-50);
+  color: var(--color-emerald-700);
+}
+.badgeFail {
+  background-color: var(--color-red-50);
+  color: var(--color-red-700);
+}
+.badgeVoid {
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-600);
+}
+.chevron {
+  flex-shrink: 0;
+  color: var(--color-slate-400);
+  transition: transform 0.2s ease;
+}
+.chevronOpen {
+  transform: rotate(180deg);
+}
+.review {
+  border-top: 1px solid var(--color-slate-200);
+  background-color: var(--color-slate-50);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-slate-600);
+}
+.error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-red-700);
+}
+.questions {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.question {
+  border-radius: 10px;
+  background-color: var(--color-white);
+  padding: 10px 12px;
+  border: 1px solid var(--color-slate-200);
+}
+.qRight {
+  border-left: 3px solid var(--color-emerald-500);
+}
+.qWrong {
+  border-left: 3px solid var(--color-red-500);
+}
+.qText {
+  margin: 0 0 6px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 14px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-900);
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+}
+.qRight .qText svg {
+  color: var(--color-emerald-600);
+}
+.qWrong .qText svg {
+  color: var(--color-red-600);
+}
+.answer {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-slate-700);
+}
+.explain {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--color-slate-600);
+}
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}

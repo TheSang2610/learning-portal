@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { TEN_COOKIE_STATE, taoState, tuyChonCookieState } from "./state";
+import { STATE_COOKIE_NAME, createState, stateCookieOptions } from "./state";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +31,7 @@ export async function GET(_req: Request) {
   // trong cookie httpOnly. Google tra `state` do nguyen ven ve theo callback.
   // Hai ban phai khop thi moi doi ma. `code` cua ke tan cong khong bao gio di
   // kem cookie cua nan nhan, nen no khong con dung duoc nua.
-  const state = taoState();
+  const state = createState();
 
   const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   authUrl.searchParams.set("client_id", clientId);
@@ -43,6 +43,6 @@ export async function GET(_req: Request) {
   authUrl.searchParams.set("state", state);
 
   const res = NextResponse.redirect(authUrl);
-  res.cookies.set(TEN_COOKIE_STATE, state, tuyChonCookieState());
+  res.cookies.set(STATE_COOKIE_NAME, state, stateCookieOptions());
   return res;
 }

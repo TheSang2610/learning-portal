@@ -2,7 +2,7 @@ import { apiRequest } from "./apiHelper";
 import type { Lesson } from "./lesson.api";
 import type { Enrollment } from "./enrollment.api";
 
-export type ThamChieuChuDe = string | { _id?: string; $oid?: string; name?: string };
+export type CategoryRef = string | { _id?: string; $oid?: string; name?: string };
 
 export interface Course {
   _id: string;
@@ -11,17 +11,26 @@ export interface Course {
   description: string;
   thumbnail?: string;
   price: number;
+  /** So ngay duoc hoc sau khi thanh toan (khoa co phi), mac dinh 30. */
+  accessDays?: number;
   instructor: string | { _id: string; name: string; email: string };
   provider?:
-    string | { _id: string; name: string; type: "company" | "university"; logo: string };
+    | string
+    | {
+        _id: string;
+        name: string;
+        slug?: string;
+        type: "company" | "university";
+        logo: string;
+      };
   // category trong model la MOT MANG ObjectId (backend/src/models/Course.js),
   // du ten truong o so it. Tuy endpoint ma no ve duoi dang mang id, mang doi
   // tuong da populate, hoac - voi ban ghi cu nhap thang bang Compass - dang
   // { $oid }. Kieu cu chi khai mot object don, ma typeof [] cung la "object",
   // nen doc thang .name hay ._id tra ve undefined ma khong ai hay: dung the la
   // bo loc theo chu de o /courses tra ve rong suot mot thoi gian.
-  // Doc bang layIdChuDe / tenChuDe ben duoi, dung doc thang.
-  category: ThamChieuChuDe | ThamChieuChuDe[];
+  // Doc bang getCategoryId / topicName ben duoi, dung doc thang.
+  category: CategoryRef | CategoryRef[];
   level: string;
   // Tuy endpoint: /courses tra ve mang ObjectId, /courses/slug/:slug populate
   // day du bai hoc. Noi goi phai tu phan biet.
@@ -30,43 +39,35 @@ export interface Course {
   isPublished: boolean;
   createdAt: string;
   updatedAt: string;
-  isPopular?: boolean;
-  isTrending?: boolean;
-  isNewRelease?: boolean;
+  // Bo dem luot xem cho ba muc trang chu (backend/src/utils/viewCount.js).
+  // luotXemThang la so cua thangLuotXem ("YYYY-MM"), co the la thang da qua.
+  luotXem?: number;
+  luotXemThang?: number;
+  thangLuotXem?: string;
 }
 
 // Doc chu de cua khoa hoc: chap nhan ca ba hinh dang o tren, luon tra ve mang.
-const chuanHoaChuDe = (tho: Course["category"]): Exclude<ThamChieuChuDe, string>[] => {
+const normalizeCategories = (tho: Course["category"]): Exclude<CategoryRef, string>[] => {
   if (!tho) return [];
-  const ds = Array.isArray(tho) ? tho : [tho];
-  return ds.map((m) => (typeof m === "string" ? { _id: m } : m)).filter(Boolean);
+  const items = Array.isArray(tho) ? tho : [tho];
+  return items.map((m) => (typeof m === "string" ? { _id: m } : m)).filter(Boolean);
 };
 
-export const layIdChuDe = (tho: Course["category"]): string[] =>
-  chuanHoaChuDe(tho)
+export const getCategoryId = (tho: Course["category"]): string[] =>
+  normalizeCategories(tho)
     .map((m) => m._id ?? m.$oid ?? "")
     .filter(Boolean);
 
 // Chi co ten khi endpoint do populate chu de; khong thi tra ve mang rong.
-export const tenChuDe = (tho: Course["category"]): string[] =>
-  chuanHoaChuDe(tho)
+export const topicName = (tho: Course["category"]): string[] =>
+  normalizeCategories(tho)
     .map((m) => m.name ?? "")
     .filter(Boolean);
 
 // instructor khi la ObjectId dang chuoi, khi la doi tuong da populate - chi lay
 // duoc ten o truong hop thu hai.
-export const tenGiangVien = (gv: Course["instructor"] | undefined): string =>
+export const getInstructorName = (gv: Course["instructor"] | undefined): string =>
   gv && typeof gv === "object" ? (gv.name ?? "") : "";
-
-export interface CreateCourseData {
-  title: string;
-  description: string;
-  thumbnail?: string;
-  price: number;
-  category: string;
-  providerId?: string;
-  level: string;
-}
 
 export interface InstructorCoursesResponse {
   success: boolean;
@@ -83,17 +84,11 @@ export interface HomeSectionsResponse {
   };
 }
 
-export interface UpdateCourseTagsData {
-  isPopular?: boolean;
-  isTrending?: boolean;
-  isNewRelease?: boolean;
-}
-
 export const getCourses = async (): Promise<Course[]> => {
   return apiRequest("/courses");
 };
 
-export interface TrangKhoaHoc {
+export interface CoursePage {
   danhSach: Course[];
   trang: number;
   soDong: number;
@@ -111,12 +106,12 @@ export interface TrangKhoaHoc {
  * Giu ca hai la co chu dich: trang chu va ban dung san o may chu van dung ban
  * mang cu, doi tung cho mot thay vi doi het cung luc.
  */
-export const layDanhSachKhoa = async (tham: {
+export const getCourseList = async (tham: {
   trang?: number;
   soDong?: number;
   search?: string;
   category?: string;
-}): Promise<TrangKhoaHoc> => {
+}): Promise<CoursePage> => {
   const q = new URLSearchParams();
 
   // Luon co `page` de may chu chac chan tra ve hinh dang co phan trang, ke ca
@@ -133,13 +128,13 @@ export const layDanhSachKhoa = async (tham: {
 // Khoa hoc kem ly do duoc goi y. `viSaoGoiY` do may chu sinh (xem
 // backend/src/utils/rankSuggestions.js) chu khong phai chu co dinh o giao dien:
 // ly do doi theo tin hieu nao da lam khoa do len hang.
-export interface KhoaGoiY extends Course {
+export interface SuggestedCourse extends Course {
   diemGoiY: number;
   viSaoGoiY: string;
 }
 
-export interface KetQuaGoiY {
-  danhSach: KhoaGoiY[];
+export interface SuggestionResult {
+  danhSach: SuggestedCourse[];
   // false khi nguoi xem chua dang nhap hoac chua hoc khoa nao - luc do danh
   // sach chi la khoa pho bien, va tieu de muc phai noi dung nhu vay.
   caNhanHoa: boolean;
@@ -151,11 +146,11 @@ export interface KetQuaGoiY {
  * Khach vang lai goi duoc: ho nhan danh sach khoa pho bien. May chu KHONG dat
  * cache cho duong nay vi phan hoi phu thuoc nguoi dang dang nhap.
  */
-export const layGoiYKhoaHoc = async (
-  soLuong = 6,
+export const getCourseSuggestions = async (
+  count = 6,
   courseId?: string,
-): Promise<KetQuaGoiY> => {
-  const q = new URLSearchParams({ soLuong: String(soLuong) });
+): Promise<SuggestionResult> => {
+  const q = new URLSearchParams({ soLuong: String(count) });
   // Co courseId -> che do "khoa lien quan" voi khoa dang xem. Khong co -> goi y
   // theo lich su hoc cua nguoi dung (hoac khoa pho bien neu la khach).
   if (courseId) q.set("courseId", courseId);
@@ -206,14 +201,6 @@ export const updateCourse = async (id: string, formData: FormData): Promise<Cour
   });
 };
 
-export const deleteCourseInstructor = async (
-  id: string,
-): Promise<{ message: string }> => {
-  return apiRequest(`/courses/${id}`, {
-    method: "DELETE",
-  });
-};
-
 export const updateCoursePublishStatus = async (
   id: string,
   isPublished: boolean,
@@ -221,21 +208,6 @@ export const updateCoursePublishStatus = async (
   return apiRequest(`/admin/courses/${id}/publish`, {
     method: "PUT",
     body: JSON.stringify({ isPublished }),
-  });
-};
-
-// PATCH /courses/:id/tags boc trong { success, message, data } chu khong tra
-// ve ban ghi khoa hoc tran nhu createCourse hay updateCourse.
-export const updateCourseTags = async (
-  id: string,
-  tagsData: UpdateCourseTagsData,
-): Promise<{ success: boolean; message: string; data: Course }> => {
-  return apiRequest(`/courses/${id}/tags`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(tagsData),
   });
 };
 

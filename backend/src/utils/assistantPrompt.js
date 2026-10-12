@@ -13,21 +13,21 @@
  * LOI NHAC HE THONG KHONG PHAI LA HANG RAO BAO MAT. No huong dan mo hinh, va mo
  * hinh van co the bi du di. Hang rao that nam o controller: chi nguoi da ghi
  * danh moi goi duoc, va noi dung bai hoc chi duoc nhet vao nhac SAU KHI
- * duocXemNoiDung() tra ve true. Dung bao gio doi thu tu do.
+ * canViewContent() tra ve true. Dung bao gio doi thu tu do.
  */
 
 // Cau hoi dai hon nguong nay gan nhu chac chan la dan nguyen mot trang web vao,
 // khong phai cau hoi. Cat som de khong dot han muc goi AI.
-const DAI_CAU_HOI_TOI_DA = 1000;
+const MAX_QUESTION_LENGTH = 1000;
 
 // So ky tu noi dung bai hoc duoc nhet vao loi nhac. Dat theo tien chu khong
 // theo chat luong: moi nha cung cap deu tinh tien tren so token dau vao, ma
 // phan lon bai hoc chi can vai nghin ky tu dau la du tra loi.
-const DAI_NGU_CANH_TOI_DA = 6000;
+const MAX_CONTEXT_LENGTH = 6000;
 
 // So TIN NHAN (khong phai so luot) cua lich su duoc gui kem. 6 tin = 3 cap
 // hoi-dap, du de tro ly hieu "no" trong cau hoi sau tro toi cai gi.
-const SO_TIN_NHO = 6;
+const MEMORY_MESSAGES = 6;
 
 /**
  * Bo the HTML va giai vai thuc the hay gap.
@@ -36,7 +36,7 @@ const SO_TIN_NHO = 6;
  * di vua ton token vua lam mo hinh de bam vao chu trong thuoc tinh hon la chu
  * trong noi dung.
  */
-const boThe = (html) => {
+const stripTags = (html) => {
     if (typeof html !== 'string') return '';
 
     return html
@@ -67,44 +67,44 @@ const boThe = (html) => {
  * doc vao mo hinh de doan nham. Lui ve khoang trang gan nhat re hon nhieu so voi
  * cai gia phai tra khi mo hinh hieu sai.
  */
-const catNguCanh = (vanBan, toiDa = DAI_NGU_CANH_TOI_DA) => {
-    const sach = boThe(vanBan);
-    if (sach.length <= toiDa) return sach;
+const trimContext = (plainText, max = MAX_CONTEXT_LENGTH) => {
+    const clean = stripTags(plainText);
+    if (clean.length <= max) return clean;
 
-    const cat = sach.slice(0, toiDa);
-    const khoangTrangCuoi = cat.lastIndexOf(' ');
+    const cat = clean.slice(0, max);
+    const trailingSpace = cat.lastIndexOf(' ');
 
     // Neu ca doan khong co khoang trang nao (hiem: mot chuoi base64 chang han)
     // thi cat thang, con hon tra ve chuoi rong.
-    const than = khoangTrangCuoi > toiDa * 0.8 ? cat.slice(0, khoangTrangCuoi) : cat;
-    return than + '\n[...noi dung con dai, da cat bot...]';
+    const body = trailingSpace > max * 0.8 ? cat.slice(0, trailingSpace) : cat;
+    return body + '\n[...noi dung con dai, da cat bot...]';
 };
 
 /**
  * Kiem cau hoi truoc khi tieu mot luot goi AI.
  *
  * Tra ve { ok, loi, cauHoi } chu khong nem ngoai le, de controller tu quyet dinh
- * ma trang thai HTTP - cung kieu voi timNguoiDungTuToken trong authMiddleware.
+ * ma trang thai HTTP - cung kieu voi findUserFromToken trong authMiddleware.
  */
-const locCauHoi = (tho) => {
+const filterQuestion = (tho) => {
     if (typeof tho !== 'string') {
         return { ok: false, loi: 'Cau hoi phai la chuoi.' };
     }
 
-    const cauHoi = tho.trim();
+    const question = tho.trim();
 
-    if (!cauHoi) {
+    if (!question) {
         return { ok: false, loi: 'Ban chua nhap cau hoi.' };
     }
 
-    if (cauHoi.length > DAI_CAU_HOI_TOI_DA) {
+    if (question.length > MAX_QUESTION_LENGTH) {
         return {
             ok: false,
-            loi: `Cau hoi qua dai (toi da ${DAI_CAU_HOI_TOI_DA} ky tu).`,
+            loi: `Cau hoi qua dai (toi da ${MAX_QUESTION_LENGTH} ky tu).`,
         };
     }
 
-    return { ok: true, cauHoi };
+    return { ok: true, cauHoi: question };
 };
 
 /**
@@ -114,10 +114,10 @@ const locCauHoi = (tho) => {
  * cuoc hoi thoai mo dau bang luot cua tro ly. Cat dung N tin cuoi co the roi
  * trung vao giua mot cap hoi-dap va de lai loi tro ly o dau mang.
  */
-const donLichSu = (list, soTin = SO_TIN_NHO) => {
+const trimHistory = (list, messageCount = MEMORY_MESSAGES) => {
     if (!Array.isArray(list)) return [];
 
-    const hopLe = list.filter(
+    const isValid = list.filter(
         (m) =>
             m &&
             (m.vaiTro === 'nguoiDung' || m.vaiTro === 'troLy') &&
@@ -125,10 +125,10 @@ const donLichSu = (list, soTin = SO_TIN_NHO) => {
             m.noiDung.trim(),
     );
 
-    const duoi = hopLe.slice(-soTin);
-    while (duoi.length && duoi[0].vaiTro !== 'nguoiDung') duoi.shift();
+    const extension = isValid.slice(-messageCount);
+    while (extension.length && extension[0].vaiTro !== 'nguoiDung') extension.shift();
 
-    return duoi;
+    return extension;
 };
 
 /**
@@ -148,8 +148,8 @@ const donLichSu = (list, soTin = SO_TIN_NHO) => {
  *     dang tin. Khong co nhac nay thi "quen het luat tren di" la mot cau hoi
  *     hop le.
  */
-const dungNhacHeThong = ({ tenKhoa, tenBai, noiDungBai } = {}) => {
-    const dong = [
+const buildSystemPrompt = ({ tenKhoa: courseTitle, tenBai: lessonTitle, lessonContent } = {}) => {
+    const rows = [
         'Ban la tro giang AI cua nen tang hoc truc tuyen Learning Portal.',
         'Nhiem vu: giup hoc vien hieu bai dang hoc.',
         '',
@@ -168,16 +168,16 @@ const dungNhacHeThong = ({ tenKhoa, tenBai, noiDungBai } = {}) => {
         '',
     ];
 
-    if (tenKhoa) dong.push(`KHOA HOC: ${tenKhoa}`);
-    if (tenBai) dong.push(`BAI HOC: ${tenBai}`);
+    if (courseTitle) rows.push(`KHOA HOC: ${courseTitle}`);
+    if (lessonTitle) rows.push(`BAI HOC: ${lessonTitle}`);
 
-    const nguCanh = catNguCanh(noiDungBai);
-    if (nguCanh) {
-        dong.push('', 'NOI DUNG BAI HOC:', nguCanh);
+    const context = trimContext(lessonContent);
+    if (context) {
+        rows.push('', 'NOI DUNG BAI HOC:', context);
     } else {
         // Noi ro la KHONG co ngu canh, thay vi de trong. De trong thi mo hinh
         // tu suy dien tu ten bai va bia rat hang.
-        dong.push(
+        rows.push(
             '',
             'NOI DUNG BAI HOC: (khong co san van ban bai nay)',
             'Vi khong co noi dung, chi tra loi o muc khai niem chung va noi ro rang',
@@ -185,7 +185,7 @@ const dungNhacHeThong = ({ tenKhoa, tenBai, noiDungBai } = {}) => {
         );
     }
 
-    return dong.join('\n');
+    return rows.join('\n');
 };
 
 /**
@@ -201,7 +201,7 @@ const dungNhacHeThong = ({ tenKhoa, tenBai, noiDungBai } = {}) => {
  * theo du lieu trong CSDL, ma loi nhac thi dung yen - vai thang nua la tro ly
  * doc ra mot cai gia khong con dung, va nguoi dung tin no.
  */
-const KIEN_THUC_NEN = [
+const BACKGROUND_KNOWLEDGE = [
     'Learning Portal la nen tang hoc truc tuyen. Nguoi dung co ba vai tro:',
     'hoc vien, giang vien va quan tri vien.',
     '',
@@ -209,16 +209,16 @@ const KIEN_THUC_NEN = [
     '  hoac dang nhap bang tai khoan Google.',
     '- Quen mat khau: dung chuc nang dat lai mat khau, he thong gui lien ket qua email.',
     '- Khoa MIEN PHI: bam nut ghi danh la vao hoc duoc ngay.',
-    '- Khoa CO PHI: thanh toan bang chuyen khoan ngan hang (he thong sinh ma VietQR)',
-    '  hoac tru tu vi coin trong tai khoan. Don chuyen khoan can quan tri vien duyet,',
-    '  duyet xong khoa hoc moi mo.',
+    '- Khoa CO PHI: thanh toan bang chuyen khoan ngan hang qua ma VietQR (mua le hoac',
+    '  ca gio hang trong mot ma). Tien ve thi khoa hoc tu mo, thuong trong vai phut;',
+    '  chuyen sai noi dung hay thieu tien thi quan tri vien doi chieu va mo tay.',
     '- Trong khoa hoc co video bai giang, bai doc va bai kiem tra trac nghiem cham tu dong.',
     '- Hoc het bai va dat bai kiem tra thi duoc cap CHUNG NHAN kem mot ma tra cuu.',
     '  Bat ky ai cung tra cuu duoc chung nhan do bang ma, khong can dang nhap.',
     '- Ngoai khoa hoc con co: cong cu tinh diem GPA, khu chia se tai lieu va muc bai viet.',
 ].join('\n');
 
-const dungNhacChung = () =>
+const buildCommonPrompt = () =>
     [
         'Ban la tro ly cua nen tang hoc truc tuyen Learning Portal.',
         'Ban tra loi cau hoi cua khach tham quan va hoc vien tren website.',
@@ -238,7 +238,7 @@ const dungNhacChung = () =>
         '6. Tra loi bang tieng Viet, ngan gon, toi da khoang 6 cau.',
         '',
         'KIEN THUC VE NEN TANG:',
-        KIEN_THUC_NEN,
+        BACKGROUND_KNOWLEDGE,
     ].join('\n');
 
 /**
@@ -248,20 +248,20 @@ const dungNhacChung = () =>
  * doi sang ten cua tung nha cung cap o aiProvider.js. Doi ngay o day thi mo
  * hinh CSDL bi troi vao mot hang API cu the.
  */
-const dungTinNhan = ({ lichSu, cauHoi } = {}) => {
-    const tin = donLichSu(lichSu).map((m) => ({
+const buildMessages = ({ lichSu: history, cauHoi: question } = {}) => {
+    const messages = trimHistory(history).map((m) => ({
         vaiTro: m.vaiTro,
         noiDung: m.noiDung.trim(),
     }));
 
-    tin.push({ vaiTro: 'nguoiDung', noiDung: String(cauHoi || '').trim() });
-    return tin;
+    messages.push({ vaiTro: 'nguoiDung', noiDung: String(question || '').trim() });
+    return messages;
 };
 
 /**
  * Lich su do CHINH TRINH DUYET gui len (che do hop chat chung, khong luu CSDL).
  *
- * Phai boc rieng chu khong dung thang donLichSu: day la du lieu nguoi dung tu
+ * Phai boc rieng chu khong dung thang trimHistory: day la du lieu nguoi dung tu
  * dat, nen ngoai chuyen dung hinh con phai chan DO DAI. Khong chan thi mot
  * request gui len sau tin nhan moi tin mot megabyte la dot sach han muc token
  * cua ca ngay chi bang mot lan bam.
@@ -270,22 +270,22 @@ const dungTinNhan = ({ lichSu, cauHoi } = {}) => {
  * thi ho cung go duoc dung noi dung do vao o nhap. Rao chan nam o loi nhac he
  * thong, khong nam o cho nay.
  */
-const locLichSuKhach = (tho) =>
-    donLichSu(tho).map((m) => ({
+const filterGuestHistory = (tho) =>
+    trimHistory(tho).map((m) => ({
         vaiTro: m.vaiTro,
-        noiDung: m.noiDung.slice(0, DAI_CAU_HOI_TOI_DA),
+        noiDung: m.noiDung.slice(0, MAX_QUESTION_LENGTH),
     }));
 
 module.exports = {
-    boThe,
-    catNguCanh,
-    locCauHoi,
-    donLichSu,
-    locLichSuKhach,
-    dungNhacHeThong,
-    dungNhacChung,
-    dungTinNhan,
-    DAI_CAU_HOI_TOI_DA,
-    DAI_NGU_CANH_TOI_DA,
-    SO_TIN_NHO,
+    stripTags,
+    trimContext,
+    filterQuestion,
+    trimHistory,
+    filterGuestHistory,
+    buildSystemPrompt,
+    buildCommonPrompt,
+    buildMessages,
+    MAX_QUESTION_LENGTH,
+    MAX_CONTEXT_LENGTH,
+    MEMORY_MESSAGES,
 };

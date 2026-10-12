@@ -13,17 +13,17 @@
 //
 // s-maxage moi la phan an tien: CDN (Vercel) giu ban sao trong tung ay giay,
 // nen luot xem thu hai tro di khong danh thuc ham serverless nua.
-const datCache = (giay = 60) => (req, res, next) => {
+const setCache = (seconds = 60) => (req, res, next) => {
     if (req.method === 'GET') {
         res.set(
             'Cache-Control',
-            `public, max-age=0, s-maxage=${giay}, stale-while-revalidate=${giay * 5}`,
+            `public, max-age=0, s-maxage=${seconds}, stale-while-revalidate=${seconds * 5}`,
         );
     }
     next();
 };
 
-// Nguoc lai voi datCache: cam luu, cho MOI duong tra ve du lieu rieng cua mot
+// Nguoc lai voi setCache: cam luu, cho MOI duong tra ve du lieu rieng cua mot
 // nguoi hoac dat cookie phien.
 //
 // Phan hoi cua /login, /google va /profile mang ten, email, vai tro cua chinh
@@ -34,10 +34,10 @@ const datCache = (giay = 60) => (req, res, next) => {
 //
 // no-store la manh nhat: khong duoc ghi ra dia, khong duoc giu trong RAM.
 // Kem no-cache + max-age=0 cho cac bo dem cu chi hieu HTTP/1.0.
-const khongLuuCache = (req, res, next) => {
+const noStore = (req, res, next) => {
     res.set('Cache-Control', 'no-store, no-cache, max-age=0, must-revalidate');
     res.set('Pragma', 'no-cache');
     next();
 };
 
-module.exports = { datCache, khongLuuCache };
+module.exports = { setCache, noStore };

@@ -1,8 +1,15 @@
 const Quiz = require('../models/Quiz');
 const QuizAttempt = require('../models/QuizAttempt');
 const Course = require('../models/Course');
+const { canViewContent } = require('../utils/contentAccess');
+
+// Trang thai cua mot luot HOP LE (tinh vao so luot, la "luot gan nhat").
+// 'graded'/'reviewed' do ban code cu dat (23 luot thang 8/2026) - truoc
+// 12/10/2026 cac luot nay bi lam ngo: mo de thay nhu chua lam, khong tinh luot,
+// giang vien khong thay trong thong ke. Chi 'reset' (cho/tu lam lai) la khong tinh.
+const VALID_ATTEMPT_STATUSES = ['submitted', 'graded', 'reviewed'];
 const mongoose = require('mongoose');
-const { ghepBaiLuyenTap } = require('../utils/practiceList');
+const { attachPracticeQuiz } = require('../utils/practiceList');
 
 // @desc    Danh sach bai luyen tap cho trang /practice (cong khai, khong can dang nhap)
 // @route   GET /api/quizzes/practice
@@ -12,24 +19,24 @@ const { ghepBaiLuyenTap } = require('../utils/practiceList');
 // hoc, nen cong noi dung co phi (contentAccess) khong bi di vong qua duong nay.
 const getPracticeList = async (req, res) => {
     try {
-        const khoaXuatBan = await Course.find({ isPublished: true }).select('_id').lean();
+        const publishedCourseIds = await Course.find({ isPublished: true }).select('_id').lean();
 
         const quizzes = await Quiz.find({
             isPublished: true,
-            course: { $in: khoaXuatBan.map((k) => k._id) }
+            course: { $in: publishedCourseIds.map((k) => k._id) }
         })
             // Chi can _id cua cau hoi de dem so cau; khong keo noi dung/dap an ve
             .select('title description course questions._id')
             .populate('course', 'title slug')
             .lean();
 
-        const luot = await QuizAttempt.aggregate([
+        const attemptRecord = await QuizAttempt.aggregate([
             { $match: { quiz: { $in: quizzes.map((q) => q._id) } } },
             { $group: { _id: '$quiz', n: { $sum: 1 } } }
         ]);
-        const soLuot = new Map(luot.map((x) => [String(x._id), x.n]));
+        const attemptTotal = new Map(attemptRecord.map((x) => [String(x._id), x.n]));
 
-        res.json(ghepBaiLuyenTap(quizzes, soLuot));
+        res.json(attachPracticeQuiz(quizzes, attemptTotal));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -132,36 +139,38 @@ const getQuizById = async (req, res) => {
         // Kiểm tra an toàn trạng thái Published
         const isQuizPublished = quiz.isPublished === true || String(quiz.isPublished) === 'true';
 
-        // 2. Nếu người dùng đăng nhập là Học viên (Student)
+        // 2. Luot lam cua CHINH nguoi dang xem - moi vai tro, khong chi hoc vien.
+        //
+        // Truoc 10/10/2026 doan nay nam trong nhanh `role === 'student'`: admin hay
+        // giang vien tu lam thu bai thi khong nhan latestAttempt, giao dien hien de
+        // trang nhu chua lam, nop thi may chu bao "da het luot" (may chu van dem
+        // luot cua ho). Rieng viec GIAU DAP AN ben duoi van chi ap cho hoc vien.
+        const latestAttempt = await QuizAttempt.findOne({
+            quiz: quiz._id,
+            student: req.user._id,
+            status: { $in: VALID_ATTEMPT_STATUSES }
+        })
+        .sort({ createdAt: -1 })
+        .lean();
+        if (latestAttempt) quiz.latestAttempt = latestAttempt;
+
+        const validAttemptCount = await QuizAttempt.countDocuments({
+            quiz: quiz._id,
+            student: req.user._id,
+            status: { $in: VALID_ATTEMPT_STATUSES }
+        });
+        quiz.usedAttempts = validAttemptCount;
+
+        // 3. Hoc vien: chan de chua cong bo va giau dap an
         if (req.user.role === 'student') {
             if (!isQuizPublished) {
                 return res.status(403).json({ message: 'Bài tập/Đề thi này chưa được giảng viên công bố!' });
             }
 
-            // 🎯 SỬA TẠI ĐÂY: Thay vì lấy cái mới nhất bất kỳ, ta tìm lượt làm bài nào ĐANG CÓ HIỆU LỰC ('submitted')
-            const latestAttempt = await QuizAttempt.findOne({ 
-                quiz: quiz._id, 
-                student: req.user._id,
-                status: 'submitted' 
-            })
-            .sort({ createdAt: -1 })
-            .lean();
-
-            if (latestAttempt) {
-                quiz.latestAttempt = latestAttempt;
-            }
-
-            // 🎯 SỬA TẠI ĐÂY: Chỉ đếm các lượt làm bài hợp lệ thực sự để tính toán quyền xem đáp án
             const maxAttempts = quiz.attempts || 1;
-            const validAttemptCount = await QuizAttempt.countDocuments({ 
-                quiz: quiz._id, 
-                student: req.user._id, 
-                status: 'submitted' 
-            });
 
             // Học sinh chỉ được xem đáp án đúng/sai nếu đã PASSED hoặc ĐÃ HẾT LƯỢT LÀM BÀI HỢP LỆ
             const canSeeAnswers = latestAttempt && (latestAttempt.passed || validAttemptCount >= maxAttempts);
-
             if (quiz.questions && Array.isArray(quiz.questions)) {
                 quiz.questions = quiz.questions.map((q) => {
                     delete q.correctAnswer;
@@ -296,7 +305,7 @@ const submitQuizAttempt = async (req, res) => {
         const attemptCount = await QuizAttempt.countDocuments({ 
             quiz: id, 
             student: req.user._id,
-            status: 'submitted'
+            status: { $in: VALID_ATTEMPT_STATUSES }
         });
         
         if (attemptCount >= quiz.attempts) {
@@ -354,7 +363,10 @@ const submitQuizAttempt = async (req, res) => {
             timeSpent,
             startedAt: startTime,
             submittedAt: endTime,
-            attemptNumber: attemptCount + 1, // Số lượt làm tiếp theo dựa trên số lượt hợp lệ thực tế
+            // So thu tu dem tren MOI luot (ke ca luot giang vien da cho lam lai),
+            // khong chi luot hop le: luot cu nay gio duoc GIU lai de hoc vien xem
+            // lai, ma index unique { quiz, student, attemptNumber } khong cho trung.
+            attemptNumber: (await QuizAttempt.countDocuments({ quiz: id, student: req.user._id })) + 1,
             status: 'submitted'
         });
 
@@ -421,7 +433,10 @@ const submitQuizAttempt = async (req, res) => {
             passed: savedAttempt.passed,
             totalPoints: quiz.totalPoints,
             timeSpent,
-            attemptNumber: savedAttempt.attemptNumber, 
+            attemptNumber: savedAttempt.attemptNumber,
+            // So luot HOP LE da dung (khong tinh luot giang vien cho lam lai) -
+            // giao dien dung so nay de biet con duoc lam nua khong.
+            usedAttempts: attemptCount + 1,
             answers: savedAttempt.answers,
             message: passed 
                 ? `Chúc mừng bạn đã vượt qua bài kiểm tra!${lessonCompletedMessage}` 
@@ -439,48 +454,86 @@ const getQuizAttemptResult = async (req, res) => {
     try {
         const { attemptId } = req.params;
 
-        const attempt = await QuizAttempt.findById(attemptId)
-            .populate('student', 'name email')
-            .populate('quiz');
+        const attempt = await QuizAttempt.findById(attemptId).lean();
+        if (!attempt || String(attempt.quiz) !== String(req.params.id)) {
+            return res.status(404).json({ message: 'Không tìm thấy dữ liệu lượt làm bài này' });
+        }
 
-        if (!attempt) return res.status(404).json({ message: 'Không tìm thấy dữ liệu lượt làm bài này' });
-
-        if (attempt.student._id.toString() !== req.user._id.toString() && req.user.role !== 'instructor' && req.user.role !== 'admin') {
+        const isOwner = String(attempt.student) === String(req.user._id);
+        const isStaff = req.user.role === 'instructor' || req.user.role === 'admin';
+        if (!isOwner && !isStaff) {
             return res.status(403).json({ message: 'Bạn không có quyền xem kết quả của người khác' });
         }
 
-        // Nếu hệ thống cấu hình ẩn đáp án sau khi làm xong, tiến hành xóa thông tin nhạy cảm trước khi trả về
-        if (req.user.role === 'student' && !attempt.quiz.showAnswers) {
-            const sanitizedAttempt = attempt.toObject();
-            if (sanitizedAttempt.quiz && sanitizedAttempt.quiz.questions) {
-                sanitizedAttempt.quiz.questions = sanitizedAttempt.quiz.questions.map((q) => ({
-                    ...q,
-                    correctAnswer: undefined,
-                    explanation: undefined
-                }));
-            }
-            return res.json(sanitizedAttempt);
+        const quiz = await Quiz.findById(attempt.quiz).select('title questions attempts passingScore').lean();
+        if (!quiz) return res.status(404).json({ message: 'Quiz không tồn tại' });
+
+        // Cung luat voi getQuizById: hoc vien chi thay DAP AN DUNG khi da dat hoac
+        // da het luot hop le. Truoc 10/10/2026 duong nay tra nguyen de kem
+        // options.isCorrect cho moi luot - hoc vien con luot mo cong cu nha phat
+        // trien la doc duoc dap an. Cau nao minh lam dung/sai thi luon thay
+        // (attempt.answers[].isCorrect), vi do la bai cua chinh ho.
+        let canSeeAnswers = isStaff;
+        if (!canSeeAnswers) {
+            const [passedAny, used] = await Promise.all([
+                QuizAttempt.exists({ quiz: quiz._id, student: req.user._id, status: { $in: VALID_ATTEMPT_STATUSES }, passed: true }),
+                QuizAttempt.countDocuments({ quiz: quiz._id, student: req.user._id, status: { $in: VALID_ATTEMPT_STATUSES } }),
+            ]);
+            canSeeAnswers = Boolean(passedAny) || used >= (quiz.attempts || 1);
         }
 
-        res.json(attempt);
+        const questions = (quiz.questions || []).map((q) => ({
+            _id: q._id,
+            text: q.text,
+            type: q.type,
+            points: q.points,
+            options: (q.options || []).map((o) => (canSeeAnswers
+                ? { _id: o._id, text: o.text, isCorrect: o.isCorrect }
+                : { _id: o._id, text: o.text })),
+            ...(canSeeAnswers ? { correctAnswer: q.correctAnswer, explanation: q.explanation } : {}),
+        }));
+
+        res.json({
+            attempt,
+            quiz: { _id: quiz._id, title: quiz.title, passingScore: quiz.passingScore, questions },
+            canSeeAnswers,
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// @desc     Lấy lịch sử tất cả các lần làm bài của học viên hiện tại
+// @desc     Lich su cac luot lam cua chinh minh (ban tom tat, khong kem bai lam)
 // @route    GET /api/quizzes/:id/attempts
 const getQuizAttempts = async (req, res) => {
     try {
         const { id } = req.params;
 
+        // Ca luot giang vien da cho lam lai (status 'reset') cung tra ve, de hoc
+        // vien xem lai minh tung sai cau nao - chi danh dau la "khong tinh".
         const attempts = await QuizAttempt.find({ quiz: id, student: req.user._id })
-            .sort({ createdAt: -1 });
+            .select('attemptNumber score percentage passed submittedAt timeSpent status retryReason')
+            .sort({ createdAt: -1 })
+            .lean();
 
         res.json(attempts);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
+};
+
+
+/**
+ * Ai duoc quan ly luot lam cua mot bai kiem tra: admin, hoac giang vien CUA
+ * KHOA chua bai do. Truoc 10/10/2026 route chi co middleware `instructor`, nen
+ * giang vien khoa A cung "cho lam lai" duoc bai cua khoa B.
+ */
+const canManageQuiz = async (quiz, user) => {
+    if (!quiz || !user) return false;
+    if (user.role === 'admin') return true;
+    if (user.role !== 'instructor') return false;
+    const course = await Course.findById(quiz.course).select('instructor').lean();
+    return Boolean(course && String(course.instructor) === String(user._id));
 };
 
 // @desc     Cho phép một học sinh làm lại bài (Giảng viên/Admin kích hoạt)
@@ -494,18 +547,28 @@ const allowStudentRetry = async (req, res) => {
             return res.status(400).json({ message: "Vui lòng cung cấp lý do cho phép làm lại bài!" });
         }
 
-        // 🎯 THAY VÌ UPDATE, TA XÓA BẢN GHI CŨ ĐỂ TRÁNH TRÙNG INDEX UNIQUE
-        const deletedAttempt = await QuizAttempt.findOneAndDelete({ quiz: quizId, student: studentId });
+        const quiz = await Quiz.findById(quizId).select('course').lean();
+        if (!quiz) return res.status(404).json({ message: 'Quiz không tồn tại' });
+        if (!(await canManageQuiz(quiz, req.user))) {
+            return res.status(403).json({ message: 'Bạn không quản lý bài kiểm tra này' });
+        }
 
-        if (!deletedAttempt) {
+        // Truoc 10/10/2026 cho nay XOA luot cu (de tranh trung attemptNumber).
+        // Gio GIU lai, chi doi sang 'reset' - khong tinh vao so luot, nhung hoc
+        // vien van xem lai duoc minh da sai cau nao. attemptNumber cua luot moi
+        // dem tren moi luot nen khong con trung (xem submitQuizAttempt).
+        const resetAttempt = await QuizAttempt.findOneAndUpdate(
+            { quiz: quizId, student: studentId, status: { $in: VALID_ATTEMPT_STATUSES } },
+            { $set: { status: 'reset', retryReason: reason.trim().slice(0, 500) } },
+            { sort: { createdAt: -1 }, new: true }
+        );
+
+        if (!resetAttempt) {
             return res.status(404).json({ message: "Không tìm thấy lượt làm bài của học sinh này." });
         }
 
-        // Tùy chọn: Bạn có thể lưu lý do này vào một bảng Log hệ thống khác nếu cần lưu vết,
-        // hoặc đơn giản là giải phóng để học sinh được làm lại sạch sẽ.
-
         res.status(200).json({
-            message: `Đã giải phóng bài làm cũ. Học sinh có thể làm lại bài mới ngay lập tức!`
+            message: `Đã cho phép làm lại. Lượt cũ vẫn được giữ trong lịch sử của học sinh nhưng không tính vào số lượt.`
         });
 
     } catch (error) {
@@ -517,6 +580,33 @@ const allowStudentRetry = async (req, res) => {
 // Đừng quên export hàm này ra ở cuối file module.exports nhé!
 // @desc     Lấy thống kê tổng hợp kết quả (Chỉ dành cho Giảng viên)
 // @route    GET /api/quizzes/:id/stats
+
+// @desc     Tu DAT LAI bai lam cua chinh minh de lam lai tu dau
+// @route    PUT /api/quizzes/:id/reset-mine
+// Ai dang co quyen hoc khoa (hoc vien da ghi danh con han, giang vien cua khoa,
+// admin) deu dung duoc - chu du an chon vay (10/10/2026). Doi lai, gioi han so
+// luot khong con chan duoc: hoc vien het luot thi tu dat lai. Lich su van giu
+// du (luot cu doi sang 'reset'), va bai da dat thi van tinh la da hoan thanh.
+const resetMyAttempts = async (req, res) => {
+    try {
+        const quiz = await Quiz.findById(req.params.id).select('course').lean();
+        if (!quiz) return res.status(404).json({ message: 'Quiz không tồn tại' });
+        const course = await Course.findById(quiz.course).select('instructor').lean();
+        if (!course || !(await canViewContent(course, req.user))) {
+            return res.status(403).json({ message: 'Bạn chưa có quyền học khóa này' });
+        }
+
+        // Giu lai cac luot cu trong lich su, chi danh dau 'reset' (khong tinh luot).
+        const out = await QuizAttempt.updateMany(
+            { quiz: quiz._id, student: req.user._id, status: { $in: VALID_ATTEMPT_STATUSES } },
+            { $set: { status: 'reset', retryReason: 'Tự đặt lại để làm lại' } }
+        );
+        res.json({ message: 'Đã đặt lại bài làm, bạn có thể làm lại từ đầu.', reset: out.modifiedCount });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // @desc     Lấy thống kê kết quả Quiz và danh sách học viên chưa làm bài
 // @route    GET /api/quizzes/:id/stats
 const getQuizStats = async (req, res) => {
@@ -527,7 +617,7 @@ const getQuizStats = async (req, res) => {
         if (!quiz) return res.status(404).json({ message: 'Quiz không tồn tại' });
 
         // 1. Lấy tất cả lượt làm bài hợp lệ ('submitted') của bài quiz này
-        const attempts = await QuizAttempt.find({ quiz: id, status: 'submitted' })
+        const attempts = await QuizAttempt.find({ quiz: id, status: { $in: VALID_ATTEMPT_STATUSES } })
             .populate('student', 'name email');
 
         // 2. Lấy danh sách TẤT CẢ học sinh đã ghi danh vào khóa học này
@@ -594,6 +684,7 @@ module.exports = {
     deleteQuiz,
     submitQuizAttempt,
     allowStudentRetry,
+    resetMyAttempts,
     getQuizAttemptResult,
     getQuizAttempts,
     getQuizStats

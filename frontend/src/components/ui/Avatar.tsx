@@ -14,12 +14,12 @@ import styles from "./Avatar.module.scss";
  * sau do. Luc ay src van la URL hop le nhung tai ve 404 - khong bat onError
  * thi o anh vo, chu khong lui ve chu cai.
  */
-export default function AnhDaiDien({
+export default function Avatar({
   src,
-  ten,
+  ten: name,
   size = 36,
   className = "",
-  nenChuCai = styles.defaultBg,
+  letterBackground = styles.defaultBg,
 }: {
   src?: string | null;
   ten?: string;
@@ -30,31 +30,31 @@ export default function AnhDaiDien({
    * tong mau rieng (header xanh, feed xam, danh gia xanh nhat) - gop ve mot
    * mau cung se doi giao dien cua nhung trang khong lien quan.
    */
-  nenChuCai?: string;
+  letterBackground?: string;
 }) {
-  const [loi, setLoi] = useState(false);
+  const [err, setErr] = useState(false);
 
   // Doi anh thi phai thu lai tu dau. Khong co doan nay thi mot lan tai hong se
   // dinh mai: dang xuat roi dang nhap bang tai khoan khac van ra chu cai, du
   // anh moi hoan toan tai duoc. Day la kieu "chinh state ngay trong luc render"
   // ma React khuyen dung cho state phai suy ra tu props - re hon useEffect vi
   // khong phai ve ra man hinh mot lan sai roi moi sua.
-  const [srcTruoc, setSrcTruoc] = useState(src);
-  if (src !== srcTruoc) {
-    setSrcTruoc(src);
-    setLoi(false);
+  const [previousSrc, setPreviousSrc] = useState(src);
+  if (src !== previousSrc) {
+    setPreviousSrc(src);
+    setErr(false);
   }
 
-  const chung = `${styles.base} ${className}`;
+  const common = `${styles.base} ${className}`;
   const style = { width: size, height: size };
 
-  if (!src || loi) {
+  if (!src || err) {
     return (
       <div
         style={{ ...style, fontSize: Math.max(11, Math.round(size * 0.42)) }}
-        className={`${chung} ${styles.fallback} ${nenChuCai}`}
+        className={`${common} ${styles.fallback} ${letterBackground}`}
       >
-        {ten?.trim().charAt(0) || "?"}
+        {name?.trim().charAt(0) || "?"}
       </div>
     );
   }
@@ -62,12 +62,12 @@ export default function AnhDaiDien({
   return (
     <SafeImage
       src={src}
-      alt={ten ? `Ảnh đại diện của ${ten}` : "Ảnh đại diện"}
+      alt={name ? `Ảnh đại diện của ${name}` : "Ảnh đại diện"}
       width={size}
       height={size}
-      onError={() => setLoi(true)}
+      onError={() => setErr(true)}
       style={style}
-      className={`${chung} ${styles.image}`}
+      className={`${common} ${styles.image}`}
     />
   );
 }

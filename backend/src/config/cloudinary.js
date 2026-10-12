@@ -8,12 +8,12 @@
 // Node co san bo nho dem module, nen require nam trong ham chi cham o lan goi
 // dau tien; nhung lan sau lay ngay tu dem.
 //
-// Dung: const layCloudinary = require('../config/cloudinary');
-//       layCloudinary().uploader.destroy(id)
+// Dung: const getCloudinary = require('../config/cloudinary');
+//       getCloudinary().uploader.destroy(id)
 
 let cloudinary = null;
 
-function layCloudinary() {
+function getCloudinary() {
     if (cloudinary) return cloudinary;
 
     cloudinary = require('cloudinary').v2;
@@ -40,4 +40,4 @@ function layCloudinary() {
     return cloudinary;
 }
 
-module.exports = layCloudinary;
+module.exports = getCloudinary;

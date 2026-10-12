@@ -20,7 +20,7 @@ const mongoose = require('mongoose');
  * thuong.
  */
 
-const traLoiSchema = new mongoose.Schema(
+const replySchema = new mongoose.Schema(
     {
         user: {
             type: mongoose.Schema.Types.ObjectId,
@@ -49,7 +49,7 @@ const traLoiSchema = new mongoose.Schema(
     { timestamps: true },
 );
 
-const cauHoiSchema = new mongoose.Schema(
+const questionSchema = new mongoose.Schema(
     {
         course: {
             type: mongoose.Schema.Types.ObjectId,
@@ -80,7 +80,7 @@ const cauHoiSchema = new mongoose.Schema(
             maxlength: 2000,
         },
 
-        traLoi: [traLoiSchema],
+        traLoi: [replySchema],
 
         // Giang vien danh dau da xong de biet cau nao con phai xu ly. Hoc vien
         // khong dat co nay - ho luon thay cau cua minh la chua xong cho toi khi
@@ -94,10 +94,10 @@ const cauHoiSchema = new mongoose.Schema(
 );
 
 // Truy van duy nhat cua man hinh hoc bai: cau hoi cua MOT bai, moi nhat truoc.
-cauHoiSchema.index({ lesson: 1, createdAt: -1 });
+questionSchema.index({ lesson: 1, createdAt: -1 });
 
 // Cho giang vien: cau chua tra loi cua MOT khoa. Khong co index nay thi trang
 // quan ly cua giang vien phai quet ca bang moi lan mo.
-cauHoiSchema.index({ course: 1, daGiaiQuyet: 1, createdAt: -1 });
+questionSchema.index({ course: 1, daGiaiQuyet: 1, createdAt: -1 });
 
-module.exports = mongoose.model('CauHoiBaiHoc', cauHoiSchema);
+module.exports = mongoose.model('CauHoiBaiHoc', questionSchema);

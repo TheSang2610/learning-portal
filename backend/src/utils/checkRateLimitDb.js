@@ -25,27 +25,27 @@ const mongoose = require('mongoose');
 
 const connectDB = require('../config/db');
 const RateLimitCounter = require('../models/RateLimitCounter');
-const { tang, docNhieu, ghiNhanSai, conBiKhoa, xoaKhoa } = require('./rateLimitStore');
+const { tang: increment, readMany, recordFailure, stillLocked, unlock } = require('./rateLimitStore');
 
 // Tien to rieng cho lan chay nay.
-const PHIEN = crypto.randomBytes(4).toString('hex');
-const K = (ten) => `kiemthu:${PHIEN}:${ten}`;
+const SESSION = crypto.randomBytes(4).toString('hex');
+const K = (name) => `kiemthu:${SESSION}:${name}`;
 
-const daTao = new Set();
-const khoa = (ten) => {
-    const k = K(ten);
-    daTao.add(k);
+const created = new Set();
+const course = (name) => {
+    const k = K(name);
+    created.add(k);
     return k;
 };
 
-let soLoi = 0;
+let errorCount = 0;
 
-const check = (dat, moTa, thucTe) => {
-    if (dat) {
-        console.log(`  OK   ${moTa}`);
+const check = (place, description, actual) => {
+    if (place) {
+        console.log(`  OK   ${description}`);
     } else {
-        soLoi += 1;
-        console.error(`  SAI  ${moTa}${thucTe === undefined ? '' : ` (nhan duoc: ${JSON.stringify(thucTe)})`}`);
+        errorCount += 1;
+        console.error(`  SAI  ${description}${actual === undefined ? '' : ` (nhan duoc: ${JSON.stringify(actual)})`}`);
     }
 };
 
@@ -61,49 +61,49 @@ const chay = async () => {
         console.error('KHONG ket noi duoc CSDL. Dung lai - chay tiep chi kiem nham nhanh bo nho.');
         process.exit(1);
     }
-    console.log(`Da ket noi. Ma phien kiem thu: ${PHIEN}\n`);
+    console.log(`Da ket noi. Ma phien kiem thu: ${SESSION}\n`);
 
-    const CUA_SO = 2000; // 2 giay, de kiem duoc cho het cua so ma khong phai cho lau
+    const WINDOW = 2000; // 2 giay, de kiem duoc cho het cua so ma khong phai cho lau
 
     // -----------------------------------------------------------------
     console.log('1. Dem tang dan trong mot cua so');
-    const k1 = khoa('dem');
-    const a = await tang(k1, CUA_SO, Date.now());
-    const b = await tang(k1, CUA_SO, Date.now());
-    const c = await tang(k1, CUA_SO, Date.now());
+    const k1 = course('dem');
+    const a = await increment(k1, WINDOW, Date.now());
+    const b = await increment(k1, WINDOW, Date.now());
+    const c = await increment(k1, WINDOW, Date.now());
     check(a.count === 1 && b.count === 2 && c.count === 3, 'dem 1 -> 2 -> 3', [a.count, b.count, c.count]);
     check(a.firstAt === c.firstAt, 'moc mo cua so khong doi giua chung');
 
     // -----------------------------------------------------------------
     console.log('2. Het cua so thi dem lai tu dau');
-    await nghi(CUA_SO + 300);
-    const d = await tang(k1, CUA_SO, Date.now());
+    await nghi(WINDOW + 300);
+    const d = await increment(k1, WINDOW, Date.now());
     check(d.count === 1, 'qua cua so -> dem ve 1', d.count);
 
     // -----------------------------------------------------------------
     console.log('3. Cham nguong thi khoa, het khoa thi tu mo');
-    const k2 = khoa('nguong');
-    for (let i = 0; i < 5; i += 1) await ghiNhanSai(k2, 5, CUA_SO);
-    const giay = await conBiKhoa([k2]);
-    check(giay > 0, 'sai du 5 lan -> bi khoa', giay);
+    const k2 = course('nguong');
+    for (let i = 0; i < 5; i += 1) await recordFailure(k2, 5, WINDOW);
+    const seconds = await stillLocked([k2]);
+    check(seconds > 0, 'sai du 5 lan -> bi khoa', seconds);
 
-    await nghi(CUA_SO + 300);
-    check(await conBiKhoa([k2]) === 0, 'qua cua so -> tu mo khoa');
+    await nghi(WINDOW + 300);
+    check(await stillLocked([k2]) === 0, 'qua cua so -> tu mo khoa');
 
     // -----------------------------------------------------------------
     console.log('4. Chua cham nguong thi khong khoa');
-    const k3 = khoa('duoinguong');
-    for (let i = 0; i < 4; i += 1) await ghiNhanSai(k3, 5, 60000);
-    check(await conBiKhoa([k3]) === 0, 'sai 4/5 lan -> chua khoa');
+    const k3 = course('duoinguong');
+    for (let i = 0; i < 4; i += 1) await recordFailure(k3, 5, 60000);
+    check(await stillLocked([k3]) === 0, 'sai 4/5 lan -> chua khoa');
 
     // -----------------------------------------------------------------
     console.log('5. conBiKhoa lay khoa nang nhat trong danh sach');
-    const kNgan = khoa('ngan');
-    const kDai = khoa('dai');
-    for (let i = 0; i < 3; i += 1) await ghiNhanSai(kNgan, 3, 3000);
-    for (let i = 0; i < 3; i += 1) await ghiNhanSai(kDai, 3, 60000);
-    const gop = await conBiKhoa([kNgan, kDai]);
-    check(gop > 30, 'tra ve khoa dai nhat chu khong phai cai gap dau tien', gop);
+    const shortKey = course('ngan');
+    const longKey = course('dai');
+    for (let i = 0; i < 3; i += 1) await recordFailure(shortKey, 3, 3000);
+    for (let i = 0; i < 3; i += 1) await recordFailure(longKey, 3, 60000);
+    const merge = await stillLocked([shortKey, longKey]);
+    check(merge > 30, 'tra ve khoa dai nhat chu khong phai cai gap dau tien', merge);
 
     // -----------------------------------------------------------------
     // Day la diem quan trong nhat cua ca script.
@@ -119,54 +119,54 @@ const chay = async () => {
     //   6b khoa DANG SONG   -> ca 20 luot cung phai TANG   (nhanh $inc)
     // Loi that su tim duoc o lan chay dau nam o 6a, khong phai 6b.
     console.log('6a. 20 luot SONG SONG tren khoa con nguyen');
-    const k4 = khoa('songsong-nguoi');
-    await Promise.all(Array.from({ length: 20 }, () => tang(k4, 60000, Date.now())));
-    const sau = (await docNhieu([k4], Date.now())).get(k4);
-    check(sau?.count === 20, 'khong mat luot nao khi cung mo mot cua so', sau?.count);
+    const k4 = course('songsong-nguoi');
+    await Promise.all(Array.from({ length: 20 }, () => increment(k4, 60000, Date.now())));
+    const after = (await readMany([k4], Date.now())).get(k4);
+    check(after?.count === 20, 'khong mat luot nao khi cung mo mot cua so', after?.count);
 
     console.log('6b. 20 luot SONG SONG tren khoa dang co cua so');
-    const k5 = khoa('songsong-am');
-    await tang(k5, 60000, Date.now()); // mo cua so truoc
-    await Promise.all(Array.from({ length: 20 }, () => tang(k5, 60000, Date.now())));
-    const sau2 = (await docNhieu([k5], Date.now())).get(k5);
+    const k5 = course('songsong-am');
+    await increment(k5, 60000, Date.now()); // mo cua so truoc
+    await Promise.all(Array.from({ length: 20 }, () => increment(k5, 60000, Date.now())));
+    const sau2 = (await readMany([k5], Date.now())).get(k5);
     check(sau2?.count === 21, 'khong mat luot nao khi cung tang mot cua so', sau2?.count);
 
     // -----------------------------------------------------------------
     console.log('7. xoaKhoa xoa sach bo dem');
-    await xoaKhoa(k4);
-    const conLai = await docNhieu([k4], Date.now());
-    check(conLai.size === 0, 'ban ghi da bi xoa han');
+    await unlock(k4);
+    const remaining = await readMany([k4], Date.now());
+    check(remaining.size === 0, 'ban ghi da bi xoa han');
 
     // -----------------------------------------------------------------
     console.log('8. Chi muc TTL da duoc tao');
-    const chiMuc = await RateLimitCounter.collection.indexes();
-    const ttl = chiMuc.find((i) => i.expireAfterSeconds !== undefined);
-    check(Boolean(ttl), 'co chi muc TTL de Mongo tu don ban ghi het han', chiMuc.map((i) => i.name));
+    const indexes = await RateLimitCounter.collection.indexes();
+    const ttl = indexes.find((i) => i.expireAfterSeconds !== undefined);
+    check(Boolean(ttl), 'co chi muc TTL de Mongo tu don ban ghi het han', indexes.map((i) => i.name));
     if (ttl) check(ttl.key?.expiresAt === 1, 'TTL dat tren truong expiresAt', ttl.key);
 };
 
-const don = async () => {
-    if (daTao.size === 0) return;
+const order = async () => {
+    if (created.size === 0) return;
     // Xoa DUNG nhung khoa script nay tao ra, liet ke tung cai mot.
-    const kq = await RateLimitCounter.deleteMany({ _id: { $in: [...daTao] } });
+    const outcome = await RateLimitCounter.deleteMany({ _id: { $in: [...created] } });
     // So xoa duoc thuong nho hon so tao ra: buoc 7 da tu xoa mot khoa, va cac
     // khoa het han co the da bi TTL cua Mongo don truoc.
-    console.log(`\nDa don ${kq.deletedCount} khoa kiem thu con lai (tao ra ${daTao.size}).`);
+    console.log(`\nDa don ${outcome.deletedCount} khoa kiem thu con lai (tao ra ${created.size}).`);
 };
 
 chay()
     .catch((e) => {
-        soLoi += 1;
+        errorCount += 1;
         console.error('\nNEM LOI:', e.message);
     })
-    .then(don)
+    .then(order)
     .catch((e) => console.error('Don dep that bai:', e.message))
     .finally(async () => {
         await mongoose.connection.close();
-        if (soLoi === 0) {
+        if (errorCount === 0) {
             console.log('\nTAT CA DEU DUNG. Nhanh CSDL cua kho dem chay dung tren cum that.');
             process.exit(0);
         }
-        console.error(`\nCO ${soLoi} MUC SAI. Xem lai utils/rateLimitStore.js.`);
+        console.error(`\nCO ${errorCount} MUC SAI. Xem lai utils/rateLimitStore.js.`);
         process.exit(1);
     });

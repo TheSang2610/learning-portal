@@ -19,7 +19,7 @@ const mongoose = require('mongoose');
  * so cu va ma vuot qua so luot cho phep.
  */
 
-const maGiamGiaSchema = new mongoose.Schema(
+const voucherSchema = new mongoose.Schema(
     {
         // Luon luu CHU HOA. Nguoi dung go tay ma nay nen khong the bat ho go
         // dung chu hoa chu thuong; chuan hoa mot lan o day thay vi so sanh
@@ -120,6 +120,6 @@ const maGiamGiaSchema = new mongoose.Schema(
 );
 
 // Danh sach quan tri: ma dang bat, moi nhat truoc.
-maGiamGiaSchema.index({ hoatDong: 1, ketThuc: -1 });
+voucherSchema.index({ hoatDong: 1, ketThuc: -1 });
 
-module.exports = mongoose.model('MaGiamGia', maGiamGiaSchema);
+module.exports = mongoose.model('MaGiamGia', voucherSchema);

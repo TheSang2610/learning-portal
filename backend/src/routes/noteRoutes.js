@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 
 const {
-    layGhiChu,
-    themGhiChu,
-    suaGhiChu,
-    xoaGhiChu,
-    ghiChuCuaToi,
+    getNotes,
+    addNote,
+    editNote,
+    deleteNote,
+    myNotes,
 } = require('../controllers/noteController');
 
 const { protect } = require('../middlewares/authMiddleware');
@@ -20,19 +20,19 @@ router.use(protect);
 // @desc    Tat ca ghi chu cua toi (man hinh tong hop)
 //
 // Dat TRUOC '/:id' - de sau thi Express coi 'cua-toi' la mot ma ghi chu.
-router.get('/cua-toi', ghiChuCuaToi);
+router.get('/cua-toi', myNotes);
 
 // @route   GET /api/ghi-chu?courseId=...&lessonId=...
 // @desc    Ghi chu cua toi trong mot bai
-router.get('/', layGhiChu);
+router.get('/', getNotes);
 
 // @route   POST /api/ghi-chu
-router.post('/', themGhiChu);
+router.post('/', addNote);
 
 // @route   PUT /api/ghi-chu/:id
-router.put('/:id', suaGhiChu);
+router.put('/:id', editNote);
 
 // @route   DELETE /api/ghi-chu/:id
-router.delete('/:id', xoaGhiChu);
+router.delete('/:id', deleteNote);
 
 module.exports = router;

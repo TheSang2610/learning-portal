@@ -1,40 +1,26 @@
-import GradeProfile from "@/src/components/gpa/GradeProfile";
-import { Calculator, Repeat } from "lucide-react";
-import FeatureLinks from "@/src/components/gpa/FeatureLinks";
-import GradeProfileGuide from "@/src/components/gpa/GradeProfileGuide";
+import {
+  FeatureLinks,
+  GradeProfile,
+  GradeProfileGuide,
+  GradeProfileHero,
+  GradeProfileMore,
+  GradeProfileShell,
+} from "@/src/components/features/portal/gpa";
+import { GRADE_PROFILE_PAGE } from "@/src/constants/portal/gpa-page";
 
-import styles from "./page.module.scss";
-export const metadata = {
-  title: "Hồ sơ điểm",
-  description: "Tính GPA, CPA và dự kiến điểm",
-};
+export const metadata = GRADE_PROFILE_PAGE.metadata;
 
 // Server component de giu metadata va de phan tieu de duoc dung san trong HTML.
-// Phan tinh toan can trang thai nen tach ra client component.
+// Phan tinh toan can trang thai nen tach ra client component (GradeProfile).
 export default function GradeProfilePage() {
   return (
-    <div className={styles.page}>
-      <div className={styles.container}>
-        <div className={styles.container2}>
-          <h1 className={styles.title}>Hồ sơ điểm</h1>
-          <p className={styles.title}>Tính GPA, CPA và dự kiến điểm</p>
-        </div>
-      </div>
-
+    <GradeProfileShell>
+      <GradeProfileHero {...GRADE_PROFILE_PAGE.hero} />
       <GradeProfile />
-
-      <div className={styles.container3}>
-        <FeatureLinks
-          title="Các tính năng khác"
-          subtitle="Khám phá các công cụ tính điểm hữu ích khác"
-          items={[
-            { href: "/calc-point", label: "Tính điểm tổng kết", icon: Calculator },
-            { href: "/convert-10-to-4", label: "Chuyển hệ 10 sang 4", icon: Repeat },
-          ]}
-        />
-
+      <GradeProfileMore>
+        <FeatureLinks {...GRADE_PROFILE_PAGE.related} />
         <GradeProfileGuide />
-      </div>
-    </div>
+      </GradeProfileMore>
+    </GradeProfileShell>
   );
 }

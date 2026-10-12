@@ -1,5 +1,5 @@
-import { GOC_API_TRINH_DUYET as API_ORIGIN } from "./apiBase";
-import { datNguoiDung, dangCoPhien } from "@/src/hooks/userStore";
+import { BROWSER_API_BASE as API_ORIGIN } from "./apiBase";
+import { storeUser, hasSession } from "@/src/hooks/userStore";
 
 const resolveApiUrl = (path: string) => {
   if (/^https?:\/\//i.test(path)) {
@@ -38,10 +38,10 @@ export const getHeaders = () => ({
  *      theo nguoi. Khong xoa thi nguoi dang nhap ngay sau do co the nhan lai
  *      du lieu cua nguoi truoc (vi du /enrollments/my-courses).
  *   4. Ban su kien userInfoChanged - Header, HeaderUserMenu va hook
- *      useNguoiDungLuu deu nghe su kien nay. Su kien 'storage' cua trinh duyet
+ *      useStoredUser deu nghe su kien nay. Su kien 'storage' cua trinh duyet
  *      KHONG ban cho chinh tab dang sua, nen phai tu ban.
  */
-export const xoaPhien = (): Promise<void> => {
+export const clearSession = (): Promise<void> => {
   if (typeof window === "undefined") return Promise.resolve();
 
   // Cookie httpOnly thi JavaScript KHONG xoa duoc - phai nho may chu xoa, va
@@ -60,7 +60,7 @@ export const xoaPhien = (): Promise<void> => {
   // lay tu may chu nen no lo ra.
   //
   // keepalive: de request van di tiep neu noi goi quen cho.
-  const xong = fetch(resolveApiUrl("/users/logout"), {
+  const done = fetch(resolveApiUrl("/users/logout"), {
     method: "POST",
     credentials: "include",
     keepalive: true,
@@ -76,11 +76,11 @@ export const xoaPhien = (): Promise<void> => {
   // nhung nguoi dang mo trang tu truoc khi doi sang kho trong RAM.
   localStorage.removeItem("userInfo");
   clearApiCache();
-  // datNguoiDung(null) da tu ban su kien "userInfoChanged".
-  datNguoiDung(null);
+  // storeUser(null) da tu ban su kien "userInfoChanged".
+  storeUser(null);
 
   // Giao dien da doi ngay o tren; cai cho o day chi la cho MAY CHU xoa cookie.
-  return xong;
+  return done;
 };
 
 export const handleResponse = async (res: Response) => {
@@ -116,19 +116,19 @@ export const handleResponse = async (res: Response) => {
     //                         NGAY TREN trang dang xem (xem AuthModalGate):
     //                         trang bi cuon ve "/" truoc khi hop kip hien.
     //
-    // dangCoPhien() con false trong luc dang hoi may chu "toi la ai". Do la
+    // hasSession() con false trong luc dang hoi may chu "toi la ai". Do la
     // huong that bai AN TOAN: cung lam la hien mot cau bao loi thay vi da nguoi
     // ta di - con hon nguoc lai.
-    const phienChet = dangCoPhien();
+    const sessionExpired = hasSession();
 
     if (
       (res.status === 401 || accountLocked) &&
       typeof window !== "undefined" &&
-      phienChet
+      sessionExpired
     ) {
       // Doi may chu xoa cookie xong moi dieu huong, thay cho mot moc 100ms
       // doan chung. Khong await o day de con nem loi ve cho noi goi ngay.
-      void xoaPhien().finally(() => {
+      void clearSession().finally(() => {
         window.location.href = "/";
       });
     }
@@ -171,26 +171,26 @@ const isGet = (options: RequestInit) =>
 // dung cai ma viec don bo dem sinh ra de tranh.
 //
 // Doi chieu the he luc goi voi the he luc ve: khac nhau thi bo qua khong ghi.
-let theHe = 0;
+let generation = 0;
 
 export const clearApiCache = () => {
   cache.clear();
   inflight.clear();
-  theHe += 1;
+  generation += 1;
 };
 
 // Bo dem chi song 30 giay nhung khong ai don cac muc het han, nen Map cu the
 // phinh ra suot phien lam viec. Chan tren mot con so, cham nguong thi don muc
 // het han truoc, van day thi xoa sach - mat bo dem khong sai gi, chi cham hon.
-const CACHE_TOI_DA = 100;
+const CACHE_MAX = 100;
 
-const donBotCache = () => {
-  if (cache.size < CACHE_TOI_DA) return;
-  const bayGio = Date.now();
+const pruneCache = () => {
+  if (cache.size < CACHE_MAX) return;
+  const now = Date.now();
   for (const [k, v] of cache) {
-    if (bayGio - v.at >= CACHE_TTL_MS) cache.delete(k);
+    if (now - v.at >= CACHE_TTL_MS) cache.delete(k);
   }
-  if (cache.size >= CACHE_TOI_DA) cache.clear();
+  if (cache.size >= CACHE_MAX) cache.clear();
 };
 
 export const apiRequest = async (path: string, options: RequestInit = {}) => {
@@ -212,14 +212,14 @@ export const apiRequest = async (path: string, options: RequestInit = {}) => {
   const pending = inflight.get(key);
   if (pending) return pending;
 
-  const theHeLucGoi = theHe;
+  const callGeneration = generation;
 
   const p = rawRequest(url, options)
     .then((data) => {
       // Co ai don bo dem trong luc minh dang bay khong? Co thi du lieu nay da
       // cu, tra ve cho nguoi goi nhung KHONG ghi vao bo dem.
-      if (theHe === theHeLucGoi) {
-        donBotCache();
+      if (generation === callGeneration) {
+        pruneCache();
         cache.set(key, { at: Date.now(), data });
       }
       return data;

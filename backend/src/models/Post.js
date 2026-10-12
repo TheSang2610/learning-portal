@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 // Danh sach chu de co dinh. De cung o day thay vi tao bang rieng: sau mot nam
 // danh sach nay gan nhu khong doi, ma them mot bang thi moi truy van danh sach
 // bai viet phai populate them mot lan.
-const CHU_DE = [
+const TOPICS = [
     'front-end-mobile-apps',
     'back-end-devops',
     'ai-llm',
@@ -12,7 +12,7 @@ const CHU_DE = [
     'others',
 ];
 
-const TEN_CHU_DE = {
+const TOPIC_NAMES = {
     'front-end-mobile-apps': 'Front-end / Mobile apps',
     'back-end-devops': 'Back-end / Devops',
     'ai-llm': 'AI / LLM',
@@ -65,7 +65,7 @@ const postSchema = new mongoose.Schema({
 
     topic: {
         type: String,
-        enum: CHU_DE,
+        enum: TOPICS,
         default: 'others',
         index: true
     },
@@ -101,5 +101,5 @@ postSchema.index({ title: 'text', excerpt: 'text' });
 const Post = mongoose.model('Post', postSchema);
 
 module.exports = Post;
-module.exports.CHU_DE = CHU_DE;
-module.exports.TEN_CHU_DE = TEN_CHU_DE;
+module.exports.TOPICS = TOPICS;
+module.exports.TOPIC_NAMES = TOPIC_NAMES;

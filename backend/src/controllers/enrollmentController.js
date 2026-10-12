@@ -1,7 +1,8 @@
-const { ganLinkPhat } = require('../utils/privateVideo');
+const { attachPlaybackUrl } = require('../utils/privateVideo');
+const { isExpired, daysLeft } = require('../utils/accessPeriod');
 const Enrollment = require('../models/Enrollment');
 const Course = require('../models/Course');
-const { taoGhiDanh } = require('../utils/enrollment');
+const { createEnrollment } = require('../utils/enrollment');
 const Lesson = require('../models/Lesson');
 const User = require('../models/User');
 const Quiz = require('../models/Quiz');
@@ -50,13 +51,17 @@ const getEnrollmentByCourse = async (req, res) => {
         // Nếu đã đăng ký, trả về thông tin enrollment và đính kèm thêm cờ isEnrolled: true
         // Video kho kin -> link ky, khong lo videoPublicId (utils/privateVideo.js).
         // Den day chac chan da ghi danh nen duoc xem.
-        const doi = enrollment.toObject();
-        doi.lessonProgress = (doi.lessonProgress || []).map((p) =>
-            p && p.lesson && typeof p.lesson === 'object' ? { ...p, lesson: ganLinkPhat(p.lesson) } : p
+        const copy = enrollment.toObject();
+        copy.lessonProgress = (copy.lessonProgress || []).map((p) =>
+            p && p.lesson && typeof p.lesson === 'object' ? { ...p, lesson: attachPlaybackUrl(p.lesson, req.user) } : p
         );
         res.json({
             isEnrolled: true,
-            ...doi // Trải phẳng dữ liệu cũ của bạn ra
+            // Thoi han hoc khoa co phi (utils/accessPeriod.js): het han thi giao
+            // dien hien nut gia han thay vi "Vao hoc".
+            expired: isExpired(enrollment),
+            daysLeft: daysLeft(enrollment),
+            ...copy // Trải phẳng dữ liệu cũ của bạn ra
         });
 
     } catch (error) {
@@ -386,14 +391,14 @@ const enrollInCourse = async (req, res) => {
         // khong ai goi - chan mot ben ma quen ben kia thi coi nhu khong chan.
         if (course.price > 0) {
             const Order = require('../models/Order');
-            // donChuaKhoa: khoa co the nam trong don gio hang (truong `courses`).
-            const donDaTra = await Order.findOne({
-                ...require('../utils/orderCourses').donChuaKhoa(courseId),
+            // ordersContainingCourse: khoa co the nam trong don gio hang (truong `courses`).
+            const paidOrder = await Order.findOne({
+                ...require('../utils/orderCourses').ordersContainingCourse(courseId),
                 student: req.user._id,
                 status: 'paid'
             });
 
-            if (!donDaTra) {
+            if (!paidOrder) {
                 return res.status(402).json({
                     message: 'Khóa học này có phí, vui lòng thanh toán trước',
                     requiresPayment: true,
@@ -402,18 +407,18 @@ const enrollInCourse = async (req, res) => {
             }
         }
 
-        const { enrollment, moiTao } = await taoGhiDanh(courseId, req.user._id);
+        const { enrollment, created } = await createEnrollment(courseId, req.user._id);
 
-        if (!moiTao) {
+        if (!created) {
             return res.status(400).json({ message: 'Bạn đã đăng ký khóa học này rồi' });
         }
 
-        const capNhat = await Course.findById(courseId).select('studentsCount');
+        const update = await Course.findById(courseId).select('studentsCount');
 
         return res.status(201).json({
             message: 'Đăng ký khóa học thành công',
             enrollment,
-            studentsCount: capNhat?.studentsCount
+            studentsCount: update?.studentsCount
         });
     } catch (error) {
         console.error('enrollInCourse:', error.message);

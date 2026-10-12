@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { capIdHopLe } = require('../middlewares/validObjectId');
+const { guardObjectIds } = require('../middlewares/validObjectId');
 
 // Chan id sai dinh dang -> 404 thay vi 500. Xem middlewares/validObjectId.js
-capIdHopLe(router);
+guardObjectIds(router);
 
 const {
     getPosts,
@@ -17,7 +17,7 @@ const {
 } = require('../controllers/postController');
 
 const { protect, admin } = require('../middlewares/authMiddleware');
-const { datCache } = require('../middlewares/cacheControl');
+const { setCache } = require('../middlewares/cacheControl');
 
 // ---------------------------------------------------------------------------
 // DOC: mo cho tat ca.
@@ -25,8 +25,8 @@ const { datCache } = require('../middlewares/cacheControl');
 // '/topics' phai dat TRUOC '/:slug', neu khong Express se coi "topics" la mot
 // slug bai viet va tra ve 404.
 // ---------------------------------------------------------------------------
-router.get('/', datCache(60), getPosts);
-router.get('/topics', datCache(300), getTopics);
+router.get('/', setCache(60), getPosts);
+router.get('/topics', setCache(300), getTopics);
 
 // ---------------------------------------------------------------------------
 // KHU QUAN TRI: dat TRUOC '/:slug'.

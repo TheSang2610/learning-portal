@@ -10,10 +10,10 @@
  * Vi sao can `state`: xem ghi chu dai trong route.ts.
  */
 
-export const TEN_COOKIE_STATE = "g_oauth_state";
+export const STATE_COOKIE_NAME = "g_oauth_state";
 
 /** Chuoi ngau nhien 256 bit, dang hex. */
-export const taoState = () => {
+export const createState = () => {
   const b = new Uint8Array(32);
   crypto.getRandomValues(b);
   return Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
@@ -33,7 +33,7 @@ export const taoState = () => {
  * tai khoan cua Google. Song lau hon thi chi la mot chuoi con hieu luc nam lai
  * trong trinh duyet ma khong ai dung toi.
  */
-export const tuyChonCookieState = () =>
+export const stateCookieOptions = () =>
   ({
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

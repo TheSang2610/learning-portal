@@ -1,7 +1,6 @@
 import { apiRequest } from "./apiHelper";
 import type { Certificate } from "./certificate";
 import type { Course } from "./course";
-import type { Review } from "./review";
 import type { Enrollment } from "./enrollment.api";
 import type { User } from "./userApi";
 
@@ -91,16 +90,6 @@ export const updateUserAdmin = async (
   });
 };
 
-// enrollmentStats la ket qua $group cua Mongo: mot dong cho moi trang thai.
-export interface AdminUserDetails extends User {
-  enrollmentStats: Array<{ _id: Enrollment["status"]; count: number }>;
-  certificatesCount: number;
-}
-
-export const getUserDetailsAdmin = async (id: string): Promise<AdminUserDetails> => {
-  return apiRequest(`/admin/users/${id}`);
-};
-
 export const updateUserStatusAdmin = async (
   id: string,
   status: boolean,
@@ -115,24 +104,6 @@ export const deleteUserAdmin = async (id: string): Promise<{ message: string }> 
   return apiRequest(`/admin/users/${id}`, {
     method: "DELETE",
   });
-};
-
-export interface AdminCoursesResponse {
-  courses: Course[];
-  pagination: AdminPagination;
-}
-
-export const getAllCoursesAdmin = async (): Promise<AdminCoursesResponse> => {
-  return apiRequest("/admin/courses");
-};
-
-export interface AdminCourseDetails extends Course {
-  enrollmentsCount: number;
-  completedCount: number;
-}
-
-export const getCourseDetailsAdmin = async (id: string): Promise<AdminCourseDetails> => {
-  return apiRequest(`/admin/courses/${id}`);
 };
 
 export const updateCoursePublishStatus = async (
@@ -202,6 +173,17 @@ export const updateEnrollmentStatusAdmin = async (
   });
 };
 
+/** Mo khoa mien phi cho mot hoc vien, khong qua don hang. */
+export const giftCourseToStudent = async (
+  userId: string,
+  courseId: string,
+): Promise<{ message: string }> => {
+  return apiRequest("/admin/enrollments/tang-khoa", {
+    method: "POST",
+    body: JSON.stringify({ userId, courseId }),
+  });
+};
+
 export interface AdminCertQuery {
   page?: number;
   limit?: number;
@@ -233,20 +215,5 @@ export const revokeCertificateAdmin = async (
 ): Promise<{ message: string; certificate: Certificate }> => {
   return apiRequest(`/admin/certificates/${id}/revoke`, {
     method: "PUT",
-  });
-};
-
-export interface AdminReviewsResponse {
-  reviews: Review[];
-  pagination: AdminPagination;
-}
-
-export const getAllReviewsAdmin = async (): Promise<AdminReviewsResponse> => {
-  return apiRequest("/admin/reviews");
-};
-
-export const deleteReviewAdmin = async (id: string): Promise<{ message: string }> => {
-  return apiRequest(`/admin/reviews/${id}`, {
-    method: "DELETE",
   });
 };

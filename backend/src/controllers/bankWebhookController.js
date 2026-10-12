@@ -1,83 +1,68 @@
 const BankTransaction = require('../models/BankTransaction');
-const CoinTopUp = require('../models/CoinTopUp');
-const { congCoin } = require('../utils/coinWallet');
-const { hopLe, daCauHinh } = require('../config/bankWebhook');
-const { rutMaNap, rutMaDon, duTien, docBaoCo } = require('../utils/matchBankTransfer');
+const { isValid, daCauHinh: isConfigured } = require('../config/bankWebhook');
+const { extractOrderCode, isPaidEnough, parseBankCredits } = require('../utils/matchBankTransfer');
 const Order = require('../models/Order');
-const { moKhoaChoDon } = require('./adminOrderController');
-const { guiThongBao } = require('./notificationController');
+const { unlockOrder } = require('./adminOrderController');
 
 /**
- * Nhan bao co tu ngan hang va cong coin ngay khi tien ve.
+ * Nhan bao co tu ngan hang va tu mo khoa don hang ngay khi tien ve.
  *
- * Truoc day hoc vien chuyen khoan xong phai bam "toi da chuyen" roi NGOI CHO
- * quan tri mo sao ke doi chieu tay. Ban dem hoac cuoi tuan la cho ca ngay, ma
- * quan tri thi phai lam mot viec lap di lap lai khong he can suy nghi.
+ * Truoc day hoc vien chuyen khoan xong phai NGOI CHO quan tri mo sao ke doi
+ * chieu tay. Ban dem hoac cuoi tuan la cho ca ngay, ma quan tri thi phai lam
+ * mot viec lap di lap lai khong he can suy nghi.
  *
- * Gio ngan hang bao ve thang day: khop ma trong noi dung chuyen khoan voi yeu
- * cau dang cho, du tien thi cong luon. Duong xac nhan tay VAN GIU nguyen cho
- * cac khoan webhook khong khop duoc - go sai ma, chuyen thieu, chuyen sau khi
- * huy - vi nhung khoan do can nguoi nhin.
+ * Gio ngan hang bao ve thang day: khop ma don trong noi dung chuyen khoan, du
+ * tien thi mo khoa luon. Duong xac nhan tay cua quan tri VAN GIU nguyen cho cac
+ * khoan webhook khong khop duoc - go sai ma, chuyen thieu, chuyen sau khi huy -
+ * vi nhung khoan do can nguoi nhin.
  *
- * TRANG THAI NAO DUOC CONG TU DONG:
- *
- *   pending    - truong hop thuong
- *   expired    - tien ve o phut thu 16. Tu choi luc nay la an tien cua nguoi
- *                ta: ho da chuyen that, chi cham vai phut.
- *   abandoned  - hoc vien reload mat ma nen he thong cap ma moi, nhung ho da
- *                chuyen theo ma cu. Cung la tien that, cung phai cong.
- *
- *   cancelled  - KHONG cong tu dong. Hoc vien da chu dong huy roi con chuyen
- *                thi day la tinh huong bat thuong, de nguoi nhin.
- *   paid       - da cong roi. Ghi 'trung' chu khong cong them.
+ * Truoc 08/10/2026 webhook nay con cong coin cho ma nap "NAP...". Coin da bo,
+ * thanh toan chi con chuyen khoan QR theo don.
  */
 
 /**
  * Tien ve mang ma don hang ("DH...") -> tu mo khoa, khong cho quan tri bam.
  *
- * Truoc 04/10/2026 webhook chi biet ma nap coin; don mua khoa thi luon nam cho
+ * Truoc 04/10/2026 webhook chua doc ma don; don mua khoa thi luon nam cho
  * quan tri mo sao ke doi chieu, hoc vien chuyen khoan xong phai ngoi cho. Mo
- * khoa di qua moKhoaChoDon - DUNG cung mot ham voi nut xac nhan cua quan tri,
+ * khoa di qua unlockOrder - DUNG cung mot ham voi nut xac nhan cua quan tri,
  * nen hai duong khong bao gio lam khac nhau (mo thieu khoa, thieu mail...).
  *
  * Don da HUY thi khong tu mo: hoc vien da bo don do, co the da dat don khac
  * cho cung khoa. Ghi 'chua_khop' de quan tri xem tay roi quyet hoan tien hay mo.
  */
-const xuLyBaoCoDonHang = async (bc, maDon) => {
-    const don = await Order.findOne({ code: maDon }).select('_id status amount');
-    if (!don) {
-        return { maNap: maDon, xuLy: 'chua_khop', ghiChu: `Không có đơn hàng nào mang mã ${maDon}` };
+const processOrderCredit = async (bc, orderCode) => {
+    const order = await Order.findOne({ code: orderCode }).select('_id status amount');
+    if (!order) {
+        return { maNap: orderCode, xuLy: 'chua_khop', ghiChu: `Không có đơn hàng nào mang mã ${orderCode}` };
     }
-    if (don.status === 'paid') {
-        return { maNap: maDon, order: don._id, xuLy: 'trung', ghiChu: 'Đơn này đã được xác nhận trước đó' };
+    if (order.status === 'paid') {
+        return { maNap: orderCode, order: order._id, xuLy: 'trung', ghiChu: 'Đơn này đã được xác nhận trước đó' };
     }
-    if (don.status === 'cancelled') {
+    if (order.status === 'cancelled') {
         return {
-            maNap: maDon,
-            order: don._id,
+            maNap: orderCode,
+            order: order._id,
             xuLy: 'chua_khop',
             ghiChu: 'Đơn đã bị hủy nhưng tiền vẫn về, cần đối chiếu tay'
         };
     }
-    if (!duTien(bc.soTien, don.amount)) {
+    if (!isPaidEnough(bc.soTien, order.amount)) {
         return {
-            maNap: maDon,
-            order: don._id,
+            maNap: orderCode,
+            order: order._id,
             xuLy: 'chua_khop',
-            ghiChu: `Tiền về ${bc.soTien.toLocaleString('vi-VN')}đ, đơn cần ${don.amount.toLocaleString('vi-VN')}đ`
+            ghiChu: `Tiền về ${bc.soTien.toLocaleString('vi-VN')}đ, đơn cần ${order.amount.toLocaleString('vi-VN')}đ`
         };
     }
 
-    const kq = await moKhoaChoDon(don._id, { note: `Tự động xác nhận theo báo có ngân hàng ${bc.maGiaoDich}` });
-    if (!kq.ok) {
-        return { maNap: maDon, order: don._id, xuLy: 'trung', ghiChu: 'Đơn vừa được xác nhận bởi luồng khác' };
+    const outcome = await unlockOrder(order._id, { note: `Tự động xác nhận theo báo có ngân hàng ${bc.maGiaoDich}` });
+    if (!outcome.ok) {
+        return { maNap: orderCode, order: order._id, xuLy: 'trung', ghiChu: 'Đơn vừa được xác nhận bởi luồng khác' };
     }
 
-    return { maNap: maDon, order: don._id, xuLy: 'da_mo_khoa', ghiChu: 'Đã tự xác nhận đơn và mở khóa học' };
+    return { maNap: orderCode, order: order._id, xuLy: 'da_mo_khoa', ghiChu: 'Đã tự xác nhận đơn và mở khóa học' };
 };
-
-/** Cac trang thai con duoc cong khi tien ve. */
-const CON_NHAN_TIEN = ['pending', 'expired', 'abandoned'];
 
 /**
  * Xu ly mot bao co da chuan hoa. Tra ve ket qua de ghi vao nhat ky.
@@ -86,141 +71,55 @@ const CON_NHAN_TIEN = ['pending', 'expired', 'abandoned'];
  * duoc lam hong ca lo. Loi that su cua CSDL thi van nem de tang tren tra 500
  * va nha cung cap phat lai.
  */
-const xuLyMotBaoCo = async (bc) => {
-    // Tien di ra khong lien quan gi toi nap coin, nhung van ghi nhat ky de sau
+const processBankCredit = async (bc) => {
+    // Tien di ra khong lien quan gi toi don hang, nhung van ghi nhat ky de sau
     // nay doi chieu so du tai khoan con khop duoc.
-    if (!bc.tienVao) {
+    if (!bc.incoming) {
         return { xuLy: 'bo_qua', ghiChu: 'Giao dich tien ra, không xử lý' };
     }
 
-    const maNap = rutMaNap(bc.noiDung);
-    if (!maNap) {
-        // Khong phai nap coin thi thu xem co phai tra tien don hang khong.
-        const maDon = rutMaDon(bc.noiDung);
-        if (maDon) return xuLyBaoCoDonHang(bc, maDon);
-        return { maNap: null, xuLy: 'chua_khop', ghiChu: 'Nội dung không chứa mã nạp hay mã đơn hợp lệ' };
+    const orderCode = extractOrderCode(bc.noiDung);
+    if (!orderCode) {
+        return { maNap: null, xuLy: 'chua_khop', ghiChu: 'Nội dung không chứa mã đơn hợp lệ' };
     }
-
-    const yc = await CoinTopUp.findOne({ code: maNap });
-    if (!yc) {
-        return { maNap, xuLy: 'chua_khop', ghiChu: `Không có yêu cầu nạp nào mang mã ${maNap}` };
-    }
-
-    if (yc.status === 'paid') {
-        return { maNap, topUp: yc._id, xuLy: 'trung', ghiChu: 'Yêu cầu này đã được cộng coin trước đó' };
-    }
-    if (!CON_NHAN_TIEN.includes(yc.status)) {
-        return {
-            maNap,
-            topUp: yc._id,
-            xuLy: 'chua_khop',
-            ghiChu: `Yêu cầu đang ở trạng thái "${yc.status}", cần đối chiếu tay`
-        };
-    }
-
-    if (!duTien(bc.soTien, yc.amount)) {
-        return {
-            maNap,
-            topUp: yc._id,
-            xuLy: 'chua_khop',
-            ghiChu: `Tiền về ${bc.soTien.toLocaleString('vi-VN')}đ, yêu cầu cần ${yc.amount.toLocaleString('vi-VN')}đ`
-        };
-    }
-
-    // Danh dau 'paid' TRUOC khi cong, va chi cong khi that su doi duoc mot ban
-    // ghi con cho. Giong het duong xac nhan tay: webhook phat lai hai lan cung
-    // luc, hoac quan tri bam xac nhan dung luc webhook ve, thi chi mot ben qua
-    // duoc cua nay. Cong truoc danh dau sau la hoc vien nhan doi coin.
-    const daKhoa = await CoinTopUp.findOneAndUpdate(
-        { _id: yc._id, status: { $in: CON_NHAN_TIEN } },
-        {
-            $set: {
-                status: 'paid',
-                paidAt: new Date(),
-                note: `Tự động cộng theo báo có ngân hàng ${bc.maGiaoDich}`
-            }
-        },
-        { new: true }
-    );
-
-    if (!daKhoa) {
-        return { maNap, topUp: yc._id, xuLy: 'trung', ghiChu: 'Yêu cầu vừa được xử lý bởi luồng khác' };
-    }
-
-    const cong = await congCoin(daKhoa.student, daKhoa.soCoin, {
-        loai: 'nap',
-        ghiChu: `Nạp coin tự động theo yêu cầu ${daKhoa.code}`
-    });
-
-    if (!cong.thanhCong) {
-        // Tra yeu cau ve trang thai cho. De no dung 'paid' ma vi khong duoc
-        // cong dong nao la mat tien that cua hoc vien, va khong ai biet.
-        daKhoa.status = 'pending';
-        daKhoa.paidAt = null;
-        await daKhoa.save();
-        return {
-            maNap,
-            topUp: yc._id,
-            xuLy: 'chua_khop',
-            ghiChu: `Cộng coin thất bại: ${cong.loi || 'không rõ nguyên nhân'}`
-        };
-    }
-
-    // Bao cho hoc vien biet tien da ve va coin da cong.
-    //
-    // Duong nay chay HOAN TOAN TU DONG, khong co ai bam nut nao: hoc vien
-    // chuyen khoan roi dong app, va neu khong bao thi ho phai tu mo lai trang
-    // vi de kiem tra. Day dung la cho can thong bao nhat trong ca he thong.
-    //
-    // guiThongBao() khong bao gio nem - xem ghi chu o ham do. Quan trong o day
-    // vi ham nay chay trong webhook: nem la ngan hang nhan ma loi va phat lai
-    // bao co, trong khi coin DA duoc cong.
-    await guiThongBao(daKhoa.student, 'coin_duoc_cong', { soCoin: daKhoa.soCoin });
-
-    return {
-        maNap,
-        topUp: daKhoa._id,
-        soCoinDaCong: daKhoa.soCoin,
-        xuLy: 'da_cong',
-        ghiChu: `Đã cộng ${daKhoa.soCoin} coin`
-    };
+    return processOrderCredit(bc, orderCode);
 };
 
 /**
- * POST /api/coin/webhook/ngan-hang
+ * POST /api/ngan-hang/webhook (va duong cu /api/coin/webhook/ngan-hang)
  *
  * Duong nay KHONG di qua protect: ngan hang khong co tai khoan tren he thong.
  * Danh tinh dua hoan toan vao khoa bi mat trong header, xem
  * config/bankWebhook.js.
  */
-const nhanBaoCoNganHang = async (req, res) => {
+const receiveBankCredit = async (req, res) => {
     // Chua dat khoa thi tu choi, khong xu ly gi. Tra 503 chu khong 401 de
     // nguoi dung dich vu biet la LOI CAU HINH BEN MINH, khong phai ho gui sai.
-    if (!daCauHinh()) {
+    if (!isConfigured()) {
         console.error('nhanBaoCoNganHang: chua dat WEBHOOK_NGAN_HANG_SECRET');
         return res.status(503).json({ success: false, message: 'Webhook chưa được cấu hình' });
     }
 
-    if (!hopLe(req)) {
+    if (!isValid(req)) {
         // Khong noi ro sai o dau, va khong in gi ve khoa nhan duoc.
         return res.status(401).json({ success: false, message: 'Không hợp lệ' });
     }
 
     try {
-        const danhSach = docBaoCo(req.body);
-        if (danhSach.length === 0) {
-            return res.status(200).json({ success: true, daXuLy: 0, message: 'Không có báo có nào' });
+        const list = parseBankCredits(req.body);
+        if (list.length === 0) {
+            return res.status(200).json({ success: true, processed: 0, message: 'Không có báo có nào' });
         }
 
-        const ketQua = [];
+        const result = [];
 
-        for (const bc of danhSach) {
-            // Ghi nhat ky TRUOC khi cong coin. Khoa duy nhat tren maGiaoDich la
-            // thu duy nhat chan duoc viec cong hai lan khi nha cung cap phat
-            // lai - phai dat no xong moi duoc dong toi vi tien.
-            let ban;
+        for (const bc of list) {
+            // Ghi nhat ky TRUOC khi mo khoa. Khoa duy nhat tren maGiaoDich la
+            // thu duy nhat chan duoc viec xu ly hai lan khi nha cung cap phat
+            // lai - phai dat no xong moi duoc dong toi don hang.
+            let record;
             try {
-                ban = await BankTransaction.create({
+                record = await BankTransaction.create({
                     maGiaoDich: bc.maGiaoDich,
                     soTien: bc.soTien,
                     noiDung: String(bc.noiDung).slice(0, 500),
@@ -229,33 +128,31 @@ const nhanBaoCoNganHang = async (req, res) => {
                     thoiGianNganHang: bc.thoiGian ? new Date(bc.thoiGian) : null,
                     xuLy: 'chua_khop'
                 });
-            } catch (loi) {
-                if (loi?.code === 11000) {
+            } catch (err) {
+                if (err?.code === 11000) {
                     // Da nhan bao co nay roi. Tra 200 de nha cung cap thoi phat
                     // lai; tra loi thi ho cu phat mai.
-                    ketQua.push({ maGiaoDich: bc.maGiaoDich, xuLy: 'trung' });
+                    result.push({ maGiaoDich: bc.maGiaoDich, xuLy: 'trung' });
                     continue;
                 }
-                throw loi;
+                throw err;
             }
 
-            const kq = await xuLyMotBaoCo(bc);
+            const outcome = await processBankCredit(bc);
 
-            ban.maNap = kq.maNap ?? null;
-            ban.topUp = kq.topUp ?? null;
-            ban.order = kq.order ?? null;
-            ban.soCoinDaCong = kq.soCoinDaCong ?? 0;
-            ban.xuLy = kq.xuLy;
-            ban.ghiChu = String(kq.ghiChu || '').slice(0, 500);
-            await ban.save();
+            record.maNap = outcome.maNap ?? null;
+            record.order = outcome.order ?? null;
+            record.xuLy = outcome.xuLy;
+            record.ghiChu = String(outcome.ghiChu || '').slice(0, 500);
+            await record.save();
 
-            ketQua.push({ maGiaoDich: bc.maGiaoDich, xuLy: kq.xuLy });
+            result.push({ maGiaoDich: bc.maGiaoDich, xuLy: outcome.xuLy });
         }
 
         // Luon 200 khi da xu ly xong, ke ca khi khong khop duoc yeu cau nao:
         // "khong khop" la viec cua quan tri, khong phai loi cua nha cung cap,
         // va bao loi chi lam ho phat lai mot bao co da ghi nhat ky roi.
-        return res.status(200).json({ success: true, daXuLy: ketQua.length, ketQua });
+        return res.status(200).json({ success: true, processed: result.length, ketQua: result });
     } catch (error) {
         console.error('nhanBaoCoNganHang:', error.message);
         // 500 la co y: day la loi THAT (mat ket noi CSDL chang han), va minh
@@ -265,30 +162,30 @@ const nhanBaoCoNganHang = async (req, res) => {
 };
 
 /**
- * GET /api/coin/quan-tri/bao-co - nhat ky bao co cho quan tri doi chieu.
+ * GET /api/ngan-hang/quan-tri/bao-co - nhat ky bao co cho quan tri doi chieu.
  */
-const danhSachBaoCo = async (req, res) => {
+const listBankCredits = async (req, res) => {
     try {
-        const loc = {};
-        if (req.query.xuLy) loc.xuLy = req.query.xuLy;
+        const query = {};
+        if (req.query.xuLy) query.xuLy = req.query.xuLy;
 
-        const soDong = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
-        const trang = Math.max(1, Number(req.query.page) || 1);
+        const pageSize = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
+        const page = Math.max(1, Number(req.query.page) || 1);
 
-        const [ds, tong] = await Promise.all([
-            BankTransaction.find(loc)
-                .populate({ path: 'topUp', select: 'code soCoin student', populate: { path: 'student', select: 'name email' } })
+        const [items, total] = await Promise.all([
+            BankTransaction.find(query)
+                .populate({ path: 'order', select: 'code amount status student', populate: { path: 'student', select: 'name email' } })
                 .sort({ createdAt: -1 })
-                .skip((trang - 1) * soDong)
-                .limit(soDong),
-            BankTransaction.countDocuments(loc)
+                .skip((page - 1) * pageSize)
+                .limit(pageSize),
+            BankTransaction.countDocuments(query)
         ]);
 
         return res.status(200).json({
-            baoCo: ds,
-            total: tong,
-            page: trang,
-            pages: Math.max(1, Math.ceil(tong / soDong))
+            bankCredit: items,
+            total: total,
+            page: page,
+            pages: Math.max(1, Math.ceil(total / pageSize))
         });
     } catch (error) {
         console.error('danhSachBaoCo:', error.message);
@@ -296,4 +193,4 @@ const danhSachBaoCo = async (req, res) => {
     }
 };
 
-module.exports = { nhanBaoCoNganHang, danhSachBaoCo, xuLyMotBaoCo, CON_NHAN_TIEN };
+module.exports = { receiveBankCredit, listBankCredits, processBankCredit };

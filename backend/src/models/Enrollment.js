@@ -45,6 +45,9 @@ const enrollmentSchema = new mongoose.Schema({
         default: 'active'
     },
 
+    // Han hoc cua khoa co phi (utils/accessPeriod.js). null = khong gioi han:
+    // khoa mien phi, khoa duoc tang, va ghi danh tao truoc 10/10/2026.
+    expiresAt: { type: Date, default: null },
     completedAt: Date,
     lastAccessedAt: Date,
 

@@ -50,10 +50,10 @@
 //    phep them dau + di"), con tang thoat thi khong.
 
 // Khong tao vong phu thuoc: phoneNumber.js khong require gi ca.
-const { chuanHoaSoDienThoai } = require('./phoneNumber');
+const { normalizePhone } = require('./phoneNumber');
 
 // Do dai toi da cua phan truoc dau @, theo RFC 5321.
-const DAI_TEN_TOI_DA = 64;
+const MAX_NAME_LENGTH = 64;
 
 // Cac ky tu duoc nhan trong ten ngan.
 //
@@ -61,26 +61,26 @@ const DAI_TEN_TOI_DA = 64;
 // trang trong chuoi co ngoac). Hep la dung: ai co dia chi ky quac van dang
 // nhap duoc bang dia chi day du, con noi rong bang ky tu la mo them be mat
 // cho diem 3 o tren.
-const MAU_TEN = /^[a-z0-9._%+-]+$/;
+const USERNAME_PATTERN = /^[a-z0-9._%+-]+$/;
 
 /**
  * Chuan hoa thu nguoi dung go o o "Email hoac ten tai khoan".
  *
  * CHI nhan chuoi. Tra ve '' cho moi thu khac - khong dung String(v) hay
  * `v || ''`: chung bien {"$ne":null} thanh '[object Object]' va nuot im lang
- * moi kieu du lieu sai. Cung ly do voi chuanHoaEmail trong validateInput.js.
+ * moi kieu du lieu sai. Cung ly do voi normalizeEmail trong validateInput.js.
  */
-const chuanHoaDinhDanh = (v) => (typeof v === 'string' ? v.trim().toLowerCase() : '');
+const normalizeIdentifier = (v) => (typeof v === 'string' ? v.trim().toLowerCase() : '');
 
 /** Co phai nguoi dung dang go ca dia chi email khong. */
 const laEmail = (v) => typeof v === 'string' && v.includes('@');
 
 /** Ten ngan co dung hinh dang khong. Kiem TRUOC khi ghep vao regex. */
-const tenHopLe = (v) =>
+const isValidName = (v) =>
     typeof v === 'string'
     && v.length > 0
-    && v.length <= DAI_TEN_TOI_DA
-    && MAU_TEN.test(v);
+    && v.length <= MAX_NAME_LENGTH
+    && USERNAME_PATTERN.test(v);
 
 // Thoat moi ky tu co nghia dac biet trong regex.
 const thoatRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -94,36 +94,36 @@ const thoatRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
  * (quet mot doan tien to); them 'i' vao la mat chi muc, moi luot dang nhap
  * thanh mot lan quet ca bang.
  */
-const mauTheoTen = (ten) => new RegExp(`^${thoatRegex(ten)}@`);
+const colorByName = (name) => new RegExp(`^${thoatRegex(name)}@`);
 
 /**
  * Bo loc Mongo de tim tai khoan tu thu nguoi dung go vao.
  *
  * Tra ve null khi dau vao khong dung hinh dang - noi goi coi nhu khong tim
- * thay, KHONG duoc bo qua buoc doi chieu mat khau gia (xem HASH_GIA trong
+ * thay, KHONG duoc bo qua buoc doi chieu mat khau gia (xem FAKE_HASH trong
  * userController.js), neu khong thi thoi gian phan hoi lai to cao dia chi nao
  * co that.
  *
- * @param {string} dinhDanh da qua chuanHoaDinhDanh
- * @param {(e: string) => boolean} emailHopLe truyen tu validateInput.js de
+ * @param {string} identifier da qua normalizeIdentifier
+ * @param {(e: string) => boolean} isValidEmail truyen tu validateInput.js de
  *        khong tao vong phu thuoc giua hai file tien ich
  */
-const boLocTaiKhoan = (dinhDanh, emailHopLe) => {
-    if (laEmail(dinhDanh)) {
-        return emailHopLe(dinhDanh) ? { email: dinhDanh } : null;
+const accountFilter = (identifier, isValidEmail) => {
+    if (laEmail(identifier)) {
+        return isValidEmail(identifier) ? { email: identifier } : null;
     }
 
     // Tra cuu theo SO DIEN THOAI.
     //
-    // Phai dat TRUOC nhanh ten ngan, vi MAU_TEN nhan ca chu so: '0901234567'
-    // lot qua tenHopLe() va se thanh regex /^0901234567@/ - tra cuu mot dia
+    // Phai dat TRUOC nhanh ten ngan, vi USERNAME_PATTERN nhan ca chu so: '0901234567'
+    // lot qua isValidName() va se thanh regex /^0901234567@/ - tra cuu mot dia
     // chi email khong ai co, roi bao sai mat khau.
-    const so = chuanHoaSoDienThoai(dinhDanh);
+    const count = normalizePhone(identifier);
 
     // Doc duoc thanh so di dong thi CHI tra cuu theo so, khong hoi them
     // nhanh ten ngan nua.
     //
-    // CAI BAY o day: mot chuoi toan chu so cung la ten ngan hop le (MAU_TEN
+    // CAI BAY o day: mot chuoi toan chu so cung la ten ngan hop le (USERNAME_PATTERN
     // nhan ca chu so), nen '0901234567' vua co the la so dien thoai, vua co
     // the la phan dau cua dia chi '0901234567@gmail.com' ma ai do da dang ky
     // tu truoc.
@@ -137,21 +137,21 @@ const boLocTaiKhoan = (dinhDanh, emailHopLe) => {
     // nguoi dung dung hang ngay, con ten ngan toan chu so la truong hop hiem.
     // Ai roi vao truong hop do van dang nhap duoc bang DIA CHI DAY DU - dung
     // duong lui ma diem 1 da dat san.
-    if (so) return { phone: so };
+    if (count) return { phone: count };
 
-    if (!tenHopLe(dinhDanh)) return null;
+    if (!isValidName(identifier)) return null;
 
     // `password: { $ne: '' }` loai tai khoan Google thuan - xem diem 2 o dau
     // file. Khong dung `$exists` vi truong nay co `default: ''`, tuc la moi
     // ban ghi deu co no.
-    return { email: mauTheoTen(dinhDanh), password: { $ne: '' } };
+    return { email: colorByName(identifier), password: { $ne: '' } };
 };
 
 module.exports = {
-    chuanHoaDinhDanh,
+    normalizeIdentifier,
     laEmail,
-    tenHopLe,
-    mauTheoTen,
-    boLocTaiKhoan,
-    DAI_TEN_TOI_DA,
+    isValidName,
+    colorByName,
+    accountFilter,
+    MAX_NAME_LENGTH,
 };

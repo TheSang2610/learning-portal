@@ -115,7 +115,7 @@ export default function IndividualsHeader() {
 
             {/* MEGA MENU CONTAINER */}
             {openExplore && categories.length > 0 && (
-              <div className={`${styles.hienTruotXuong} ${styles.floating}`}>
+              <div className={`${styles.showSlideDown} ${styles.floating}`}>
                 {/* CỘT TRÁI: DANH MỤC (CATEGORIES) */}
                 <div className={styles.box4}>
                   <div className={styles.box5}>Danh mục ngành học</div>

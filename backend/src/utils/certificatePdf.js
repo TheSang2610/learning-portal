@@ -22,24 +22,24 @@ const DAM = path.join(__dirname, '..', 'assets', 'fonts', 'DejaVuSans-Bold.ttf')
 
 const XANH = '#0b3f91';
 const VANG = '#c9962b';
-const CHU = '#1f2937';
-const NHAT = '#6b7280';
+const TEXT = '#1f2937';
+const BEST = '#6b7280';
 
-const ngayVN = (d) => {
+const vnDate = (d) => {
     const t = d instanceof Date ? d : new Date(d);
     if (Number.isNaN(t.getTime())) return '—';
-    const hai = (n) => String(n).padStart(2, '0');
-    return `${hai(t.getDate())}/${hai(t.getMonth() + 1)}/${t.getFullYear()}`;
+    const pad2 = (n) => String(n).padStart(2, '0');
+    return `${pad2(t.getDate())}/${pad2(t.getMonth() + 1)}/${t.getFullYear()}`;
 };
 
 /**
  * @param {object} cc      Ban ghi Certificate (da populate course/student neu co).
- * @param {object} tuyChon
- * @param {string} [tuyChon.tenHocVien]
- * @param {string} [tuyChon.diaChiXacThuc] Dia chi trang tra cuu, in duoi chan.
+ * @param {object} options
+ * @param {string} [options.studentName]
+ * @param {string} [options.verifyUrl] Dia chi trang tra cuu, in duoi chan.
  * @returns {PDFDocument} Luong doc duoc; goi .pipe(res) roi khong can end().
  */
-const dungChungChiPdf = (cc, tuyChon = {}) => {
+const buildCertificatePdf = (cc, options = {}) => {
     const doc = new PDFDocument({
         size: 'A4',
         layout: 'landscape',
@@ -67,42 +67,42 @@ const dungChungChiPdf = (cc, tuyChon = {}) => {
     doc.lineWidth(6).strokeColor(XANH).rect(22, 22, W - 44, H - 44).stroke();
     doc.lineWidth(1).strokeColor(VANG).rect(34, 34, W - 68, H - 68).stroke();
 
-    const giua = (chu, y, co, phong, mau) => {
-        doc.font(phong).fontSize(co).fillColor(mau);
-        doc.text(chu, 60, y, { width: W - 120, align: 'center' });
+    const giua = (text, y, size, phong, mau) => {
+        doc.font(phong).fontSize(size).fillColor(mau);
+        doc.text(text, 60, y, { width: W - 120, align: 'center' });
     };
 
-    giua('LEARNING PORTAL', 64, 12, 'dam', NHAT);
+    giua('LEARNING PORTAL', 64, 12, 'dam', BEST);
     giua('CHỨNG NHẬN HOÀN THÀNH KHÓA HỌC', 92, 26, 'dam', XANH);
 
     doc.lineWidth(1.5).strokeColor(VANG)
         .moveTo(W / 2 - 70, 132).lineTo(W / 2 + 70, 132).stroke();
 
-    giua('Chứng nhận rằng', 152, 12, 'thuong', NHAT);
+    giua('Chứng nhận rằng', 152, 12, 'thuong', BEST);
 
-    const ten = String(tuyChon.tenHocVien || cc.student?.name || 'Học viên').trim();
+    const name = String(options.studentName || cc.student?.name || 'Học viên').trim();
     // Ten dai thi ha co chu xuong cho khoi tran sang hai dong va de trong khung.
-    giua(ten, 176, ten.length > 28 ? 26 : 32, 'dam', CHU);
+    giua(name, 176, name.length > 28 ? 26 : 32, 'dam', TEXT);
 
-    giua('đã hoàn thành khóa học', 226, 12, 'thuong', NHAT);
+    giua('đã hoàn thành khóa học', 226, 12, 'thuong', BEST);
     giua(
         String(cc.courseName || cc.course?.title || cc.title || 'Khóa học'),
         248, 18, 'dam', XANH
     );
 
     // Ba o thong tin xep deu nhau o nua duoi.
-    const o = [
-        ['Ngày hoàn thành', ngayVN(cc.completionDate || cc.issuedAt)],
+    const item = [
+        ['Ngày hoàn thành', vnDate(cc.completionDate || cc.issuedAt)],
         ['Kết quả', cc.scorePercentage != null ? `${cc.scorePercentage}%` : '—'],
         ['Giảng viên', String(cc.instructorName || cc.signedBy || '—')]
     ];
-    const rongO = (W - 200) / 3;
-    o.forEach(([nhan, gt], i) => {
-        const x = 100 + i * rongO;
-        doc.font('thuong').fontSize(9).fillColor(NHAT)
-            .text(nhan, x, 300, { width: rongO, align: 'center' });
-        doc.font('dam').fontSize(13).fillColor(CHU)
-            .text(gt, x, 314, { width: rongO, align: 'center' });
+    const cellWidth = (W - 200) / 3;
+    item.forEach(([label, gt], i) => {
+        const x = 100 + i * cellWidth;
+        doc.font('thuong').fontSize(9).fillColor(BEST)
+            .text(label, x, 300, { width: cellWidth, align: 'center' });
+        doc.font('dam').fontSize(13).fillColor(TEXT)
+            .text(gt, x, 314, { width: cellWidth, align: 'center' });
     });
 
     // Cho ky ben phai. Khong co chu ky that thi van de duong ke va chuc danh:
@@ -110,31 +110,31 @@ const dungChungChiPdf = (cc, tuyChon = {}) => {
     const xKy = W - 300;
     doc.lineWidth(0.8).strokeColor('#9ca3af')
         .moveTo(xKy + 40, 424).lineTo(xKy + 220, 424).stroke();
-    doc.font('dam').fontSize(11).fillColor(CHU)
+    doc.font('dam').fontSize(11).fillColor(TEXT)
         .text(String(cc.signedBy || cc.instructorName || 'Learning Portal'),
             xKy, 432, { width: 260, align: 'center' });
-    doc.font('thuong').fontSize(8.5).fillColor(NHAT)
+    doc.font('thuong').fontSize(8.5).fillColor(BEST)
         .text('Đại diện Learning Portal', xKy, 448, { width: 260, align: 'center' });
 
     // Chan trang: so hieu ben trai, ma tra cuu ben phai.
-    const yChan = H - 96;
+    const footerY = H - 96;
     doc.lineWidth(0.8).strokeColor('#e5e7eb')
-        .moveTo(80, yChan - 16).lineTo(W - 80, yChan - 16).stroke();
+        .moveTo(80, footerY - 16).lineTo(W - 80, footerY - 16).stroke();
 
-    doc.font('thuong').fontSize(8.5).fillColor(NHAT)
-        .text('Số hiệu chứng nhận', 80, yChan, { width: 260 });
-    doc.font('dam').fontSize(11).fillColor(CHU)
-        .text(String(cc.certificateNumber || '—'), 80, yChan + 13, { width: 260 });
+    doc.font('thuong').fontSize(8.5).fillColor(BEST)
+        .text('Số hiệu chứng nhận', 80, footerY, { width: 260 });
+    doc.font('dam').fontSize(11).fillColor(TEXT)
+        .text(String(cc.certificateNumber || '—'), 80, footerY + 13, { width: 260 });
 
-    doc.font('thuong').fontSize(8.5).fillColor(NHAT)
-        .text('Mã tra cứu', W - 340, yChan, { width: 260, align: 'right' });
-    doc.font('dam').fontSize(11).fillColor(CHU)
-        .text(String(cc.verificationCode || '—'), W - 340, yChan + 13,
+    doc.font('thuong').fontSize(8.5).fillColor(BEST)
+        .text('Mã tra cứu', W - 340, footerY, { width: 260, align: 'right' });
+    doc.font('dam').fontSize(11).fillColor(TEXT)
+        .text(String(cc.verificationCode || '—'), W - 340, footerY + 13,
             { width: 260, align: 'right' });
 
-    if (tuyChon.diaChiXacThuc) {
-        doc.font('thuong').fontSize(8).fillColor(NHAT)
-            .text(`Tra cứu tính xác thực tại ${tuyChon.diaChiXacThuc}`,
+    if (options.verifyUrl) {
+        doc.font('thuong').fontSize(8).fillColor(BEST)
+            .text(`Tra cứu tính xác thực tại ${options.verifyUrl}`,
                 60, H - 58, { width: W - 120, align: 'center' });
     }
 
@@ -154,4 +154,4 @@ const dungChungChiPdf = (cc, tuyChon = {}) => {
     return doc;
 };
 
-module.exports = { dungChungChiPdf };
+module.exports = { buildCertificatePdf };

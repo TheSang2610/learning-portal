@@ -16,7 +16,7 @@ const documentUniversitySchema = new mongoose.Schema({
         trim: true,
         maxlength: 120,
     },
-    // Khoa chuan hoa (chuanHoaMon) - dung tren dia chi ?truong= va de chan trung.
+    // Khoa chuan hoa (normalizeSubject) - dung tren dia chi ?truong= va de chan trung.
     key: {
         type: String,
         required: true,

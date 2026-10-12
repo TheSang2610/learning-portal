@@ -52,17 +52,17 @@
 // nho giot deu deu - thu ma chi nhin theo phut se khong bao gio thay.
 
 // Tran co the chinh bang bien moi truong, khong phai sua ma nguon.
-const so = (ten, macDinh) => {
-    const v = Number(process.env[ten]);
-    return Number.isFinite(v) && v > 0 ? v : macDinh;
+const count = (name, defaults) => {
+    const v = Number(process.env[name]);
+    return Number.isFinite(v) && v > 0 ? v : defaults;
 };
 
-const NGUONG_PHUT = so('TRAN_API_MOI_PHUT', 1200);
-const NGUONG_GIO = so('TRAN_API_MOI_GIO', 20000);
+const MINUTE_THRESHOLD = count('TRAN_API_MOI_PHUT', 1200);
+const HOURLY_THRESHOLD = count('TRAN_API_MOI_GIO', 20000);
 
 // Chan tran so khoa dang giu, de mot dot tan cong tu hang chuc nghin dia chi
 // khac nhau khong bom phinh bo nho lambda.
-const MAX_KHOA = 20000;
+const MAX_KEYS = 20000;
 
 /**
  * Duong KHONG bao gio bi chan.
@@ -73,43 +73,46 @@ const MAX_KHOA = 20000;
  * Duong webhook ngan hang la duong TIEN VE. Nha cung cap goi tu may chu cua
  * ho, tuc la tu MOT dia chi IP co dinh; neu ho gui don mot dot (vi du sau khi
  * he thong ho bi gian doan roi gui bu) thi mot cai 429 o day nghia la tien da
- * vao tai khoan ma coin khong duoc cong. Han muc phia tren rong hon nhu cau
+ * vao tai khoan ma don khong duoc mo khoa. Han muc phia tren rong hon nhu cau
  * cua ho rat nhieu lan, nhung mot duong dinh toi tien thi khong dat cuoc vao
  * chu "rat nhieu lan".
+ *
+ * Co HAI duong webhook: duong moi va duong cu tu thoi con coin (nha cung cap
+ * van tro vao do cho toi khi doi URL ben ho) - xem index.js.
  */
-const BO_QUA = new Set(['/', '/api/coin/webhook/ngan-hang']);
+const SKIP_PATHS = new Set(['/', '/api/ngan-hang/webhook', '/api/coin/webhook/ngan-hang']);
 
 // --------------------------------------------------------------------------
 // Bo dem cua so co dinh - phan thuan, kiem thu duoc
 // --------------------------------------------------------------------------
 
-const taoBoDem = (cuaSoMs, nguong) => ({ cuaSoMs, nguong, o: new Map() });
+const createCounter = (windowMs, nguong) => ({ windowMs, nguong, o: new Map() });
 
-const don = (bo, now) => {
-    for (const [k, v] of bo.o) {
-        if (v.hetHan <= now) bo.o.delete(k);
+const order = (remove, now) => {
+    for (const [k, v] of remove.o) {
+        if (v.hetHan <= now) remove.o.delete(k);
     }
     // Don xong van day nghia la dang bi ban tu rat nhieu dia chi cung luc.
     // Xoa sach con hon de bo nho phinh: mat bo dem mot nhip la mat mot lop
     // phong thu, con het RAM la sap han tien trinh.
-    if (bo.o.size >= MAX_KHOA) bo.o.clear();
+    if (remove.o.size >= MAX_KEYS) remove.o.clear();
 };
 
 /**
  * Ghi mot luot va cho biet co vuot nguong khong.
  * @returns {number} so giay phai cho neu VUOT, 0 neu con di tiep duoc.
  */
-const ghiMot = (bo, khoa, now) => {
-    let rec = bo.o.get(khoa);
+const recordHit = (remove, course, now) => {
+    let rec = remove.o.get(course);
 
     if (!rec || rec.hetHan <= now) {
-        if (bo.o.size >= MAX_KHOA) don(bo, now);
-        rec = { dem: 0, hetHan: now + bo.cuaSoMs };
-        bo.o.set(khoa, rec);
+        if (remove.o.size >= MAX_KEYS) order(remove, now);
+        rec = { dem: 0, hetHan: now + remove.windowMs };
+        remove.o.set(course, rec);
     }
 
     rec.dem += 1;
-    if (rec.dem <= bo.nguong) return 0;
+    if (rec.dem <= remove.nguong) return 0;
     return Math.max(1, Math.ceil((rec.hetHan - now) / 1000));
 };
 
@@ -120,38 +123,38 @@ const ghiMot = (bo, khoa, now) => {
 // req.ip chi dung khi index.js da dat app.set('trust proxy', 1).
 // Thieu dong do thi day la IP cua proxy, va MOI khach chung mot o dem - tuc
 // la mot nguoi dung nang tay co the khoa ca he thong.
-const ipCua = (req) => req.ip || req.socket?.remoteAddress || 'unknown';
+const ipOf = (req) => req.ip || req.socket?.remoteAddress || 'unknown';
 
-const taoTranChung = ({
-    nguongPhut = NGUONG_PHUT,
-    nguongGio = NGUONG_GIO,
+const createGlobalLimiter = ({
+    minuteThreshold = MINUTE_THRESHOLD,
+    hourlyThreshold = HOURLY_THRESHOLD,
 } = {}) => {
-    const cacBo = [
-        taoBoDem(60 * 1000, nguongPhut),
-        taoBoDem(60 * 60 * 1000, nguongGio),
+    const allBuckets = [
+        createCounter(60 * 1000, minuteThreshold),
+        createCounter(60 * 60 * 1000, hourlyThreshold),
     ];
 
     return (req, res, next) => {
-        if (BO_QUA.has(req.path)) return next();
+        if (SKIP_PATHS.has(req.path)) return next();
 
         const now = Date.now();
-        const khoa = ipCua(req);
+        const course = ipOf(req);
 
         // Ghi vao CA HAI cua so truoc roi moi quyet dinh.
         //
         // Neu tra ve ngay khi cua so phut vuot thi cua so gio khong duoc ghi -
         // va the la mot ke bi chan lien tuc theo phut lai khong bao gio cham
         // nguong theo gio, dung cai nguong sinh ra de bat ho.
-        let choGiay = 0;
-        for (const bo of cacBo) {
-            choGiay = Math.max(choGiay, ghiMot(bo, khoa, now));
+        let waitSeconds = 0;
+        for (const remove of allBuckets) {
+            waitSeconds = Math.max(waitSeconds, recordHit(remove, course, now));
         }
 
-        if (choGiay > 0) {
-            res.set('Retry-After', String(choGiay));
+        if (waitSeconds > 0) {
+            res.set('Retry-After', String(waitSeconds));
             return res.status(429).json({
                 message: 'Quá nhiều yêu cầu từ địa chỉ này. Vui lòng thử lại sau ít phút.',
-                retryAfter: choGiay,
+                retryAfter: waitSeconds,
             });
         }
 
@@ -159,4 +162,4 @@ const taoTranChung = ({
     };
 };
 
-module.exports = { taoTranChung, taoBoDem, ghiMot, BO_QUA, MAX_KHOA };
+module.exports = { createGlobalLimiter, createCounter, recordHit, SKIP_PATHS, MAX_KEYS };

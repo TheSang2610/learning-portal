@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
-import { DUONG_HO_SO } from "@/src/services/apiBase";
-import { datNguoiDung, datDangTai, KHOA_HIEU } from "@/src/hooks/userStore";
+import { PROFILE_PATH } from "@/src/services/apiBase";
+import { storeUser, setLoading, SIGNAL_KEY } from "@/src/hooks/userStore";
 
 // Hoi may chu "toi la ai" mot lan moi lan tai trang, roi nhet ket qua vao kho
 // trong RAM (src/hooks/userStore.ts). Khong ve gi ra man hinh.
 //
 // VI SAO KHONG DUNG apiRequest / getMyProfile O DAY - day la cai bay:
-// apiHelper.handleResponse gap 401 se goi xoaPhien() roi
+// apiHelper.handleResponse gap 401 se goi clearSession() roi
 // `window.location.href = "/"`. Component nay chay tren MOI trang, ke ca trang
 // chu, va khach vang lai thi /users/profile tra dung 401. Dung apiRequest la
 // khach chua dang nhap vao trang chu se bi chuyen ve trang chu -> tai lai ->
@@ -34,88 +34,88 @@ declare global {
   }
 }
 
-const layLoiHuaDaBay = (): Promise<unknown> | null => {
+const getPendingProfile = (): Promise<unknown> | null => {
   if (typeof window === "undefined") return null;
-  const dangBay = window.__hoSoDangBay;
-  if (!dangBay) return null;
+  const pending = window.__hoSoDangBay;
+  if (!pending) return null;
   window.__hoSoDangBay = null;
-  return dangBay;
+  return pending;
 };
 
-export default function NapNguoiDung() {
+export default function UserBootstrap() {
   useEffect(() => {
-    let conSong = true;
+    let stillMounted = true;
 
-    const nap = async () => {
+    const load = async () => {
       try {
         // Lan dau: dung ket qua cua luot goi da bay san tu the <script>.
-        const daBay = layLoiHuaDaBay();
-        if (daBay) {
-          const duLieu = await daBay;
-          if (!conSong) return;
+        const requested = getPendingProfile();
+        if (requested) {
+          const data = await requested;
+          if (!stillMounted) return;
           // The <script> tra ve null cho ca 401 (khach vang lai) lan loi mang.
           // Hai truong hop deu coi nhu chua dang nhap - giong het nhanh duoi.
-          datNguoiDung((duLieu as Parameters<typeof datNguoiDung>[0]) ?? null, false);
+          storeUser((data as Parameters<typeof storeUser>[0]) ?? null, false);
           return;
         }
 
-        const res = await fetch(DUONG_HO_SO, {
+        const res = await fetch(PROFILE_PATH, {
           credentials: "include",
           // Danh tinh khong duoc lay tu bo dem cua trinh duyet: vua doi tai
           // khoan ma an ban cu la hien nham ten nguoi truoc.
           cache: "no-store",
         });
-        if (!conSong) return;
+        if (!stillMounted) return;
 
         if (!res.ok) {
           // 401 = khach vang lai. Cac ma khac (500, mat mang) cung coi nhu
           // chua dang nhap: tha ve nut "Dang nhap" con hon treo mai o trang
           // thai dang tai.
-          datNguoiDung(null, false);
+          storeUser(null, false);
           return;
         }
 
-        datNguoiDung(await res.json(), false);
+        storeUser(await res.json(), false);
       } catch {
-        if (conSong) datNguoiDung(null, false);
+        if (stillMounted) storeUser(null, false);
       }
     };
 
-    void nap();
+    void load();
 
     // Dang nhap o tab ben canh thi tab nay phai biet. Su kien 'storage' chi
     // ban cho cac tab KHAC, dung y ta can.
     //
-    // CAN THAN: nap() ket thuc bang datNguoiDung(..., false). Chu `false` do
+    // CAN THAN: nap() ket thuc bang storeUser(..., false). Chu `false` do
     // la thu duy nhat chan vong lap - bo di thi tra loi mot thong bao lai
     // phat ra mot thong bao moi, va hai tab se goi /users/profile qua lai
-    // khong bao gio dung. Xem ghi chu dai o datNguoiDung().
-    const khiTabKhacDoi = (e: StorageEvent) => {
-      if (e.key !== KHOA_HIEU) return;
-      datDangTai(true);
-      void nap();
+    // khong bao gio dung. Xem ghi chu dai o storeUser().
+    const onOtherTabChange = (e: StorageEvent) => {
+      if (e.key !== SIGNAL_KEY) return;
+      setLoading(true);
+      void load();
     };
 
     // Quay lai bang nut Back: trang duoc lay tu bo nho dem cua trinh duyet nen
     // useEffect KHONG chay lai - phai tu doc lai, neu khong man hinh con giu
     // danh tinh cu sau khi da dang xuat o trang khac.
-    const khiQuayLai = (e: PageTransitionEvent) => {
-      if (e.persisted) void nap();
+    const onReturn = (e: PageTransitionEvent) => {
+      if (e.persisted) void load();
     };
 
-    // Vua dang nhap xong: yeuCauNapLai() ban su kien nay de lap not cac truong
+    // Vua dang nhap xong: requireReload() ban su kien nay de lap not cac truong
     // ma than phan hoi cua /login khong co (fullname, avatar, provider).
-    const khiDuocNho = () => void nap();
+    const onRemembered = () => void load();
 
-    window.addEventListener("storage", khiTabKhacDoi);
-    window.addEventListener("pageshow", khiQuayLai);
-    window.addEventListener("napLaiNguoiDung", khiDuocNho);
+    window.addEventListener("storage", onOtherTabChange);
+    window.addEventListener("pageshow", onReturn);
+    window.addEventListener("napLaiNguoiDung", onRemembered);
 
     return () => {
-      conSong = false;
-      window.removeEventListener("storage", khiTabKhacDoi);
-      window.removeEventListener("pageshow", khiQuayLai);
-      window.removeEventListener("napLaiNguoiDung", khiDuocNho);
+      stillMounted = false;
+      window.removeEventListener("storage", onOtherTabChange);
+      window.removeEventListener("pageshow", onReturn);
+      window.removeEventListener("napLaiNguoiDung", onRemembered);
     };
   }, []);
 

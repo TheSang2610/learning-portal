@@ -66,6 +66,7 @@ export interface QuizSubmitResponse {
   timeSpent: number;
   message: string;
   attemptNumber?: number;
+  usedAttempts?: number;
   answers: QuizAnswer[];
 }
 
@@ -94,17 +95,42 @@ export interface QuizAttempt {
 // lam bai (xem cuoi getQuizById trong quizController). Khong phai luc nao cung co.
 export interface QuizWithAttempt extends Quiz {
   latestAttempt?: QuizAttempt;
+  /** So luot HOP LE da dung (khong tinh luot giang vien cho lam lai). */
+  usedAttempts?: number;
 }
 
 // Ket qua hien ra man hinh den tu hai nguon: lan vua nop (QuizSubmitResponse)
 // hoac lan lam gan nhat kem theo de (QuizAttempt). Chi dung phan chung.
-export interface KetQuaLamBai {
+export interface AttemptResult {
   score: number;
   percentage: number;
   passed: boolean;
   attemptNumber?: number;
+  /** Chi co o phan hoi khi vua nop bai: so luot hop le da dung. */
+  usedAttempts?: number;
   answers?: QuizAnswer[];
   message?: string;
+}
+
+/** Mot dong trong lich su lam bai (khong kem bai lam). */
+export interface AttemptSummary {
+  _id: string;
+  attemptNumber: number;
+  score: number;
+  percentage: number;
+  passed: boolean;
+  submittedAt: string;
+  timeSpent?: number;
+  /** "reset" = giang vien da cho lam lai: van xem duoc, khong tinh vao so luot. */
+  status: "submitted" | "graded" | "reviewed" | "reset";
+  retryReason?: string;
+}
+
+/** Xem lai mot luot: dap an dung chi co khi canSeeAnswers. */
+export interface AttemptReview {
+  attempt: QuizAttempt & { status?: string; retryReason?: string };
+  quiz: { _id: string; title: string; passingScore: number; questions: QuizQuestion[] };
+  canSeeAnswers: boolean;
 }
 
 export interface QuizStats {
@@ -186,15 +212,22 @@ export const submitQuizAttempt = async (
   });
 };
 
-export const getQuizAttemptResult = async (
+export const getMyQuizAttempts = async (quizId: string): Promise<AttemptSummary[]> => {
+  return apiRequest(`/quizzes/${quizId}/attempts`);
+};
+
+export const getAttemptReview = async (
   quizId: string,
   attemptId: string,
-): Promise<QuizAttempt> => {
+): Promise<AttemptReview> => {
   return apiRequest(`/quizzes/${quizId}/attempt/${attemptId}`);
 };
 
-export const getQuizAttempts = async (quizId: string): Promise<QuizAttempt[]> => {
-  return apiRequest(`/quizzes/${quizId}/attempts`);
+/** Tu dat lai bai lam cua minh: cac luot cu chuyen sang "khong tinh", van giu lich su. */
+export const resetMyQuizAttempts = async (
+  quizId: string,
+): Promise<{ message: string; reset: number }> => {
+  return apiRequest(`/quizzes/${quizId}/reset-mine`, { method: "PUT" });
 };
 
 export const getQuizStats = async (quizId: string): Promise<QuizStats> => {

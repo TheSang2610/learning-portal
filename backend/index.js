@@ -5,7 +5,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const { chongCsrf } = require('./src/middlewares/csrf');
-const { taoTranChung } = require('./src/middlewares/globalRateLimit');
+const { createGlobalLimiter } = require('./src/middlewares/globalRateLimit');
 const connectDB = require('./src/config/db');
 
 
@@ -89,7 +89,7 @@ app.use(compression());
 // cua nguoi dung - dung nghia la tu mo lai lo CSRF vua bit.
 const allowedOrigins = (process.env.FRONTEND_ORIGINS || '')
   .split(',')
-  .map((o) => o.trim().replace(/\/+$/, ''))
+  .map((item) => item.trim().replace(/\/+$/, ''))
   .filter(Boolean);
 
 // Khi dev: chap nhan MOI port cua localhost / 127.0.0.1.
@@ -102,7 +102,7 @@ const isLocalhost = (origin) =>
 // CA CORS lan chan CSRF. De hai noi tu liet ke rieng thi them mot ten mien moi
 // se sua duoc mot cho va quen cho kia - luc do dang nhap duoc nhung moi thao
 // tac ghi deu bi tu choi 403, rat kho doan ra.
-const originDuocPhep = (origin) => {
+const corsOrigins = (origin) => {
   if (allowedOrigins.includes(origin)) return true;
   return process.env.NODE_ENV !== 'production' && isLocalhost(origin);
 };
@@ -111,7 +111,7 @@ app.use(cors({
   origin: function (origin, callback) {
     // Cho phép request không có origin (mobile apps, curl, etc)
     if (!origin) return callback(null, true);
-    if (originDuocPhep(origin)) return callback(null, true);
+    if (corsOrigins(origin)) return callback(null, true);
 
     // Tra ve false, KHONG nem loi.
     //
@@ -135,7 +135,7 @@ app.use(cors({
 // Dat sau express.json thi mot request tu origin la mang than JSON hong se bi
 // tra 400 truoc khi kip kiem origin - vua sai ma trang thai, vua ton cong doc
 // than cua mot request dang le phai vut di ngay. Xem middlewares/csrf.js.
-app.use(chongCsrf(originDuocPhep));
+app.use(chongCsrf(corsOrigins));
 
 // Tran chung cho toan bo API.
 //
@@ -150,7 +150,7 @@ app.use(chongCsrf(originDuocPhep));
 //
 // Doc dau middlewares/globalRateLimit.js de biet ro cai nay chan duoc gi va KHONG
 // chan duoc gi - dung tuong co no roi la an toan truoc DDoS.
-app.use(taoTranChung());
+app.use(createGlobalLimiter());
 
 // Middleware
 // 50mb la con so cu, thua 1000 lan so voi nhu cau that: JSON lon nhat ma may
@@ -184,15 +184,15 @@ app.use((req, res, next) => {
   // Luc dev thi giu nguyen loi that, khong thi khong con gi ma sua.
   if (process.env.NODE_ENV === 'development') return next();
 
-  const traJson = res.json.bind(res);
+  const sendJson = res.json.bind(res);
 
   res.json = (body) => {
     if (res.statusCode >= 500 && body && typeof body === 'object' && body.message) {
       // Giau voi khach thi phai hien voi minh, neu khong loi bien mat khong dau vet.
       console.error(`[${req.method} ${req.originalUrl}] ${res.statusCode}:`, body.message);
-      return traJson({ ...body, message: 'Đã có lỗi xảy ra, vui lòng thử lại sau' });
+      return sendJson({ ...body, message: 'Đã có lỗi xảy ra, vui lòng thử lại sau' });
     }
-    return traJson(body);
+    return sendJson(body);
   };
 
   next();
@@ -208,16 +208,19 @@ app.use('/api/users', require('./src/routes/userRoutes'));
 app.use('/api/categories', require('./src/routes/categoryRoutes'));
 app.use('/api/courses', require('./src/routes/courseRoutes'));
 app.use('/api/lessons', require('./src/routes/lessonRoutes'));
+app.use('/api/video', require('./src/routes/videoRoutes'));
 app.use('/api/reviews', require('./src/routes/reviewRoutes'));
 app.use('/api/enrollments', require('./src/routes/enrollmentRoutes'));
 app.use('/api/orders', require('./src/routes/orderRoutes'));
-app.use('/api/coin', require('./src/routes/coinRoutes'));
+app.use('/api/ngan-hang', require('./src/routes/bankRoutes'));
+// Duong webhook cu, tu thoi con coin. Nha cung cap (SePay/Casso) dang tro vao
+// day - doi URL ben ho xong thi bo dong nay.
+app.post('/api/coin/webhook/ngan-hang', require('./src/controllers/bankWebhookController').receiveBankCredit);
 app.use('/api/quizzes', require('./src/routes/quizRoutes'));
 app.use('/api/certificates', require('./src/routes/certificateRoutes'));
 app.use('/api/admin', require('./src/routes/adminRoutes'));
 app.use("/api/providers", require("./src/routes/providerRoutes"));
 app.use('/api/faqs', require('./src/routes/faqRoutes'));
-app.use('/api/banners', require('./src/routes/bannerRoutes'));
 app.use('/api/documents', require('./src/routes/documentRoutes'));
 app.use('/api/posts', require('./src/routes/postRoutes'));
 app.use('/api/tro-ly', require('./src/routes/assistantRoutes'));
@@ -235,13 +238,13 @@ app.use('/api/da-luu', require('./src/routes/savedRoutes'));
 //   /api/docs       giao dien Swagger UI, bam thu duoc tung endpoint
 //   /api/docs.json  ban dac ta tho, nap thang vao Postman hay bo sinh client
 const swaggerUi = require('swagger-ui-express');
-const dacTaApi = require('./src/docs/openapi');
+const apiSpec = require('./src/docs/openapi');
 
-app.get('/api/docs.json', (req, res) => res.json(dacTaApi));
+app.get('/api/docs.json', (req, res) => res.json(apiSpec));
 app.use(
   '/api/docs',
   swaggerUi.serve,
-  swaggerUi.setup(dacTaApi, {
+  swaggerUi.setup(apiSpec, {
     customSiteTitle: 'Learning Portal API',
     // Gui kem cookie phien khi bam Try it out, neu khong moi loi thu deu 401.
     swaggerOptions: { withCredentials: true, persistAuthorization: true },
@@ -263,10 +266,10 @@ app.use((err, req, res, next) => {
   // 400. Ban cu chi nhin res.statusCode nen bien tat ca thanh 500, tuc la bao
   // "may chu hong" trong khi loi la do phia goi gui sai. 5xx con bi che noi
   // dung o lop tren nua, nen nguoi goi khong con manh moi nao de sua.
-  const maCuaLoi = Number(err.status || err.statusCode);
+  const errorStatus = Number(err.status || err.statusCode);
   const statusCode =
-    maCuaLoi >= 400 && maCuaLoi <= 599
-      ? maCuaLoi
+    errorStatus >= 400 && errorStatus <= 599
+      ? errorStatus
       : res.statusCode === 200
         ? 500
         : res.statusCode;

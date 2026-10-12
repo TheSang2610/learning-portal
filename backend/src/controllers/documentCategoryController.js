@@ -5,32 +5,32 @@
 const Document = require('../models/Document');
 const DocumentSubject = require('../models/DocumentSubject');
 const DocumentCategory = require('../models/DocumentCategory');
-const { chuanHoaMon } = require('../utils/rankDocuments');
+const { normalizeSubject } = require('../utils/rankDocuments');
 
 // Cung dieu kien "dang hien" voi documentController.
-const HIEN = { daAn: { $ne: true } };
+const VISIBLE = { daAn: { $ne: true } };
 
-const kiemDauVao = (body, { batBuocTen }) => {
-    const ra = {};
-    if (body.ten !== undefined || batBuocTen) {
-        const ten = String(body.ten || '').replace(/\s+/g, ' ').trim();
-        if (!ten) return { loi: 'Vui lòng nhập tên lĩnh vực' };
-        if (ten.length > 60) return { loi: 'Tên lĩnh vực tối đa 60 ký tự' };
-        const key = chuanHoaMon(ten);
+const validateInput = (body, { requireName }) => {
+    const out = {};
+    if (body.ten !== undefined || requireName) {
+        const name = String(body.ten || '').replace(/\s+/g, ' ').trim();
+        if (!name) return { loi: 'Vui lòng nhập tên lĩnh vực' };
+        if (name.length > 60) return { loi: 'Tên lĩnh vực tối đa 60 ký tự' };
+        const key = normalizeSubject(name);
         if (!key) return { loi: 'Tên lĩnh vực phải có chữ hoặc số' };
-        ra.ten = ten;
-        ra.key = key;
+        out.ten = name;
+        out.key = key;
     }
     if (body.bieuTuong !== undefined) {
-        if (!DocumentCategory.BIEU_TUONG.includes(body.bieuTuong)) return { loi: 'Biểu tượng không hợp lệ' };
-        ra.bieuTuong = body.bieuTuong;
+        if (!DocumentCategory.ICONS.includes(body.bieuTuong)) return { loi: 'Biểu tượng không hợp lệ' };
+        out.bieuTuong = body.bieuTuong;
     }
     if (body.thuTu !== undefined) {
         const n = Number(body.thuTu);
         if (!Number.isInteger(n) || n < 0 || n > 999) return { loi: 'Thứ tự phải là số nguyên 0-999' };
-        ra.thuTu = n;
+        out.thuTu = n;
     }
-    return { ra };
+    return { ra: out };
 };
 
 // @desc    Cac linh vuc kem so mon va so tai lieu DANG HIEN
@@ -38,24 +38,24 @@ const kiemDauVao = (body, { batBuocTen }) => {
 //
 // soTaiLieu dem tai lieu KHAC NHAU: mot tai lieu gan hai mon cung linh vuc chi
 // tinh mot lan (countDocuments voi $in, khong cong so cua tung mon).
-const layLinhVuc = async (req, res) => {
+const getFields = async (req, res) => {
     try {
-        const [dsNhom, dsMon] = await Promise.all([
+        const [groupList, subjectList] = await Promise.all([
             DocumentCategory.find().sort({ thuTu: 1, ten: 1 }).lean(),
             DocumentSubject.find({ nhom: { $ne: null } }).select('ten key nhom').sort({ ten: 1 }).lean(),
         ]);
-        const monTheoNhom = new Map();
-        for (const m of dsMon) {
+        const subjectsByGroup = new Map();
+        for (const m of subjectList) {
             const k = String(m.nhom);
-            if (!monTheoNhom.has(k)) monTheoNhom.set(k, []);
-            monTheoNhom.get(k).push(m);
+            if (!subjectsByGroup.has(k)) subjectsByGroup.set(k, []);
+            subjectsByGroup.get(k).push(m);
         }
         // Mot truy van dem moi linh vuc, chay song song - so linh vuc chi vai chuc.
-        const ketQua = await Promise.all(
-            dsNhom.map(async (n) => {
-                const mon = monTheoNhom.get(String(n._id)) || [];
-                const soTaiLieu = mon.length
-                    ? await Document.countDocuments({ ...HIEN, monHocKey: { $in: mon.map((m) => m.key) } })
+        const result = await Promise.all(
+            groupList.map(async (n) => {
+                const subjectItem = subjectsByGroup.get(String(n._id)) || [];
+                const documentCount = subjectItem.length
+                    ? await Document.countDocuments({ ...VISIBLE, monHocKey: { $in: subjectItem.map((m) => m.key) } })
                     : 0;
                 return {
                     _id: n._id,
@@ -63,14 +63,14 @@ const layLinhVuc = async (req, res) => {
                     ten: n.ten,
                     bieuTuong: n.bieuTuong,
                     thuTu: n.thuTu,
-                    soMon: mon.length,
-                    soTaiLieu,
+                    soMon: subjectItem.length,
+                    soTaiLieu: documentCount,
                     // Vai ten mon de hien duoi o linh vuc - khong can tra ca danh sach.
-                    monTieuBieu: mon.slice(0, 4).map((m) => ({ key: m.key, ten: m.ten })),
+                    monTieuBieu: subjectItem.slice(0, 4).map((m) => ({ key: m.key, ten: m.ten })),
                 };
             }),
         );
-        res.json(ketQua);
+        res.json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -78,14 +78,14 @@ const layLinhVuc = async (req, res) => {
 
 // @desc    Them linh vuc (admin)
 // @route   POST /api/documents/linh-vuc   { ten, bieuTuong?, thuTu? }
-const themLinhVuc = async (req, res) => {
+const addField = async (req, res) => {
     try {
-        const { loi, ra } = kiemDauVao(req.body || {}, { batBuocTen: true });
-        if (loi) return res.status(400).json({ message: loi });
-        if (await DocumentCategory.exists({ key: ra.key })) {
+        const { loi: err, ra: out } = validateInput(req.body || {}, { requireName: true });
+        if (err) return res.status(400).json({ message: err });
+        if (await DocumentCategory.exists({ key: out.key })) {
             return res.status(409).json({ message: 'Đã có lĩnh vực trùng tên này' });
         }
-        const n = await DocumentCategory.create(ra);
+        const n = await DocumentCategory.create(out);
         res.status(201).json({ ...n.toObject(), soMon: 0, soTaiLieu: 0, monTieuBieu: [] });
     } catch (error) {
         if (error && error.code === 11000) return res.status(409).json({ message: 'Đã có lĩnh vực trùng tên này' });
@@ -95,17 +95,17 @@ const themLinhVuc = async (req, res) => {
 
 // @desc    Sua linh vuc (admin)
 // @route   PUT /api/documents/linh-vuc/:id   { ten?, bieuTuong?, thuTu? }
-const suaLinhVuc = async (req, res) => {
+const editField = async (req, res) => {
     try {
         const n = await DocumentCategory.findById(req.params.id);
         if (!n) return res.status(404).json({ message: 'Không tìm thấy lĩnh vực' });
-        const { loi, ra } = kiemDauVao(req.body || {}, { batBuocTen: false });
-        if (loi) return res.status(400).json({ message: loi });
-        if (!Object.keys(ra).length) return res.status(400).json({ message: 'Không có gì để cập nhật' });
-        if (ra.key && ra.key !== n.key && (await DocumentCategory.exists({ key: ra.key }))) {
+        const { loi: err, ra: out } = validateInput(req.body || {}, { requireName: false });
+        if (err) return res.status(400).json({ message: err });
+        if (!Object.keys(out).length) return res.status(400).json({ message: 'Không có gì để cập nhật' });
+        if (out.key && out.key !== n.key && (await DocumentCategory.exists({ key: out.key }))) {
             return res.status(409).json({ message: 'Đã có lĩnh vực trùng tên này' });
         }
-        Object.assign(n, ra);
+        Object.assign(n, out);
         await n.save();
         res.json(n);
     } catch (error) {
@@ -116,7 +116,7 @@ const suaLinhVuc = async (req, res) => {
 
 // @desc    Xoa linh vuc (admin). Cac mon trong do KHONG bi xoa - chi thanh "chua co linh vuc".
 // @route   DELETE /api/documents/linh-vuc/:id
-const xoaLinhVuc = async (req, res) => {
+const deleteField = async (req, res) => {
     try {
         const n = await DocumentCategory.findById(req.params.id);
         if (!n) return res.status(404).json({ message: 'Không tìm thấy lĩnh vực' });
@@ -128,4 +128,4 @@ const xoaLinhVuc = async (req, res) => {
     }
 };
 
-module.exports = { layLinhVuc, themLinhVuc, suaLinhVuc, xoaLinhVuc };
+module.exports = { getFields, addField, editField, deleteField };

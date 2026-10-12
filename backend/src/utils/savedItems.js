@@ -1,6 +1,6 @@
 // Ham thuan cho tinh nang "da luu" - khong dung CSDL nen test duoc o CI.
 
-const TOI_DA_NHAP = 200;
+const MAX_IMPORT = 200;
 
 const laObjectId = (s) => /^[a-f0-9]{24}$/i.test(String(s || ''));
 
@@ -13,33 +13,33 @@ const laObjectId = (s) => /^[a-f0-9]{24}$/i.test(String(s || ''));
  *
  * Moi thu khac bi bo qua: day la du lieu tu trinh duyet gui len, ai cung sua
  * duoc - khong tin, khong bao loi, chi nhat ra cai hop le. Bo trung, va cat o
- * TOI_DA_NHAP de mot request khong bat may chu tra ca nghin truy van.
+ * MAX_IMPORT de mot request khong bat may chu tra ca nghin truy van.
  */
-function docDuongDanCu(dsTho) {
+function parseLegacyPath(dsTho) {
     if (!Array.isArray(dsTho)) return [];
-    const daGap = new Set();
-    const kq = [];
+    const seen = new Set();
+    const outcome = [];
 
     for (const tho of dsTho) {
-        if (kq.length >= TOI_DA_NHAP) break;
+        if (outcome.length >= MAX_IMPORT) break;
         if (typeof tho !== 'string' || tho.length > 300) continue;
 
         // Bo ?query va #hash - nut luu cu luu dung href cua the.
-        const duong = tho.split(/[?#]/)[0].replace(/\/+$/, '');
+        const route = tho.split(/[?#]/)[0].replace(/\/+$/, '');
 
-        let muc = null;
-        const blog = duong.match(/^\/blog\/([a-z0-9-]{1,220})$/i);
-        const taiLieu = duong.match(/^\/share-document\/([a-f0-9]{24})$/i);
-        if (blog) muc = { loai: 'baiViet', slug: blog[1].toLowerCase() };
-        else if (taiLieu) muc = { loai: 'taiLieu', id: taiLieu[1].toLowerCase() };
-        if (!muc) continue;
+        let item = null;
+        const blog = route.match(/^\/blog\/([a-z0-9-]{1,220})$/i);
+        const document = route.match(/^\/share-document\/([a-f0-9]{24})$/i);
+        if (blog) item = { loai: 'baiViet', slug: blog[1].toLowerCase() };
+        else if (document) item = { loai: 'taiLieu', id: document[1].toLowerCase() };
+        if (!item) continue;
 
-        const khoa = `${muc.loai}:${muc.slug || muc.id}`;
-        if (daGap.has(khoa)) continue;
-        daGap.add(khoa);
-        kq.push(muc);
+        const course = `${item.loai}:${item.slug || item.id}`;
+        if (seen.has(course)) continue;
+        seen.add(course);
+        outcome.push(item);
     }
-    return kq;
+    return outcome;
 }
 
-module.exports = { docDuongDanCu, laObjectId, TOI_DA_NHAP };
+module.exports = { parseLegacyPath, laObjectId, MAX_IMPORT };

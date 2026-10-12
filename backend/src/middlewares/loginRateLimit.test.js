@@ -16,42 +16,42 @@ const {
     clearLoginAttempts,
     MAX_FAILS_EMAIL,
     MAX_FAILS_IP,
-    MAX_FAILS_TAI_KHOAN,
+    MAX_ACCOUNT_FAILS,
 } = require('./loginRateLimit');
 const { _resetForTest } = require('../utils/rateLimitStore');
 
 // Gia lap mot luot dang nhap. Tra ve { chan, ma, keys }.
-const thu = async (ip, email) => {
+const attempt = async (ip, email) => {
     const req = { ip, body: { email } };
-    let ma = null;
-    let choQua = false;
+    let code = null;
+    let allowed = false;
     const res = {
         set() { return this; },
-        status(m) { ma = m; return this; },
+        status(m) { code = m; return this; },
         json() { return this; },
     };
-    await loginRateLimit(req, res, () => { choQua = true; });
-    return { chan: !choQua, ma, keys: req.loginAttemptKey };
+    await loginRateLimit(req, res, () => { allowed = true; });
+    return { chan: !allowed, ma: code, keys: req.loginAttemptKey };
 };
 
 // Dang nhap sai n lan lien tiep. Tra ve so lan thuc su di qua duoc.
-const saiNhieuLan = async (ip, email, n) => {
+const failManyTimes = async (ip, email, n) => {
     for (let i = 0; i < n; i += 1) {
-        const kq = await thu(ip, email);
-        if (kq.chan) return i; // da bi chan tu lan thu i
-        await recordLoginFailure(kq.keys);
+        const outcome = await attempt(ip, email);
+        if (outcome.chan) return i; // da bi chan tu lan thu i
+        await recordLoginFailure(outcome.keys);
     }
     return n;
 };
 
 test('do mat khau MOT tai khoan tu MOT IP: bi chan sau dung 5 lan sai', async () => {
     _resetForTest();
-    const daSai = await saiNhieuLan('1.1.1.1', 'nan-nhan@vidu.com', 10);
-    assert.strictEqual(daSai, MAX_FAILS_EMAIL, 'phai chan ngay sau lan sai thu 5');
+    const failed = await failManyTimes('1.1.1.1', 'nan-nhan@vidu.com', 10);
+    assert.strictEqual(failed, MAX_FAILS_EMAIL, 'phai chan ngay sau lan sai thu 5');
 
-    const kq = await thu('1.1.1.1', 'nan-nhan@vidu.com');
-    assert.strictEqual(kq.chan, true);
-    assert.strictEqual(kq.ma, 429);
+    const outcome = await attempt('1.1.1.1', 'nan-nhan@vidu.com');
+    assert.strictEqual(outcome.chan, true);
+    assert.strictEqual(outcome.ma, 429);
 });
 
 test('thu MOT mat khau tren NHIEU email: van bi chan nho bo dem theo IP', async () => {
@@ -59,16 +59,16 @@ test('thu MOT mat khau tren NHIEU email: van bi chan nho bo dem theo IP', async 
     // gio cham nguong. Bo dem theo IP phai bat duoc.
     _resetForTest();
 
-    let soLanQua = 0;
+    let passCount = 0;
     for (let i = 0; i < MAX_FAILS_IP + 20; i += 1) {
-        const kq = await thu('9.9.9.9', `nguoi${i}@vidu.com`);
-        if (kq.chan) break;
-        soLanQua += 1;
-        await recordLoginFailure(kq.keys);
+        const outcome = await attempt('9.9.9.9', `nguoi${i}@vidu.com`);
+        if (outcome.chan) break;
+        passCount += 1;
+        await recordLoginFailure(outcome.keys);
     }
 
-    assert.strictEqual(soLanQua, MAX_FAILS_IP, `phai chan sau ${MAX_FAILS_IP} lan sai tu cung mot IP`);
-    assert.strictEqual((await thu('9.9.9.9', 'nguoi-moi-tinh@vidu.com')).chan, true);
+    assert.strictEqual(passCount, MAX_FAILS_IP, `phai chan sau ${MAX_FAILS_IP} lan sai tu cung mot IP`);
+    assert.strictEqual((await attempt('9.9.9.9', 'nguoi-moi-tinh@vidu.com')).chan, true);
 });
 
 test('do MOT tai khoan tu NHIEU IP: van bi chan nho bo dem theo email', async () => {
@@ -80,38 +80,38 @@ test('do MOT tai khoan tu NHIEU IP: van bi chan nho bo dem theo email', async ()
     _resetForTest();
     const email = 'nan-nhan@vidu.com';
 
-    let soLanQua = 0;
-    for (let i = 0; i < MAX_FAILS_TAI_KHOAN + 10; i += 1) {
+    let passCount = 0;
+    for (let i = 0; i < MAX_ACCOUNT_FAILS + 10; i += 1) {
         const ip = `10.0.0.${Math.floor(i / 4)}`; // moi IP dung dung 4 lan
-        const kq = await thu(ip, email);
-        if (kq.chan) break;
-        soLanQua += 1;
-        await recordLoginFailure(kq.keys);
+        const outcome = await attempt(ip, email);
+        if (outcome.chan) break;
+        passCount += 1;
+        await recordLoginFailure(outcome.keys);
     }
 
     assert.strictEqual(
-        soLanQua,
-        MAX_FAILS_TAI_KHOAN,
-        `phai chan sau ${MAX_FAILS_TAI_KHOAN} lan sai tren cung mot email, du moi lan mot IP khac`,
+        passCount,
+        MAX_ACCOUNT_FAILS,
+        `phai chan sau ${MAX_ACCOUNT_FAILS} lan sai tren cung mot email, du moi lan mot IP khac`,
     );
 
     // IP hoan toan moi cung khong vao duoc nua - do la muc dich cua khoa nay.
-    assert.strictEqual((await thu('203.0.113.7', email)).chan, true);
+    assert.strictEqual((await attempt('203.0.113.7', email)).chan, true);
 });
 
 test('nguong theo tai khoan phai cao hon nguong mot IP', () => {
     // Neu de bang hoac thap hon, mot nguoi go nham mat khau cua chinh minh se
     // tu khoa tai khoan tren MOI thiet bi chu khong chi may dang ngoi.
     assert.ok(
-        MAX_FAILS_TAI_KHOAN > MAX_FAILS_EMAIL,
+        MAX_ACCOUNT_FAILS > MAX_FAILS_EMAIL,
         'nguong theo email phai noi long hon nguong theo ip|email',
     );
 });
 
 test('nguoi dung o IP khac khong bi va lay', async () => {
     _resetForTest();
-    await saiNhieuLan('1.1.1.1', 'nan-nhan@vidu.com', 10);
-    assert.strictEqual((await thu('2.2.2.2', 'nan-nhan@vidu.com')).chan, false);
+    await failManyTimes('1.1.1.1', 'nan-nhan@vidu.com', 10);
+    assert.strictEqual((await attempt('2.2.2.2', 'nan-nhan@vidu.com')).chan, false);
 });
 
 test('dang nhap dung thi xoa bo dem cua email do', async () => {
@@ -120,15 +120,15 @@ test('dang nhap dung thi xoa bo dem cua email do', async () => {
     const email = 'toi@vidu.com';
 
     // Sai 4 lan (chua toi nguong 5)
-    await saiNhieuLan(ip, email, MAX_FAILS_EMAIL - 1);
+    await failManyTimes(ip, email, MAX_FAILS_EMAIL - 1);
 
-    const kq = await thu(ip, email);
-    assert.strictEqual(kq.chan, false);
-    await clearLoginAttempts(kq.keys); // dang nhap dung
+    const outcome = await attempt(ip, email);
+    assert.strictEqual(outcome.chan, false);
+    await clearLoginAttempts(outcome.keys); // dang nhap dung
 
     // Duoc dem lai tu dau
-    const daSai = await saiNhieuLan(ip, email, MAX_FAILS_EMAIL + 3);
-    assert.strictEqual(daSai, MAX_FAILS_EMAIL);
+    const failed = await failManyTimes(ip, email, MAX_FAILS_EMAIL + 3);
+    assert.strictEqual(failed, MAX_FAILS_EMAIL);
 });
 
 test('dang nhap dung thi xoa ca bo dem theo rieng tai khoan', async () => {
@@ -137,20 +137,20 @@ test('dang nhap dung thi xoa ca bo dem theo rieng tai khoan', async () => {
     _resetForTest();
     const email = 'hay-quen@vidu.com';
 
-    for (let i = 0; i < MAX_FAILS_TAI_KHOAN - 1; i += 1) {
-        const kq = await thu(`10.1.0.${Math.floor(i / 4)}`, email);
-        await recordLoginFailure(kq.keys);
+    for (let i = 0; i < MAX_ACCOUNT_FAILS - 1; i += 1) {
+        const outcome = await attempt(`10.1.0.${Math.floor(i / 4)}`, email);
+        await recordLoginFailure(outcome.keys);
     }
 
-    const ok = await thu('10.9.9.9', email);
+    const ok = await attempt('10.9.9.9', email);
     assert.strictEqual(ok.chan, false);
     await clearLoginAttempts(ok.keys); // dang nhap dung
 
     // Neu bo dem theo email KHONG duoc xoa thi no dang o 19, chi mot lan sai
     // nua la cham nguong 20 va chan ngay. Da xoa thi con nguyen han muc, va
     // thu chan truoc phai la khoa ip|email o lan thu 5.
-    const daSai = await saiNhieuLan('10.9.9.9', email, MAX_FAILS_EMAIL + 3);
-    assert.strictEqual(daSai, MAX_FAILS_EMAIL, 'bo dem theo email phai duoc xoa khi dang nhap dung');
+    const failed = await failManyTimes('10.9.9.9', email, MAX_FAILS_EMAIL + 3);
+    assert.strictEqual(failed, MAX_FAILS_EMAIL, 'bo dem theo email phai duoc xoa khi dang nhap dung');
 });
 
 test('dang nhap dung KHONG lam moi han muc theo IP', async () => {
@@ -160,24 +160,24 @@ test('dang nhap dung KHONG lam moi han muc theo IP', async () => {
     const ip = '4.4.4.4';
 
     for (let i = 0; i < MAX_FAILS_IP - 1; i += 1) {
-        const kq = await thu(ip, `nguoi${i}@vidu.com`);
-        await recordLoginFailure(kq.keys);
+        const outcome = await attempt(ip, `nguoi${i}@vidu.com`);
+        await recordLoginFailure(outcome.keys);
     }
 
     // Mot lan dang nhap dung
-    const ok = await thu(ip, 'trung-roi@vidu.com');
+    const ok = await attempt(ip, 'trung-roi@vidu.com');
     await clearLoginAttempts(ok.keys);
 
     // Chi con dung mot lan sai nua la cham nguong IP
-    const kq = await thu(ip, 'nguoi-khac@vidu.com');
-    assert.strictEqual(kq.chan, false);
-    await recordLoginFailure(kq.keys);
-    assert.strictEqual((await thu(ip, 'nguoi-khac-nua@vidu.com')).chan, true);
+    const outcome = await attempt(ip, 'nguoi-khac@vidu.com');
+    assert.strictEqual(outcome.chan, false);
+    await recordLoginFailure(outcome.keys);
+    assert.strictEqual((await attempt(ip, 'nguoi-khac-nua@vidu.com')).chan, true);
 });
 
 test('phan hoi 429 co kem Retry-After', async () => {
     _resetForTest();
-    await saiNhieuLan('5.5.5.5', 'ai-do@vidu.com', MAX_FAILS_EMAIL);
+    await failManyTimes('5.5.5.5', 'ai-do@vidu.com', MAX_FAILS_EMAIL);
 
     let header = null;
     const res = {
@@ -192,22 +192,22 @@ test('phan hoi 429 co kem Retry-After', async () => {
 test('khong co req.ip thi van chay, khong no', async () => {
     _resetForTest();
     const req = { body: { email: 'x@vidu.com' } };
-    let choQua = false;
+    let allowed = false;
     await loginRateLimit(
         req,
         { set() { return this; }, status() { return this; }, json() { return this; } },
-        () => { choQua = true; },
+        () => { allowed = true; },
     );
-    assert.strictEqual(choQua, true);
-    assert.ok(req.loginAttemptKey.theoIp.includes('unknown'));
+    assert.strictEqual(allowed, true);
+    assert.ok(req.loginAttemptKey.byIp.includes('unknown'));
 });
 
 test('khoa cua dang nhap khong dam vao khoa cua duong khac', async () => {
     // Kho dem la kho DUNG CHUNG (dang ky, doi mat khau cung ghi vao do). Thieu
     // tien to thi mot IP bi chan o duong dang ky se bi chan luon o dang nhap.
     _resetForTest();
-    const kq = await thu('7.7.7.7', 'ai@vidu.com');
-    assert.ok(kq.keys.theoIp.startsWith('dangnhap:'));
-    assert.ok(kq.keys.theoEmail.startsWith('dangnhap:'));
-    assert.ok(kq.keys.theoTaiKhoan.startsWith('dangnhap:'));
+    const outcome = await attempt('7.7.7.7', 'ai@vidu.com');
+    assert.ok(outcome.keys.byIp.startsWith('dangnhap:'));
+    assert.ok(outcome.keys.theoEmail.startsWith('dangnhap:'));
+    assert.ok(outcome.keys.byAccount.startsWith('dangnhap:'));
 });

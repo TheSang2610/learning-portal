@@ -1,5 +1,5 @@
 const multer = require('multer');
-const layCloudinary = require('../config/cloudinary');
+const getCloudinary = require('../config/cloudinary');
 
 
 const storage = multer.memoryStorage();
@@ -30,7 +30,7 @@ const uploadLessonFiles = uploadCloud.fields([
 // file raw phai co duoi trong public_id thi Cloudinary moi tra ve dung kieu noi dung.
 const uploadToCloudinary = (fileBuffer, resourceType = 'auto', options = {}) => {
   return new Promise((resolve, reject) => {
-    const stream = layCloudinary().uploader.upload_stream(
+    const stream = getCloudinary().uploader.upload_stream(
       {
         folder: 'learning-portal',
         resource_type: resourceType,

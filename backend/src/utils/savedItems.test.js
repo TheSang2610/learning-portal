@@ -1,25 +1,25 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { docDuongDanCu, laObjectId, TOI_DA_NHAP } = require('./savedItems');
+const { parseLegacyPath, laObjectId, MAX_IMPORT } = require('./savedItems');
 
 const ID = '6aba36230bd792d94b5286b0';
 
 test('doc duoc duong dan blog va tai lieu', () => {
-    assert.deepStrictEqual(docDuongDanCu(['/blog/hoc-react', `/share-document/${ID}`]), [
+    assert.deepStrictEqual(parseLegacyPath(['/blog/hoc-react', `/share-document/${ID}`]), [
         { loai: 'baiViet', slug: 'hoc-react' },
         { loai: 'taiLieu', id: ID },
     ]);
 });
 
 test('bo query, hash va dau / cuoi', () => {
-    assert.deepStrictEqual(docDuongDanCu(['/blog/abc/?x=1', `/share-document/${ID}#top`]), [
+    assert.deepStrictEqual(parseLegacyPath(['/blog/abc/?x=1', `/share-document/${ID}#top`]), [
         { loai: 'baiViet', slug: 'abc' },
         { loai: 'taiLieu', id: ID },
     ]);
 });
 
 test('bo trung, ke ca khac hoa thuong', () => {
-    assert.strictEqual(docDuongDanCu(['/blog/abc', '/blog/ABC', '/blog/abc']).length, 1);
+    assert.strictEqual(parseLegacyPath(['/blog/abc', '/blog/ABC', '/blog/abc']).length, 1);
 });
 
 test('bo moi thu khong hop le', () => {
@@ -28,17 +28,17 @@ test('bo moi thu khong hop le', () => {
         '/blog/', '/blog/a/b', 'https://evil.com/blog/x', '/blog/<script>', 'x'.repeat(400),
         `/share-document/${ID}/file`,
     ];
-    assert.deepStrictEqual(docDuongDanCu(rac), []);
+    assert.deepStrictEqual(parseLegacyPath(rac), []);
 });
 
 test('khong phai mang -> rong', () => {
-    assert.deepStrictEqual(docDuongDanCu('/blog/x'), []);
-    assert.deepStrictEqual(docDuongDanCu(undefined), []);
+    assert.deepStrictEqual(parseLegacyPath('/blog/x'), []);
+    assert.deepStrictEqual(parseLegacyPath(undefined), []);
 });
 
 test('cat o TOI_DA_NHAP', () => {
-    const nhieu = Array.from({ length: TOI_DA_NHAP + 50 }, (_, i) => `/blog/bai-${i}`);
-    assert.strictEqual(docDuongDanCu(nhieu).length, TOI_DA_NHAP);
+    const many = Array.from({ length: MAX_IMPORT + 50 }, (_, i) => `/blog/bai-${i}`);
+    assert.strictEqual(parseLegacyPath(many).length, MAX_IMPORT);
 });
 
 test('laObjectId', () => {

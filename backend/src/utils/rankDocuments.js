@@ -20,7 +20,7 @@
 
 /** Bo dau tieng Viet. "đ" khong phai dau ghep nen NFD khong tach duoc, phai
  *  thay rieng. */
-const boDau = (s) =>
+const stripAccents = (s) =>
     String(s || '')
         .normalize('NFD')
         .replace(/[̀-ͯ]/g, '')
@@ -35,8 +35,8 @@ const boDau = (s) =>
  * goi y theo mon coi chung la ba mon khac nhau, va muc "cung mon" gan nhu
  * khong bao gio trung.
  */
-const chuanHoaMon = (s) =>
-    boDau(s)
+const normalizeSubject = (s) =>
+    stripAccents(s)
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, ' ')
         .trim();
@@ -52,7 +52,7 @@ const chuanHoaMon = (s) =>
 //           (đề thi, ôn thi). Voi kho tai lieu hoc tap, "de thi" la loai tai
 //           lieu cot loi, chan no la mat tin hieu quy nhat.
 //   'co'  - nham la "có", nhung no cung la "cơ" trong "Cơ sở dữ liệu".
-const TU_BO_QUA = new Set([
+const STOP_WORDS = new Set([
     'tai', 'lieu', 'mon', 'hoc', 'va', 'cua', 'cho', 'cac', 'nhung', 'la',
     'voi', 'trong', 'de', 'bai', 'giang', 'giao', 'trinh', 'phan',
     'chuong', 'on', 'tap', 'ki', 'ky', 'nam', 'file', 'pdf', 'doc', 'docx',
@@ -64,26 +64,26 @@ const TU_BO_QUA = new Set([
  * lieu nhieu mon); ban ghi cu con la chuoi. Nhan ca hai de khong phu thuoc
  * viec script chuyen du lieu da chay hay chua.
  */
-const thanhMang = (v) => (Array.isArray(v) ? v : v ? [v] : []).filter(Boolean);
+const networkBar = (v) => (Array.isArray(v) ? v : v ? [v] : []).filter(Boolean);
 
 /**
  * Cac mon cua mot tai lieu: [{ key, ten }], cung thu tu nhu tren tai lieu.
  * Thieu khoa thi tu chuan hoa tu ten.
  */
-const cacMonCua = (taiLieu) => {
-    const ten = thanhMang(taiLieu && taiLieu.monHoc).map((t) => String(t).trim());
-    const khoa = thanhMang(taiLieu && taiLieu.monHocKey);
-    if (!khoa.length) return ten.map((t) => ({ key: chuanHoaMon(t), ten: t })).filter((m) => m.key);
-    return khoa.map((k, i) => ({ key: k, ten: ten[i] || k }));
+const subjectsOf = (document) => {
+    const name = networkBar(document && document.monHoc).map((t) => String(t).trim());
+    const course = networkBar(document && document.monHocKey);
+    if (!course.length) return name.map((t) => ({ key: normalizeSubject(t), ten: t })).filter((m) => m.key);
+    return course.map((k, i) => ({ key: k, ten: name[i] || k }));
 };
 
 /** Tach chuoi thanh cac tu khoa co nghia, khong trung nhau. */
-const tachTuKhoa = (s) => [
+const splitKeywords = (s) => [
     ...new Set(
-        chuanHoaMon(s)
+        normalizeSubject(s)
             .split(' ')
             // Bo tu 1 ky tu: "c", "a" khop voi moi thu.
-            .filter((t) => t.length >= 2 && !TU_BO_QUA.has(t)),
+            .filter((t) => t.length >= 2 && !STOP_WORDS.has(t)),
     ),
 ];
 
@@ -103,25 +103,25 @@ const tachTuKhoa = (s) => [
 //     tieu de tai lieu dang xem. Co tran de mot tieu de dai nhieu tu khong
 //     vuot mat tai lieu cung mon.
 //
-//   PHO_BIEN - yeu nhat, chi de pha the hoa khi cac muc tren bang nhau.
-const DIEM_CUNG_MON_DANG_XEM = 50;
-const DIEM_MOI_TRONG_SO_MON = 10;
-const DIEM_MON_QUAN_TAM_TOI_DA = 30;
-const DIEM_MOI_TU_KHOA = 8;
-const DIEM_TU_KHOA_TOI_DA = 24;
-const DIEM_PHO_BIEN_TOI_DA = 10;
+//   POPULAR - yeu nhat, chi de pha the hoa khi cac muc tren bang nhau.
+const SAME_SUBJECT_SCORE = 50;
+const SCORE_PER_SUBJECT_WEIGHT = 10;
+const MAX_INTEREST_SCORE = 30;
+const SCORE_PER_KEYWORD = 8;
+const MAX_KEYWORD_SCORE = 24;
+const MAX_POPULARITY_SCORE = 10;
 
 // Qua 20 luot tai thi coi nhu pho bien toi da: chenh lech phia tren chi phan
 // anh tai lieu nao dang truoc, khong phan anh tai lieu nao hop hon.
-const NGUONG_PHO_BIEN = 20;
+const POPULARITY_THRESHOLD = 20;
 
 // Trong so cua tung loai hanh dong khi gom lich su.
-const TRONG_SO_HANH_DONG = { xem: 1, tai: 3 };
+const ACTION_WEIGHTS = { xem: 1, tai: 3 };
 
 // Chi lay tu khoa tu chung nay lan tim gan nhat: so thich thay doi, tim tu
 // thang truoc it noi len dieu nguoi dung can hom nay.
-const SO_LAN_TIM_GAN_NHAT = 10;
-const SO_TU_KHOA_TOI_DA = 12;
+const RECENT_SEARCH_COUNT = 10;
+const MAX_KEYWORDS = 12;
 
 // ---------------------------------------------------------------------------
 // Gom lich su
@@ -133,35 +133,35 @@ const SO_TU_KHOA_TOI_DA = 12;
  * `hoatDong` sap MOI NHAT TRUOC. Moi phan tu: { loai: 'xem'|'tai'|'tim',
  * document, monHocKey, tuKhoa }.
  */
-const tongHopLichSu = (hoatDong) => {
-    const monQuanTam = new Map();
-    const daTai = new Set();
-    const tuKhoa = [];
-    let soLanTim = 0;
+const summarizeHistory = (activity) => {
+    const interestSubjects = new Map();
+    const downloaded = new Set();
+    const keyword = [];
+    let searchCount = 0;
 
-    for (const h of Array.isArray(hoatDong) ? hoatDong : []) {
+    for (const h of Array.isArray(activity) ? activity : []) {
         if (!h || !h.loai) continue;
 
         if (h.loai === 'tim') {
-            if (soLanTim >= SO_LAN_TIM_GAN_NHAT) continue;
-            soLanTim += 1;
-            for (const t of tachTuKhoa(h.tuKhoa)) {
-                if (!tuKhoa.includes(t)) tuKhoa.push(t);
+            if (searchCount >= RECENT_SEARCH_COUNT) continue;
+            searchCount += 1;
+            for (const t of splitKeywords(h.tuKhoa)) {
+                if (!keyword.includes(t)) keyword.push(t);
             }
             continue;
         }
 
-        const trongSo = TRONG_SO_HANH_DONG[h.loai];
-        if (!trongSo) continue;
+        const weight = ACTION_WEIGHTS[h.loai];
+        if (!weight) continue;
 
         // Mot tai lieu nhieu mon: moi mon cua no deu duoc tinh la "quan tam".
-        for (const k of thanhMang(h.monHocKey)) {
-            monQuanTam.set(k, (monQuanTam.get(k) || 0) + trongSo);
+        for (const k of networkBar(h.monHocKey)) {
+            interestSubjects.set(k, (interestSubjects.get(k) || 0) + weight);
         }
-        if (h.loai === 'tai' && h.document) daTai.add(String(h.document));
+        if (h.loai === 'tai' && h.document) downloaded.add(String(h.document));
     }
 
-    return { monQuanTam, daTai, tuKhoa: tuKhoa.slice(0, SO_TU_KHOA_TOI_DA) };
+    return { interestSubjects, daTai: downloaded, tuKhoa: keyword.slice(0, MAX_KEYWORDS) };
 };
 
 /**
@@ -175,20 +175,20 @@ const tongHopLichSu = (hoatDong) => {
  * `hoatDong` sap MOI NHAT TRUOC. Tra ve mang theo dung thu tu do. Bo qua loai
  * 'tim' vi tim khong gan voi tai lieu nao.
  */
-const gopLichSuTheoTaiLieu = (hoatDong) => {
-    const theoTaiLieu = new Map();
-    for (const h of Array.isArray(hoatDong) ? hoatDong : []) {
+const groupHistoryByDocument = (activity) => {
+    const byDocument = new Map();
+    for (const h of Array.isArray(activity) ? activity : []) {
         if (!h || !h.document || (h.loai !== 'xem' && h.loai !== 'tai')) continue;
         const id = String(h.document);
-        const cu = theoTaiLieu.get(id);
-        if (!cu) {
+        const old = byDocument.get(id);
+        if (!old) {
             // Gap lan dau = lan GAN NHAT, vi danh sach da sap moi nhat truoc.
-            theoTaiLieu.set(id, { document: id, lanCuoi: h.createdAt, daTai: h.loai === 'tai' });
+            byDocument.set(id, { document: id, lanCuoi: h.createdAt, daTai: h.loai === 'tai' });
         } else if (h.loai === 'tai') {
-            cu.daTai = true;
+            old.daTai = true;
         }
     }
-    return [...theoTaiLieu.values()];
+    return [...byDocument.values()];
 };
 
 // ---------------------------------------------------------------------------
@@ -199,87 +199,87 @@ const gopLichSuTheoTaiLieu = (hoatDong) => {
  * Cham diem MOT tai lieu.
  *
  * `boi`:
- *   monDangXem   khoa mon (chuoi hoac mang) cua tai lieu dang mo o trang chi
+ *   viewingSubject   khoa mon (chuoi hoac mang) cua tai lieu dang mo o trang chi
  *                tiet; rong neu khong
- *   monQuanTam   Map<khoa mon, trong so> tu lich su
+ *   interestSubjects   Map<khoa mon, trong so> tu lich su
  *   tuKhoa       mang tu khoa da chuan hoa
- *   nguonTuKhoa  'tim' (tu lich su tim) | 'tieuDe' (tu tai lieu dang xem) -
+ *   keywordSource  'tim' (tu lich su tim) | 'tieuDe' (tu tai lieu dang xem) -
  *                chi de chon cau giai thich cho dung
  *
  * Tra ve ca `vi` - cau hien duoi moi goi y. Mot goi y khong noi duoc ly do thi
  * nguoi dung coi no la quang cao.
  */
-const chamDiem = (taiLieu, boi = {}) => {
-    const monQuanTam = boi.monQuanTam instanceof Map ? boi.monQuanTam : new Map();
-    const tuKhoa = Array.isArray(boi.tuKhoa) ? boi.tuKhoa : [];
-    const cacMon = cacMonCua(taiLieu);
-    const monDangXem = new Set(thanhMang(boi.monDangXem));
+const scoreDocument = (document, boi = {}) => {
+    const interestSubjects = boi.interestSubjects instanceof Map ? boi.interestSubjects : new Map();
+    const keyword = Array.isArray(boi.tuKhoa) ? boi.tuKhoa : [];
+    const subjects = subjectsOf(document);
+    const viewingSubject = new Set(networkBar(boi.viewingSubject));
 
-    let diem = 0;
+    let score = 0;
     // Cac ly do co the co, cau cu the nhat dung truoc. Tinh het roi moi chon
     // de thu tu cong diem khong quyet dinh cau giai thich.
-    const lyDo = [];
+    const reason = [];
 
     // Trung MOT mon voi tai lieu dang xem la du diem "cung mon" - khong cong
     // don theo so mon trung, khong thi tai lieu gan nhieu mon luon thang.
-    const monChung = cacMon.find((m) => monDangXem.has(m.key));
+    const sharedSubjects = subjects.find((m) => viewingSubject.has(m.key));
     // Mon quan tam: lay mon co trong so lich su CAO NHAT trong cac mon cua tai
     // lieu, cung ly do - mot tin hieu, khong cong don.
-    const monHayXem = cacMon
-        .filter((m) => monQuanTam.has(m.key))
-        .sort((a, b) => monQuanTam.get(b.key) - monQuanTam.get(a.key))[0];
+    const frequentSubjects = subjects
+        .filter((m) => interestSubjects.has(m.key))
+        .sort((a, b) => interestSubjects.get(b.key) - interestSubjects.get(a.key))[0];
 
-    if (monChung) {
-        diem += DIEM_CUNG_MON_DANG_XEM;
-        lyDo.push([1, `Cùng môn ${monChung.ten}`]);
-    } else if (monHayXem) {
+    if (sharedSubjects) {
+        score += SAME_SUBJECT_SCORE;
+        reason.push([1, `Cùng môn ${sharedSubjects.ten}`]);
+    } else if (frequentSubjects) {
         // else: cung mon dang xem da la ly do manh hon, cong them diem lich su
         // cho cung mon ay la dem mot tin hieu hai lan.
-        diem += Math.min(monQuanTam.get(monHayXem.key) * DIEM_MOI_TRONG_SO_MON, DIEM_MON_QUAN_TAM_TOI_DA);
-        lyDo.push([3, `Môn ${monHayXem.ten} bạn hay xem`]);
+        score += Math.min(interestSubjects.get(frequentSubjects.key) * SCORE_PER_SUBJECT_WEIGHT, MAX_INTEREST_SCORE);
+        reason.push([3, `Môn ${frequentSubjects.ten} bạn hay xem`]);
     }
 
-    if (tuKhoa.length) {
-        const tuCuaTaiLieu = new Set(
-            tachTuKhoa(`${taiLieu.title || ''} ${cacMon.map((m) => m.ten).join(' ')}`),
+    if (keyword.length) {
+        const documentWords = new Set(
+            splitKeywords(`${document.title || ''} ${subjects.map((m) => m.ten).join(' ')}`),
         );
-        const trung = tuKhoa.filter((t) => tuCuaTaiLieu.has(t));
+        const trung = keyword.filter((t) => documentWords.has(t));
         if (trung.length) {
-            diem += Math.min(trung.length * DIEM_MOI_TU_KHOA, DIEM_TU_KHOA_TOI_DA);
-            if (boi.nguonTuKhoa === 'tim') {
-                lyDo.push([2, `Liên quan tới "${trung[0]}" bạn đã tìm`]);
+            score += Math.min(trung.length * SCORE_PER_KEYWORD, MAX_KEYWORD_SCORE);
+            if (boi.keywordSource === 'tim') {
+                reason.push([2, `Liên quan tới "${trung[0]}" bạn đã tìm`]);
             } else {
-                lyDo.push([4, 'Nội dung gần với tài liệu đang xem']);
+                reason.push([4, 'Nội dung gần với tài liệu đang xem']);
             }
         }
     }
 
-    const luotTai = Number(taiLieu.downloadCount) || 0;
-    if (luotTai > 0) {
-        diem += Math.min(luotTai / NGUONG_PHO_BIEN, 1) * DIEM_PHO_BIEN_TOI_DA;
-        lyDo.push([5, 'Được tải nhiều']);
+    const downloadCount = Number(document.downloadCount) || 0;
+    if (downloadCount > 0) {
+        score += Math.min(downloadCount / POPULARITY_THRESHOLD, 1) * MAX_POPULARITY_SCORE;
+        reason.push([5, 'Được tải nhiều']);
     }
 
-    lyDo.sort((a, b) => a[0] - b[0]);
-    return { diem, vi: lyDo.length ? lyDo[0][1] : 'Mới được chia sẻ' };
+    reason.sort((a, b) => a[0] - b[0]);
+    return { diem: score, vi: reason.length ? reason[0][1] : 'Mới được chia sẻ' };
 };
 
 /**
  * Xep hang va cat lay N tai lieu.
  *
- * `boi.loaiTru` - Set id PHAI bo: tai lieu dang xem va tai lieu nguoi dung da
+ * `boi.exclude` - Set id PHAI bo: tai lieu dang xem va tai lieu nguoi dung da
  * tai ve. Goi y lai dung thu nguoi ta vua tai la loi de thay nhat cua mot muc
  * goi y.
  */
-const xepHangTaiLieu = (danhSach, boi = {}, soLuong = 6) => {
-    if (!Array.isArray(danhSach)) return [];
-    const loaiTru = boi.loaiTru instanceof Set ? boi.loaiTru : new Set();
+const rankDocuments = (list, boi = {}, count = 6) => {
+    if (!Array.isArray(list)) return [];
+    const exclude = boi.exclude instanceof Set ? boi.exclude : new Set();
 
-    return danhSach
-        .filter((d) => d && d._id && !loaiTru.has(String(d._id)))
+    return list
+        .filter((d) => d && d._id && !exclude.has(String(d._id)))
         .map((d) => {
-            const { diem, vi } = chamDiem(d, boi);
-            return { ...d, diemGoiY: diem, viSaoGoiY: vi };
+            const { diem: score, vi: wallet } = scoreDocument(d, boi);
+            return { ...d, diemGoiY: score, viSaoGoiY: wallet };
         })
         .sort((a, b) => {
             if (b.diemGoiY !== a.diemGoiY) return b.diemGoiY - a.diemGoiY;
@@ -287,23 +287,23 @@ const xepHangTaiLieu = (danhSach, boi = {}, soLuong = 6) => {
             // thuoc CSDL tra ve the nao, doi giua hai lan tai trang.
             return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
         })
-        .slice(0, Math.max(1, Math.min(soLuong, 24)));
+        .slice(0, Math.max(1, Math.min(count, 24)));
 };
 
 module.exports = {
-    boDau,
-    chuanHoaMon,
-    thanhMang,
-    cacMonCua,
-    tachTuKhoa,
-    tongHopLichSu,
-    gopLichSuTheoTaiLieu,
-    chamDiem,
-    xepHangTaiLieu,
-    DIEM_CUNG_MON_DANG_XEM,
-    DIEM_MON_QUAN_TAM_TOI_DA,
-    DIEM_MOI_TU_KHOA,
-    DIEM_TU_KHOA_TOI_DA,
-    DIEM_PHO_BIEN_TOI_DA,
-    TRONG_SO_HANH_DONG,
+    stripAccents,
+    normalizeSubject,
+    networkBar,
+    subjectsOf,
+    splitKeywords,
+    summarizeHistory,
+    groupHistoryByDocument,
+    scoreDocument,
+    rankDocuments,
+    SAME_SUBJECT_SCORE,
+    MAX_INTEREST_SCORE,
+    SCORE_PER_KEYWORD,
+    MAX_KEYWORD_SCORE,
+    MAX_POPULARITY_SCORE,
+    ACTION_WEIGHTS,
 };

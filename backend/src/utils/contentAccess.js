@@ -18,36 +18,48 @@
  */
 
 const Enrollment = require('../models/Enrollment');
+const Course = require('../models/Course');
+const { activeFilter } = require('./accessPeriod');
 
 // Cac truong chi nguoi co quyen moi duoc nhan.
 // videoPublicId: ma video o kho kin - khong lo cho nguoi chua mua, va nguoi da
-// mua cung chi nhan link ky (utils/privateVideo.ganLinkPhat), khong nhan ma.
-const TRUONG_KIN = ['videoUrl', 'videoPublicId', 'content', 'documentUrl'];
+// mua cung chi nhan link ky (utils/privateVideo.attachPlaybackUrl), khong nhan ma.
+const PRIVATE_FIELDS = ['videoUrl', 'videoPublicId', 'content', 'documentUrl'];
 
 /**
  * @param {object} khoa   Tai lieu Course (co _id va instructor)
  * @param {object} [nguoiDung]  req.user, co the khong co (khach vang lai)
  */
-const duocXemNoiDung = async (khoa, nguoiDung) => {
-    if (!khoa || !nguoiDung) return false;
+const canViewContent = async (course, user) => {
+    if (!course || !user) return false;
 
     // Admin xem duoc tat ca - dung dung mot cho voi middleware `admin`.
-    if (nguoiDung.role === 'admin') return true;
+    if (user.role === 'admin') return true;
 
     // Giang vien cua chinh khoa do. `instructor` co the da populate thanh doi
     // tuong, cung co the con la ObjectId - phai chiu ca hai hinh dang.
-    const chuKhoa = khoa.instructor?._id ?? khoa.instructor;
-    if (chuKhoa && String(chuKhoa) === String(nguoiDung._id)) return true;
+    const courseOwner = course.instructor?._id ?? course.instructor;
+    if (courseOwner && String(courseOwner) === String(user._id)) return true;
 
     // Con lai: phai co ban ghi ghi danh. Kiem o day la du cho ca khoa co phi,
     // vi ban ghi ghi danh cua khoa co phi chi tao duoc sau khi don da `paid`
     // (xem cong 402 trong enrollInCourse).
-    const daGhiDanh = await Enrollment.exists({
-        course: khoa._id,
-        student: nguoiDung._id,
+    // Khoa co phi het han hoc (utils/accessPeriod.js) thi khong duoc xem nua;
+    // tien do, lich su bai lam va chung nhan van giu.
+    //
+    // Khoa DANG mien phi thi bo qua han: khoa tung co phi roi quan tri chuyen
+    // sang mien phi, nguoi mua cu da het han van phai hoc duoc nhu moi nguoi.
+    // Noi goi khong phai luc nao cung chon san `price` nen thieu thi tu doc.
+    const price = course.price !== undefined
+        ? course.price
+        : (await Course.findById(course._id).select('price').lean())?.price;
+    const enrolled = await Enrollment.exists({
+        course: course._id,
+        student: user._id,
+        ...(Number(price) > 0 ? activeFilter() : {}),
     });
 
-    return Boolean(daGhiDanh);
+    return Boolean(enrolled);
 };
 
 /**
@@ -56,15 +68,15 @@ const duocXemNoiDung = async (khoa, nguoiDung) => {
  * Nhan ca tai lieu Mongoose lan doi tuong thuong. Tra ve doi tuong thuong -
  * khong sua tai chỗ, vi tai lieu Mongoose con dung cho viec khac o noi goi.
  */
-const catNoiDung = (baiHoc) => {
-    if (!baiHoc) return baiHoc;
+const stripContent = (lesson) => {
+    if (!lesson) return lesson;
 
-    const doi = typeof baiHoc.toObject === 'function' ? baiHoc.toObject() : { ...baiHoc };
-    for (const truong of TRUONG_KIN) delete doi[truong];
+    const copy = typeof lesson.toObject === 'function' ? lesson.toObject() : { ...lesson };
+    for (const school of PRIVATE_FIELDS) delete copy[school];
 
     // Bao cho giao dien biet vi sao thieu, de con hien nut "Dang ky de xem".
-    doi.biKhoa = true;
-    return doi;
+    copy.biKhoa = true;
+    return copy;
 };
 
-module.exports = { duocXemNoiDung, catNoiDung, TRUONG_KIN };
+module.exports = { canViewContent, stripContent, PRIVATE_FIELDS };

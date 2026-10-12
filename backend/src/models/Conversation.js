@@ -13,7 +13,7 @@ const mongoose = require('mongoose');
  *     khong phai phong doan.
  */
 
-const tinNhanSchema = new mongoose.Schema(
+const messageSchema = new mongoose.Schema(
     {
         // Ten vai tro rieng cua du an, khong phai ten cua hang API nao. Doi
         // sang 'user'/'model'/'assistant' o aiProvider.js, de sau nay doi
@@ -26,7 +26,7 @@ const tinNhanSchema = new mongoose.Schema(
         noiDung: {
             type: String,
             required: true,
-            // Chan tren o tang luoc do nua. locCauHoi() da chan 1000 ky tu o
+            // Chan tren o tang luoc do nua. filterQuestion() da chan 1000 ky tu o
             // dau vao, nhung phan hoi cua AI thi khong qua ham do.
             maxlength: 8000,
         },
@@ -52,7 +52,7 @@ const conversationSchema = new mongoose.Schema(
             ref: 'Lesson',
             default: null,
         },
-        tinNhan: [tinNhanSchema],
+        tinNhan: [messageSchema],
     },
     // Ghim ten collection de ten trong CSDL trung voi ten tren so do ERD.
     { timestamps: true, collection: 'conversations' },

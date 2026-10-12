@@ -84,18 +84,6 @@ export const getProvidersApi = async (): Promise<Provider[]> => {
   return apiRequest("/providers");
 };
 
-export const updateUserRole = async (userId: string, role: string): Promise<User> => {
-  return apiRequest(`/users/${userId}/role`, {
-    method: "PUT",
-    body: JSON.stringify({ role }),
-  });
-};
-
-export const deleteUser = async (userId: string): Promise<{ message: string }> => {
-  return apiRequest(`/users/${userId}`, {
-    method: "DELETE",
-  });
-};
 export interface ActivityDay {
   date: string; // YYYY-MM-DD
   count: number;

@@ -9,14 +9,14 @@
 
 const idMongo = { type: "string", example: "66f1a2b3c4d5e6f7a8b9c0d1" };
 
-const Loi = {
+const Error = {
   type: "object",
   properties: {
     message: { type: "string", example: "Không tìm thấy khóa học" },
   },
 };
 
-const NguoiDung = {
+const User = {
   type: "object",
   properties: {
     _id: idMongo,
@@ -30,7 +30,7 @@ const NguoiDung = {
   },
 };
 
-const DanhMuc = {
+const Category = {
   type: "object",
   properties: {
     _id: idMongo,
@@ -40,7 +40,7 @@ const DanhMuc = {
   },
 };
 
-const DonVi = {
+const Provider = {
   type: "object",
   properties: {
     _id: idMongo,
@@ -50,7 +50,7 @@ const DonVi = {
   },
 };
 
-const BaiHoc = {
+const Lesson = {
   type: "object",
   properties: {
     _id: idMongo,
@@ -72,7 +72,7 @@ const BaiHoc = {
   },
 };
 
-const KhoaHoc = {
+const Course = {
   type: "object",
   properties: {
     _id: idMongo,
@@ -95,7 +95,7 @@ const KhoaHoc = {
   },
 };
 
-const TienDoBai = {
+const LessonProgress = {
   type: "object",
   properties: {
     lesson: { oneOf: [idMongo, { $ref: "#/components/schemas/BaiHoc" }] },
@@ -105,7 +105,7 @@ const TienDoBai = {
   },
 };
 
-const GhiDanh = {
+const Enrollment = {
   type: "object",
   properties: {
     _id: idMongo,
@@ -120,7 +120,7 @@ const GhiDanh = {
 
 // Endpoint GET /api/enrollments/{courseId} luon tra 200, phan biet bang co
 // isEnrolled chu khong tra 404 - nguoi goi phai kiem co nay truoc.
-const GhiDanhTheoKhoa = {
+const CourseEnrollment = {
   type: "object",
   properties: {
     isEnrolled: { type: "boolean", example: true },
@@ -131,7 +131,7 @@ const GhiDanhTheoKhoa = {
   },
 };
 
-const ThongKeTienDo = {
+const ProgressStats = {
   type: "object",
   properties: {
     progressPercentage: { type: "integer", example: 50 },
@@ -140,7 +140,7 @@ const ThongKeTienDo = {
   },
 };
 
-const DonHang = {
+const Order = {
   type: "object",
   properties: {
     _id: idMongo,
@@ -153,7 +153,7 @@ const DonHang = {
   },
 };
 
-const CauHoiTracNghiem = {
+const QuizQuestion = {
   type: "object",
   properties: {
     question: { type: "string" },
@@ -163,7 +163,7 @@ const CauHoiTracNghiem = {
   },
 };
 
-const BaiTracNghiem = {
+const Quiz = {
   type: "object",
   properties: {
     _id: idMongo,
@@ -175,7 +175,7 @@ const BaiTracNghiem = {
   },
 };
 
-const LuotLamBai = {
+const QuizAttempt = {
   type: "object",
   properties: {
     _id: idMongo,
@@ -187,7 +187,7 @@ const LuotLamBai = {
   },
 };
 
-const ChungNhan = {
+const Certificate = {
   type: "object",
   properties: {
     _id: idMongo,
@@ -203,7 +203,7 @@ const ChungNhan = {
   },
 };
 
-const DanhGia = {
+const Review = {
   type: "object",
   properties: {
     _id: idMongo,
@@ -216,7 +216,7 @@ const DanhGia = {
   },
 };
 
-const ThongKeDanhGia = {
+const ReviewStats = {
   type: "object",
   properties: {
     averageRating: { type: "number", example: 4.6 },
@@ -229,7 +229,7 @@ const ThongKeDanhGia = {
   },
 };
 
-const CauHoiThuongGap = {
+const Faq = {
   type: "object",
   properties: {
     _id: idMongo,
@@ -240,18 +240,7 @@ const CauHoiThuongGap = {
   },
 };
 
-const BangQuangCao = {
-  type: "object",
-  properties: {
-    _id: idMongo,
-    title: { type: "string" },
-    image: { type: "string" },
-    link: { type: "string" },
-    isActive: { type: "boolean" },
-  },
-};
-
-const TaiLieu = {
+const Document = {
   type: "object",
   properties: {
     _id: idMongo,
@@ -263,7 +252,7 @@ const TaiLieu = {
   },
 };
 
-const BaiViet = {
+const Post = {
   type: "object",
   properties: {
     _id: idMongo,
@@ -280,7 +269,7 @@ const BaiViet = {
   },
 };
 
-const ThanhTich = {
+const Achievement = {
   type: "object",
   properties: {
     _id: idMongo,
@@ -292,26 +281,25 @@ const ThanhTich = {
 };
 
 module.exports = {
-  Loi,
-  NguoiDung,
-  DanhMuc,
-  DonVi,
-  BaiHoc,
-  KhoaHoc,
-  TienDoBai,
-  GhiDanh,
-  GhiDanhTheoKhoa,
-  ThongKeTienDo,
-  DonHang,
-  CauHoiTracNghiem,
-  BaiTracNghiem,
-  LuotLamBai,
-  ChungNhan,
-  DanhGia,
-  ThongKeDanhGia,
-  CauHoiThuongGap,
-  BangQuangCao,
-  TaiLieu,
-  BaiViet,
-  ThanhTich,
+  Loi: Error,
+  NguoiDung: User,
+  DanhMuc: Category,
+  DonVi: Provider,
+  BaiHoc: Lesson,
+  KhoaHoc: Course,
+  TienDoBai: LessonProgress,
+  GhiDanh: Enrollment,
+  GhiDanhTheoKhoa: CourseEnrollment,
+  ThongKeTienDo: ProgressStats,
+  DonHang: Order,
+  CauHoiTracNghiem: QuizQuestion,
+  BaiTracNghiem: Quiz,
+  LuotLamBai: QuizAttempt,
+  ChungNhan: Certificate,
+  DanhGia: Review,
+  ThongKeDanhGia: ReviewStats,
+  CauHoiThuongGap: Faq,
+  TaiLieu: Document,
+  BaiViet: Post,
+  ThanhTich: Achievement,
 };

@@ -24,19 +24,19 @@
 //
 //   HOC_CUNG - nguoi hoc khoa A cung hoc khoa B. Tin hieu that tu hanh vi,
 //     nhung nhieu khi it nguoi: mot trung hop ngau nhien cung day diem len.
-//     Vi vay co tran DIEM_HOC_CUNG_TOI_DA ben duoi.
+//     Vi vay co tran MAX_CO_LEARNER_SCORE ben duoi.
 //
-//   PHO_BIEN - yeu nhat, chi dung de pha the hoa. Khong co no thi hai khoa
+//   POPULAR - yeu nhat, chi dung de pha the hoa. Khong co no thi hai khoa
 //     cung diem se xep theo thu tu CSDL tra ve, tuc la ngau nhien voi nguoi dung.
-const DIEM_CUNG_DANH_MUC = 50;
-const DIEM_MOI_NGUOI_HOC_CUNG = 10;
-const DIEM_HOC_CUNG_TOI_DA = 30;
-const DIEM_PHO_BIEN_TOI_DA = 10;
+const SAME_CATEGORY_SCORE = 50;
+const SCORE_PER_CO_LEARNER = 10;
+const MAX_CO_LEARNER_SCORE = 30;
+const MAX_POPULARITY_SCORE = 10;
 
 // So hoc vien de dat muc "pho bien toi da". Khoa 20 nguoi hoc va khoa 500 nguoi
 // hoc deu duoc coi la pho bien nhu nhau - vi qua nguong nay thi chenh lech chi
 // phan anh khoa nao mo truoc, khong phan anh khoa nao hop hon.
-const NGUONG_PHO_BIEN = 20;
+const POPULARITY_THRESHOLD = 20;
 
 /**
  * Cham diem MOT khoa.
@@ -45,58 +45,58 @@ const NGUONG_PHO_BIEN = 20;
  * phai trang tri: mot goi y khong noi duoc ly do thi nguoi dung coi no la
  * quang cao, con noi duoc thi ho hieu he thong dang theo doi cai gi.
  */
-const chamDiem = (khoa, boi = {}) => {
-    const danhMucDangHoc = boi.danhMucDangHoc instanceof Set ? boi.danhMucDangHoc : new Set();
-    const demHocCung = boi.demHocCung instanceof Map ? boi.demHocCung : new Map();
+const scoreDocument = (course, boi = {}) => {
+    const learningCategories = boi.learningCategories instanceof Set ? boi.learningCategories : new Set();
+    const countCoLearners = boi.countCoLearners instanceof Map ? boi.countCoLearners : new Map();
 
-    const idKhoa = String(khoa._id);
-    const idDanhMuc = khoa.category ? String(khoa.category._id || khoa.category) : '';
+    const courseId = String(course._id);
+    const categoryId = course.category ? String(course.category._id || course.category) : '';
 
-    let diem = 0;
-    let vi = '';
+    let score = 0;
+    let wallet = '';
 
-    const cungDanhMuc = !!idDanhMuc && danhMucDangHoc.has(idDanhMuc);
-    if (cungDanhMuc) {
-        diem += DIEM_CUNG_DANH_MUC;
-        vi = 'Cùng lĩnh vực với khóa bạn đang học';
+    const sameCategory = !!categoryId && learningCategories.has(categoryId);
+    if (sameCategory) {
+        score += SAME_CATEGORY_SCORE;
+        wallet = 'Cùng lĩnh vực với khóa bạn đang học';
     }
 
-    const soHocCung = demHocCung.get(idKhoa) || 0;
-    if (soHocCung > 0) {
-        diem += Math.min(soHocCung * DIEM_MOI_NGUOI_HOC_CUNG, DIEM_HOC_CUNG_TOI_DA);
+    const coLearnerCount = countCoLearners.get(courseId) || 0;
+    if (coLearnerCount > 0) {
+        score += Math.min(coLearnerCount * SCORE_PER_CO_LEARNER, MAX_CO_LEARNER_SCORE);
 
         // Cau nay de len truoc cau danh muc khi co ca hai: no cu the hon, va la
         // tin hieu tu nguoi that chu khong tu mot cai nhan phan loai.
-        vi = 'Học viên học khóa giống bạn cũng học khóa này';
+        wallet = 'Học viên học khóa giống bạn cũng học khóa này';
     }
 
-    const soHocVien = Number(khoa.soHocVien) || 0;
-    if (soHocVien > 0) {
-        diem += Math.min(soHocVien / NGUONG_PHO_BIEN, 1) * DIEM_PHO_BIEN_TOI_DA;
-        if (!vi) vi = 'Đang được nhiều người học';
+    const studentCount = Number(course.studentCount) || 0;
+    if (studentCount > 0) {
+        score += Math.min(studentCount / POPULARITY_THRESHOLD, 1) * MAX_POPULARITY_SCORE;
+        if (!wallet) wallet = 'Đang được nhiều người học';
     }
 
-    if (!vi) vi = 'Có thể bạn quan tâm';
+    if (!wallet) wallet = 'Có thể bạn quan tâm';
 
-    return { diem, vi };
+    return { diem: score, vi: wallet };
 };
 
 /**
  * Xep hang va cat lay N khoa.
  *
- * `daHoc` la danh sach id PHAI loai bo. Goi y dung thu nguoi ta da mua la loi
+ * `learned` la danh sach id PHAI loai bo. Goi y dung thu nguoi ta da mua la loi
  * de thay nhat cua mot muc goi y, va no lam hong long tin vao ca muc do.
  */
-const xepHangGoiY = (danhSach, boi = {}, soLuong = 6) => {
-    if (!Array.isArray(danhSach)) return [];
+const rankSuggestions = (list, boi = {}, count = 6) => {
+    if (!Array.isArray(list)) return [];
 
-    const daHoc = boi.daHoc instanceof Set ? boi.daHoc : new Set();
+    const learned = boi.learned instanceof Set ? boi.learned : new Set();
 
-    return danhSach
-        .filter((k) => k && k._id && !daHoc.has(String(k._id)))
+    return list
+        .filter((k) => k && k._id && !learned.has(String(k._id)))
         .map((k) => {
-            const { diem, vi } = chamDiem(k, boi);
-            return { ...k, diemGoiY: diem, viSaoGoiY: vi };
+            const { diem: score, vi: wallet } = scoreDocument(k, boi);
+            return { ...k, diemGoiY: score, viSaoGoiY: wallet };
         })
         .sort((a, b) => {
             if (b.diemGoiY !== a.diemGoiY) return b.diemGoiY - a.diemGoiY;
@@ -106,15 +106,15 @@ const xepHangGoiY = (danhSach, boi = {}, soLuong = 6) => {
             // va nguoi dung thay muc goi y nhay lung tung.
             return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
         })
-        .slice(0, Math.max(1, Math.min(soLuong, 24)));
+        .slice(0, Math.max(1, Math.min(count, 24)));
 };
 
 module.exports = {
-    chamDiem,
-    xepHangGoiY,
-    DIEM_CUNG_DANH_MUC,
-    DIEM_MOI_NGUOI_HOC_CUNG,
-    DIEM_HOC_CUNG_TOI_DA,
-    DIEM_PHO_BIEN_TOI_DA,
-    NGUONG_PHO_BIEN,
+    scoreDocument,
+    rankSuggestions,
+    SAME_CATEGORY_SCORE,
+    SCORE_PER_CO_LEARNER,
+    MAX_CO_LEARNER_SCORE,
+    MAX_POPULARITY_SCORE,
+    POPULARITY_THRESHOLD,
 };

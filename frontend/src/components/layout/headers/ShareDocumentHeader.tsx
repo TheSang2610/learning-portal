@@ -3,19 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import HeaderUserMenu from "./HeaderUserMenu";
-import {
-  DUONG_TAT_CA,
-  DUONG_TRANG_CHU,
-  DUONG_TRUONG,
-} from "@/src/components/document/duongDan";
+import { ALL_PATH, HOME_PATH, SCHOOLS_PATH } from "@/src/lib/document/paths";
 
 import styles from "./ShareDocumentHeader.module.scss";
 
 // Menu rieng cua khu tai lieu - dieu huong trong khu, khong dan ra cam nang /
 // khoa hoc (hai muc do da co o thanh TopNav tren cung).
 const MENU = [
-  { href: DUONG_TRUONG, nhan: "Trường đại học" },
-  { href: DUONG_TAT_CA, nhan: "Tất cả tài liệu" },
+  { href: SCHOOLS_PATH, nhan: "Trường đại học" },
+  { href: ALL_PATH, nhan: "Tất cả tài liệu" },
   { href: "/help", nhan: "Trợ giúp" },
 ];
 
@@ -27,20 +23,20 @@ export default function ShareDocumentHeader() {
         <div className={styles.row}>
           {/* Chu logo cung kieu "Learning Portal" o trang chu, mau tim dam cua
               dai dau khu tai lieu (ShareDocumentHero). */}
-          <Link href={DUONG_TRANG_CHU} className={styles.logo}>
+          <Link href={HOME_PATH} className={styles.logo}>
             LearningDocument
           </Link>
 
           <nav className={styles.nav} aria-label="Khu chia sẻ tài liệu">
             {MENU.map((m) => {
               // Dang o trang do hoac trang con cua no (vd. mot truong, mot tai lieu).
-              const dangO = pathname === m.href || pathname.startsWith(`${m.href}/`);
+              const current = pathname === m.href || pathname.startsWith(`${m.href}/`);
               return (
                 <Link
                   key={m.href}
                   href={m.href}
-                  aria-current={dangO ? "page" : undefined}
-                  className={`${styles.box3} ${dangO ? styles.dangO : ""}`}
+                  aria-current={current ? "page" : undefined}
+                  className={`${styles.box3} ${current ? styles.current : ""}`}
                 >
                   {m.nhan}
                 </Link>
@@ -50,7 +46,7 @@ export default function ShareDocumentHeader() {
         </div>
 
         {/* Khu tai lieu mien phi, khong ban gi - khong can gio hang. */}
-        <HeaderUserMenu coGioHang={false} />
+        <HeaderUserMenu hasCart={false} />
       </div>
     </div>
   );

@@ -16,16 +16,16 @@
 
 // Ma video YouTube luon dai dung 11 ky tu. Kiem do dai de mot duong dan la
 // (vi du /watch?v=) khong bi bien thanh iframe tro toi trang loi.
-const MA_YOUTUBE = /^[A-Za-z0-9_-]{11}$/;
+const YOUTUBE_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;
 
-function nhungYouTube(ma: string): string {
+function embedYouTube(code: string): string {
   // Co y BO tham so list: nguoi dung thuong chep link tu giua mot playlist.
   // Giu list lai thi trinh phat tu chay sang video ke tiep cua playlist sau khi
   // het bai - tuc la bai hoc bi danh dau xong roi may chay tiep noi dung khac.
-  return `https://www.youtube.com/embed/${ma}`;
+  return `https://www.youtube.com/embed/${code}`;
 }
 
-export function layDuongDanNhung(url: string): string | null {
+export function getEmbedUrl(url: string): string | null {
   let u: URL;
   try {
     u = new URL(url.trim());
@@ -38,8 +38,8 @@ export function layDuongDanNhung(url: string): string | null {
   const host = u.hostname.replace(/^www\./, "").toLowerCase();
 
   if (host === "youtu.be") {
-    const ma = u.pathname.split("/").filter(Boolean)[0] || "";
-    return MA_YOUTUBE.test(ma) ? nhungYouTube(ma) : null;
+    const code = u.pathname.split("/").filter(Boolean)[0] || "";
+    return YOUTUBE_ID_PATTERN.test(code) ? embedYouTube(code) : null;
   }
 
   if (
@@ -48,17 +48,17 @@ export function layDuongDanNhung(url: string): string | null {
     host === "youtube-nocookie.com"
   ) {
     if (u.pathname === "/watch") {
-      const ma = u.searchParams.get("v") || "";
-      return MA_YOUTUBE.test(ma) ? nhungYouTube(ma) : null;
+      const code = u.searchParams.get("v") || "";
+      return YOUTUBE_ID_PATTERN.test(code) ? embedYouTube(code) : null;
     }
     // /embed/, /shorts/, /live/ va /v/ deu mang ma ngay sau doan dau.
     const khop = u.pathname.match(/^\/(?:embed|shorts|live|v)\/([^/?#]+)/);
-    return khop && MA_YOUTUBE.test(khop[1]) ? nhungYouTube(khop[1]) : null;
+    return khop && YOUTUBE_ID_PATTERN.test(khop[1]) ? embedYouTube(khop[1]) : null;
   }
 
   if (host === "vimeo.com") {
-    const ma = u.pathname.split("/").filter(Boolean)[0] || "";
-    return /^\d+$/.test(ma) ? `https://player.vimeo.com/video/${ma}` : null;
+    const code = u.pathname.split("/").filter(Boolean)[0] || "";
+    return /^\d+$/.test(code) ? `https://player.vimeo.com/video/${code}` : null;
   }
 
   if (host === "player.vimeo.com") {

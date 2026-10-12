@@ -7,7 +7,7 @@ import styles from "./TopNav.module.scss";
 export default function TopNav() {
   const pathname = usePathname();
 
-  // `nhan` la ten day du, `nhanNgan` la ten dung tren dien thoai.
+  // `nhan` la ten day du, `shortLabel` la ten dung tren dien thoai.
   //
   // Bon ten day du cong lai rong khoang 533px, trong khi iPhone 12 Pro chi co
   // 390px. Thu gon con chu khoa la vua man hinh, khong phai vuot sang ngang
@@ -22,17 +22,17 @@ export default function TopNav() {
     },
     {
       title: "Cẩm nang môn học",
-      nhanNgan: "Cẩm nang",
+      shortLabel: "Cẩm nang",
       href: "/blog",
     },
     {
       title: "Chia sẻ tài liệu",
-      nhanNgan: "Tài liệu",
+      shortLabel: "Tài liệu",
       href: "/share-document",
     },
     {
       title: "Tính điểm GPA",
-      nhanNgan: "GPA",
+      shortLabel: "GPA",
       href: "/gpa-calculator",
     },
   ];
@@ -62,7 +62,7 @@ export default function TopNav() {
                   chi biet duoc sau khi chay, ma doc no trong lan ve dau tien
                   se lam HTML dung san lech voi HTML trinh duyet ve ra. De CSS
                   quyet dinh thi ca hai ben deu ve giong nhau. */}
-              <span className={styles.label}>{item.nhanNgan ?? item.title}</span>
+              <span className={styles.label}>{item.shortLabel ?? item.title}</span>
               <span className={styles.label2}>{item.title}</span>
 
               {active && <span className={styles.floating} />}

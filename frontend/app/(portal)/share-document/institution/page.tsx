@@ -1,32 +1,18 @@
-import InstitutionDirectory from "@/src/components/document/InstitutionDirectory";
-import type { DocumentUniversity } from "@/src/services/document";
-import { GOC_API } from "@/src/services/serverFetch";
+import { InstitutionDirectory } from "@/src/components/features/portal/share-document";
+import { getSchoolOptions } from "@/src/components/features/portal/share-document/serverDocuments";
+import { SHARE_DOCUMENT } from "@/src/constants/portal/share-document-page";
 
-export const metadata = {
-  title: "Trường đại học",
-  description:
-    "Tìm trường đại học của bạn và xem tài liệu học tập do sinh viên trường đó chia sẻ.",
-};
+export const metadata = SHARE_DOCUMENT.institutions.metadata;
 
 // Danh sach truong va so tai lieu doi cham - luu 60 giay nhu API.
 export const revalidate = 60;
 
-async function layDsTruong(): Promise<DocumentUniversity[]> {
-  try {
-    const res = await fetch(`${GOC_API}/api/documents/truong`, {
-      next: { revalidate: 60 },
-    });
-    return res.ok ? ((await res.json()) as DocumentUniversity[]) : [];
-  } catch {
-    // Backend chet thi tra rong chu khong nem - nem se lam hong luot build.
-    return [];
-  }
-}
-
 /**
  * Danh sach truong (/share-document/institution) - nut "Xem tat ca" o khung
  * "Truong dai hoc" tai /share-document dan toi day.
+ *
+ * getSchoolOptions tra rong khi backend chet chu khong nem - nem se lam hong luot build.
  */
 export default async function InstitutionPage() {
-  return <InstitutionDirectory dsTruong={await layDsTruong()} />;
+  return <InstitutionDirectory schoolList={await getSchoolOptions()} />;
 }

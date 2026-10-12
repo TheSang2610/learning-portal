@@ -4,9 +4,9 @@ const Enrollment = require('../models/Enrollment');
 const Course = require('../models/Course');
 const User = require('../models/User');
 const crypto = require('crypto');
-const { phanTrang } = require('../utils/queryParams');
-const { dungChungChiPdf } = require('../utils/certificatePdf');
-const { guiThongBao } = require('./notificationController');
+const { phanTrang: paginate } = require('../utils/queryParams');
+const { buildCertificatePdf } = require('../utils/certificatePdf');
+const { sendNotification } = require('./notificationController');
 
 // @desc    Tạo chứng chỉ khi hoàn thành khóa học
 // @route   POST /api/certificates
@@ -88,7 +88,7 @@ const createCertificate = async (req, res) => {
         // Truoc day chung nhan duoc sinh am tham: khong co dau hieu nao o giao
         // dien, hoc vien phai tu vao ho so moi thay. Nguoi hoc xong roi khong
         // quay lai trang ho so thi khong bao gio biet minh co no.
-        await guiThongBao(enrollment.student._id, 'chung_nhan', {
+        await sendNotification(enrollment.student._id, 'chung_nhan', {
             tenKhoa: enrollment.course.title
         });
 
@@ -149,7 +149,7 @@ const getCertificateById = async (req, res) => {
  * Ai xem duoc: chinh chu, quan tri, hoac bat ky ai neu chung nhan de cong khai
  * - dung dung mot luat voi getCertificateById de khong co duong vong.
  */
-const taiChungChiPdf = async (req, res) => {
+const downloadCertificatePdf = async (req, res) => {
     try {
         const cc = await Certificate.findById(req.params.id)
             .populate('course', 'title')
@@ -159,23 +159,23 @@ const taiChungChiPdf = async (req, res) => {
             return res.status(404).json({ message: 'Chứng chỉ không tồn tại' });
         }
 
-        const laChu = req.user && String(cc.student?._id) === String(req.user._id);
-        const laQuanTri = req.user && req.user.role === 'admin';
-        if (!cc.isPublic && !laChu && !laQuanTri) {
+        const isOwner = req.user && String(cc.student?._id) === String(req.user._id);
+        const isAdmin = req.user && req.user.role === 'admin';
+        if (!cc.isPublic && !isOwner && !isAdmin) {
             return res.status(403).json({ message: 'Bạn không có quyền xem chứng chỉ này' });
         }
 
-        const ten = `chung-nhan-${cc.certificateNumber || cc._id}.pdf`;
+        const name = `chung-nhan-${cc.certificateNumber || cc._id}.pdf`;
         res.setHeader('Content-Type', 'application/pdf');
         // inline: bam vao la MO RA XEM ngay trong trinh duyet, van bam tai ve
         // duoc. attachment thi moi lan bam la mot tep roi xuong thu muc Downloads
         // - quan tri duyet vai chuc chung nhan se ngap tep.
-        res.setHeader('Content-Disposition', `inline; filename="${ten}"`);
+        res.setHeader('Content-Disposition', `inline; filename="${name}"`);
 
-        const goc = process.env.FRONTEND_URL || '';
-        dungChungChiPdf(cc, {
-            tenHocVien: cc.student?.name,
-            diaChiXacThuc: goc ? `${goc.replace(/\/+$/, '')}/certificates/verify` : ''
+        const origin = process.env.FRONTEND_URL || '';
+        buildCertificatePdf(cc, {
+            studentName: cc.student?.name,
+            verifyUrl: origin ? `${origin.replace(/\/+$/, '')}/certificates/verify` : ''
         }).pipe(res);
     } catch (error) {
         console.error('taiChungChiPdf:', error.message);
@@ -318,7 +318,7 @@ const getUserPublicAchievements = async (req, res) => {
 const getLeaderboard = async (req, res) => {
     try {
         // $limit cua Mongo tu choi so <= 0 -> ?limit=-1 tung lam duong nay tra 500.
-        const { soDong: limit } = phanTrang(req.query, { macDinh: 10, toiDa: 50 });
+        const { soDong: limit } = paginate(req.query, { defaults: 10, toiDa: 50 });
 
         const leaderboard = await Achievement.aggregate([
             {
@@ -426,7 +426,7 @@ module.exports = {
     createCertificate,
     getMyCertificates,
     getCertificateById,
-    taiChungChiPdf,
+    downloadCertificatePdf,
     verifyCertificate,
     updateCertificate,
     getUserPublicCertificates,

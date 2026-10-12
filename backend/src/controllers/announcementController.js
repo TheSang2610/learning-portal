@@ -2,36 +2,36 @@ const Announcement = require('../models/Announcement');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 const {
-    dungThongBaoChung,
-    docKenh,
-    locNguoiNhan,
-    locDangHien,
+    buildAnnouncement,
+    readChannel,
+    recipientFilter,
+    visibleFilter,
 } = require('../utils/announcementContent');
 
 // Dau trang chi hien vai dai. Nhieu hon thi day noi dung chinh xuong duoi man
 // hinh dau tien, va nguoi dung bat dau lo di tat ca.
-const SO_HIEN_TOI_DA = 3;
+const MAX_VISIBLE = 3;
 
 // Truong tra ve cho khach. KHONG tra nguoiTao: id tai khoan quan tri khong phai
 // viec cua khach vang lai.
-const TRUONG_CONG_KHAI = 'tieuDe noiDung duongDan mucDo createdAt';
+const PUBLIC_FIELDS = 'tieuDe noiDung duongDan mucDo createdAt';
 
-// Ghi thong bao chuong theo lo, giong guiThongBaoHeThong: 500 ban ghi mot lan
+// Ghi thong bao chuong theo lo, giong sendSystemNotification: 500 ban ghi mot lan
 // cho khong cham gioi han kich thuoc lenh cua Mongo khi he thong dong nguoi.
-const CO_LO = 500;
+const HAS_LEAK = 500;
 
 // @desc    Thong bao cong khai dang hien
 // @route   GET /api/thong-bao-chung
 // @access  Cong khai (ca khach)
-const layThongBaoChung = async (req, res) => {
+const getAnnouncements = async (req, res) => {
     try {
-        const danhSach = await Announcement.find(locDangHien())
+        const list = await Announcement.find(visibleFilter())
             .sort({ createdAt: -1 })
-            .limit(SO_HIEN_TOI_DA)
-            .select(TRUONG_CONG_KHAI)
+            .limit(MAX_VISIBLE)
+            .select(PUBLIC_FIELDS)
             .lean();
 
-        res.json({ danhSach });
+        res.json({ danhSach: list });
     } catch (error) {
         console.error('[thong-bao-chung]', error.message);
         // Dai thong bao la phan phu: loi thi tra danh sach rong chu khong de
@@ -43,14 +43,14 @@ const layThongBaoChung = async (req, res) => {
 // @desc    Moi dot thong bao da gui, cho trang quan tri
 // @route   GET /api/thong-bao-chung/quan-tri
 // @access  Admin
-const layTatCaQuanTri = async (req, res) => {
+const getAllAdmin = async (req, res) => {
     try {
-        const danhSach = await Announcement.find({})
+        const list = await Announcement.find({})
             .sort({ createdAt: -1 })
             .limit(50)
             .lean();
 
-        res.json({ danhSach });
+        res.json({ danhSach: list });
     } catch (error) {
         console.error('[thong-bao-chung]', error.message);
         res.status(500).json({ message: 'Không tải được danh sách thông báo.' });
@@ -60,45 +60,45 @@ const layTatCaQuanTri = async (req, res) => {
 // @desc    Gui mot dot thong bao: dai dau trang va/hoac chuong
 // @route   POST /api/thong-bao-chung/quan-tri
 // @access  Admin
-const taoThongBaoChung = async (req, res) => {
+const createAnnouncement = async (req, res) => {
     try {
-        const nd = dungThongBaoChung(req.body);
-        if (!nd.ok) return res.status(400).json({ message: nd.loi });
+        const contentText = buildAnnouncement(req.body);
+        if (!contentText.ok) return res.status(400).json({ message: contentText.loi });
 
-        const kenh = docKenh(req.body);
+        const kenh = readChannel(req.body);
         if (!kenh.ok) return res.status(400).json({ message: kenh.loi });
 
-        const thongBao = await Announcement.create({
-            ...nd.thongBao,
+        const notification = await Announcement.create({
+            ...contentText.thongBao,
             dangHien: kenh.hienDauTrang,
             guiChuong: kenh.guiChuong,
             vaiTro: kenh.vaiTro,
             nguoiTao: req.user._id,
         });
 
-        let daGui = 0;
+        let sent = 0;
         if (kenh.guiChuong) {
-            const nguoiNhan = await User.find(locNguoiNhan(kenh.vaiTro)).select('_id').lean();
+            const recipient = await User.find(recipientFilter(kenh.vaiTro)).select('_id').lean();
 
-            for (let i = 0; i < nguoiNhan.length; i += CO_LO) {
-                const lo = nguoiNhan.slice(i, i + CO_LO).map((n) => ({
+            for (let i = 0; i < recipient.length; i += HAS_LEAK) {
+                const lo = recipient.slice(i, i + HAS_LEAK).map((n) => ({
                     user: n._id,
                     loai: 'he_thong',
-                    tieuDe: nd.thongBao.tieuDe,
-                    noiDung: nd.thongBao.noiDung,
-                    duongDan: nd.thongBao.duongDan,
-                    thongBaoGoc: thongBao._id,
+                    tieuDe: contentText.thongBao.tieuDe,
+                    noiDung: contentText.thongBao.noiDung,
+                    duongDan: contentText.thongBao.duongDan,
+                    thongBaoGoc: notification._id,
                 }));
                 // ordered: false - mot ban ghi hong khong duoc lam dung ca lo.
-                const ghi = await Notification.insertMany(lo, { ordered: false });
-                daGui += ghi.length;
+                const write = await Notification.insertMany(lo, { ordered: false });
+                sent += write.length;
             }
 
-            thongBao.soNguoiNhan = daGui;
-            await thongBao.save();
+            notification.soNguoiNhan = sent;
+            await notification.save();
         }
 
-        res.status(201).json({ thongBao, daGui });
+        res.status(201).json({ thongBao: notification, daGui: sent });
     } catch (error) {
         console.error('[thong-bao-chung]', error.message);
         res.status(500).json({ message: 'Không gửi được thông báo.' });
@@ -108,36 +108,36 @@ const taoThongBaoChung = async (req, res) => {
 // @desc    Sua noi dung mot dot thong bao - cap nhat ca dai dau trang lan chuong
 // @route   PUT /api/thong-bao-chung/quan-tri/:id
 // @access  Admin
-const suaThongBaoChung = async (req, res) => {
+const editAnnouncement = async (req, res) => {
     try {
-        const thongBao = await Announcement.findById(req.params.id);
-        if (!thongBao) {
+        const notification = await Announcement.findById(req.params.id);
+        if (!notification) {
             return res.status(404).json({ message: 'Không tìm thấy thông báo.' });
         }
 
-        const nd = dungThongBaoChung(req.body);
-        if (!nd.ok) return res.status(400).json({ message: nd.loi });
+        const contentText = buildAnnouncement(req.body);
+        if (!contentText.ok) return res.status(400).json({ message: contentText.loi });
 
-        Object.assign(thongBao, nd.thongBao);
+        Object.assign(notification, contentText.thongBao);
         // Bat / tat dai dau trang ngay trong luc sua. Chi nhan boolean that,
-        // giong ly do o docKenh.
+        // giong ly do o readChannel.
         if (typeof req.body?.hienDauTrang === 'boolean') {
-            thongBao.dangHien = req.body.hienDauTrang;
+            notification.dangHien = req.body.hienDauTrang;
         }
-        await thongBao.save();
+        await notification.save();
 
         // Sua luon trong chuong cua nhung nguoi da nhan, KHONG dong vao daDoc:
         // nguoi da doc thi van la da doc, chi chu ben trong doi.
-        const capNhat = await Notification.updateMany(
-            { thongBaoGoc: thongBao._id },
+        const update = await Notification.updateMany(
+            { thongBaoGoc: notification._id },
             {
-                tieuDe: nd.thongBao.tieuDe,
-                noiDung: nd.thongBao.noiDung,
-                duongDan: nd.thongBao.duongDan,
+                tieuDe: contentText.thongBao.tieuDe,
+                noiDung: contentText.thongBao.noiDung,
+                duongDan: contentText.thongBao.duongDan,
             },
         );
 
-        res.json({ thongBao, daCapNhat: capNhat.modifiedCount ?? 0 });
+        res.json({ thongBao: notification, daCapNhat: update.modifiedCount ?? 0 });
     } catch (error) {
         console.error('[thong-bao-chung]', error.message);
         res.status(500).json({ message: 'Không sửa được thông báo.' });
@@ -147,20 +147,20 @@ const suaThongBaoChung = async (req, res) => {
 // @desc    Xoa / thu hoi mot dot thong bao khoi ca dai dau trang lan chuong
 // @route   DELETE /api/thong-bao-chung/quan-tri/:id
 // @access  Admin
-const xoaThongBaoChung = async (req, res) => {
+const deleteAnnouncement = async (req, res) => {
     try {
-        const thongBao = await Announcement.findById(req.params.id).select('_id').lean();
-        if (!thongBao) {
+        const notification = await Announcement.findById(req.params.id).select('_id').lean();
+        if (!notification) {
             return res.status(404).json({ message: 'Không tìm thấy thông báo.' });
         }
 
         // Rut khoi chuong TRUOC roi moi xoa ban ghi goc: neu buoc sau hong thi
         // ban ghi goc van con trong danh sach de quan tri bam xoa lai, chu khong
         // bo lai cac thong bao mo coi trong chuong ma khong con cach nao tim.
-        const thuHoi = await Notification.deleteMany({ thongBaoGoc: thongBao._id });
-        await Announcement.deleteOne({ _id: thongBao._id });
+        const revoke = await Notification.deleteMany({ thongBaoGoc: notification._id });
+        await Announcement.deleteOne({ _id: notification._id });
 
-        res.json({ daThuHoi: thuHoi.deletedCount ?? 0 });
+        res.json({ daThuHoi: revoke.deletedCount ?? 0 });
     } catch (error) {
         console.error('[thong-bao-chung]', error.message);
         res.status(500).json({ message: 'Không xóa được thông báo.' });
@@ -168,9 +168,9 @@ const xoaThongBaoChung = async (req, res) => {
 };
 
 module.exports = {
-    layThongBaoChung,
-    layTatCaQuanTri,
-    taoThongBaoChung,
-    suaThongBaoChung,
-    xoaThongBaoChung,
+    getAnnouncements,
+    getAllAdmin,
+    createAnnouncement,
+    editAnnouncement,
+    deleteAnnouncement,
 };

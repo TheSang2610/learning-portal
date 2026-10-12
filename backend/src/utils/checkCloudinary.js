@@ -14,20 +14,20 @@ const TEN = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECR
 // len binh thuong, chi luc nguoi dung bam Tai ve moi nhan 401 - loi kieu do
 // rat lau moi phat hien ra. Nen thu that mot vong: day len mot PDF ti hon,
 // goi lai dung duong dan cong khai, roi xoa di.
-async function thuGiaoPdf(cloudinary) {
+async function tryDeliverPdf(cloudinary) {
     const id = `zz-kiem-tra/pdf-${Date.now()}.pdf`;
     let url = null;
     try {
         const r = await new Promise((res, rej) => {
             const s = cloudinary.uploader.upload_stream(
                 { resource_type: 'raw', public_id: id, use_filename: false, unique_filename: false },
-                (e, kq) => (e ? rej(e) : res(kq)),
+                (e, outcome) => (e ? rej(e) : res(outcome)),
             );
             s.end(Buffer.from('%PDF-1.4\n%%EOF\n'));
         });
         url = r.secure_url;
 
-        const ma = await new Promise((res) => {
+        const code = await new Promise((res) => {
             require('https')
                 .get(url, (x) => {
                     x.resume();
@@ -35,7 +35,7 @@ async function thuGiaoPdf(cloudinary) {
                 })
                 .on('error', () => res(0));
         });
-        return ma === 200;
+        return code === 200;
     } catch {
         return false;
     } finally {
@@ -87,7 +87,7 @@ async function main() {
             console.log(`  han muc    : da dung ${u.credits.used_percent}% goi thang nay`);
         }
 
-        const pdfOk = await thuGiaoPdf(cloudinary);
+        const pdfOk = await tryDeliverPdf(cloudinary);
         console.log(`  file PDF   : ${pdfOk ? 'tai ve duoc' : 'BI CHAN'}`);
 
         if (!pdfOk) {
@@ -102,15 +102,15 @@ async function main() {
         console.log('vi .env chi duoc doc mot lan luc khoi dong.');
         process.exit(pdfOk ? 0 : 1);
     } catch (e) {
-        const ma = e?.error?.http_code || e?.http_code;
+        const code = e?.error?.http_code || e?.http_code;
         console.log('\nKHOA SAI - chua tai anh len duoc.\n');
 
-        if (ma === 401) {
+        if (code === 401) {
             // Da thu: go sai cloud_name cung ra 401 chu khong phai 404, vi
             // Cloudinary xac thuc truoc khi tra loi. Nen doi chieu ca ba.
             console.log('  Cloudinary tra ve 401. Sai mot trong ba gia tri,');
             console.log('  hay gap nhat la copy thieu ky tu o API_SECRET.');
-        } else if (ma === 404) {
+        } else if (code === 404) {
             console.log('  Cloudinary tra ve 404: sai CLOUDINARY_CLOUD_NAME.');
         } else {
             console.log(`  ${e?.error?.message || e.message}`);

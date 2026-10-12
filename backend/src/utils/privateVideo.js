@@ -3,33 +3,35 @@
  *
  * Truoc 04/10/2026 video upload o che do cong khai va CSDL luu thang link: ai co
  * link (hoc vien chep ra, gui nhom chat) la xem mai duoc, khong can tai khoan.
- * Cong duocXemNoiDung chi chan duoc LUC LAY link, khong chan duoc link da lot ra.
+ * Cong canViewContent chi chan duoc LUC LAY link, khong chan duoc link da lot ra.
  *
  * Gio:
- *   - Trinh duyet giang vien upload THANG len Cloudinary (thamSoUploadVideo cap
+ *   - Trinh duyet giang vien upload THANG len Cloudinary (videoUploadParams cap
  *     chu ky). File khong di qua backend - Vercel chi nhan request ~4.5 MB, video
  *     bai giang di qua backend la hong tren ban that.
  *   - CSDL chi luu public_id (Lesson.videoPublicId), khong luu link.
- *   - Moi lan nguoi DA DUOC XEM mo bai, ganLinkPhat() sinh link CO CHU KY. Link
+ *   - May chu dung playbackUrl() sinh link CO CHU KY de tu tai video ve. Link
  *     khong ky bi Cloudinary tra 401. Da thu that 04/10/2026: link ky phat duoc ca
  *     HLS, cac doan con trong manifest cung tu duoc ky.
  *
- * Gioi han con lai: chu ky cua Cloudinary goi mien phi KHONG het han - link ky
- * lot ra van xem duoc. Link tu het han can token authentication (goi tra phi).
+ * Chu ky cua Cloudinary goi mien phi KHONG het han, nen tu 10/10/2026 link ky
+ * nay chi con dung o PHIA MAY CHU: trinh duyet nhan link phat cua minh, gan voi
+ * nguoi xem va het han sau 2 gio - xem utils/videoStream.js.
  */
-const layCloudinary = require('../config/cloudinary');
+const getCloudinary = require('../config/cloudinary');
+const { streamPath } = require('./videoStream');
 
-const THU_MUC_BAI_GIANG = 'learning-portal/bai-giang';
+const LECTURE_FOLDER = 'learning-portal/bai-giang';
 
 // public_id Cloudinary tu sinh khi chi gui `folder`: thu muc + chuoi ngau nhien.
 // Chi nhan dung dang nay: nhan bua thi giang vien gui public_id cua video khoa
 // KHAC (hoac anh dai dien cua ai do) vao bai hoc cua minh.
 const MAU_ID = /^learning-portal\/bai-giang\/[A-Za-z0-9_-]{1,120}$/;
 
-const idVideoHopLe = (x) => typeof x === 'string' && MAU_ID.test(x);
+const isValidVideoId = (x) => typeof x === 'string' && MAU_ID.test(x);
 
 /** Link phat HLS co chu ky cho mot video o kho kin. */
-const linkPhatVideo = (publicId, cld = layCloudinary()) =>
+const playbackUrl = (publicId, cld = getCloudinary()) =>
     cld.url(publicId, {
         resource_type: 'video',
         type: 'authenticated',
@@ -45,17 +47,22 @@ const linkPhatVideo = (publicId, cld = layCloudinary()) =>
  * duoc link... neu lo ca khoa API, nhung khong co ly do gi de lo no).
  *
  * Bai cu (video cong khai, link YouTube) giu nguyen `videoUrl` nhu truoc.
- * Chi goi SAU khi duocXemNoiDung() da cho qua.
+ * Chi goi SAU khi canViewContent() da cho qua.
  */
-const ganLinkPhat = (baiHoc, sinhLink = linkPhatVideo) => {
-    if (!baiHoc || typeof baiHoc !== 'object') return baiHoc;
-    const doi = typeof baiHoc.toObject === 'function' ? baiHoc.toObject() : { ...baiHoc };
+// Tu 10/10/2026 trinh duyet KHONG nhan link Cloudinary nua ma nhan link phat
+// cua chinh may chu, gan voi nguoi xem va het han sau 2 gio (utils/videoStream.js).
+const defaultLink = (lesson, user) => streamPath(lesson._id, user._id);
+
+const attachPlaybackUrl = (lesson, user, sinhLink = defaultLink) => {
+    if (!lesson || typeof lesson !== 'object') return lesson;
+    const copy = typeof lesson.toObject === 'function' ? lesson.toObject() : { ...lesson };
     // videoKin: de form sua bai biet video dang o kho kin ma hien "da luu",
     // thay vi hien link ky trong o nhap link (va gui nguoc no len khi luu).
-    doi.videoKin = Boolean(doi.videoPublicId);
-    if (doi.videoPublicId) doi.videoUrl = sinhLink(doi.videoPublicId);
-    delete doi.videoPublicId;
-    return doi;
+    copy.videoKin = Boolean(copy.videoPublicId);
+    // Khong biet ai xem thi khong cap link - ve phat phai gan voi mot nguoi.
+    if (copy.videoPublicId) copy.videoUrl = user ? sinhLink(copy, user) : '';
+    delete copy.videoPublicId;
+    return copy;
 };
 
 /**
@@ -65,16 +72,16 @@ const ganLinkPhat = (baiHoc, sinhLink = linkPhatVideo) => {
  * so do, nen khong doi duoc thu muc hay bien video thanh cong khai. Cloudinary
  * tu choi chu ky cu hon 1 gio.
  */
-const thamSoUploadVideo = (cld = layCloudinary()) => {
+const videoUploadParams = (cld = getCloudinary()) => {
     const cfg = cld.config();
     const timestamp = Math.round(Date.now() / 1000);
-    const kyTren = { folder: THU_MUC_BAI_GIANG, timestamp, type: 'authenticated' };
+    const signFor = { folder: LECTURE_FOLDER, timestamp, type: 'authenticated' };
     return {
         cloudName: cfg.cloud_name,
         apiKey: cfg.api_key,
-        ...kyTren,
-        signature: cld.utils.api_sign_request(kyTren, cfg.api_secret)
+        ...signFor,
+        signature: cld.utils.api_sign_request(signFor, cfg.api_secret)
     };
 };
 
-module.exports = { THU_MUC_BAI_GIANG, idVideoHopLe, linkPhatVideo, ganLinkPhat, thamSoUploadVideo };
+module.exports = { LECTURE_FOLDER, isValidVideoId, playbackUrl, attachPlaybackUrl, videoUploadParams };
