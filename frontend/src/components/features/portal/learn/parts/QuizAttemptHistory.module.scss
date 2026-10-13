@@ -119,11 +119,13 @@
   padding: 10px 12px;
   border: 1px solid var(--color-slate-200);
 }
+// Dung/sai do bieu tuong o dau cau mang nghia; khung chi tinh nhe mau cho de luot.
 .qRight {
-  border-left: 3px solid var(--color-emerald-500);
+  border-color: var(--color-emerald-200);
 }
 .qWrong {
-  border-left: 3px solid var(--color-red-500);
+  border-color: var(--color-red-200);
+  background-color: var(--color-red-50);
 }
 .qText {
   margin: 0 0 6px;
