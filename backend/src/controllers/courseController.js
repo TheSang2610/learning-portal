@@ -7,6 +7,8 @@ const { uploadToCloudinary } = require('../utils/uploadCloud');
 const { canViewContent, stripContent } = require('../utils/contentAccess');
 const { attachPlaybackUrl } = require('../utils/privateVideo');
 const Enrollment = require('../models/Enrollment');
+const CourseView = require('../models/CourseView');
+const { pickRecentViews } = require('../utils/recentViews');
 const Category = require('../models/categoryModel');
 const { rankSuggestions } = require('../utils/rankSuggestions');
 const { phanTrang: paginate, fuzzyRegex } = require('../utils/queryParams');
@@ -222,6 +224,15 @@ const getCourseBySlug = async (req, res) => {
             // thi nguoi dung van phai xem duoc khoa hoc.
             Course.updateOne({ _id: course._id }, incrementViewCount(monthKey()), { updatePipeline: true })
                 .catch((err) => console.error('Loi dem luot xem:', err.message));
+            // "Xem gan day" cua nguoi dang dang nhap (muc tren dashboard). Cung
+            // khong await, cung ly do o tren.
+            if (req.user?._id) {
+                CourseView.updateOne(
+                    { user: req.user._id, course: course._id },
+                    { $set: { viewedAt: new Date() } },
+                    { upsert: true }
+                ).catch((err) => console.error('Loi ghi lich su xem:', err.message));
+            }
             await sendCourseForUser(course, req.user, res);
         } else {
             res.status(404).json({ message: 'Không tìm thấy khóa học hoặc khóa học chưa được xuất bản.' });
@@ -659,9 +670,10 @@ const suggestCourses = async (req, res) => {
             isPublished: true,
             ...(learned.size ? { _id: { $nin: [...learned] } } : {}),
         })
-            .select('title slug thumbnail price category instructor createdAt')
+            .select('title slug thumbnail price category instructor provider level rating reviewsCount createdAt')
             .populate('instructor', 'name')
             .populate('category', 'name')
+            .populate('provider', 'name logo')
             .limit(200)
             .lean();
 
@@ -694,7 +706,37 @@ const suggestCourses = async (req, res) => {
     }
 };
 
+// @desc    Khoa hoc nguoi dang nhap vua mo xem (muc "Xem gan day" o dashboard)
+// @route   GET /api/courses/da-xem?soLuong=3
+const getRecentlyViewed = async (req, res) => {
+    try {
+        const [views, mine] = await Promise.all([
+            CourseView.find({ user: req.user._id })
+                .sort({ viewedAt: -1 })
+                .limit(50)
+                .select('course viewedAt')
+                .lean(),
+            Enrollment.find({ student: req.user._id }).select('course').lean(),
+        ]);
+
+        const courses = views.length
+            ? await Course.find({ _id: { $in: views.map((v) => v.course) }, isPublished: true })
+                .select('title slug thumbnail price level rating reviewsCount provider')
+                .populate('provider', 'name logo')
+                .lean()
+            : [];
+
+        res.status(200).json({
+            danhSach: pickRecentViews(views, courses, mine.map((g) => g.course), req.query.soLuong),
+        });
+    } catch (error) {
+        console.error('[da-xem]', error.message);
+        res.status(500).json({ message: 'Không lấy được khóa học đã xem.' });
+    }
+};
+
 module.exports = {
+    getRecentlyViewed,
     createCourse,
     getCourses,
     suggestCourses,

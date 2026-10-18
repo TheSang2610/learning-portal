@@ -20,7 +20,8 @@ const {
     getAdminPopularCourses,
     getAdminTrendingCourses,
     getAdminNewReleasesCourses,
-    suggestCourses
+    suggestCourses,
+    getRecentlyViewed,
 } = require('../controllers/courseController');
 
 const { protect, optionalUser, instructor, admin } = require('../middlewares/authMiddleware');
@@ -66,6 +67,9 @@ router.get('/slug/:slug', optionalUser, getCourseBySlug);
 // 'public, s-maxage=60' thi CDN giu goi y cua mot nguoi roi tra cho nguoi tiep
 // theo, tuc la lo ra nguoi truoc da mua nhung khoa nao.
 router.get('/goi-y', noStore, optionalUser, suggestCourses);
+
+// Lich su xem cua RIENG nguoi dang nhap - noStore, cung ly do voi /goi-y.
+router.get('/da-xem', noStore, protect, getRecentlyViewed);
 
 
 /* ==========================================================================

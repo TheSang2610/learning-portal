@@ -8,6 +8,7 @@ const { protect, admin } = require('../middlewares/authMiddleware');
 const {
     // Dashboard
     getDashboardStatistics,
+    getDashboardActivity,
 
     // Users Management
     getAllUsers,
@@ -51,6 +52,7 @@ router.use(protect, admin);
 
 // ============ Dashboard ============
 router.get('/dashboard/statistics', getDashboardStatistics);
+router.get('/dashboard/activity', getDashboardActivity);
 
 // ============ Users Management ============
 router.get('/users', getAllUsers);

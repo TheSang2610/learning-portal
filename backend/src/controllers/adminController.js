@@ -24,9 +24,67 @@ const Certificate = require('../models/Certificate');
 const { phanTrang: paginate, fuzzyRegex } = require('../utils/queryParams');
 const Review = require('../models/Review');
 const Quiz = require('../models/Quiz');
+const { buildDailySeries, compareWindows } = require('../utils/dailySeries');
 
 // @desc    Get dashboard statistics
 // @route   GET /api/admin/dashboard/statistics
+// @desc    So lieu theo ngay + ghi danh gan day cho dashboard admin
+// @route   GET /api/admin/dashboard/activity?days=90
+//
+// Bieu do can chuoi theo ngay (nguoi dung moi, ghi danh moi); the so lieu can
+// so sanh 30 ngay gan nhat voi 30 ngay truoc - nen luon lay it nhat 60 ngay.
+const getDashboardActivity = async (req, res) => {
+    try {
+        const days = Math.min(Math.max(parseInt(req.query.days, 10) || 90, 7), 180);
+        const span = Math.max(days, 60);
+        const since = new Date(Date.now() - span * 24 * 60 * 60 * 1000);
+        const byDay = [
+            { $match: { createdAt: { $gte: since } } },
+            {
+                $group: {
+                    _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: 'Asia/Ho_Chi_Minh' } },
+                    count: { $sum: 1 },
+                },
+            },
+        ];
+
+        const [users, enrollments, certificates, recent] = await Promise.all([
+            User.aggregate(byDay),
+            Enrollment.aggregate(byDay),
+            Certificate.aggregate(byDay),
+            Enrollment.find()
+                .sort({ createdAt: -1 })
+                .limit(8)
+                .populate('student', 'name email')
+                .populate('course', 'title slug price')
+                .select('student course totalProgress status createdAt')
+                .lean(),
+        ]);
+
+        const all = buildDailySeries({ users, enrollments, certificates }, span);
+
+        res.json({
+            days: all.slice(-days),
+            compare: {
+                users: compareWindows(all, 'users'),
+                enrollments: compareWindows(all, 'enrollments'),
+                certificates: compareWindows(all, 'certificates'),
+            },
+            recent: recent.map((e) => ({
+                _id: e._id,
+                student: e.student ? { name: e.student.name, email: e.student.email } : null,
+                course: e.course ? { title: e.course.title, slug: e.course.slug, price: e.course.price } : null,
+                progress: e.totalProgress || 0,
+                status: e.status,
+                createdAt: e.createdAt,
+            })),
+        });
+    } catch (error) {
+        console.error('[dashboard/activity]', error.message);
+        res.status(500).json({ message: 'Không lấy được số liệu theo ngày.' });
+    }
+};
+
 const getDashboardStatistics = async (req, res) => {
     try {
         const totalUsers = await User.countDocuments();
@@ -745,6 +803,7 @@ const deleteReviewAdmin = async (req, res) => {
 };
 
 module.exports = {
+    getDashboardActivity,
     getDashboardStatistics,
     getAllUsers,
     getUserDetails,
