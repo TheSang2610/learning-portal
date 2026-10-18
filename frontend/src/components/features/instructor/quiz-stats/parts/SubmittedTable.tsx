@@ -67,7 +67,7 @@ export default function SubmittedTable({ list, onRetry }: SubmittedTableProps) {
                   }`}
                 >
                   <RotateCcw size={12} />
-                  {C.submitted.retry}
+                  <span>{C.submitted.retry}</span>
                 </button>
               </td>
             </tr>

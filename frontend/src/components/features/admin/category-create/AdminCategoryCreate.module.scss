@@ -2,8 +2,6 @@
 // Khai bao lay dung tu ban CSS Tailwind da build, nen giao dien khong doi.
 
 .stack {
-  max-width: var(--container-xl);
-
   :where(& > :not(:last-child)) {
     --tw-space-y-reverse: 0;
     margin-block-start: calc(calc(var(--spacing) * 6) * var(--tw-space-y-reverse));

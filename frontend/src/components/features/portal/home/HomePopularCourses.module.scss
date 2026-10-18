@@ -49,7 +49,8 @@
   gap: calc(var(--spacing) * 6);
 
   @media (min-width: 64rem) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    // So cot = so muc admin dang bat (--cols, mac dinh 3).
+    grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
   }
 }
 
@@ -224,7 +225,7 @@
   flex-direction: column;
   gap: calc(var(--spacing) * 4);
   border-radius: var(--radius-2xl);
-  background-color: #ebf3ff;
+  background-color: #e8efff;
   padding: calc(var(--spacing) * 4);
 }
 
@@ -570,4 +571,13 @@
   background-color: var(--color-blue-50);
   color: var(--color-blue-700);
   box-shadow: inset 0 0 0 1px var(--color-blue-200);
+}
+
+// Danh sach the trong mot cot - the la CourseListCard (parts/).
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  list-style: none;
 }

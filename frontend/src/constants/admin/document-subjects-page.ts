@@ -3,6 +3,24 @@ export const ADMIN_DOCUMENT_SUBJECTS = {
   title: "Lĩnh vực, trường và môn học của tài liệu",
   intro:
     "Lĩnh vực là nhóm lớn hiện ở trang Chia sẻ tài liệu (Luật, Kinh doanh…). Người đăng tài liệu chọn môn; môn thuộc lĩnh vực nào thì tài liệu hiện dưới lĩnh vực đó. Riêng cho kho tài liệu, không liên quan tới danh mục khóa học.",
+  /** Ba trang tach rieng (truoc day chung mot trang). */
+  pages: {
+    categories: {
+      title: "Lĩnh vực tài liệu",
+      intro:
+        "Lĩnh vực là nhóm lớn hiện ở trang Chia sẻ tài liệu (Luật, Kinh doanh…). Môn học thuộc lĩnh vực nào thì tài liệu của môn đó hiện dưới lĩnh vực đó.",
+    },
+    universities: {
+      title: "Trường đại học",
+      intro:
+        "Danh sách trường người đăng tài liệu chọn được, kèm logo hiện ở trang Trường của kho tài liệu.",
+    },
+    subjects: {
+      title: "Môn học tài liệu",
+      intro:
+        "Môn học người đăng tài liệu chọn khi đăng bài. Gán môn vào lĩnh vực để tài liệu hiện đúng nhóm. Riêng cho kho tài liệu, không liên quan tới danh mục khóa học.",
+    },
+  },
   closeAria: "Đóng",
   saveNameAria: "Lưu tên",
   cancelAria: "Hủy",

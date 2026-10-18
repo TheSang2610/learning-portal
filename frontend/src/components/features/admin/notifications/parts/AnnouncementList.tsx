@@ -94,7 +94,8 @@ export default function AnnouncementList({ s }: { s: AdminAnnouncementsState }) 
                       onClick={() => s.startEdit(tb)}
                       className={styles.button}
                     >
-                      <Pencil size={14} /> {L.edit}
+                      <Pencil size={14} />
+                      <span>{L.edit}</span>
                     </button>
                     <button
                       type="button"
@@ -104,11 +105,13 @@ export default function AnnouncementList({ s }: { s: AdminAnnouncementsState }) 
                     >
                       {tb.dangHien ? (
                         <>
-                          <EyeOff size={14} /> {L.unpin}
+                          <EyeOff size={14} />
+                          <span>{L.unpin}</span>
                         </>
                       ) : (
                         <>
-                          <Eye size={14} /> {L.pin}
+                          <Eye size={14} />
+                          <span>{L.pin}</span>
                         </>
                       )}
                     </button>
@@ -117,7 +120,8 @@ export default function AnnouncementList({ s }: { s: AdminAnnouncementsState }) 
                       onClick={() => s.setPendingDelete(tb._id)}
                       className={styles.buttonDangerGhost}
                     >
-                      <Trash2 size={14} /> {tb.guiChuong ? L.recall : L.delete}
+                      <Trash2 size={14} />
+                      <span>{tb.guiChuong ? L.recall : L.delete}</span>
                     </button>
                   </div>
                 )}

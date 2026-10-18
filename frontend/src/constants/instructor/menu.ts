@@ -1,36 +1,12 @@
-import {
-  BookOpen,
-  GraduationCap,
-  MessageCircleQuestion,
-  Video,
-  type LucideIcon,
-} from "lucide-react";
+import { BookOpen, GraduationCap, MessageCircleQuestion, PlusCircle } from "lucide-react";
 
-export interface InstructorSubMenuItem {
-  label: string;
-  href: string;
-  icon: LucideIcon;
-  /** Muc chi hien khi dang o trang con (dang soan bai hoc). */
-  isIndicatorOnly?: boolean;
-  /** Cac duong dan lam muc nay sang. */
-  activeRoutes: string[];
-}
+import type { ShellNavGroup } from "@/src/components/layout/dashboard-shell/nav";
 
-export interface InstructorMenuItem {
-  label: string;
-  href: string;
-  icon: LucideIcon;
-  submenu?: InstructorSubMenuItem[];
-}
-
-// ===== NHOM ROUTE PHANG (URL khong con long nhau) =====
-export const INSTRUCTOR_COURSE_ROUTES = [
+// Trang soan bai hoc / bai kiem tra mo tu trang chi tiet khoa hoc - coi nhu
+// thuoc "Khoa hoc cua toi" de menu van sang dung cho.
+const COURSE_EDIT_ROUTES = [
   "/instructor/courses",
-  "/instructor/course-create",
   "/instructor/course-detail",
-];
-
-export const INSTRUCTOR_LESSON_ROUTES = [
   "/instructor/lessons",
   "/instructor/lesson-create",
   "/instructor/lesson-detail",
@@ -39,47 +15,31 @@ export const INSTRUCTOR_LESSON_ROUTES = [
   "/instructor/quiz-stats",
 ];
 
-export const INSTRUCTOR_MENU: InstructorMenuItem[] = [
-  // {
-  //   label: "Dashboard",
-  //   href: "/instructor/dashboard",
-  //   icon: LayoutDashboard,
-  // },
+/** Menu khu giang vien (kieu sidebar cua shadcn) - phang, khong menu con. */
+export const INSTRUCTOR_NAV: ShellNavGroup[] = [
   {
-    label: "My Courses",
-    href: "/instructor/courses",
-    icon: BookOpen,
-    submenu: [
+    label: "Giảng dạy",
+    items: [
       {
-        label: "All Courses",
+        label: "Khóa học của tôi",
         href: "/instructor/courses",
         icon: BookOpen,
-        activeRoutes: ["/instructor/courses", "/instructor/course-detail"],
+        activeRoutes: COURSE_EDIT_ROUTES,
       },
-      {
-        label: "Create Course",
-        href: "/instructor/course-create",
-        icon: GraduationCap,
-        activeRoutes: ["/instructor/course-create"],
-      },
-      {
-        label: "Lesson Content",
-        href: "",
-        icon: Video,
-        isIndicatorOnly: true,
-        activeRoutes: INSTRUCTOR_LESSON_ROUTES,
-      },
+      { label: "Tạo khóa học mới", href: "/instructor/course-create", icon: PlusCircle },
     ],
   },
-  // Hang doi cau hoi cua hoc vien.
-  //
-  // Phai co duong vao tu day, neu khong thi giang vien khong bao gio biet co
-  // trang nay - va phan hoi dap trong bai hoc thanh noi hoc vien dat cau hoi
-  // roi khong ai tra loi.
   {
-    label: "Student Q&A",
-    href: "/instructor/questions",
-    icon: MessageCircleQuestion,
+    label: "Học viên",
+    items: [
+      // Hang doi cau hoi cua hoc vien. Phai co duong vao tu day, neu khong
+      // giang vien khong bao gio biet co trang nay.
+      {
+        label: "Hỏi đáp học viên",
+        href: "/instructor/questions",
+        icon: MessageCircleQuestion,
+      },
+    ],
   },
 ];
 
@@ -88,12 +48,14 @@ export const INSTRUCTOR_SHELL = {
   coursesHref: "/instructor/courses",
   /** Khong du quyen / dang xuat thi ve day. */
   outHref: "/",
-  loading: "Loading Instructor Panel...",
-  brand: "INSTRUCTOR",
-  workspace: "Workspace",
-  editing: "(Editing)",
-  nameFallback: "Instructor",
-  roleLabel: "Faculty Member",
+  loading: "Đang tải khu giảng viên...",
+  brand: "Learning Platform",
+  brandSub: "Khu giảng viên",
+  brandIcon: GraduationCap,
+  root: "Giảng viên",
+  editing: "(đang sửa)",
+  nameFallback: "Giảng viên",
+  roleLabel: "Giảng viên",
   logout: "Đăng xuất",
-  home: "Home",
+  toggle: "Ẩn/hiện thanh bên",
 } as const;

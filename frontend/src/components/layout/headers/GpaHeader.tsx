@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import BrandLogo from "@/src/components/layout/BrandLogo";
 import { usePathname } from "next/navigation";
 import HeaderUserMenu from "./HeaderUserMenu";
 
@@ -23,11 +24,10 @@ export default function GpaHeader() {
       <div className={styles.container}>
         <div className={styles.row}>
           {/* Cung kieu chu voi logo o IndividualsHeader de dong bo toan trang */}
-          <Link href="/" className={styles.box2}>
-            Learning Portal
+          <BrandLogo brand="platform" className={styles.box2}>
             {/* Dong phu cho biet dang o khu cong cu diem, khong phai trang chu */}
             <span className={styles.logoPhu}>Quản lý điểm</span>
-          </Link>
+          </BrandLogo>
 
           <nav className={styles.nav}>
             {TOOLS.map((t) => {

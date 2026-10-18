@@ -24,7 +24,8 @@ export default function LessonsHeader({ courseId, courseTitle }: LessonsHeaderPr
       </div>
 
       <Link href={C.lessonCreateHref(courseId)} className={styles.card}>
-        <Plus size={16} /> {C.header.addLesson}
+        <Plus size={16} />
+        <span>{C.header.addLesson}</span>
       </Link>
     </div>
   );

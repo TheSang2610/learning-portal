@@ -141,6 +141,27 @@ export interface SuggestionResult {
 }
 
 /**
+ * Dang gon cua khoa hoc dung cho cac the danh sach (muc "Tiep tuc kham pha" o
+ * dashboard). Cac endpoint /goi-y, /da-xem, /home-sections deu tra du cac truong
+ * nay; provider da populate (name, logo).
+ */
+export type ExploreCourse = Pick<
+  Course,
+  "_id" | "title" | "slug" | "thumbnail" | "price"
+> & {
+  level?: string;
+  rating?: number;
+  reviewsCount?: number;
+  provider?: Course["provider"];
+};
+
+/** Khoa nguoi dang nhap vua mo xem, moi nhat truoc, da bo khoa da ghi danh. */
+export const getRecentlyViewedCourses = async (
+  count = 3,
+): Promise<{ danhSach: ExploreCourse[] }> =>
+  apiRequest(`/courses/da-xem?soLuong=${count}`);
+
+/**
  * Goi y khoa hoc tiep theo.
  *
  * Khach vang lai goi duoc: ho nhan danh sach khoa pho bien. May chu KHONG dat

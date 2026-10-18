@@ -421,6 +421,8 @@
 .mon,
 .subjectInside {
   display: inline-flex;
+  // Mot dong, rong co han: ten mon dai cat bang "..." thay vi tran sang cot ben.
+  max-width: 16rem;
   align-items: center;
   gap: calc(var(--spacing) * 1.5);
   border-radius: 999px;
@@ -518,4 +520,11 @@
   gap: calc(var(--spacing) * 2);
   min-width: 260px;
   max-width: 360px;
+}
+
+.subjectText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

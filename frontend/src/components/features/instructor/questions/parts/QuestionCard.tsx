@@ -107,7 +107,8 @@ export default function QuestionCard({
                   disabled={!replyText.trim() || sending}
                   className={styles.button5}
                 >
-                  <Send size={14} /> {C.item.send}
+                  <Send size={14} />
+                  <span>{C.item.send}</span>
                 </button>
               </div>
             </div>

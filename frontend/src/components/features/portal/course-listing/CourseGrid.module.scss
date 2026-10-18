@@ -1,0 +1,94 @@
+// Luoi khoa hoc dung chung cho cac trang danh sach khoa hoc.
+
+$ink: #0d0f12;
+$muted: #5b6780;
+$line: #dae1ed;
+
+.container {
+  margin-inline: auto;
+  max-width: var(--container-7xl);
+  padding: calc(var(--spacing) * 8) calc(var(--spacing) * 4) calc(var(--spacing) * 12);
+
+  @media (min-width: 40rem) {
+    padding-inline: calc(var(--spacing) * 6);
+  }
+}
+
+.count {
+  margin-bottom: calc(var(--spacing) * 4);
+  font-size: 14.5px;
+  font-weight: var(--font-weight-semibold);
+  color: $muted;
+}
+
+.grid {
+  display: grid;
+  gap: calc(var(--spacing) * 6);
+
+  @media (min-width: 40rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (min-width: 48rem) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (min-width: 64rem) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+// Khung cho luc tai - cung kich thuoc the that de trang khong nhay.
+.skeleton {
+  aspect-ratio: 3 / 4;
+  border-radius: 16px;
+  background-color: #e6ebf3;
+  animation: var(--animate-pulse);
+}
+
+.empty {
+  border: 1px dashed $line;
+  border-radius: 16px;
+  background-color: #fff;
+  padding: calc(var(--spacing) * 14) calc(var(--spacing) * 6);
+  text-align: center;
+  font-size: 15px;
+  color: $muted;
+
+  strong {
+    color: $ink;
+  }
+}
+
+.more {
+  margin-top: calc(var(--spacing) * 10);
+  display: flex;
+  justify-content: center;
+}
+
+.moreButton {
+  height: 44px;
+  border: 1px solid $line;
+  border-radius: 12px;
+  background-color: #fff;
+  padding: 0 28px;
+  font-size: 14.5px;
+  font-weight: var(--font-weight-semibold);
+  color: $ink;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      border-color: var(--color-blue-600);
+      color: var(--color-blue-700);
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}

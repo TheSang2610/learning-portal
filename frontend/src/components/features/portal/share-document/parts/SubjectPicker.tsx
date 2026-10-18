@@ -84,7 +84,7 @@ export default function SubjectPicker({
               className={`${styles.chip} ${selected ? styles.chipActive : ""}`}
             >
               {selected && <Check size={13} />}
-              {m.ten}
+              <span>{m.ten}</span>
             </button>
           );
         })}

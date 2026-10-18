@@ -48,7 +48,7 @@ export default function LessonRowItem({
               className={`${styles.row4} ${quiz.isPublished ? styles.label4 : styles.label5}`}
             >
               <FileQuestion size={10} />
-              {quiz.isPublished ? C.row.quizOpen : C.row.quizHidden}
+              <span>{quiz.isPublished ? C.row.quizOpen : C.row.quizHidden}</span>
             </span>
             <span className={styles.label6}>
               ({quiz.questions?.length || 0} {C.row.questions})
@@ -70,7 +70,8 @@ export default function LessonRowItem({
               href={C.quizStatsHref(courseId, lesson._id, quiz._id)}
               className={styles.box5}
             >
-              <BarChart2 size={12} /> {C.row.viewScores}
+              <BarChart2 size={12} />
+              <span>{C.row.viewScores}</span>
             </Link>
 
             <Link href={C.quizEditHref(courseId, lesson._id)} className={styles.box6}>

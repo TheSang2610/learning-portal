@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BookMarked } from "lucide-react";
+import BrandLogo from "@/src/components/layout/BrandLogo";
 import HeaderUserMenu from "./HeaderUserMenu";
 
 import styles from "./BlogHeader.module.scss";
@@ -10,10 +10,7 @@ export default function BlogHeader() {
     <div className={styles.box}>
       <div className={styles.container}>
         <div className={styles.row}>
-          <Link href="/blog" className={styles.row2}>
-            <BookMarked size={22} className={styles.box2} />
-            <span className={styles.label}>Cẩm nang môn học</span>
-          </Link>
+          <BrandLogo brand="guide" />
 
           <nav className={styles.nav}>
             <Link href="/courses" className={styles.box3}>

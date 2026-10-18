@@ -1,0 +1,29 @@
+// Muc don vi dao tao: tieu de + dai logo chay ngang (HomePartners).
+.partners {
+  background-color: #fff;
+  padding-top: calc(var(--spacing) * 12);
+}
+
+.partnersHead {
+  margin-inline: auto;
+  max-width: var(--container-7xl);
+  padding-inline: calc(var(--spacing) * 4);
+  margin-bottom: calc(var(--spacing) * 2);
+
+  @media (min-width: 40rem) {
+    padding-inline: calc(var(--spacing) * 6);
+  }
+}
+
+.partnersHeading {
+  font-size: clamp(1.4rem, 2.6vw, 1.75rem);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.01em;
+  color: #0d0f12;
+}
+
+.partnersText {
+  margin-top: calc(var(--spacing) * 2);
+  font-size: 15px;
+  color: #5b6780;
+}

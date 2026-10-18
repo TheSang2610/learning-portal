@@ -7,7 +7,14 @@ import type { DocumentCatalogState } from "../hooks/useDocumentCatalog";
 import styles from "../AdminDocumentSubjects.module.scss";
 
 /** Truong dai hoc: them, doi ten / logo, xoa. */
-export default function UniversitySection({ s }: { s: DocumentCatalogState }) {
+export default function UniversitySection({
+  s,
+  hideHeading = false,
+}: {
+  s: DocumentCatalogState;
+  /** Trang da co tieu de rieng (PageHeader) thi an tieu de muc. */
+  hideHeading?: boolean;
+}) {
   const U = C.universities;
 
   const phim = (t: DocumentUniversity) => (e: React.KeyboardEvent) => {
@@ -17,10 +24,12 @@ export default function UniversitySection({ s }: { s: DocumentCatalogState }) {
 
   return (
     <>
-      <h2 className={styles.muc}>
-        <GraduationCap size={18} />
-        {U.heading}
-      </h2>
+      {!hideHeading && (
+        <h2 className={styles.muc}>
+          <GraduationCap size={18} />
+          {U.heading}
+        </h2>
+      )}
       <form onSubmit={s.themTruong} className={styles.them}>
         <input
           value={s.newSchoolName}

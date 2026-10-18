@@ -26,6 +26,41 @@ export const getDashboardStatistics = async (): Promise<DashboardStatistics> => 
   return apiRequest("/admin/dashboard/statistics");
 };
 
+/** Mot ngay tren bieu do dashboard (ngay theo gio Viet Nam). */
+export interface DashboardDay {
+  date: string;
+  users: number;
+  enrollments: number;
+  certificates: number;
+}
+
+/** Tong 30 ngay gan nhat so voi 30 ngay truoc; change = null khi ky truoc bang 0. */
+export interface WindowCompare {
+  current: number;
+  previous: number;
+  change: number | null;
+}
+
+export interface DashboardActivity {
+  days: DashboardDay[];
+  compare: {
+    users: WindowCompare;
+    enrollments: WindowCompare;
+    certificates: WindowCompare;
+  };
+  recent: {
+    _id: string;
+    student: { name: string; email: string } | null;
+    course: { title: string; slug: string; price: number } | null;
+    progress: number;
+    status: "active" | "completed" | "dropped";
+    createdAt: string;
+  }[];
+}
+
+export const getDashboardActivity = async (days = 90): Promise<DashboardActivity> =>
+  apiRequest(`/admin/dashboard/activity?days=${days}`);
+
 export interface AdminUserQuery {
   page?: number;
   limit?: number;

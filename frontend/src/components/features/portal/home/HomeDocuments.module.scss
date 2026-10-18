@@ -1,0 +1,330 @@
+// Muc "Chia se tai lieu" - tong xanh ngoc cua mang tai lieu (documentGradient
+// trong HomeHero), de nguoi xem nhan ra cung mot khu voi the "Tai lieu" o phan
+// mo dau.
+
+//
+// Mau dat bang bien CSS - xem ghi chu o HomeGuides.module.scss.
+$teal: var(--accent);
+$teal-ink: var(--accent-ink);
+$teal-soft: var(--accent-soft);
+$ink: #0b0c1e;
+
+.section {
+  --accent: #00bfb3;
+  --accent-ink: #007a72;
+  --accent-soft: #e6f8f6;
+  --accent-end: #009d93;
+  --accent-hover: #e6fffc;
+
+  background-color: #fff;
+}
+
+.toneCourse {
+  --accent: var(--color-blue-600);
+  --accent-ink: var(--color-blue-700);
+  --accent-soft: var(--color-blue-50);
+  --accent-end: var(--color-blue-800);
+  --accent-hover: var(--color-blue-50);
+}
+
+.container {
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 10);
+  max-width: var(--container-7xl);
+  padding-inline: calc(var(--spacing) * 6);
+  padding-block: calc(var(--spacing) * 16);
+
+  @media (min-width: 48rem) {
+    padding-block: calc(var(--spacing) * 20);
+  }
+}
+
+// ---- dau muc
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: calc(var(--spacing) * 6);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5);
+  border-radius: 999px;
+  background-color: $teal-soft;
+  padding: calc(var(--spacing) * 1) calc(var(--spacing) * 3);
+  font-size: 13px;
+  font-weight: var(--font-weight-semibold);
+  color: $teal-ink;
+}
+
+.heading {
+  margin-top: calc(var(--spacing) * 4);
+  font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+  font-size: clamp(1.8rem, 3.6vw, 2.5rem);
+  font-weight: var(--font-weight-extrabold);
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  color: $ink;
+}
+
+.text {
+  margin-top: calc(var(--spacing) * 4);
+  max-width: 62ch;
+  font-size: 15px;
+  line-height: var(--leading-relaxed);
+  color: var(--color-slate-500);
+}
+
+.cta {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  border-radius: var(--radius-xl);
+  background-color: $ink;
+  padding: calc(var(--spacing) * 3.5) calc(var(--spacing) * 6);
+  font-size: 15px;
+  font-weight: var(--font-weight-semibold);
+  color: #fff;
+  transition: background-color 0.2s;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: $teal-ink;
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 3px;
+  }
+}
+
+.ctaArrow {
+  transition: translate 0.2s;
+
+  @media (hover: hover) {
+    :global(.group):hover & {
+      translate: 3px 0;
+    }
+  }
+}
+
+// ---- so lieu
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(var(--spacing) * 3);
+  margin: 0;
+
+  @media (min-width: 48rem) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: calc(var(--spacing) * 4);
+  }
+}
+
+.stat {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: calc(var(--spacing) * 1);
+  border: 1px solid var(--color-slate-200);
+  border-radius: var(--radius-2xl);
+  background: linear-gradient(160deg, $teal-soft, #fff 65%);
+  padding: calc(var(--spacing) * 5);
+}
+
+.statValue {
+  margin: 0;
+  font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  font-weight: var(--font-weight-extrabold);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: $ink;
+}
+
+.statLabel {
+  font-size: 13.5px;
+  color: var(--color-slate-500);
+}
+
+// ---- tai lieu xem nhieu
+
+.rowTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: calc(var(--spacing) * 3);
+  margin-bottom: calc(var(--spacing) * 3);
+}
+
+.blockTitle {
+  font-size: 0.78rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-slate-500);
+}
+
+.seeAll {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5);
+  font-size: 14px;
+  font-weight: var(--font-weight-semibold);
+  color: $teal-ink;
+
+  @media (hover: hover) {
+    &:hover {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(var(--spacing) * 2);
+  padding: 0;
+  list-style: none;
+
+  @media (min-width: 64rem) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: calc(var(--spacing) * 4);
+  }
+}
+
+// ---- linh vuc + loi moi dang
+
+.footer {
+  display: grid;
+  align-items: stretch;
+  gap: calc(var(--spacing) * 6);
+
+  @media (min-width: 64rem) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  // Khong co linh vuc nao: the moi dang chiem ca hang.
+  > :only-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--spacing) * 2);
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  border: 1px solid var(--color-slate-200);
+  border-radius: 999px;
+  background-color: #fff;
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 2) calc(var(--spacing) * 2)
+    calc(var(--spacing) * 4);
+  font-size: 14px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-700);
+  transition:
+    border-color 0.2s,
+    background-color 0.2s,
+    color 0.2s;
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: $teal;
+      background-color: $teal-soft;
+      color: $teal-ink;
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+}
+
+.chipCount {
+  min-width: calc(var(--spacing) * 6);
+  border-radius: 999px;
+  background-color: var(--color-slate-100);
+  padding: 1px calc(var(--spacing) * 2);
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-slate-500);
+}
+
+.share {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--spacing) * 4);
+  border-radius: var(--radius-2xl);
+  background: linear-gradient(120deg, var(--accent), var(--accent-end));
+  padding: calc(var(--spacing) * 5) calc(var(--spacing) * 6);
+  color: #fff;
+}
+
+.shareIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: calc(var(--spacing) * 11);
+  height: calc(var(--spacing) * 11);
+  border-radius: var(--radius-xl);
+  background-color: rgb(255 255 255 / 0.18);
+}
+
+.shareText {
+  min-width: 12rem;
+  flex: 1;
+}
+
+.shareTitle {
+  font-size: 16px;
+  font-weight: var(--font-weight-bold);
+}
+
+.shareDesc {
+  margin-top: calc(var(--spacing) * 0.5);
+  font-size: 14px;
+  color: rgb(255 255 255 / 0.85);
+}
+
+.shareButton {
+  flex-shrink: 0;
+  border-radius: var(--radius-xl);
+  background-color: #fff;
+  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 5);
+  font-size: 14px;
+  font-weight: var(--font-weight-semibold);
+  color: $teal-ink;
+  transition: background-color 0.2s;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--accent-hover);
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 2px;
+  }
+}

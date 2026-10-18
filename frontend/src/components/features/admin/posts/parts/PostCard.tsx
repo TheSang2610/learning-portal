@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Eye, ImageOff, PenLine, Trash2 } from "lucide-react";
+import { Eye, ImageOff, Pencil, Trash2 } from "lucide-react";
 
 import SafeImage from "@/src/components/ui/SafeImage";
 import { ADMIN_POSTS as C } from "@/src/constants/admin/posts-page";
@@ -74,7 +74,7 @@ export default function PostCard({ p, topicName, onDelete }: PostCardProps) {
           </Link>
         )}
         <Link href={C.editHref(p._id)} title={C.card.editTitle} className={styles.box8}>
-          <PenLine size={18} />
+          <Pencil size={18} />
         </Link>
         <button
           type="button"

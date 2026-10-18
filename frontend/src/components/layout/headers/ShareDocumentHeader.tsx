@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import BrandLogo from "@/src/components/layout/BrandLogo";
 import { usePathname } from "next/navigation";
 import HeaderUserMenu from "./HeaderUserMenu";
-import { ALL_PATH, HOME_PATH, SCHOOLS_PATH } from "@/src/lib/document/paths";
+import { ALL_PATH, SCHOOLS_PATH } from "@/src/lib/document/paths";
 
 import styles from "./ShareDocumentHeader.module.scss";
 
@@ -21,11 +22,7 @@ export default function ShareDocumentHeader() {
     <div className={styles.box}>
       <div className={styles.container}>
         <div className={styles.row}>
-          {/* Chu logo cung kieu "Learning Portal" o trang chu, mau tim dam cua
-              dai dau khu tai lieu (ShareDocumentHero). */}
-          <Link href={HOME_PATH} className={styles.logo}>
-            LearningDocument
-          </Link>
+          <BrandLogo brand="document" />
 
           <nav className={styles.nav} aria-label="Khu chia sẻ tài liệu">
             {MENU.map((m) => {

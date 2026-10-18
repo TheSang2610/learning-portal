@@ -6,15 +6,24 @@ import type { DocumentCatalogState } from "../hooks/useDocumentCatalog";
 import styles from "../AdminDocumentSubjects.module.scss";
 
 /** Mon hoc: them, doi ten, xep vao linh vuc, xoa (khi khong con tai lieu). */
-export default function SubjectSection({ s }: { s: DocumentCatalogState }) {
+export default function SubjectSection({
+  s,
+  hideHeading = false,
+}: {
+  s: DocumentCatalogState;
+  /** Trang da co tieu de rieng (PageHeader) thi an tieu de muc. */
+  hideHeading?: boolean;
+}) {
   const S = C.subjects;
 
   return (
     <>
-      <h2 className={styles.muc}>
-        <BookOpen size={18} />
-        {S.heading}
-      </h2>
+      {!hideHeading && (
+        <h2 className={styles.muc}>
+          <BookOpen size={18} />
+          {S.heading}
+        </h2>
+      )}
       <form onSubmit={s.them} className={styles.them}>
         <input
           value={s.newName}

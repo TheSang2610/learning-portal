@@ -15,7 +15,8 @@ export default function AnnouncementForm({ s }: { s: AdminAnnouncementsState }) 
     <div className={styles.card}>
       {s.editing && (
         <p className={styles.editing}>
-          <Pencil size={14} /> {F.editing}
+          <Pencil size={14} />
+          <span>{F.editing}</span>
           <strong>{s.editing.tieuDe}</strong>
         </p>
       )}
@@ -189,11 +190,13 @@ export default function AnnouncementForm({ s }: { s: AdminAnnouncementsState }) 
           >
             {s.editing ? (
               <>
-                <Pencil size={16} /> {C.actions.save}
+                <Pencil size={16} />
+                <span>{C.actions.save}</span>
               </>
             ) : (
               <>
-                <Send size={16} /> {C.actions.send}
+                <Send size={16} />
+                <span>{C.actions.send}</span>
               </>
             )}
           </button>

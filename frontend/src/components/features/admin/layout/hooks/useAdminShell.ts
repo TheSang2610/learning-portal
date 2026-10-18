@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { useUserLoading, useStoredUser } from "@/src/hooks/userStore";
 import { clearSession } from "@/src/services/apiHelper";
 
-/** Gac cong quan tri, trang thai mo cac nhom menu va dang xuat. */
+/** Gac cong quan tri va dang xuat. Trang thai menu nam trong DashboardShell. */
 export function useAdminShell() {
   const router = useRouter();
   const pathname = usePathname();
@@ -22,35 +22,6 @@ export function useAdminShell() {
   // trong effect - React canh bao vi no de sinh vong ve lai day chuyen, va
   // eslint o day chay voi --max-warnings 0.
   const loading = loadingUser || user?.role !== "admin";
-
-  // null = "chua bam gi, cu theo duong dan"; true/false = nguoi dung da tu bam.
-  //
-  // Truoc day hai o nay la boolean thuong, mo ra bang mot useEffect chay theo
-  // pathname - tuc la React ve mot lan voi menu dong roi ve lai voi menu mo.
-  // Suy ra ngay luc ve thi khong con vong thua nao.
-  const [courseMenuOpened, setCourseMenuOpened] = useState<boolean | null>(null);
-  const [homeMenuOpened, setHomeMenuOpened] = useState<boolean | null>(null);
-
-  // Tu dong mo nhom menu theo duong dan tren thanh dia chi
-  const inHomeArea = pathname.startsWith("/admin/home-most-popular");
-  const inCourseArea =
-    (pathname.startsWith("/admin/courses") && !inHomeArea) ||
-    pathname.startsWith("/admin/categories") ||
-    pathname.startsWith("/admin/providers") ||
-    pathname.startsWith("/admin/lessons");
-
-  // Chuyen SANG mot trang thuoc khu do thi bo lua chon tu bam, cho menu mo lai.
-  // Chuyen sang trang khac thi giu nguyen y nguoi dung - dung y het hanh vi cua
-  // useEffect cu, chi khac la khong ton mot vong ve lai.
-  const [previousPath, setPreviousPath] = useState(pathname);
-  if (previousPath !== pathname) {
-    setPreviousPath(pathname);
-    if (inCourseArea) setCourseMenuOpened(null);
-    if (inHomeArea) setHomeMenuOpened(null);
-  }
-
-  const isCourseMenuOpen = courseMenuOpened ?? inCourseArea;
-  const isHomeMenuOpen = homeMenuOpened ?? inHomeArea;
 
   // Gac cong khu quan tri bang cau tra loi cua MAY CHU.
   //
@@ -92,10 +63,6 @@ export function useAdminShell() {
     pathname,
     adminName,
     loading,
-    isCourseMenuOpen,
-    isHomeMenuOpen,
-    toggleCourseMenu: () => setCourseMenuOpened(!isCourseMenuOpen),
-    toggleHomeMenu: () => setHomeMenuOpened(!isHomeMenuOpen),
     logoutHandler,
   };
 }

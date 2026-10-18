@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import BrandLogo, { brandForPath } from "@/src/components/layout/BrandLogo";
 import { getCategories, Category } from "@/src/services/categoryService";
 import { getHomeSections, Course } from "@/src/services/course";
 import { getProviders, ProviderData } from "@/src/services/provider";
@@ -25,6 +27,10 @@ export default function Footer({
   initialPopular,
   initialProviders,
 }: Props) {
+  // Footer doi LOGO theo khu dang mo: Learning Guide o /blog, Learning
+  // Document o /share-document, con lai Learning Platform. Dong ban quyen van
+  // la ten du an "Learning Portal".
+  const brand = brandForPath(usePathname());
   const [categories, setCategories] = useState<Category[]>(initialCategories ?? []);
   const [popularCourses, setPopularCourses] = useState<Course[]>(initialPopular ?? []);
   const [providers, setProviders] = useState<ProviderData[]>(initialProviders ?? []);
@@ -53,9 +59,7 @@ export default function Footer({
       <div className={styles.container}>
         {/* CỘT 1: THƯƠNG HIỆU PLATFORM */}
         <div className={styles.col}>
-          <Link href="/" className={styles.box}>
-            Learning Portal
-          </Link>
+          <BrandLogo brand={brand} size="footer" />
           <p className={styles.text}>
             Nền tảng đào tạo trực tuyến chuẩn hóa thế hệ mới. Học tập mọi lúc, mọi nơi
             cùng các chuyên gia và tổ chức uy tín hàng đầu.

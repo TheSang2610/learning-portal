@@ -1,0 +1,318 @@
+// Dai dau trang chung cua cac trang danh sach khoa hoc (/courses, /collection) - nen xanh nhat co vong cung trang tri (cung kieu
+// dashboard), o tim kiem lon, so lieu dang vien, hang chip danh muc cuon ngang.
+
+$ink: #0d0f12;
+$muted: #5b6780;
+$line: #dae1ed;
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #eef3ff 0%, #f5f7fa 100%);
+  border-bottom: 1px solid #e3e8f2;
+}
+
+.glow {
+  position: absolute;
+  top: -55%;
+  right: -10%;
+  width: 46rem;
+  height: 46rem;
+  border-radius: 50%;
+  border: 70px solid rgb(21 93 252 / 0.05);
+  pointer-events: none;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 140px;
+    border-radius: 50%;
+    border: 1.5px solid rgb(21 93 252 / 0.14);
+  }
+}
+
+.container {
+  position: relative;
+  margin-inline: auto;
+  max-width: var(--container-7xl);
+  padding: calc(var(--spacing) * 8) calc(var(--spacing) * 4) calc(var(--spacing) * 8);
+
+  @media (min-width: 40rem) {
+    padding-inline: calc(var(--spacing) * 6);
+  }
+
+  @media (min-width: 48rem) {
+    padding-block: calc(var(--spacing) * 10);
+  }
+}
+
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: $muted;
+
+  a {
+    color: var(--color-blue-700);
+
+    @media (hover: hover) {
+      &:hover {
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+    }
+  }
+
+  [aria-current="page"] {
+    color: $ink;
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+.title {
+  margin-top: calc(var(--spacing) * 4);
+  font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+  font-size: clamp(1.8rem, 3.8vw, 2.6rem);
+  font-weight: var(--font-weight-extrabold);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  color: $ink;
+}
+
+.subtitle {
+  margin-top: calc(var(--spacing) * 3);
+  max-width: 60ch;
+  font-size: 15.5px;
+  line-height: var(--leading-relaxed);
+  color: $muted;
+}
+
+// ---- o tim kiem
+
+.search {
+  margin-top: calc(var(--spacing) * 6);
+  display: flex;
+  max-width: 44rem;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid $line;
+  border-radius: 14px;
+  background-color: #fff;
+  padding: 6px 6px 6px 16px;
+  box-shadow: 0 10px 30px -22px rgb(15 17 20 / 0.45);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+
+  &:focus-within {
+    border-color: var(--color-blue-600);
+    box-shadow: 0 0 0 4px rgb(21 93 252 / 0.12);
+  }
+}
+
+.searchIcon {
+  flex: none;
+  color: $muted;
+}
+
+.searchInput {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  background: transparent;
+  padding-block: 10px;
+  font-size: 15.5px;
+  color: $ink;
+  outline: none;
+
+  &::placeholder {
+    color: #8d97ab;
+  }
+
+  // An nut x mac dinh cua trinh duyet - da co nut xoa rieng.
+  &::-webkit-search-cancel-button {
+    appearance: none;
+  }
+}
+
+.clear {
+  display: grid;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 999px;
+  color: $muted;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: #f2f5fa;
+      color: $ink;
+    }
+  }
+}
+
+.searchButton {
+  flex: none;
+  border: 0;
+  border-radius: 10px;
+  background-color: var(--color-blue-600);
+  padding: 11px 22px;
+  font-size: 15px;
+  font-weight: var(--font-weight-semibold);
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.15s;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-blue-700);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-blue-600);
+    outline-offset: 2px;
+  }
+}
+
+// ---- so lieu
+
+.stats {
+  margin-top: calc(var(--spacing) * 5);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid $line;
+    border-radius: 999px;
+    background-color: rgb(255 255 255 / 0.8);
+    padding: 6px 12px;
+    font-size: 13.5px;
+    font-weight: var(--font-weight-semibold);
+    color: $ink;
+
+    svg {
+      color: var(--color-blue-600);
+    }
+  }
+}
+
+// ---- chip danh muc: mot hang cuon ngang, khong xuong dong
+
+.chipsRow {
+  margin-top: calc(var(--spacing) * 7);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chipsLabel {
+  flex: none;
+  font-size: 13px;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: $muted;
+
+  @media (max-width: 40rem) {
+    display: none;
+  }
+}
+
+.chips {
+  display: flex;
+  min-width: 0;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px;
+  list-style: none;
+  scrollbar-width: none;
+  // Mo dan o mep phai: chip cuoi bi cat nhin ra la "con cuon duoc", khong
+  // phai bi loi.
+  mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent);
+  padding-right: 40px;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  border: 1px solid $line;
+  border-radius: 999px;
+  background-color: #fff;
+  padding: 7px 8px 7px 14px;
+  font-size: 14px;
+  font-weight: var(--font-weight-semibold);
+  color: $ink;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s,
+    color 0.15s;
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--color-blue-600);
+      color: var(--color-blue-700);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-blue-600);
+    outline-offset: 2px;
+  }
+
+  // "Tat ca" khong co o dem - can deu hai ben.
+  &:not(:has(.chipCount)) {
+    padding-right: 14px;
+  }
+}
+
+.chipActive {
+  border-color: $ink;
+  background-color: $ink;
+  color: #fff;
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: $ink;
+      color: #fff;
+    }
+  }
+
+  .chipCount {
+    background-color: rgb(255 255 255 / 0.18);
+    color: #fff;
+  }
+}
+
+.chipCount {
+  min-width: 22px;
+  border-radius: 999px;
+  background-color: #eef2f8;
+  padding: 1px 7px;
+  text-align: center;
+  font-size: 12px;
+  color: $muted;
+}
+
+// Moi chang breadcrumb = [dau >] + link / chu.
+.crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}

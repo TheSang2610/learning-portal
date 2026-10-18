@@ -1,4 +1,4 @@
-import { AlertCircle, Edit3, HelpCircle, Loader2, Trash2 } from "lucide-react";
+import { AlertCircle, HelpCircle, Loader2, Pencil, Trash2 } from "lucide-react";
 
 import { ADMIN_COURSE_FAQS as C } from "@/src/constants/admin/course-faqs-page";
 import type { FaqManager } from "@/src/hooks/useFaqManager";
@@ -50,7 +50,7 @@ export default function CourseFaqList({ m }: { m: FaqManager }) {
 
           <div className={styles.row3}>
             <button onClick={() => m.openEdit(faq)} className={styles.button2}>
-              <Edit3 size={18} />
+              <Pencil size={18} />
             </button>
             <button onClick={() => m.handleDelete(faq._id!)} className={styles.button3}>
               <Trash2 size={18} />

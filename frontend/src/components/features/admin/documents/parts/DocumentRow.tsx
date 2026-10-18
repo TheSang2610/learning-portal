@@ -92,9 +92,16 @@ export default function DocumentRow({
             type="button"
             onClick={() => s.startEditSubject(d)}
             className={d.monHoc?.length ? styles.mon : styles.subjectInside}
-            title={R.editSubjectsTitle}
+            // Ten mon dai bi cat bang "..." - re chuot de doc du.
+            title={
+              d.monHoc?.length
+                ? `${d.monHoc.join(", ")} — ${R.editSubjectsTitle}`
+                : R.editSubjectsTitle
+            }
           >
-            {d.monHoc?.length ? d.monHoc.join(", ") : R.noSubject}
+            <span className={styles.subjectText}>
+              {d.monHoc?.length ? d.monHoc.join(", ") : R.noSubject}
+            </span>
             <Pencil size={12} />
           </button>
         )}

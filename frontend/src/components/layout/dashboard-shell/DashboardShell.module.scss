@@ -1,0 +1,698 @@
+// Khung quan tri / giang vien - bo cuc shadcn/ui Dashboard (sidebar "inset").
+// Bang mau trung tinh cua shadcn (neutral): nen sidebar #fafafa, vien #e5e5e5,
+// chu #0a0a0a, chu phu #737373, muc dang chon #f0f0f0.
+
+$bg: #fafafa;
+$ink: #0a0a0a;
+$muted: #737373;
+$line: #e5e5e5;
+$accent: #f0f0f0;
+$primary: #171717;
+$w: 16rem;
+$w-icon: 3rem;
+
+.wrapper {
+  // Khu quan tri chi dung tong den - trang (shadcn neutral): dinh nghia lai
+  // cac bien mau xanh / tim ma trang cu dung (nut, vien khi hover/focus, link,
+  // tab...) thanh dai xam. Xanh la / do / vang (thanh cong, xoa, canh bao) giu
+  // nguyen vi mang nghia.
+  --color-blue-50: #fafafa;
+  --color-blue-100: #f5f5f5;
+  --color-blue-200: #e5e5e5;
+  --color-blue-300: #d4d4d4;
+  --color-blue-400: #a3a3a3;
+  --color-blue-500: #737373;
+  --color-blue-600: #171717;
+  --color-blue-700: #262626;
+  --color-blue-800: #0a0a0a;
+  --color-blue-900: #0a0a0a;
+  --color-blue-950: #0a0a0a;
+  --color-indigo-50: #fafafa;
+  --color-indigo-100: #f5f5f5;
+  --color-indigo-200: #e5e5e5;
+  --color-indigo-300: #d4d4d4;
+  --color-indigo-400: #a3a3a3;
+  --color-indigo-500: #737373;
+  --color-indigo-600: #171717;
+  --color-indigo-700: #262626;
+  --color-indigo-800: #0a0a0a;
+  --color-indigo-900: #0a0a0a;
+  --color-indigo-950: #0a0a0a;
+  --color-violet-50: #fafafa;
+  --color-violet-100: #f5f5f5;
+  --color-violet-200: #e5e5e5;
+  --color-violet-300: #d4d4d4;
+  --color-violet-400: #a3a3a3;
+  --color-violet-500: #737373;
+  --color-violet-600: #171717;
+  --color-violet-700: #262626;
+  --color-violet-800: #0a0a0a;
+  --color-violet-900: #0a0a0a;
+  --color-violet-950: #0a0a0a;
+  --color-purple-50: #fafafa;
+  --color-purple-100: #f5f5f5;
+  --color-purple-200: #e5e5e5;
+  --color-purple-300: #d4d4d4;
+  --color-purple-400: #a3a3a3;
+  --color-purple-500: #737373;
+  --color-purple-600: #171717;
+  --color-purple-700: #262626;
+  --color-purple-800: #0a0a0a;
+  --color-purple-900: #0a0a0a;
+  --color-purple-950: #0a0a0a;
+  --color-sky-50: #fafafa;
+  --color-sky-100: #f5f5f5;
+  --color-sky-200: #e5e5e5;
+  --color-sky-300: #d4d4d4;
+  --color-sky-400: #a3a3a3;
+  --color-sky-500: #737373;
+  --color-sky-600: #171717;
+  --color-sky-700: #262626;
+  --color-sky-800: #0a0a0a;
+  --color-sky-900: #0a0a0a;
+  --color-sky-950: #0a0a0a;
+
+  // Font he thong dang sans giong shadcn; trang con co the dat font rieng.
+  --shell-sidebar: #{$w};
+  display: flex;
+  min-height: 100vh;
+  background-color: $bg;
+  color: $ink;
+  font-family:
+    var(--font-inter, "Inter"),
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
+
+.collapsed {
+  --shell-sidebar: #{$w-icon};
+}
+
+// ---- sidebar
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  height: 100vh;
+  width: var(--shell-sidebar);
+  flex: none;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 8px;
+  transition: width 0.2s ease-linear;
+
+  @media (max-width: 767px) {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 50;
+    width: 18rem;
+    border-right: 1px solid $line;
+    background-color: $bg;
+    translate: -100% 0;
+    transition: translate 0.2s ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.mobileOpen .sidebar {
+  translate: 0 0;
+}
+
+.overlay {
+  display: none;
+
+  @media (max-width: 767px) {
+    .mobileOpen & {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: block;
+      background-color: rgb(0 0 0 / 0.5);
+    }
+  }
+}
+
+.sidebarHeader {
+  padding: 0 0 8px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  padding: 8px;
+  overflow: hidden;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: $accent;
+    }
+  }
+
+  .collapsed & {
+    padding: 0;
+    justify-content: center;
+    height: 32px;
+  }
+}
+
+.brandIcon {
+  display: grid;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 8px;
+  background-color: $primary;
+  color: #fff;
+}
+
+.brandText {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  line-height: 1.25;
+
+  .collapsed & {
+    display: none;
+  }
+}
+
+.brandName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.brandSub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: $muted;
+}
+
+.sidebarContent {
+  min-height: 0;
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4d4 transparent;
+}
+
+.group {
+  padding: 8px 0;
+}
+
+.groupLabel {
+  display: flex;
+  height: 32px;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgb(10 10 10 / 0.7);
+  white-space: nowrap;
+  transition: opacity 0.2s;
+
+  .collapsed & {
+    height: 0;
+    opacity: 0;
+    overflow: hidden;
+  }
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  width: 100%;
+  height: 32px;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  padding: 0 8px;
+  font-size: 14px;
+  text-align: left;
+  color: $ink;
+  cursor: pointer;
+  transition: background-color 0.15s;
+
+  svg {
+    flex: none;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: $accent;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid #a3a3a3;
+    outline-offset: -2px;
+  }
+
+  .collapsed & {
+    width: 32px;
+    justify-content: center;
+    padding: 0;
+  }
+}
+
+.itemActive {
+  background-color: $accent;
+  font-weight: 500;
+}
+
+.itemLabel {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  .collapsed & {
+    display: none;
+  }
+}
+
+.chevron {
+  margin-left: auto;
+  color: $muted;
+  transition: rotate 0.2s;
+}
+
+.chevronOpen {
+  rotate: 90deg;
+}
+
+// Muc con: vach doc ben trai, giong SidebarMenuSub cua shadcn.
+.sub {
+  margin: 4px 0 4px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-left: 1px solid $line;
+  padding: 2px 0 2px 10px;
+  list-style: none;
+}
+
+.subItem {
+  display: flex;
+  height: 28px;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  border-radius: 6px;
+  padding: 0 8px;
+  font-size: 14px;
+  white-space: nowrap;
+  color: rgb(10 10 10 / 0.8);
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: $accent;
+      color: $ink;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid #a3a3a3;
+    outline-offset: -2px;
+  }
+}
+
+.subItemActive {
+  background-color: $accent;
+  font-weight: 500;
+  color: $ink;
+}
+
+.editing {
+  font-size: 12px;
+  color: $muted;
+}
+
+// ---- chan sidebar: nguoi dung
+
+.sidebarFooter {
+  padding-top: 8px;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  padding: 8px;
+
+  .collapsed & {
+    flex-direction: column;
+    padding: 0;
+  }
+}
+
+.avatar {
+  display: grid;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 8px;
+  background-color: #e5e5e5;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.userText {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  line-height: 1.25;
+
+  .collapsed & {
+    display: none;
+  }
+}
+
+.userName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.userSub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: $muted;
+}
+
+.logout {
+  display: grid;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: $muted;
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: $accent;
+      color: $ink;
+    }
+  }
+}
+
+// ---- noi dung: khung trang noi tren nen (variant "inset")
+
+.inset {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  background-color: #fff;
+
+  @media (min-width: 768px) {
+    margin: 8px 8px 8px 0;
+    min-height: calc(100vh - 16px);
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+    outline: 1px solid rgb(0 0 0 / 0.04);
+
+    .collapsed & {
+      margin-left: 0;
+    }
+  }
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  height: 48px;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid $line;
+  background-color: rgb(255 255 255 / 0.9);
+  padding: 0 16px;
+  backdrop-filter: blur(6px);
+
+  @media (min-width: 768px) {
+    border-radius: 12px 12px 0 0;
+    padding: 0 24px;
+  }
+}
+
+.trigger {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  margin-left: -4px;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: $ink;
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: $accent;
+    }
+  }
+}
+
+.separator {
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background-color: $line;
+}
+
+.breadcrumb {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  color: $muted;
+
+  li {
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+    gap: 4px;
+  }
+
+  a {
+    white-space: nowrap;
+    transition: color 0.15s;
+
+    @media (hover: hover) {
+      &:hover {
+        color: $ink;
+      }
+    }
+  }
+
+  [aria-current="page"] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: $ink;
+  }
+}
+
+.crumbSep {
+  flex: none;
+}
+
+.crumbHideMobile {
+  @media (max-width: 767px) {
+    display: none !important;
+  }
+}
+
+.main {
+  min-width: 0;
+  flex: 1;
+  padding: 16px;
+
+  @media (min-width: 768px) {
+    padding: 24px;
+  }
+}
+
+// ---- Chuan hoa chung cho MOI trang ben trong khung (ke ca trang chua viet lai
+// bang admin-ui): tieu de, bang, o nhap cung mot kieu shadcn. Chi chinh mau,
+// vien, chu - KHONG chinh padding / chieu cao de khong lam vo bo cuc rieng
+// (o nhap co bieu tuong ben trong...).
+.main {
+  :global(h1) {
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    color: $ink;
+  }
+
+  :global(table) {
+    border-collapse: collapse;
+  }
+
+  :global(th) {
+    background-color: #fafafa;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    color: $muted;
+  }
+
+  :global(td) {
+    border-color: $line;
+  }
+
+  :global(
+    input:not(
+      [type="checkbox"],
+      [type="radio"],
+      [type="color"],
+      [type="file"],
+      [type="range"]
+    )
+  ),
+  :global(select),
+  :global(textarea) {
+    border: 1px solid $line;
+    border-radius: 8px;
+    background-color: #fff;
+    font-size: 14px;
+    color: $ink;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+
+    &::placeholder {
+      color: #a3a3a3;
+    }
+
+    &:focus {
+      border-color: #a3a3a3;
+      outline: none;
+      box-shadow: 0 0 0 3px rgb(163 163 163 / 0.3);
+    }
+  }
+}
+
+// Phan tu GOC cua moi trang luon rong het khung (giong /admin/courses): nhieu
+// trang cu tu dat max-width + margin auto (form hep giua man hinh) va tu them
+// padding - chong len padding cua .main thanh le kep. !important vi day la
+// quy uoc cua khung, phai thang moi class rieng cua trang.
+.main > * {
+  max-width: none !important;
+  margin-inline: 0 !important;
+  padding-inline: 0 !important;
+  padding-top: 0 !important;
+  min-height: 0 !important;
+}
+
+// Vien focus mac dinh cua trinh duyet (xanh) -> xam, cung tong den - trang.
+.main {
+  :global(a:focus-visible),
+  :global(button:focus-visible) {
+    outline: 2px solid #a3a3a3;
+    outline-offset: 2px;
+  }
+}
+
+// Nut thao tac chi co MOT bieu tuong (sua, xoa, xem, mo link, an/hien, khoa...)
+// cung mot kieu o moi trang, ke ca trang cu: o 32px, khong vien, khong nen, chu
+// den; re chuot nen xam nhat. Trong bang: moi nut-bieu-tuong. Ngoai bang (danh
+// sach FAQ, the bai viet...): nut sua / xoa.
+.main {
+  :global(td) :is(:global(button), :global(a)):has(> :global(svg.lucide):only-child),
+  :is(:global(button), :global(a)):has(
+    > :global(svg):is(
+        :global(.lucide-pencil),
+        :global(.lucide-trash-2),
+        :global(.lucide-trash)
+      ):only-child
+  ) {
+    display: inline-grid;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    place-items: center;
+    border: 0 !important;
+    border-radius: 6px;
+    background: transparent !important;
+    padding: 0 !important;
+    color: $ink;
+    box-shadow: none !important;
+    transition: background-color 0.15s;
+
+    > :global(svg) {
+      width: 16px;
+      height: 16px;
+    }
+
+    &:not(:disabled):hover {
+      background-color: $accent !important;
+      color: $ink;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+    }
+  }
+}
+
+// Nut xoa (icon thung rac) luon DO o moi trang - nhin la biet nut nguy hiem,
+// ke ca trang cu chua viet lai bang admin-ui. Re chuot: nen do nhat.
+.main {
+  :global(button:has(> svg.lucide-trash-2)),
+  :global(button:has(> svg.lucide-trash)),
+  :global(a:has(> svg.lucide-trash-2)) {
+    color: #dc2626 !important;
+
+    &:not(:disabled):hover {
+      background-color: #fef2f2 !important;
+      color: #b91c1c !important;
+    }
+  }
+}

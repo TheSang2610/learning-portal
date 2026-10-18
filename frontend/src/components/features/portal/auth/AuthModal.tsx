@@ -1,9 +1,17 @@
 "use client";
 
 import { storeUser, requireReload } from "@/src/hooks/userStore";
-import { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type InputHTMLAttributes,
+} from "react";
 import { getErrorMessage } from "@/src/services/apiHelper";
 import Image from "next/image";
+import { Eye, EyeOff, Lock, Mail, Phone, User, X, type LucideIcon } from "lucide-react";
 
 import styles from "./AuthModal.module.scss";
 import {
@@ -29,6 +37,8 @@ interface AuthModalProps {
   onClose: () => void;
   /** Cau giai thich vi sao hop nay hien ra, vi du khi khach bam vao hoc. */
   labelError?: string;
+  /** Tab mo dau - lay tu ?auth=login|register. */
+  startTab?: "login" | "register";
 }
 
 // So chu so cua ma dat lai. Khop voi DIGIT_COUNT trong
@@ -71,8 +81,74 @@ const goDirect = (role?: string) => {
   return window.location.replace(address.toString());
 };
 
-export default function AuthModal({ open, onClose, labelError }: AuthModalProps) {
-  const [isLogin, setIsLogin] = useState(true);
+/** O nhap co bieu tuong ben trai (cung kieu cho moi o trong hop). */
+function Field({
+  icon: Icon,
+  ...rest
+}: InputHTMLAttributes<HTMLInputElement> & { icon: LucideIcon }) {
+  return (
+    <label className={styles.field}>
+      <Icon size={18} aria-hidden className={styles.fieldIcon} />
+      <input {...rest} className={styles.input} />
+    </label>
+  );
+}
+
+/** O mat khau + nut hien / an. */
+function PasswordField(props: InputHTMLAttributes<HTMLInputElement>) {
+  const [shown, setShown] = useState(false);
+  return (
+    <label className={styles.field}>
+      <Lock size={18} aria-hidden className={styles.fieldIcon} />
+      <input {...props} type={shown ? "text" : "password"} className={styles.input} />
+      <button
+        type="button"
+        onClick={() => setShown((v) => !v)}
+        className={styles.eye}
+        aria-label={shown ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+        title={shown ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+      >
+        {shown ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+    </label>
+  );
+}
+
+/**
+ * Chieu cao tu co gian MUOT theo noi dung: doi tab dang nhap / dang ky (form
+ * dai ngan khac nhau) thi hop gian ra / thu lai tu tu thay vi giat.
+ */
+function useAutoHeight<T extends HTMLElement>() {
+  // Callback ref (setter cua state) thay cho useRef: phan tu xuat hien / bien
+  // mat theo hop mo / dong, effect tu gan lai ResizeObserver.
+  const [node, setNode] = useState<T | null>(null);
+  const [height, setHeight] = useState<number | undefined>(undefined);
+  useLayoutEffect(() => {
+    if (!node) return;
+    const ro = new ResizeObserver(() => setHeight(node.offsetHeight));
+    ro.observe(node);
+    return () => ro.disconnect();
+  }, [node]);
+  return [setNode, height] as const;
+}
+
+export default function AuthModal({
+  open,
+  onClose,
+  labelError,
+  startTab = "login",
+}: AuthModalProps) {
+  const [isLogin, setIsLogin] = useState(startTab !== "register");
+  // Moi lan hop MO (hoac doi ?auth=) thi ve dung tab duoc yeu cau. Chinh state
+  // ngay luc render (cach React khuyen cho state suy tu props), khong useEffect.
+  const openKey = open ? startTab : "";
+  const [lastOpenKey, setLastOpenKey] = useState(openKey);
+  if (lastOpenKey !== openKey) {
+    setLastOpenKey(openKey);
+    if (open) setIsLogin(startTab !== "register");
+  }
+  // Do chieu cao than hop de co gian muot khi doi tab.
+  const [bodyRef, bodyHeight] = useAutoHeight<HTMLDivElement>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   // Hien cau nhac "neu ban dang ky bang Google..." sau khi dang nhap that bai.
@@ -481,313 +557,343 @@ export default function AuthModal({ open, onClose, labelError }: AuthModalProps)
     <div className={styles.overlay}>
       <div className={styles.floating} onClick={onClose} />
 
-      <div className={styles.card}>
+      {/* Hai cot: form (khung vien bo goc) ben trai, anh ben phai nam DUOI
+          mep form. Man hinh hep thi chi con form. */}
+      <div
+        className={styles.dialog}
+        role="dialog"
+        aria-modal="true"
+        aria-label={forgotStep ? "Quên mật khẩu" : isLogin ? "Đăng nhập" : "Đăng ký"}
+      >
+        {/* Nut dong: goc tren ben phai cua ca hop - nam tren anh khi co anh,
+            tren form khi man hinh hep. */}
         <button
           type="button"
           onClick={onClose}
-          // h-11 w-11: 44px la kich thuoc vung cham toi thieu Apple khuyen
-          // nghi. Ban cu la 25x40 - hut mot nut nho nhu vay tren dien thoai
-          // rat de truot tay.
-          className={styles.button}
-          aria-label="Close auth modal"
+          className={styles.close}
+          aria-label="Đóng"
         >
-          ×
+          <X size={18} />
         </button>
+        <div className={styles.card}>
+          {/* Khong tieu de / bieu tuong o dau hop: hang tab Dang nhap / Dang ky da
+            noi ro. Chi luong quen mat khau (khong co tab) moi can mot dong tieu de. */}
+          {forgotStep && (
+            <h2 id="auth-title" className={styles.heading}>
+              Quên mật khẩu
+            </h2>
+          )}
 
-        <h2 className={styles.heading}>
-          {forgotStep ? "Quên mật khẩu" : isLogin ? "Đăng nhập" : "Đăng ký"}
-        </h2>
+          {/* Vi sao hop nay hien ra (vd. khach bam "Vào học"). */}
+          {labelError && !forgotStep && <p className={styles.reason}>{labelError}</p>}
 
-        {/* Vi sao hop nay hien ra. Khach bam "Vào học" roi thay mot o dang
-            nhap khong loi giai thich se tuong minh bam nham. */}
-        {labelError && !forgotStep && <p className={styles.text}>{labelError}</p>}
-
-        {/* Trong luong quen mat khau thi KHONG hien hai tab: dang o giua mot
-            viec co ba buoc, bam sang "Đăng ký" la mat het cong da lam ma
-            khong ai bao truoc. */}
-        {!forgotStep && (
-          <div className={styles.row}>
-            <button
-              type="button"
-              onClick={() => {
-                setIsLogin(true);
-                cleanup();
-              }}
-              className={`${styles.button10} ${
-                isLogin ? styles.button2 : styles.button3
-              }`}
+          {/* Trong luong quen mat khau KHONG hien hai tab: dang giua mot viec ba
+            buoc, bam sang "Đăng ký" la mat het cong da lam. */}
+          {!forgotStep && (
+            // Nut gat: nen xanh (.slider) TRUOT sang tab duoc chon.
+            <div
+              className={styles.tabs}
+              data-side={isLogin ? "left" : "right"}
+              role="tablist"
             >
-              Đăng nhập
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setIsLogin(false);
-                cleanup();
-              }}
-              className={`${styles.button10} ${
-                !isLogin ? styles.button2 : styles.button3
-              }`}
-            >
-              Đăng ký
-            </button>
-          </div>
-        )}
-
-        {error && (
-          <div className={styles.card2}>
-            {error}
-            {googleHint && (
-              <p className={styles.text2}>
-                Nếu bạn đã đăng ký bằng Google, hãy dùng nút “Tiếp tục với Google” ở trên.
-              </p>
-            )}
-          </div>
-        )}
-
-        {notification && <div className={styles.card3}>{notification}</div>}
-
-        {!forgotStep && (
-          <button
-            type="button"
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-            className={styles.button4}
-          >
-            <Image
-              src="https://www.svgrepo.com/show/355037/google.svg"
-              alt="Google logo"
-              width={20}
-              height={20}
-              className={styles.box}
-            />
-            Tiếp tục với Google
-          </button>
-        )}
-
-        {forgotStep === "email" ? (
-          <form onSubmit={sendCode} className={styles.form}>
-            {/* Nói rõ là phải có EMAIL, không nhận số điện thoại.
-                Đăng ký chỉ bắt buộc số điện thoại, nên có tài khoản không có
-                email — và chưa gắn nhà cung cấp SMS nào thì không có chỗ nào
-                gửi mã tới. Không nói trước thì người dùng gõ số vào, nhận câu
-                "đã gửi mã" rồi ngồi đợi một tin nhắn không bao giờ tới.
-
-                Máy chủ vẫn trả đúng một câu cho mọi trường hợp, kể cả tài
-                khoản không có email — nói riêng ra là biến đường này thành
-                máy trả lời câu hỏi ai có email ai không. */}
-            <p className={styles.text3}>
-              Nhập email của tài khoản. Chúng tôi sẽ gửi một mã gồm {CODE_DIGITS} chữ số
-              tới hộp thư đó.
-            </p>
-            <p className={styles.text4}>
-              Tài khoản đăng ký bằng số điện thoại mà chưa thêm email thì chưa tự lấy lại
-              mật khẩu được — nhắn quản trị viên để được đặt lại.
-            </p>
-            {/* Xem ghi chu o o dang nhap: type="email" se chan ten ngan. */}
-            <input
-              type="text"
-              placeholder="Email hoặc tên tài khoản"
-              value={quenEmail}
-              onChange={(e) => setQuenEmail(e.target.value)}
-              required
-              autoFocus
-              autoComplete="username"
-              maxLength={MAX_EMAIL_LENGTH}
-              className={styles.input}
-            />
-            <button type="submit" disabled={loading} className={styles.button5}>
-              {loading ? "Đang gửi..." : "Gửi mã"}
-            </button>
-            <button type="button" onClick={exitForgotFlow} className={styles.button6}>
-              Quay lại đăng nhập
-            </button>
-          </form>
-        ) : forgotStep === "ma" ? (
-          <form onSubmit={confirmCode} className={styles.form}>
-            <p className={styles.text3}>
-              Mở hộp thư <span className={styles.label}>{quenEmail}</span> và nhập mã vào
-              ô dưới. Nhớ xem cả mục Spam.
-            </p>
-            <input
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              placeholder="000000"
-              value={forgotCode}
-              // Loc bo moi thu khong phai chu so ngay luc go: nguoi dung hay
-              // dan ca cum "Mã: 482913" tu email vao.
-              onChange={(e) =>
-                setForgotCode(e.target.value.replace(/\D/g, "").slice(0, CODE_DIGITS))
-              }
-              required
-              autoFocus
-              maxLength={CODE_DIGITS}
-              className={styles.input2}
-            />
-            <button
-              type="submit"
-              disabled={loading || forgotCode.length !== CODE_DIGITS}
-              className={styles.button5}
-            >
-              {loading ? "Đang kiểm tra..." : "Xác nhận"}
-            </button>
-            <div className={styles.row2}>
-              {/* Gui lai ma. May chu tu dem so lan gui va tu chan khi du -
-                  giao dien khong khoa nut nay va khong dem nguoc, vi lam vay
-                  la noi cho nguoi ta biet con bao nhieu lan va bao lau. */}
+              <span className={styles.slider} aria-hidden />
               <button
                 type="button"
-                onClick={() => sendCode()}
-                disabled={loading}
-                className={styles.button7}
+                role="tab"
+                aria-selected={isLogin}
+                onClick={() => {
+                  if (isLogin) return;
+                  setIsLogin(true);
+                  cleanup();
+                }}
+                className={`${styles.tab} ${isLogin ? styles.tabActive : ""}`}
               >
-                Gửi lại mã
+                Đăng nhập
               </button>
-              <button type="button" onClick={exitForgotFlow} className={styles.button8}>
-                Quay lại đăng nhập
+              <button
+                type="button"
+                role="tab"
+                aria-selected={!isLogin}
+                onClick={() => {
+                  if (!isLogin) return;
+                  setIsLogin(false);
+                  cleanup();
+                }}
+                className={`${styles.tab} ${!isLogin ? styles.tabActive : ""}`}
+              >
+                Đăng ký
               </button>
             </div>
-          </form>
-        ) : forgotStep === "matKhau" ? (
-          <form onSubmit={changePassword} className={styles.form}>
-            <p className={styles.text3}>
-              Mã hợp lệ. Đặt mật khẩu mới cho tài khoản{" "}
-              <span className={styles.label}>{quenEmail}</span>.
-            </p>
-            <input
-              type="password"
-              placeholder={`Mật khẩu mới (tối thiểu ${MIN_PASSWORD_LENGTH} ký tự)`}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-              autoFocus
-              autoComplete="new-password"
-              minLength={MIN_PASSWORD_LENGTH}
-              className={styles.input}
-            />
-            <input
-              type="password"
-              placeholder="Nhập lại mật khẩu mới"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              autoComplete="new-password"
-              minLength={MIN_PASSWORD_LENGTH}
-              className={styles.input}
-            />
-            <button type="submit" disabled={loading} className={styles.button5}>
-              {loading ? "Đang đổi..." : "Đổi mật khẩu"}
-            </button>
-          </form>
-        ) : isLogin ? (
-          <form
-            onSubmit={handleLoginSubmit}
-            className={styles.form}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* type="text" chu KHONG phai "email": trinh duyet tu chan
-                khong cho gui khi o type="email" khong chua dau @, nen de
-                nguyen la khong ai dang nhap bang ten tai khoan ngan duoc. */}
-            <input
-              type="text"
-              name="email"
-              placeholder="Số điện thoại hoặc email"
-              value={loginData.email}
-              onChange={handleLoginChange}
-              required
-              autoComplete="username"
-              maxLength={MAX_EMAIL_LENGTH}
-              className={styles.input}
-            />
-            <input
-              type="password"
-              name="password"
-              placeholder="Mật khẩu"
-              value={loginData.password}
-              onChange={handleLoginChange}
-              required
-              autoComplete="current-password"
-              className={styles.input}
-            />
-            <button type="submit" disabled={loading} className={styles.button5}>
-              {loading ? "Đang xử lý..." : "Đăng nhập"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                cleanup();
-                // Mang san email ho vua go sang buoc 1 - gan nhu luon la dia
-                // chi ho dinh dat lai, bat go lai la vo ich.
-                setQuenEmail(loginData.email.trim().toLowerCase());
-                setForgotStep("email");
-              }}
-              className={styles.button9}
-            >
-              Quên mật khẩu?
-            </button>
-          </form>
-        ) : (
-          <form
-            onSubmit={handleRegisterSubmit}
-            className={styles.form}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <input
-              type="text"
-              name="name"
-              placeholder="Họ và tên"
-              value={registerData.name}
-              onChange={handleRegisterChange}
-              required
-              autoComplete="name"
-              maxLength={MAX_NAME_LENGTH}
-              className={styles.input}
-            />
-            {/* inputMode="tel" mở bàn phím số trên điện thoại. type vẫn là
-                "tel" chứ không phải "number": "number" cắt mất số 0 ở đầu ở
-                một số trình duyệt, và 0 đầu là thứ không được mất. */}
-            <input
-              type="tel"
-              name="phone"
-              inputMode="tel"
-              placeholder="Số điện thoại"
-              value={registerData.phone}
-              onChange={handleRegisterChange}
-              required
-              autoComplete="tel"
-              maxLength={15}
-              className={styles.input}
-            />
+          )}
 
-            <input
-              type="email"
-              name="email"
-              placeholder="Email (không bắt buộc)"
-              value={registerData.email}
-              onChange={handleRegisterChange}
-              autoComplete="email"
-              maxLength={MAX_EMAIL_LENGTH}
-              className={styles.input}
-            />
+          {/* Than hop: chieu cao co gian muot theo noi dung (useAutoHeight). */}
+          <div className={styles.body} style={{ height: bodyHeight }}>
+            <div ref={bodyRef}>
+              {error && (
+                <div className={styles.alertError} role="alert">
+                  {error}
+                  {googleHint && (
+                    <p className={styles.alertHint}>
+                      Nếu bạn đã đăng ký bằng Google, hãy dùng nút “Tiếp tục với Google” ở
+                      trên.
+                    </p>
+                  )}
+                </div>
+              )}
 
-            <input
-              type="password"
-              name="password"
-              placeholder={`Mật khẩu (tối thiểu ${MIN_PASSWORD_LENGTH} ký tự)`}
-              value={registerData.password}
-              onChange={handleRegisterChange}
-              required
-              autoComplete="new-password"
-              minLength={MIN_PASSWORD_LENGTH}
-              className={styles.input}
-            />
-            <button type="submit" disabled={loading} className={styles.button5}>
-              {loading ? "Đang xử lý..." : "Đăng ký"}
-            </button>
-          </form>
-        )}
+              {notification && (
+                <div className={styles.alertOk} role="status">
+                  {notification}
+                </div>
+              )}
+
+              {!forgotStep && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    disabled={loading}
+                    className={styles.google}
+                  >
+                    <Image
+                      src="https://www.svgrepo.com/show/355037/google.svg"
+                      alt=""
+                      width={20}
+                      height={20}
+                    />
+                    Tiếp tục với Google
+                  </button>
+                  <div className={styles.divider}>
+                    <span>hoặc</span>
+                  </div>
+                </>
+              )}
+
+              {forgotStep === "email" ? (
+                <form key="f-email" onSubmit={sendCode} className={styles.form}>
+                  {/* Noi ro phai co EMAIL, khong nhan so dien thoai: chua gan nha
+                    cung cap SMS nao nen khong co cho gui ma toi so dien thoai. */}
+                  <p className={styles.text3}>
+                    Nhập email của tài khoản. Chúng tôi sẽ gửi một mã gồm {CODE_DIGITS}{" "}
+                    chữ số tới hộp thư đó.
+                  </p>
+                  <p className={styles.text4}>
+                    Tài khoản đăng ký bằng số điện thoại mà chưa thêm email thì chưa tự
+                    lấy lại mật khẩu được — nhắn quản trị viên để được đặt lại.
+                  </p>
+                  {/* type="text": type="email" se chan ten tai khoan ngan. */}
+                  <Field
+                    icon={Mail}
+                    type="text"
+                    placeholder="Email hoặc tên tài khoản"
+                    value={quenEmail}
+                    onChange={(e) => setQuenEmail(e.target.value)}
+                    required
+                    autoFocus
+                    autoComplete="username"
+                    maxLength={MAX_EMAIL_LENGTH}
+                  />
+                  <button type="submit" disabled={loading} className={styles.submit}>
+                    {loading ? "Đang gửi..." : "Gửi mã"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={exitForgotFlow}
+                    className={styles.linkButton}
+                  >
+                    Quay lại đăng nhập
+                  </button>
+                </form>
+              ) : forgotStep === "ma" ? (
+                <form key="f-ma" onSubmit={confirmCode} className={styles.form}>
+                  <p className={styles.text3}>
+                    Mở hộp thư <span className={styles.label}>{quenEmail}</span> và nhập
+                    mã vào ô dưới. Nhớ xem cả mục Spam.
+                  </p>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="000000"
+                    value={forgotCode}
+                    // Loc bo moi thu khong phai chu so: nguoi dung hay dan ca cum
+                    // "Mã: 482913" tu email vao.
+                    onChange={(e) =>
+                      setForgotCode(
+                        e.target.value.replace(/\D/g, "").slice(0, CODE_DIGITS),
+                      )
+                    }
+                    required
+                    autoFocus
+                    maxLength={CODE_DIGITS}
+                    className={styles.code}
+                  />
+                  <button
+                    type="submit"
+                    disabled={loading || forgotCode.length !== CODE_DIGITS}
+                    className={styles.submit}
+                  >
+                    {loading ? "Đang kiểm tra..." : "Xác nhận"}
+                  </button>
+                  <div className={styles.row2}>
+                    {/* May chu tu dem so lan gui va tu chan khi du. */}
+                    <button
+                      type="button"
+                      onClick={() => sendCode()}
+                      disabled={loading}
+                      className={styles.linkButton}
+                    >
+                      Gửi lại mã
+                    </button>
+                    <button
+                      type="button"
+                      onClick={exitForgotFlow}
+                      className={styles.linkMuted}
+                    >
+                      Quay lại đăng nhập
+                    </button>
+                  </div>
+                </form>
+              ) : forgotStep === "matKhau" ? (
+                <form key="f-mk" onSubmit={changePassword} className={styles.form}>
+                  <p className={styles.text3}>
+                    Mã hợp lệ. Đặt mật khẩu mới cho tài khoản{" "}
+                    <span className={styles.label}>{quenEmail}</span>.
+                  </p>
+                  <PasswordField
+                    placeholder={`Mật khẩu mới (tối thiểu ${MIN_PASSWORD_LENGTH} ký tự)`}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    autoFocus
+                    autoComplete="new-password"
+                    minLength={MIN_PASSWORD_LENGTH}
+                  />
+                  <PasswordField
+                    placeholder="Nhập lại mật khẩu mới"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                    minLength={MIN_PASSWORD_LENGTH}
+                  />
+                  <button type="submit" disabled={loading} className={styles.submit}>
+                    {loading ? "Đang đổi..." : "Đổi mật khẩu"}
+                  </button>
+                </form>
+              ) : isLogin ? (
+                <form
+                  key="login"
+                  onSubmit={handleLoginSubmit}
+                  className={`${styles.form} ${styles.fromLeft}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* type="text" chu KHONG phai "email": trinh duyet chan o
+                    type="email" khong co @, ten tai khoan ngan khong dang nhap
+                    duoc. */}
+                  <Field
+                    icon={Mail}
+                    type="text"
+                    name="email"
+                    placeholder="Số điện thoại hoặc email"
+                    value={loginData.email}
+                    onChange={handleLoginChange}
+                    required
+                    autoComplete="username"
+                    maxLength={MAX_EMAIL_LENGTH}
+                  />
+                  <PasswordField
+                    name="password"
+                    placeholder="Mật khẩu"
+                    value={loginData.password}
+                    onChange={handleLoginChange}
+                    required
+                    autoComplete="current-password"
+                  />
+                  <div className={styles.forgotRow}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        cleanup();
+                        // Mang san email vua go sang buoc 1.
+                        setQuenEmail(loginData.email.trim().toLowerCase());
+                        setForgotStep("email");
+                      }}
+                      className={styles.linkButton}
+                    >
+                      Quên mật khẩu?
+                    </button>
+                  </div>
+                  <button type="submit" disabled={loading} className={styles.submit}>
+                    {loading ? "Đang xử lý..." : "Đăng nhập"}
+                  </button>
+                </form>
+              ) : (
+                <form
+                  key="register"
+                  onSubmit={handleRegisterSubmit}
+                  className={`${styles.form} ${styles.fromRight}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Field
+                    icon={User}
+                    type="text"
+                    name="name"
+                    placeholder="Họ và tên"
+                    value={registerData.name}
+                    onChange={handleRegisterChange}
+                    required
+                    autoComplete="name"
+                    maxLength={MAX_NAME_LENGTH}
+                  />
+                  {/* type="tel" (khong phai "number"): "number" cat so 0 o dau. */}
+                  <Field
+                    icon={Phone}
+                    type="tel"
+                    name="phone"
+                    inputMode="tel"
+                    placeholder="Số điện thoại"
+                    value={registerData.phone}
+                    onChange={handleRegisterChange}
+                    required
+                    autoComplete="tel"
+                    maxLength={15}
+                  />
+                  <Field
+                    icon={Mail}
+                    type="email"
+                    name="email"
+                    placeholder="Email (không bắt buộc)"
+                    value={registerData.email}
+                    onChange={handleRegisterChange}
+                    autoComplete="email"
+                    maxLength={MAX_EMAIL_LENGTH}
+                  />
+                  <PasswordField
+                    name="password"
+                    placeholder={`Mật khẩu (tối thiểu ${MIN_PASSWORD_LENGTH} ký tự)`}
+                    value={registerData.password}
+                    onChange={handleRegisterChange}
+                    required
+                    autoComplete="new-password"
+                    minLength={MIN_PASSWORD_LENGTH}
+                  />
+                  <button type="submit" disabled={loading} className={styles.submit}>
+                    {loading ? "Đang xử lý..." : "Tạo tài khoản"}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <aside className={styles.art} aria-hidden>
+          <p className={styles.artText}>
+            Học có lộ trình,
+            <br />
+            lấy chứng nhận có mã tra cứu.
+          </p>
+        </aside>
       </div>
     </div>
   );

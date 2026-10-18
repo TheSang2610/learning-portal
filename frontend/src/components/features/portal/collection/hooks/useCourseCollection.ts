@@ -1,42 +1,39 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 
+import type { HomeSectionsState } from "@/src/components/features/portal/home/HomePopularCourses";
 import { COLLECTIONS } from "@/src/constants/portal/collection-page";
 import { getHomeSections, type Course } from "@/src/services/course";
 
-/** Doc ?slug= va tai danh sach khoa cua muc tuong ung tu du lieu trang chu. */
-export function useCourseCollection() {
-  // Lay slug tu query string: /collection?slug=most-popular-courses
-  const searchParams = useSearchParams();
-  const collectionSlug = searchParams.get("slug") || "";
-  const item = COLLECTIONS[collectionSlug];
-
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
+/**
+ * Danh sach khoa cua bang xep hang `slug`. Co `lists` (lay san o may chu) thi
+ * dung ngay, khong goi mang; khong co (may chu tai hong) thi trinh duyet tu
+ * goi /courses/home-sections nhu truoc.
+ */
+export function useCourseCollection(slug: string, lists: HomeSectionsState | null) {
+  const def = COLLECTIONS[slug];
+  const [fetched, setFetched] = useState<HomeSectionsState | null>(null);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    const loadCollection = async () => {
-      try {
-        setLoading(true);
-        const response = await getHomeSections();
-        const definition = COLLECTIONS[collectionSlug];
-
-        if (response?.success && response.data && definition) {
-          setCourses(response.data[definition.get] || []);
-        } else {
-          setCourses([]);
-        }
-      } catch (error) {
-        console.error("Lỗi khi tải danh sách bộ sưu tập khóa học:", error);
-      } finally {
-        setLoading(false);
-      }
+    if (lists) return;
+    let alive = true;
+    getHomeSections()
+      .then((res) => {
+        if (!alive) return;
+        if (res?.success && res.data) setFetched(res.data as HomeSectionsState);
+        else setFailed(true);
+      })
+      .catch(() => alive && setFailed(true));
+    return () => {
+      alive = false;
     };
+  }, [lists]);
 
-    loadCollection();
-  }, [collectionSlug]);
+  const source = lists ?? fetched;
+  const courses: Course[] = def && source ? (source[def.get] ?? []) : [];
+  const loading = !lists && !fetched && !failed && Boolean(def);
 
-  return { muc: item, courses, loading };
+  return { courses, loading };
 }

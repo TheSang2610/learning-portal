@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import BrandLogo from "@/src/components/layout/BrandLogo";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, Search, BookOpen } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -94,9 +95,7 @@ export default function IndividualsHeader() {
           {/* Co chu nho lai tren dien thoai. O 26px logo chiem 190px trong
               tong 390px cua iPhone 12 Pro, khong con cho cho hai nut dang
               nhap - do chinh la canh logo de len chu "Dang nhap". */}
-          <Link href="/" className={styles.box}>
-            Learning Portal
-          </Link>
+          <BrandLogo brand="platform" />
 
           {/* 🌟 EXPLORE DROPDOWN MENU */}
           <div className={styles.box2} ref={exploreRef}>

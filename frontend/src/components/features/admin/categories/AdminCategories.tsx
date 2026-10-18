@@ -23,7 +23,8 @@ export default function AdminCategories() {
           </p>
         </div>
         <button onClick={c.openCreate} className={styles.button}>
-          <Plus size={16} /> {C.add}
+          <Plus size={16} />
+          <span>{C.add}</span>
         </button>
       </div>
 

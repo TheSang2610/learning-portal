@@ -79,7 +79,7 @@ export default function CertificateRow({
           className={styles.link}
         >
           <FileText size={13} />
-          {C.row.pdf}
+          <span>{C.row.pdf}</span>
         </a>
       </td>
       <td className={styles.headCell}>

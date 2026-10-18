@@ -1,0 +1,121 @@
+$ink: #0d0f12;
+$muted: #5b6780;
+$line: #dae1ed;
+
+.section {
+  background-color: #fff;
+}
+
+.container {
+  margin-inline: auto;
+  max-width: var(--container-7xl);
+  padding: calc(var(--spacing) * 14) calc(var(--spacing) * 4);
+
+  @media (min-width: 40rem) {
+    padding-inline: calc(var(--spacing) * 6);
+  }
+}
+
+.heading {
+  font-size: clamp(1.4rem, 2.6vw, 1.75rem);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.01em;
+  color: $ink;
+}
+
+.description {
+  margin-top: calc(var(--spacing) * 2);
+  max-width: 62ch;
+  font-size: 15px;
+  color: $muted;
+}
+
+.grid {
+  margin-top: calc(var(--spacing) * 7);
+  display: grid;
+  gap: calc(var(--spacing) * 5);
+
+  @media (min-width: 48rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  border: 1px solid $line;
+  border-radius: 16px;
+  background: linear-gradient(160deg, #eef3ff, #fff 60%);
+  padding: 24px;
+  transition:
+    box-shadow 0.15s ease-out,
+    translate 0.15s ease-out;
+
+  @media (hover: hover) {
+    &:hover {
+      translate: 0 -2px;
+      box-shadow:
+        0 0 4px 0 rgb(15 17 20 / 0.1),
+        0 4px 12px 4px rgb(15 17 20 / 0.1);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-blue-600);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.icon {
+  display: grid;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 12px;
+  background-color: var(--color-blue-600);
+  color: #fff;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: var(--font-weight-bold);
+  color: $ink;
+}
+
+.text {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: $muted;
+}
+
+.cta {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14.5px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-blue-700);
+}
+
+.arrow {
+  transition: translate 0.2s;
+
+  @media (hover: hover) {
+    :global(.group):hover & {
+      translate: 3px 0;
+    }
+  }
+}

@@ -19,7 +19,7 @@ export default function UserModal({ s }: { s: AdminUsersState }) {
         <div className={styles.row8}>
           <div className={styles.row10}>
             {editingId && editing && (
-              <Avatar src={editing.avatar} ten={editing.name} size={40} />
+              <Avatar src={editing.avatar} ten={editing.name} size={40} colorful />
             )}
             <div className={styles.box3}>
               <h2 className={styles.heading2}>

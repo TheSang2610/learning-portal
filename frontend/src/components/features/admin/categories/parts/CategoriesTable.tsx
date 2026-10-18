@@ -1,4 +1,4 @@
-import { Edit3, FolderOpen, Loader2, Trash2 } from "lucide-react";
+import { FolderOpen, Loader2, Pencil, Trash2 } from "lucide-react";
 
 import { ADMIN_CATEGORIES as C } from "@/src/constants/admin/categories-page";
 import type { Category } from "@/src/services/categoryService";
@@ -65,7 +65,7 @@ export default function CategoriesTable({
                         title={C.edit}
                         className={styles.button2}
                       >
-                        <Edit3 size={16} />
+                        <Pencil size={16} />
                       </button>
                       <button
                         onClick={() => onDelete(c)}

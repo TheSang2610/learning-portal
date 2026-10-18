@@ -1,6 +1,9 @@
 import Link from "next/link";
-import { Edit, HelpCircle, Trash2, Video } from "lucide-react";
+import { BookOpen, HelpCircle, Pencil, Trash2, Video } from "lucide-react";
 
+import { Badge, Button, buttonClass } from "@/src/components/admin-ui";
+import SafeImage from "@/src/components/ui/SafeImage";
+import { COURSE_LEVEL_LABELS } from "@/src/constants/course-level";
 import { ADMIN_COURSES as C } from "@/src/constants/admin/courses-page";
 import { formatVnd } from "@/src/lib/format";
 import type { Course } from "@/src/services/course";
@@ -13,54 +16,90 @@ interface AdminCourseRowProps {
   onDelete: (courseId: string, courseTitle: string) => void;
 }
 
-/** Mot dong khoa hoc: ten, cap do, gia, trang thai va cac thao tac. */
+/** Mot dong khoa hoc: anh + ten, cap do, hoc phi, trang thai, thao tac (nut bieu tuong). */
 export default function AdminCourseRow({
   course,
   deleting,
   onDelete,
 }: AdminCourseRowProps) {
   const price = course.price ?? 0;
-  const href = (build: (id: string) => string) => (course._id ? build(course._id) : "#");
+  const id = course._id ?? "";
+  const provider =
+    course.provider && typeof course.provider === "object" ? course.provider.name : null;
 
   return (
-    <tr className={styles.row2}>
-      <td className={styles.cell}>{course.title}</td>
-      <td className={styles.cell2}>
-        <span className={styles.label}>{course.level}</span>
+    <tr>
+      <td>
+        <div className={styles.courseCell}>
+          <span className={styles.thumb}>
+            {course.thumbnail ? (
+              <SafeImage
+                src={course.thumbnail}
+                alt=""
+                fill
+                sizes="56px"
+                className={styles.thumbImage}
+                hideOnError
+              />
+            ) : (
+              <BookOpen size={16} aria-hidden />
+            )}
+          </span>
+          <span className={styles.courseText}>
+            <Link href={C.detailHref(id)} className={styles.courseTitle}>
+              {course.title}
+            </Link>
+            {provider && <span className={styles.courseSub}>{provider}</span>}
+          </span>
+        </div>
       </td>
-      <td className={styles.cell3}>
-        {price === 0 ? <span className={styles.label2}>{C.free}</span> : formatVnd(price)}
+      <td className={styles.nowrap}>
+        {COURSE_LEVEL_LABELS[String(course.level).toLowerCase()] ?? course.level}
       </td>
-      <td className={styles.cell4}>
-        <span
-          className={`${styles.label5} ${course.isPublished ? styles.label3 : styles.label4}`}
-        >
+      <td className={styles.nowrap}>{price === 0 ? C.free : formatVnd(price)}</td>
+      <td>
+        <Badge tone={course.isPublished ? "success" : "neutral"}>
           {course.isPublished ? C.published : C.draft}
-        </span>
+        </Badge>
       </td>
-
-      <td className={styles.cell5}>
-        <Link href={href(C.lessonsHref)} className={styles.box4}>
-          <Video size={13} /> {C.actions.lessons}
-        </Link>
-
-        <Link href={href(C.faqsHref)} className={styles.box5}>
-          <HelpCircle size={13} /> {C.actions.faqs}
-        </Link>
-
-        <Link href={href(C.detailHref)} className={styles.box6}>
-          <Edit size={13} /> {C.actions.edit}
-        </Link>
-
-        <button
-          type="button"
-          disabled={deleting}
-          onClick={() => onDelete(course._id!, course.title)}
-          className={styles.button}
-        >
-          <Trash2 size={13} />
-          {deleting ? C.actions.deleting : C.actions.delete}
-        </button>
+      <td>
+        <div className={styles.actions}>
+          <Link
+            href={C.lessonsHref(id)}
+            className={buttonClass("ghost", "icon")}
+            title={C.actions.lessons}
+            aria-label={`${C.actions.lessons}: ${course.title}`}
+          >
+            <Video size={16} />
+          </Link>
+          <Link
+            href={C.faqsHref(id)}
+            className={buttonClass("ghost", "icon")}
+            title={C.actions.faqs}
+            aria-label={`${C.actions.faqs}: ${course.title}`}
+          >
+            <HelpCircle size={16} />
+          </Link>
+          <Link
+            href={C.detailHref(id)}
+            className={buttonClass("ghost", "icon")}
+            title={C.actions.edit}
+            aria-label={`${C.actions.edit}: ${course.title}`}
+          >
+            <Pencil size={16} />
+          </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            disabled={deleting}
+            onClick={() => onDelete(id, course.title)}
+            title={deleting ? C.actions.deleting : C.actions.delete}
+            aria-label={`${C.actions.delete}: ${course.title}`}
+            className={styles.danger}
+          >
+            <Trash2 size={16} />
+          </Button>
+        </div>
       </td>
     </tr>
   );

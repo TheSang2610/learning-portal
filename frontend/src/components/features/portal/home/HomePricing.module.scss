@@ -1,0 +1,174 @@
+// Bang hoc phi - hai the, the "co phi" noi bat bang vien tim chu dao.
+
+$brand: #4f2bff;
+$ink: #0b0c1e;
+
+.section {
+  background-color: #fff;
+}
+
+.container {
+  margin-inline: auto;
+  max-width: var(--container-7xl);
+  padding-inline: calc(var(--spacing) * 6);
+  padding-block: calc(var(--spacing) * 14);
+
+  @media (min-width: 48rem) {
+    padding-block: calc(var(--spacing) * 16);
+  }
+}
+
+.grid {
+  margin-top: calc(var(--spacing) * 8);
+  display: grid;
+  gap: calc(var(--spacing) * 5);
+
+  @media (min-width: 48rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: calc(var(--spacing) * 6);
+  }
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-slate-200);
+  border-radius: var(--radius-3xl);
+  background-color: #fff;
+  padding: calc(var(--spacing) * 7);
+
+  @media (min-width: 48rem) {
+    padding: calc(var(--spacing) * 9);
+  }
+}
+
+.highlight {
+  border: 2px solid $brand;
+  background: linear-gradient(170deg, #f4f1ff, #fff 45%);
+  box-shadow: 0 30px 50px -38px #4f2bffcc;
+}
+
+.name {
+  font-size: 15px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-500);
+}
+
+.price {
+  margin-top: calc(var(--spacing) * 3);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: calc(var(--spacing) * 2);
+  font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+  font-size: clamp(1.9rem, 4vw, 2.6rem);
+  font-weight: var(--font-weight-extrabold);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: $ink;
+}
+
+.note {
+  font-family: var(--chu-than), "Inter", system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: var(--font-weight-medium, 500);
+  letter-spacing: 0;
+  color: var(--color-slate-500);
+}
+
+.count {
+  margin-top: calc(var(--spacing) * 2);
+  font-size: 14px;
+  color: var(--color-slate-500);
+}
+
+.features {
+  margin-block: calc(var(--spacing) * 6) calc(var(--spacing) * 8);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 3);
+  border-top: 1px dashed var(--color-slate-200);
+  padding: calc(var(--spacing) * 6) 0 0;
+  list-style: none;
+}
+
+.feature {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--spacing) * 3);
+  font-size: 15px;
+  color: var(--color-slate-700);
+}
+
+.check {
+  margin-top: 2px;
+  flex: none;
+  color: #00bfb3;
+}
+
+.highlight .check {
+  color: $brand;
+}
+
+.cta {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--spacing) * 2);
+  border: 1px solid var(--color-slate-200);
+  border-radius: var(--radius-xl);
+  padding: calc(var(--spacing) * 3.5) calc(var(--spacing) * 6);
+  font-size: 15px;
+  font-weight: var(--font-weight-semibold);
+  color: $ink;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: $ink;
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid $brand;
+    outline-offset: 3px;
+  }
+}
+
+.highlight .cta {
+  border-color: $brand;
+  background-color: $brand;
+  color: #fff;
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: #2c14b8;
+      background-color: #2c14b8;
+    }
+  }
+}
+
+.arrow {
+  transition: translate 0.2s;
+
+  @media (hover: hover) {
+    :global(.group):hover & {
+      translate: 3px 0;
+    }
+  }
+}
+
+.footnote {
+  margin-top: calc(var(--spacing) * 6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--spacing) * 2);
+  text-align: center;
+  font-size: 14px;
+  color: var(--color-slate-500);
+}

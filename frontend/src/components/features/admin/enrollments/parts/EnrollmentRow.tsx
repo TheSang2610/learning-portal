@@ -29,7 +29,7 @@ export default function EnrollmentRow({ r, busy, onChangeStatus }: EnrollmentRow
     <tr className={styles.row2}>
       <td className={styles.headCell}>
         <div className={styles.row3}>
-          <Avatar src={r.student?.avatar} ten={r.student?.name} size={36} />
+          <Avatar src={r.student?.avatar} ten={r.student?.name} size={36} colorful />
           <div className={styles.box}>
             <p className={styles.text2}>{r.student?.name || C.deleted}</p>
             <p className={styles.text3}>{r.student?.email || C.none}</p>

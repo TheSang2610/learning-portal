@@ -5,28 +5,37 @@ export const ADMIN_COURSES = {
   faqsHref: (id: string) => `/admin/course-faqs?courseId=${id}`,
   detailHref: (id: string) => `/admin/course-detail?courseId=${id}`,
 
-  loading: "Loading courses...",
-  title: "Courses",
-  subtitle: "Manage your LMS courses",
-  create: "Create Course",
+  loading: "Đang tải khóa học…",
+  title: "Danh sách khóa học",
+  /** {n} = tong so khoa, {p} = so khoa da xuat ban. */
+  subtitle: "{n} khóa học · {p} đã xuất bản",
+  create: "Tạo khóa học mới",
 
-  columns: ["Title", "Level", "Price", "Status", "Actions"],
+  searchPlaceholder: "Tìm theo tên khóa học…",
+  statusFilter: [
+    { value: "", label: "Mọi trạng thái" },
+    { value: "published", label: "Đã xuất bản" },
+    { value: "draft", label: "Bản nháp" },
+  ],
+
+  columns: ["Khóa học", "Cấp độ", "Học phí", "Trạng thái", ""],
   free: "Miễn phí",
-  published: "Published",
-  draft: "Draft",
+  published: "Đã xuất bản",
+  draft: "Bản nháp",
   actions: {
     lessons: "Bài học",
     faqs: "Hỏi đáp",
     edit: "Sửa",
     delete: "Xóa",
-    deleting: "Đang xóa...",
+    deleting: "Đang xóa…",
   },
-  empty: "📭 Không tìm thấy khóa học nào trong hệ thống quản trị.",
+  empty: "Chưa có khóa học nào.",
+  noMatch: "Không có khóa học nào khớp bộ lọc.",
 
   messages: {
     confirmDelete: (title: string) =>
-      `⚠️ CẢNH BÁO NGUY HIỂM!\n\nBạn có chắc chắn muốn xóa khóa học: "${title}"?\nHành động này sẽ xóa toàn bộ bài học, bài tập trắc nghiệm (quiz) bên trong và KHÔNG THỂ HOÀN TÁC!`,
-    deleted: "Xóa khóa học và toàn bộ dữ liệu liên quan thành công!",
-    deleteFailed: "Không thể xóa khóa học. Vui lòng kiểm tra lại phân quyền Admin.",
+      `Xóa khóa học "${title}"?\n\nToàn bộ bài học và bài kiểm tra bên trong cũng bị xóa. Không thể hoàn tác.`,
+    deleted: "Đã xóa khóa học.",
+    deleteFailed: "Không xóa được khóa học. Kiểm tra lại quyền quản trị.",
   },
 } as const;

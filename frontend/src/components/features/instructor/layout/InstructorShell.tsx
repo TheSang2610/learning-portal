@@ -1,63 +1,37 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Menu } from "lucide-react";
 
-import { INSTRUCTOR_SHELL as C } from "@/src/constants/instructor/menu";
+import DashboardShell from "@/src/components/layout/dashboard-shell/DashboardShell";
+import { INSTRUCTOR_NAV, INSTRUCTOR_SHELL as C } from "@/src/constants/instructor/menu";
 
 import { useInstructorShell } from "./hooks/useInstructorShell";
-import InstructorBreadcrumbs from "./parts/InstructorBreadcrumbs";
-import InstructorSidebar from "./parts/InstructorSidebar";
 import styles from "./InstructorShell.module.scss";
 
-/** Khung khu giang vien: sidebar + header breadcrumb + noi dung trang. */
+/** Khung khu giang vien: dung khung chung kieu shadcn (sidebar + breadcrumb). */
 export default function InstructorShell({ children }: { children: ReactNode }) {
   const s = useInstructorShell();
 
   if (s.loading) {
-    return <div className={styles.row2}>{C.loading}</div>;
+    return <div className={styles.loading}>{C.loading}</div>;
   }
 
   return (
-    <div className={styles.page}>
-      <InstructorSidebar s={s} />
-
-      {/* 2. MAIN VIEWPORT */}
-      <div className={styles.col2}>
-        {/* WHITE HEADER WITH BREADCRUMBS */}
-        <header className={styles.header}>
-          {/* BREADCRUMBS & HAMBURGER */}
-          <div className={styles.row7}>
-            <button className={styles.button4}>
-              <Menu size={18} />
-            </button>
-            <InstructorBreadcrumbs pathname={s.pathname} />
-          </div>
-
-          {/* ACTION UTILITIES */}
-          <div className={styles.row8} />
-        </header>
-
-        {/* PAGE CONTENT */}
-        <main className={styles.main}>{children}</main>
-      </div>
-
-      {/* CUSTOM INTERNAL SCROLLBAR FOR SIDEBAR */}
-      <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 5px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #1e2530;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #2a323d;
-          border-radius: 99px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #3e4958;
-        }
-      `}</style>
-    </div>
+    <DashboardShell
+      pathname={s.pathname}
+      brand={{
+        name: C.brand,
+        subtitle: C.brandSub,
+        href: C.coursesHref,
+        icon: C.brandIcon,
+      }}
+      nav={INSTRUCTOR_NAV}
+      user={{ name: s.instructorName || C.nameFallback, subtitle: C.roleLabel }}
+      onLogout={s.logoutHandler}
+      root={{ label: C.root, href: C.coursesHref }}
+      labels={{ toggle: C.toggle, logout: C.logout, editing: C.editing }}
+    >
+      {children}
+    </DashboardShell>
   );
 }

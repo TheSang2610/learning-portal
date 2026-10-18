@@ -57,7 +57,8 @@ function AdminCourseDetailContent() {
             </button>
 
             <Link href={C.lessonsHref(f.courseId)} className={styles.card6}>
-              <Video size={14} /> {C.actions.lessons}
+              <Video size={14} />
+              <span>{C.actions.lessons}</span>
             </Link>
           </div>
         </form>

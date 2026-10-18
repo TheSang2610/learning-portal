@@ -1,8 +1,8 @@
 import Link from "next/link";
 import {
   CheckCircle2,
-  Edit2,
   FileQuestion,
+  Pencil,
   Plus,
   Trash2,
   Video,
@@ -58,7 +58,7 @@ export default function AdminLessonRow({
               className={`${styles.row4} ${quiz.isPublished ? styles.label4 : styles.label5}`}
             >
               <FileQuestion size={12} />
-              {quiz.isPublished ? C.row.quizPublished : C.row.quizDraft}
+              <span>{quiz.isPublished ? C.row.quizPublished : C.row.quizDraft}</span>
             </span>
             <span className={styles.label6}>
               {C.row.questions(quiz.questions?.length || 0)}
@@ -72,12 +72,14 @@ export default function AdminLessonRow({
       <td className={styles.cell4}>
         {!quiz ? (
           <Link href={C.quizCreateHref(courseId, lesson._id)} className={styles.box4}>
-            <Plus size={12} /> {C.row.addQuiz}
+            <Plus size={12} />
+            <span>{C.row.addQuiz}</span>
           </Link>
         ) : (
           <>
             <Link href={C.quizEditHref(courseId, lesson._id)} className={styles.box5}>
-              <Edit2 size={12} /> {C.row.editQuiz}
+              <Pencil size={12} />
+              <span>{C.row.editQuiz}</span>
             </Link>
 
             <button
@@ -94,7 +96,8 @@ export default function AdminLessonRow({
               onClick={() => onDeleteQuiz(quiz._id)}
               className={styles.button3}
             >
-              <Trash2 size={12} /> {C.row.deleteQuiz}
+              <Trash2 size={12} />
+              <span>{C.row.deleteQuiz}</span>
             </button>
           </>
         )}

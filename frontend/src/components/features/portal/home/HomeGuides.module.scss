@@ -1,0 +1,352 @@
+// Muc "Cam nang mon hoc" - tong hong cua mang bai viet (postGradient trong
+// HomeHero), de nguoi xem nhan ra cung mot khu voi the "Bai viet" o phan mo dau.
+
+//
+// Mau dat bang bien CSS de doi tong theo noi dat: tone="course" (dashboard) dung
+// dung xanh cua cac muc khoa hoc ben canh, cho ca trang mot mau.
+$pink: var(--accent);
+$pink-ink: var(--accent-ink);
+$pink-soft: var(--accent-soft);
+$ink: #0b0c1e;
+
+.section {
+  --accent: #ff3e9d;
+  --accent-ink: #c2185b;
+  --accent-soft: #fff0f7;
+  --accent-rgb: 255 62 157;
+
+  background:
+    radial-gradient(50% 60% at 100% 0%, rgb(var(--accent-rgb) / 0.08), transparent 70%),
+    var(--color-slate-50);
+  border-block: 1px solid var(--color-slate-200);
+}
+
+// Cung tong xanh voi HomePopularCourses / CourseSuggestions.
+.toneCourse {
+  --accent: var(--color-blue-600);
+  --accent-ink: var(--color-blue-700);
+  --accent-soft: var(--color-blue-50);
+  --accent-rgb: 21 93 252;
+
+  background: #f5f7fa;
+}
+
+.container {
+  margin-inline: auto;
+  display: grid;
+  align-items: center;
+  gap: calc(var(--spacing) * 10);
+  max-width: var(--container-7xl);
+  padding-inline: calc(var(--spacing) * 6);
+  padding-block: calc(var(--spacing) * 16);
+
+  @media (min-width: 48rem) {
+    padding-block: calc(var(--spacing) * 20);
+  }
+
+  @media (min-width: 64rem) {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: calc(var(--spacing) * 16);
+  }
+}
+
+// ---- cot chu
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5);
+  border-radius: 999px;
+  background-color: $pink-soft;
+  padding: calc(var(--spacing) * 1) calc(var(--spacing) * 3);
+  font-size: 13px;
+  font-weight: var(--font-weight-semibold);
+  color: $pink-ink;
+}
+
+.heading {
+  margin-top: calc(var(--spacing) * 4);
+  font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
+  font-size: clamp(1.8rem, 3.6vw, 2.5rem);
+  font-weight: var(--font-weight-extrabold);
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  color: $ink;
+}
+
+.text {
+  margin-top: calc(var(--spacing) * 4);
+  max-width: 54ch;
+  font-size: 15px;
+  line-height: var(--leading-relaxed);
+  color: var(--color-slate-500);
+}
+
+.points {
+  margin-top: calc(var(--spacing) * 6);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 3);
+  padding: 0;
+  list-style: none;
+}
+
+.point {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--spacing) * 3);
+  font-size: 0.95rem;
+  color: var(--color-slate-700);
+}
+
+.check {
+  margin-top: calc(var(--spacing) * 0.5);
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: calc(var(--spacing) * 5.5);
+  height: calc(var(--spacing) * 5.5);
+  border-radius: 999px;
+  background-color: $pink;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: var(--font-weight-bold);
+  color: #fff;
+}
+
+.cta {
+  margin-top: calc(var(--spacing) * 8);
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  border-radius: var(--radius-xl);
+  background-color: $ink;
+  padding: calc(var(--spacing) * 3.5) calc(var(--spacing) * 6);
+  font-size: 15px;
+  font-weight: var(--font-weight-semibold);
+  color: #fff;
+  transition: background-color 0.2s;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: $pink-ink;
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid $pink;
+    outline-offset: 3px;
+  }
+}
+
+.ctaArrow {
+  transition: translate 0.2s;
+
+  @media (hover: hover) {
+    :global(.group):hover & {
+      translate: 3px 0;
+    }
+  }
+}
+
+// ---- cot loi vao
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 6);
+  border: 1px solid var(--color-slate-200);
+  border-radius: var(--radius-3xl);
+  background-color: #fff;
+  padding: calc(var(--spacing) * 5);
+  box-shadow: 0 24px 40px -30px #0b0c1e8c;
+
+  @media (min-width: 48rem) {
+    padding: calc(var(--spacing) * 7);
+  }
+}
+
+.blockTitle {
+  margin-bottom: calc(var(--spacing) * 3);
+  font-size: 0.78rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-slate-500);
+}
+
+// bai moi
+.posts {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 1);
+  padding: 0;
+  list-style: none;
+}
+
+.post {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 4);
+  border-radius: var(--radius-xl);
+  padding: calc(var(--spacing) * 2);
+  transition: background-color 0.15s;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: $pink-soft;
+
+      .postTitle {
+        color: $pink-ink;
+      }
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid $pink;
+    outline-offset: 2px;
+  }
+}
+
+.thumb {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  width: 88px;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-lg);
+  background-color: $pink-soft;
+  color: $pink;
+}
+
+.thumbImage {
+  object-fit: cover;
+}
+
+.postBody {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 1);
+}
+
+.postTitle {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 15px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.35;
+  color: var(--color-slate-900);
+  transition: color 0.15s;
+}
+
+.postMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5);
+  font-size: 12.5px;
+  color: var(--color-slate-500);
+}
+
+.tag {
+  border-radius: 999px;
+  background-color: var(--color-slate-100);
+  padding: 1px calc(var(--spacing) * 2);
+  color: var(--color-slate-700);
+}
+
+// chu de
+.topics {
+  display: grid;
+  gap: calc(var(--spacing) * 2.5);
+
+  @media (min-width: 40rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.topic {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+  border: 1px solid var(--color-slate-200);
+  border-radius: var(--radius-xl);
+  padding: calc(var(--spacing) * 3);
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    translate 0.2s;
+
+  @media (hover: hover) {
+    &:hover {
+      translate: 0 -2px;
+      border-color: rgb(var(--accent-rgb) / 0.4);
+      box-shadow: 0 8px 24px -14px rgb(var(--accent-rgb) / 0.55);
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid $pink;
+    outline-offset: 2px;
+  }
+}
+
+.topicIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: calc(var(--spacing) * 10);
+  height: calc(var(--spacing) * 10);
+  border-radius: var(--radius-lg);
+  background-color: $pink-soft;
+  color: $pink-ink;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+
+  @media (hover: hover) {
+    :global(.group):hover & {
+      background-color: $pink;
+      color: #fff;
+    }
+  }
+}
+
+.topicText {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.topicName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14.5px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-900);
+}
+
+.topicCount {
+  font-size: 12.5px;
+  color: var(--color-slate-500);
+}
+
+.topicArrow {
+  flex: none;
+  color: var(--color-slate-300);
+  transition: color 0.2s;
+
+  @media (hover: hover) {
+    :global(.group):hover & {
+      color: $pink;
+    }
+  }
+}

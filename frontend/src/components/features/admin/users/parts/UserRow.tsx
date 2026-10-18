@@ -1,12 +1,12 @@
 import {
-  Edit3,
   GraduationCap,
   Lock,
+  Pencil,
   ShieldCheck,
   Trash2,
+  type LucideIcon,
   Unlock,
   User as UserIcon,
-  type LucideIcon,
 } from "lucide-react";
 
 import Avatar from "@/src/components/ui/Avatar";
@@ -55,10 +55,10 @@ export default function UserRow({
               title={R.viewAvatar}
               className={styles.button2}
             >
-              <Avatar src={u.avatar} ten={u.name} size={36} />
+              <Avatar src={u.avatar} ten={u.name} size={36} colorful />
             </button>
           ) : (
-            <Avatar ten={u.name} size={36} />
+            <Avatar ten={u.name} size={36} colorful />
           )}
           <div className={styles.box3}>
             <p className={styles.text4}>
@@ -90,7 +90,7 @@ export default function UserRow({
       <td className={styles.headCell}>
         <div className={styles.row5}>
           <button onClick={() => onEdit(u)} title={R.edit} className={styles.button3}>
-            <Edit3 size={16} />
+            <Pencil size={16} />
           </button>
           <button
             onClick={() => onToggle(u)}

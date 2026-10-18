@@ -1,4 +1,4 @@
-import { AlertCircle, Edit3, HelpCircle, Loader2, Trash2 } from "lucide-react";
+import { AlertCircle, HelpCircle, Loader2, Pencil, Trash2 } from "lucide-react";
 
 import { ADMIN_FAQS as C } from "@/src/constants/admin/faqs-page";
 import type { FaqManager } from "@/src/hooks/useFaqManager";
@@ -54,7 +54,7 @@ export default function FaqList({ m }: { m: FaqManager }) {
               className={styles.button2}
               title={C.editTitle}
             >
-              <Edit3 size={18} />
+              <Pencil size={18} />
             </button>
             <button
               onClick={() => m.handleDelete(faq._id!)}

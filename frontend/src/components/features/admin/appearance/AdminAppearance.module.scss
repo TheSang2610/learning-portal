@@ -1,0 +1,146 @@
+$ink: #0a0a0a;
+$muted: #737373;
+$line: #e5e5e5;
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.loading {
+  font-size: 14px;
+  color: $muted;
+}
+
+.notice {
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  background-color: #f0fdf4;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #15803d;
+}
+
+.errorNotice {
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background-color: #fef2f2;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #b91c1c;
+}
+
+.switches {
+  display: grid;
+  gap: 10px;
+
+  @media (min-width: 900px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+// ---- mau
+
+.colorGroups {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+
+  @media (min-width: 900px) {
+    grid-template-columns: 3fr 2fr 2fr;
+  }
+}
+
+.colorGroup {
+  margin: 0;
+  border: 1px solid $line;
+  border-radius: 10px;
+  padding: 12px 14px 14px;
+
+  legend {
+    padding: 0 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: $muted;
+  }
+}
+
+.colors {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.color {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.colorLabel {
+  font-size: 13px;
+  color: $ink;
+}
+
+.colorRow {
+  display: flex;
+  gap: 8px;
+}
+
+.swatch {
+  width: 36px;
+  height: 32px;
+  flex: none;
+  cursor: pointer;
+  border: 1px solid $line;
+  border-radius: 6px;
+  background: #fff;
+  padding: 2px;
+}
+
+.hex {
+  min-width: 0;
+  flex: 1;
+  height: 32px;
+  border: 1px solid $line;
+  border-radius: 6px;
+  padding: 0 8px;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 13px;
+  text-transform: lowercase;
+
+  &:focus {
+    border-color: #a3a3a3;
+    outline: none;
+    box-shadow: 0 0 0 3px rgb(163 163 163 / 0.3);
+  }
+}
+
+// ---- xem truoc
+
+.previewLabel {
+  margin: 20px 0 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: $muted;
+}
+
+.preview {
+  overflow: hidden;
+  border: 1px dashed #d4d4d4;
+  border-radius: 12px;
+  background-color: #f8fafc;
+  padding-bottom: 24px;
+
+  // Banner that dat le theo khung trang - trong khung xem truoc thi vua khung.
+  > section {
+    width: calc(100% - 32px);
+    padding-top: 24px;
+  }
+}
+
+.previewOff {
+  opacity: 0.4;
+  filter: grayscale(1);
+}

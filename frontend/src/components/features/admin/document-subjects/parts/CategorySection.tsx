@@ -22,15 +22,24 @@ function BieuTuongOptions() {
 }
 
 /** Linh vuc: them (ten + bieu tuong), doi ten, doi bieu tuong, xoa. */
-export default function CategorySection({ s }: { s: DocumentCatalogState }) {
+export default function CategorySection({
+  s,
+  hideHeading = false,
+}: {
+  s: DocumentCatalogState;
+  /** Trang da co tieu de rieng (PageHeader) thi an tieu de muc. */
+  hideHeading?: boolean;
+}) {
   const K = C.categories;
 
   return (
     <>
-      <h2 className={styles.muc}>
-        <Layers size={18} />
-        {K.heading}
-      </h2>
+      {!hideHeading && (
+        <h2 className={styles.muc}>
+          <Layers size={18} />
+          {K.heading}
+        </h2>
+      )}
       <form onSubmit={s.addGroup} className={styles.them}>
         <input
           value={s.newGroupName}

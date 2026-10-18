@@ -23,7 +23,8 @@ export default function AdminVouchers() {
         </div>
 
         <button type="button" onClick={s.openCreate} className={styles.button}>
-          <Plus size={16} /> {C.create}
+          <Plus size={16} />
+          <span>{C.create}</span>
         </button>
       </div>
 

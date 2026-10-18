@@ -3,9 +3,15 @@ import { BadgeCheck, FileText, GraduationCap, PenLine } from "lucide-react";
 import type {
   HomeCategoriesData,
   HomeCoursesData,
+  HomeDashboardData,
+  HomeDocumentsData,
+  HomeExploreData,
   HomeFeaturesData,
+  HomeGuidesData,
   HomeHeroData,
   HomePopularCoursesData,
+  HomePricingData,
+  HomePromoData,
   HomeTestimonialsData,
 } from "@/src/types/home";
 
@@ -298,6 +304,168 @@ const testimonials: HomeTestimonialsData = {
   ],
 };
 
+/* ------------------------------------------------------------------ */
+/* Hai muc dan sang khu Cam nang (/blog) va khu Tai lieu (/share-document) */
+/* ------------------------------------------------------------------ */
+
+const guides: HomeGuidesData = {
+  eyebrow: "Cẩm nang môn học",
+  heading: "Kinh nghiệm học từng môn, từ người đã đi qua",
+  text: "Môn nào khó ở chỗ nào, nên học theo thứ tự ra sao, đề thi hay ra dạng gì — gom lại thành bài viết ngắn, đọc vài phút là nắm được đường đi.",
+  points: [
+    "Chia theo chủ đề: front-end, back-end, AI, kiểm thử, thiết kế...",
+    "Viết bởi giảng viên và học viên đã học xong môn",
+    "Lưu bài để đọc lại lúc ôn thi",
+  ],
+  cta: { label: "Đọc cẩm nang", href: "/blog" },
+  latestTitle: "Bài mới đăng",
+  topicsTitle: "Chọn chủ đề",
+  topicCount: "{n} bài viết",
+  topicEmpty: "Sắp có bài",
+  topicHref: "/blog?topic={slug}",
+  readMinutes: "{n} phút đọc",
+};
+
+const documents: HomeDocumentsData = {
+  eyebrow: "Chia sẻ tài liệu",
+  heading: "Kho tài liệu do chính sinh viên góp",
+  text: "Giáo trình, đề cương, slide, đề ôn tập — lọc theo trường, theo môn, tải về miễn phí. Có tài liệu hay thì đăng lên để bạn khác cùng dùng.",
+  cta: { label: "Vào kho tài liệu", href: "/share-document" },
+  statLabels: {
+    documents: "tài liệu",
+    subjects: "môn học",
+    schools: "trường đại học",
+    downloads: "lượt tải",
+  },
+  popularTitle: "Được xem nhiều",
+  seeAllLabel: "Xem tất cả tài liệu",
+  seeAllHref: "/share-document/all-document",
+  groupsTitle: "Theo lĩnh vực",
+  share: {
+    title: "Có tài liệu hay trong máy?",
+    text: "Đăng PDF, Word hoặc viết thẳng một bài hướng dẫn — chỉ mất một phút.",
+    label: "Chia sẻ tài liệu",
+    href: "/share-document",
+  },
+};
+
+/* ------------------------------------------------------------------ */
+/* Phan rieng cho KHACH (landing) va cho nguoi DA dang nhap (dashboard)  */
+/* ------------------------------------------------------------------ */
+
+// Dai quang cao. Sua chu / duong dan o day; muon tat thi bo the <HomePromo>
+// trong page.tsx tuong ung.
+const guestPromo: HomePromoData = {
+  badge: "Miễn phí",
+  title: "Tạo tài khoản là học được ngay — không cần thẻ, không cần nạp tiền",
+  text: "Ghi danh khóa miễn phí, lưu tiến độ trên máy chủ, làm bài kiểm tra và nhận chứng nhận có mã tra cứu.",
+  cta: { label: "Tạo tài khoản miễn phí", action: "register" },
+  secondary: { label: "Xem khóa học", href: "/courses" },
+};
+
+const memberPromo: HomePromoData = {
+  badge: "Mới",
+  title: "Kho tài liệu theo trường: tìm đề cương, giáo trình đúng môn trường bạn",
+  text: "Lọc theo trường, lĩnh vực và môn học. Có tài liệu hay thì đăng lên cho bạn cùng lớp.",
+  cta: { label: "Xem các trường", href: "/share-document/institution" },
+};
+
+const pricing: HomePricingData = {
+  heading: "Học phí rõ ràng, trả theo từng khóa",
+  description:
+    "Không gói tháng, không tự gia hạn. Khóa miễn phí học bao lâu cũng được; khóa có phí trả một lần cho một thời hạn học.",
+  freePrice: "0đ",
+  paidFrom: "Từ {price}",
+  paidNone: "Sắp mở",
+  accessDaysLabel: "{n} ngày học",
+  plans: [
+    {
+      id: "free",
+      name: "Khóa miễn phí",
+      priceNote: "Trọn đời",
+      count: "{n} khóa đang mở",
+      countZero: "Sắp có khóa",
+      features: [
+        "Học không giới hạn thời gian",
+        "Lưu tiến độ, đổi máy vẫn học tiếp được",
+        "Bài kiểm tra và chứng nhận khi hoàn thành",
+      ],
+      cta: { label: "Học miễn phí", href: "/courses" },
+    },
+    {
+      id: "paid",
+      name: "Khóa có phí",
+      priceNote: "",
+      count: "{n} khóa",
+      countZero: "Đang chuẩn bị khóa đầu tiên",
+      features: [
+        "Trả một lần, học trong thời hạn của khóa",
+        "Gia hạn cộng dồn, không mất ngày còn lại",
+        "Hỏi đáp trực tiếp với giảng viên trong bài",
+        "Chuyển khoản ngân hàng, dùng được mã giảm giá",
+      ],
+      cta: { label: "Xem khóa có phí", href: "/courses" },
+      highlight: true,
+    },
+  ],
+  footnote: "Chứng nhận của mọi khóa đều có mã riêng, ai cũng tra cứu lại được.",
+};
+
+const dashboard: HomeDashboardData = {
+  welcome: "{name}, chào mừng quay lại khóa học",
+  welcomeFallback: "Chào mừng quay lại khóa học",
+  pace: {
+    daysLeft: "Còn {n} ngày học · đến {date}",
+    until: "Học đến {date}",
+    unlimited: "Học không giới hạn thời gian",
+    expired: "Đã hết hạn học",
+  },
+  complete: "{n}% hoàn thành",
+  upNext: "Bài tiếp theo: {title}",
+  allDone: "Bạn đã học hết các bài",
+  upNextUnknown: "Vào học tiếp khóa này",
+  lessonPosition: "Bài {i}/{total}",
+  video: "Video",
+  reading: "Bài đọc",
+  resume: "Học tiếp",
+  start: "Bắt đầu",
+  review: "Xem lại khóa",
+  continueWatching: "Tiếp tục xem",
+  goalsTitle: "Mục tiêu hôm nay",
+  goal: "Hoàn thành {n} bài trong {course} · {done}/{n}",
+  streak: "Chuỗi {n} tuần",
+  streakTip:
+    "Tuần nào cũng học một chút thì dễ đi hết khóa hơn nhiều so với dồn học một lúc.",
+  weekDays: ["T2", "T3", "T4", "T5", "T6", "T7", "CN"],
+  weekSummary: "Tuần này: {n} bài đã xong · {m} phút học",
+  setGoal: "Mục tiêu mỗi ngày: {n} bài — bấm để đổi",
+  goalOptions: [1, 2, 3, 5],
+  otherTitle: "Khóa khác của bạn",
+  emptyTitle: "Bạn chưa ghi danh khóa nào",
+  emptyText: "Chọn một khóa miễn phí để bắt đầu — tiến độ sẽ hiện ở đây.",
+  emptyCta: { label: "Tìm khóa học", href: "/courses" },
+  myCoursesHref: "/user/my-courses",
+  myCoursesLabel: "Tất cả khóa của tôi",
+  error: "Không tải được khóa học của bạn. Thử tải lại trang.",
+};
+
+// Muc "Tiep tuc kham pha" (dashboard): ba cot cuon ngang, bo cuc theo Coursera.
+const explore: HomeExploreData = {
+  heading: "Tiếp tục khám phá",
+  panels: {
+    recent: "Xem gần đây",
+    similar: "Tương tự hoạt động của bạn",
+    trending: "Đang thịnh hành",
+  },
+  recentEmpty: "Các khóa bạn mở xem sẽ hiện ở đây để quay lại nhanh.",
+  recentEmptyCta: { label: "Khám phá khóa học", href: "/courses" },
+  empty: "Chưa có khóa nào ở mục này.",
+  free: "Miễn phí",
+  courseHref: "/course?slug={slug}",
+  prev: "Xem cột trước",
+  next: "Xem cột sau",
+};
+
 /**
  * Noi dung + cau hinh trang chu (app/(portal)/page.tsx).
  *
@@ -312,13 +480,27 @@ export const HOME_PAGE = {
     faqs: "/api/faqs/homepage",
     homeSections: "/api/courses/home-sections",
     courses: "/api/courses",
+    latestPosts: "/api/posts?page=1&limit=3",
+    postTopics: "/api/posts/topics",
+    documentStats: "/api/documents/thong-ke",
+    popularDocuments: "/api/documents?page=1&limit=4&sapXep=phoBien",
+    documentGroups: "/api/documents/linh-vuc",
   },
   /** So khoa goi y ca nhan hoa hien tren trang chu. */
   suggestionsCount: 8,
+  /** So linh vuc tai lieu hien o muc Chia se tai lieu. */
+  documentGroupCount: 6,
   hero,
   features,
   categories,
   popularCourses,
   courses,
+  guides,
+  documents,
   testimonials,
+  guestPromo,
+  memberPromo,
+  pricing,
+  dashboard,
+  explore,
 };

@@ -1,0 +1,188 @@
+// "Tiep tuc kham pha" - theo muc "Resume your exploration" cua Coursera:
+// cot nen xanh nhat bo goc 16px, the trang bo goc 16px, anh 80px bo goc 8px,
+// nut tron Truoc/Sau noi o hai mep, cuon ngang bam theo tung cot.
+// Mau xanh lay theo cac muc khoa hoc cua du an (--color-blue-*).
+
+$panel-bg: #e8efff;
+$ink: #0d0f12;
+$muted: #5b6780;
+$gap: 24px;
+
+.section {
+  background-color: #fff;
+}
+
+.container {
+  margin-inline: auto;
+  width: min(76rem, 100% - 2.5rem);
+  padding-block: calc(var(--spacing) * 12) calc(var(--spacing) * 8);
+}
+
+.heading {
+  font-size: clamp(1.35rem, 2.4vw, 1.6rem);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.01em;
+  color: $ink;
+}
+
+// ---- carousel
+
+.carousel {
+  position: relative;
+  margin-top: calc(var(--spacing) * 5);
+}
+
+.track {
+  display: grid;
+  grid-auto-flow: column;
+  // Mobile: mot cot gan het chieu ngang, he mep cot sau de biet con cuon duoc.
+  grid-auto-columns: 88%;
+  gap: $gap;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  // Desktop: hai cot vua khung nhu Coursera, cot thu ba cuon toi.
+  @media (min-width: 64rem) {
+    grid-auto-columns: calc((100% - #{$gap}) / 2);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    scroll-behavior: auto;
+  }
+}
+
+.panel {
+  scroll-snap-align: start;
+  border-radius: 16px;
+  background-color: $panel-bg;
+  padding: 16px;
+  animation: fade-in 0.3s ease-out both;
+}
+
+.panelTitle {
+  padding: 8px 2px 16px;
+  font-size: 18px;
+  font-weight: var(--font-weight-semibold);
+  color: $ink;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+
+// ---- trang thai
+
+.skeleton {
+  height: 100px;
+  border-radius: 16px;
+  background-color: rgb(255 255 255 / 0.65);
+  animation: var(--animate-pulse);
+}
+
+.empty {
+  display: flex;
+  min-height: 12rem;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 12px;
+  border: 1.5px dashed #b8c8ee;
+  border-radius: 16px;
+  padding: 20px;
+  font-size: 15px;
+  color: $muted;
+}
+
+.emptyLink {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-blue-700);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+// ---- nut Truoc / Sau: tron, noi tren mep, an dan khi het duong cuon
+
+.arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid #dae1ed;
+  border-radius: 50%;
+  background-color: #fff;
+  color: $ink;
+  box-shadow:
+    0 0 4px 0 rgb(15 17 20 / 0.1),
+    0 2px 12px 2px rgb(15 17 20 / 0.1);
+  cursor: pointer;
+  translate: 0 -50%;
+  transition:
+    opacity 0.2s ease-out,
+    scale 0.15s ease-out,
+    background-color 0.15s;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: #f2f5fa;
+      scale: 1.05;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-blue-600);
+    outline-offset: 2px;
+  }
+}
+
+.arrowPrev {
+  left: -20px;
+}
+
+.arrowNext {
+  right: -20px;
+}
+
+.arrowHidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+// Man hinh cham: vuot tay la du, nut chi che noi dung.
+@media (hover: none) {
+  .arrow {
+    display: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: none;
+  }
+
+  .arrow {
+    transition: none;
+  }
+}

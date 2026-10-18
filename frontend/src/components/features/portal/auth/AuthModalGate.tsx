@@ -62,5 +62,14 @@ export default function AuthModalGate() {
     );
   };
 
-  return <AuthModal open={openId} onClose={rows} labelError={labelError} />;
+  return (
+    <AuthModal
+      open={openId}
+      onClose={rows}
+      labelError={labelError}
+      // ?auth=register (nut "Dang ky mien phi", dai moi dang ky) mo thang tab
+      // Dang ky; moi gia tri khac mo tab Dang nhap.
+      startTab={searchParams.get("auth") === "register" ? "register" : "login"}
+    />
+  );
 }

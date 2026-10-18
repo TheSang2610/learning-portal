@@ -1,0 +1,167 @@
+// The khoa hoc dang hang ngang - bo cuc the danh sach cua Coursera. Dung chung
+// cho HomeExplore va HomePopularCourses.
+
+$ink: #0d0f12;
+$muted: #5b6780;
+
+// The xuat hien lan luot: truot len + hien dan, moi the tre hon 70ms.
+.item {
+  animation: slide-in-up 0.3s ease-out both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 16px;
+  background-color: #fff;
+  padding: 10px;
+  transition:
+    box-shadow 0.15s ease-out,
+    translate 0.15s ease-out;
+
+  @media (hover: hover) {
+    &:hover {
+      translate: 0 -1px;
+      box-shadow:
+        0 0 4px 0 rgb(15 17 20 / 0.1),
+        0 4px 12px 4px rgb(15 17 20 / 0.1);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-blue-600);
+    outline-offset: 2px;
+  }
+}
+
+.thumb {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 80px;
+  height: 80px;
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: var(--color-blue-50);
+  color: var(--color-blue-600);
+}
+
+.thumbImage {
+  object-fit: cover;
+}
+
+.body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.partner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.partnerLogo {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  overflow: hidden;
+  border: 1px solid #dae1ed;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.partnerLogoImage {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.partnerName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  color: $muted;
+}
+
+.title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 16px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.3;
+  color: $ink;
+}
+
+// Dau phan cach: moi muc co "·" phia truoc (::before, rong $sep). .meta lui
+// trai dung $sep va .metaWrap cat phan tran -> dau cua muc dung DAU moi dong
+// luon bi an, ke ca khi xuong dong o cho bat ky.
+$sep: 14px;
+
+.metaWrap {
+  margin-top: 2px;
+  display: block;
+  overflow: hidden;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-left: -$sep;
+  font-size: 13.5px;
+  color: $muted;
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+
+  &::before {
+    content: "·";
+    display: inline-block;
+    width: $sep;
+    text-align: center;
+    color: $muted;
+  }
+}
+
+.rating {
+  gap: 3px;
+  color: $ink;
+}
+
+.star {
+  fill: currentColor;
+}
+
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item {
+    animation: none;
+  }
+
+  .card {
+    transition: none;
+  }
+}

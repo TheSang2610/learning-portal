@@ -29,7 +29,7 @@ export default function LessonInfoBar({
 
       <button type="button" disabled={busy} onClick={onDelete} className={styles.button2}>
         <Trash2 size={14} />
-        {deleting ? C.info.deleting : C.info.delete}
+        <span>{deleting ? C.info.deleting : C.info.delete}</span>
       </button>
     </div>
   );

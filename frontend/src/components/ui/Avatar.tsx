@@ -5,6 +5,30 @@ import SafeImage from "./SafeImage";
 
 import styles from "./Avatar.module.scss";
 
+// Bang mau cho vong tron chu cai khi bat `colorful` - deu du dam de chu trang
+// doc ro. Cung mot ten luon ra cung mot mau (bam theo ten), nen nhin danh sach
+// dai van nhan ra nguoi quen.
+const PALETTE = [
+  "#2563eb",
+  "#7c3aed",
+  "#db2777",
+  "#ea580c",
+  "#16a34a",
+  "#0891b2",
+  "#b45309",
+  "#dc2626",
+  "#4f46e5",
+  "#0d9488",
+];
+
+/** Mau nen co dinh theo ten (hoac email / id). */
+export const avatarColor = (key?: string) => {
+  const k = (key ?? "").trim();
+  let h = 0;
+  for (let i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0;
+  return PALETTE[h % PALETTE.length];
+};
+
 /**
  * Anh dai dien co duong lui: khong co anh, hoac anh tai that bai, thi hien
  * vong tron chu cai dau.
@@ -20,6 +44,7 @@ export default function Avatar({
   size = 36,
   className = "",
   letterBackground = styles.defaultBg,
+  colorful = false,
 }: {
   src?: string | null;
   ten?: string;
@@ -31,6 +56,8 @@ export default function Avatar({
    * mau cung se doi giao dien cua nhung trang khong lien quan.
    */
   letterBackground?: string;
+  /** Moi nguoi mot mau (theo ten) thay cho letterBackground - dung o bang quan tri. */
+  colorful?: boolean;
 }) {
   const [err, setErr] = useState(false);
 
@@ -51,7 +78,11 @@ export default function Avatar({
   if (!src || err) {
     return (
       <div
-        style={{ ...style, fontSize: Math.max(11, Math.round(size * 0.42)) }}
+        style={{
+          ...style,
+          fontSize: Math.max(11, Math.round(size * 0.42)),
+          ...(colorful ? { backgroundColor: avatarColor(name), color: "#fff" } : null),
+        }}
         className={`${common} ${styles.fallback} ${letterBackground}`}
       >
         {name?.trim().charAt(0) || "?"}

@@ -20,16 +20,15 @@
 }
 
 .page2 {
-  min-height: 100vh;
   background-color: #f5f7fa;
-  padding-bottom: calc(var(--spacing) * 16);
+  padding-bottom: calc(var(--spacing) * 6);
 }
 
 .container {
   margin-inline: auto;
   max-width: var(--container-7xl);
   padding-inline: calc(var(--spacing) * 4);
-  padding-block: calc(var(--spacing) * 10);
+  padding-block: calc(var(--spacing) * 8) calc(var(--spacing) * 6);
 
   @media (min-width: 40rem) {
     padding-inline: calc(var(--spacing) * 6);
@@ -82,7 +81,6 @@
 }
 
 .card {
-  margin-top: calc(var(--spacing) * 8);
   border-radius: var(--radius-2xl);
   border-style: var(--tw-border-style);
   border-width: 1px;
@@ -102,7 +100,6 @@
 }
 
 .grid {
-  margin-top: calc(var(--spacing) * 8);
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
   gap: calc(var(--spacing) * 6);
@@ -177,4 +174,26 @@
     cursor: not-allowed;
     opacity: 0.6;
   }
+}
+
+// Dong "N khoa hoc" ngay tren luoi.
+.resultCount {
+  margin-bottom: calc(var(--spacing) * 4);
+  font-size: 14.5px;
+  font-weight: var(--font-weight-semibold);
+  color: #5b6780;
+}
+
+.emptyHint {
+  margin-top: calc(var(--spacing) * 2);
+  font-size: 14px;
+  color: #5b6780;
+}
+
+// Khung cho luc tai - cung kich thuoc the that de trang khong nhay.
+.skeleton {
+  aspect-ratio: 3 / 4;
+  border-radius: 16px;
+  background-color: #e6ebf3;
+  animation: var(--animate-pulse);
 }

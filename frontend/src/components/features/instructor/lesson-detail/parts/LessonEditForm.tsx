@@ -94,7 +94,8 @@ export default function LessonEditForm({
           onClick={onCancel}
           className={styles.button3}
         >
-          <X size={14} /> {C.actions.cancel}
+          <X size={14} />
+          <span>{C.actions.cancel}</span>
         </button>
 
         <button type="submit" disabled={busy} className={styles.button4}>

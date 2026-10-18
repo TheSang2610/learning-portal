@@ -1,12 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { getCourseList, Course } from "@/src/services/course";
 import { getCategories, Category } from "@/src/services/categoryService";
-import SectionTitle from "@/src/components/common/SectionHeading";
-import CourseCard from "@/src/components/common/CourseCard";
+import {
+  CourseGrid,
+  coursesHref,
+  ListingHero,
+  type ListingChip,
+  type ListingStats,
+} from "@/src/components/features/portal/course-listing";
+import { COURSES_PAGE } from "@/src/constants/portal/courses-page";
+import { fillTemplate } from "@/src/lib/format";
 
 import styles from "./CourseSearchClient.module.scss";
 interface Props {
@@ -19,7 +25,17 @@ interface Props {
    */
   initialCourses?: Course[] | null;
   initialCategories?: Category[] | null;
+  /** So khoa theo id danh muc - cho chip danh muc o dai dau trang. */
+  countByCategory?: Record<string, number>;
+  /** So lieu cua ca kho (khong theo bo loc) - null khi may chu tai loi. */
+  stats?: ListingStats | null;
 }
+
+const R = COURSES_PAGE.results;
+const H = COURSES_PAGE.hero;
+
+// Slug danh muc: ban ghi cu co the thieu slug - suy tu ten, giong HomeCategories.
+const slugOf = (c: Category) => c.slug || c.name.toLowerCase().replace(/ /g, "-");
 
 // Cho bao lau sau phim cuoi cung roi moi hoi may chu.
 //
@@ -33,8 +49,12 @@ const DEBOUNCE_MS = 350;
 
 const PAGE_SIZE = 24;
 
-export default function CourseSearchClient({ initialCourses, initialCategories }: Props) {
-  const router = useRouter();
+export default function CourseSearchClient({
+  initialCourses,
+  initialCategories,
+  countByCategory = {},
+  stats = null,
+}: Props) {
   const searchParams = useSearchParams();
   const searchKeyword = searchParams.get("search") || ""; // /courses?search=...
   const categoryParam = searchParams.get("category") || ""; // /courses?category=...
@@ -131,80 +151,91 @@ export default function CourseSearchClient({ initialCourses, initialCategories }
     }
   }, [loadingMore, hasMore, page, searchKeyword, categoryParam]);
 
-  if (loading) {
-    return (
-      <div className={styles.page}>
-        <div className={styles.spinner}></div>
-      </div>
-    );
-  }
+  const activeCategory = categories.find((c) => slugOf(c) === categoryParam);
+
+  // Chi hien danh muc dang co khoa (hoac dang duoc chon) - chip dan toi trang
+  // rong la mat mot cu bam. Bam lai chip dang chon = bo loc.
+  const chips: ListingChip[] = [
+    {
+      key: "",
+      label: COURSES_PAGE.chips.all,
+      href: coursesHref({ search: searchKeyword }),
+      active: !categoryParam,
+    },
+    ...categories
+      .filter((c) => (countByCategory[c._id] ?? 0) > 0 || slugOf(c) === categoryParam)
+      .map((c) => ({
+        key: c._id,
+        label: c.name,
+        count: countByCategory[c._id] ?? 0,
+        href: coursesHref({
+          search: searchKeyword,
+          category: slugOf(c) === categoryParam ? "" : slugOf(c),
+        }),
+        active: slugOf(c) === categoryParam,
+      })),
+  ];
 
   return (
     <div className={styles.page2}>
-      <div className={styles.container}>
-        <button onClick={() => router.push("/")} className={styles.button}>
-          <ArrowLeft size={14} /> VỀ TRANG CHỦ
-        </button>
+      <ListingHero
+        key={searchKeyword}
+        crumbs={[
+          { label: H.breadcrumbHome, href: H.breadcrumbHref },
+          {
+            label: H.breadcrumbCurrent,
+            href: searchKeyword || categoryParam ? "/courses" : undefined,
+          },
+          ...(searchKeyword
+            ? [{ label: `"${searchKeyword}"` }]
+            : activeCategory
+              ? [{ label: activeCategory.name }]
+              : []),
+        ]}
+        title={
+          searchKeyword
+            ? fillTemplate(H.titleSearch, { q: searchKeyword })
+            : (activeCategory?.name ?? (categoryParam || H.titleAll))
+        }
+        subtitle={searchKeyword ? undefined : H.subtitle}
+        keyword={searchKeyword}
+        searchCategory={categoryParam}
+        stats={stats}
+        chipsLabel={COURSES_PAGE.chips.label}
+        chips={chips.length > 1 ? chips : []}
+      />
 
-        <SectionTitle
-          nhu="h1"
-          tieuDe={
-            searchKeyword
-              ? `Kết quả cho "${searchKeyword}"`
-              : categoryParam
-                ? categories.find((c) => c.slug === categoryParam)?.name || categoryParam
-                : "Tất cả khoá học"
-          }
-          moTa={
-            // Dem TONG o may chu chu khong phai so the dang hien: dang hien 24
-            // ma noi "24 khoa hoc" trong khi con 80 nua la noi sai.
-            total > 0
-              ? `${total} khoá học${categoryParam ? " trong danh mục này" : ""}.`
-              : undefined
-          }
-        />
-
-        {courses.length === 0 ? (
-          <div className={styles.card}>
-            {/* Khong con noi cung mot cau cho moi truong hop: tim khong ra va
-                danh muc rong la hai chuyen khac nhau, ma cau cu luon chen tu
-                khoa vao - vao tu danh muc thi hien ra cap nhay rong. */}
-            {searchKeyword ? (
-              <>
-                Không tìm thấy khoá học nào cho{" "}
-                <strong className={styles.strong}>&quot;{searchKeyword}&quot;</strong>.
-              </>
-            ) : (
-              "Danh mục này chưa có khoá học nào."
-            )}
-          </div>
-        ) : (
-          <>
-            <div className={styles.grid}>
-              {courses.map((course) => (
-                <CourseCard
-                  key={course._id}
-                  khoa={course}
-                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                />
-              ))}
-            </div>
-
-            {hasMore && (
-              <div className={styles.row}>
-                <button
-                  type="button"
-                  onClick={loadMore}
-                  disabled={loadingMore}
-                  className={styles.button2}
-                >
-                  {loadingMore ? "Đang tải…" : `Xem thêm (còn ${total - courses.length})`}
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      <CourseGrid
+        courses={courses}
+        loading={loading}
+        // Dem TONG o may chu chu khong phai so the dang hien.
+        countText={fillTemplate(categoryParam ? R.countInCategory : R.count, {
+          n: total,
+        })}
+        empty={
+          // Tim khong ra va danh muc rong la hai chuyen khac nhau.
+          searchKeyword ? (
+            <>
+              {R.emptySearch} <strong>&quot;{searchKeyword}&quot;</strong>.
+              <br />
+              {R.emptyHint}
+            </>
+          ) : (
+            R.emptyCategory
+          )
+        }
+        loadMore={
+          hasMore
+            ? {
+                label: loadingMore
+                  ? R.loadingMore
+                  : fillTemplate(R.loadMore, { n: total - courses.length }),
+                busy: loadingMore,
+                onClick: loadMore,
+              }
+            : null
+        }
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { BookOpen, CheckCircle, Edit3, Star, Trash2, User } from "lucide-react";
+import { BookOpen, CheckCircle, Pencil, Star, Trash2, User } from "lucide-react";
 
 import { ADMIN_REVIEWS as C } from "@/src/constants/admin/reviews-page";
 import type { Review } from "@/src/services/review";
@@ -81,16 +81,18 @@ export default function ReviewRow({
             onClick={() => onEdit(review)}
             className={styles.button3}
             title={C.row.editTitle}
+            aria-label={C.row.editTitle}
           >
-            <Edit3 size={15} /> {C.row.edit}
+            <Pencil size={16} />
           </button>
           <button
             disabled={deleting}
             onClick={() => onDelete(review._id)}
             className={styles.button4}
             title={C.row.deleteTitle}
+            aria-label={C.row.deleteTitle}
           >
-            <Trash2 size={15} /> {C.row.delete}
+            <Trash2 size={16} />
           </button>
         </div>
       </td>

@@ -24,7 +24,8 @@ export default function AdminUsers() {
           <p className={styles.text3}>{s.fetching ? C.loading : C.count(s.total)}</p>
         </div>
         <button onClick={s.openCreate} className={styles.button}>
-          <Plus size={16} /> {C.add}
+          <Plus size={16} />
+          <span>{C.add}</span>
         </button>
       </div>
 

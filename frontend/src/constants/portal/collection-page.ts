@@ -32,10 +32,12 @@ export const COLLECTIONS: Record<
 };
 
 export const COLLECTION_PAGE = {
-  back: "QUAY LẠI",
+  /** + slug -> /collection?slug=most-popular-courses */
+  href: "/collection?slug=",
   fallbackTitle: "Danh sách khoá học",
+  chipsLabel: "Bảng xếp hạng",
+  /** {n} = so khoa trong bang. */
+  count: "{n} khóa học",
   empty: "Mục này chưa có khoá học nào được hiển thị.",
   unknown: "Không có mục nào ứng với đường dẫn này.",
-  cardSizes:
-    "(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw",
 } as const;
