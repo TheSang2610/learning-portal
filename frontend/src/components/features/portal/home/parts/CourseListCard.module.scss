@@ -3,6 +3,11 @@
 
 $ink: #0d0f12;
 $muted: #5b6780;
+// Sao vang ho phach: mau rieng cho diem danh gia, khong trung voi mau xanh cua
+// nut/lien ket. So diem van dung $ink de doc ro.
+$star: #f59e0b;
+// Xanh la cho "Mien phi" - 5.5:1 tren nen trang.
+$free: #047857;
 
 // The xuat hien lan luot: truot len + hien dan, moi the tre hon 70ms.
 .item {
@@ -14,6 +19,7 @@ $muted: #5b6780;
   display: flex;
   align-items: center;
   gap: 12px;
+  border: 1px solid var(--color-slate-200);
   border-radius: 16px;
   background-color: #fff;
   padding: 10px;
@@ -55,6 +61,7 @@ $muted: #5b6780;
 
 .body {
   display: flex;
+  flex: 1;
   min-width: 0;
   flex-direction: column;
   gap: 2px;
@@ -85,6 +92,7 @@ $muted: #5b6780;
 }
 
 .partnerName {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -136,13 +144,31 @@ $sep: 14px;
   }
 }
 
+// Diem danh gia o cuoi hang don vi, day sat mep phai.
 .rating {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
   gap: 3px;
+  margin-left: auto;
+  font-size: 13.5px;
+  font-weight: var(--font-weight-semibold);
   color: $ink;
 }
 
 .star {
+  color: $star;
   fill: currentColor;
+}
+
+.price {
+  font-weight: var(--font-weight-semibold);
+  color: $ink;
+}
+
+.free {
+  font-weight: var(--font-weight-semibold);
+  color: $free;
 }
 
 @keyframes slide-in-up {

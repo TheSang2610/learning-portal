@@ -48,6 +48,9 @@ export default function CourseCard({ khoa: course, rankBadge, sizes }: Props) {
             fill
             sizes={sizes ?? "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"}
             className={styles.previewImage}
+            // Anh bia do giang vien tai len co the la anh chup man hinh be
+            // ngang; cat cover thi chu tren anh bi dut doan.
+            avoidHeavyCrop
           />
         ) : (
           <span className={styles.previewEmpty}>

@@ -76,6 +76,20 @@ test('khong co tin hieu nao van co cau giai thich, khong de trong', () => {
     assert.strictEqual(wallet, 'Có thể bạn quan tâm');
 });
 
+test('chi danh dau cu the khi ly do la cua rieng nguoi dung', () => {
+    const popular = scoreDocument(course('x', { studentCount: 5 }), {});
+    assert.strictEqual(popular.vi, 'Đang được nhiều người học');
+    assert.strictEqual(popular.cuThe, false);
+
+    assert.strictEqual(scoreDocument(course('y'), {}).cuThe, false);
+
+    const sameCategory = scoreDocument(course('z', { category: 'dm1', studentCount: 5 }), {
+        learningCategories: new Set(['dm1']),
+    });
+    assert.strictEqual(sameCategory.vi, 'Cùng lĩnh vực với khóa bạn đang học');
+    assert.strictEqual(sameCategory.cuThe, true);
+});
+
 test('xep dung thu tu: danh muc thang pho bien', () => {
     const items = [
         course('pho_bien', { studentCount: 500 }),

@@ -1,6 +1,6 @@
-// Bang hoc phi - hai the, the "co phi" noi bat bang vien tim chu dao.
+// Bang hoc phi - hai the, the "co phi" noi bat bang vien mau nut chinh.
 
-$brand: #4f2bff;
+$brand: var(--color-cta);
 $ink: #0b0c1e;
 
 .section {
@@ -45,14 +45,20 @@ $ink: #0b0c1e;
 
 .highlight {
   border: 2px solid $brand;
-  background: linear-gradient(170deg, #f4f1ff, #fff 45%);
-  box-shadow: 0 30px 50px -38px #4f2bffcc;
+  background: linear-gradient(
+    170deg,
+    color-mix(in srgb, var(--color-cta) 7%, #fff),
+    #fff 45%
+  );
+  box-shadow: 0 30px 50px -38px color-mix(in srgb, var(--color-cta) 80%, transparent);
 }
 
+// Chu xam o the "co phi" nam tren nen xanh nhat (~#eff6ff): slate-500 chi dat
+// ~4.38:1, duoi muc 4.5:1 cho chu thuong. slate-600 cho ca hai the cho deu.
 .name {
   font-size: 15px;
   font-weight: var(--font-weight-semibold);
-  color: var(--color-slate-500);
+  color: var(--color-slate-600);
 }
 
 .price {
@@ -74,13 +80,13 @@ $ink: #0b0c1e;
   font-size: 15px;
   font-weight: var(--font-weight-medium, 500);
   letter-spacing: 0;
-  color: var(--color-slate-500);
+  color: var(--color-slate-600);
 }
 
 .count {
   margin-top: calc(var(--spacing) * 2);
   font-size: 14px;
-  color: var(--color-slate-500);
+  color: var(--color-slate-600);
 }
 
 .features {
@@ -140,14 +146,14 @@ $ink: #0b0c1e;
 }
 
 .highlight .cta {
-  border-color: $brand;
-  background-color: $brand;
+  border-color: var(--color-cta);
+  background-color: var(--color-cta);
   color: #fff;
 
   @media (hover: hover) {
     &:hover {
-      border-color: #2c14b8;
-      background-color: #2c14b8;
+      border-color: var(--color-cta-hover);
+      background-color: var(--color-cta-hover);
     }
   }
 }

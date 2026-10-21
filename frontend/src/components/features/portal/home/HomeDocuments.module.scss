@@ -88,7 +88,7 @@ $ink: #0b0c1e;
   align-items: center;
   gap: calc(var(--spacing) * 2);
   border-radius: var(--radius-xl);
-  background-color: $ink;
+  background-color: var(--color-cta);
   padding: calc(var(--spacing) * 3.5) calc(var(--spacing) * 6);
   font-size: 15px;
   font-weight: var(--font-weight-semibold);
@@ -97,12 +97,12 @@ $ink: #0b0c1e;
 
   @media (hover: hover) {
     &:hover {
-      background-color: $teal-ink;
+      background-color: var(--color-cta-hover);
     }
   }
 
   &:focus-visible {
-    outline: 3px solid $teal;
+    outline: 3px solid var(--color-cta);
     outline-offset: 3px;
   }
 }
@@ -153,7 +153,8 @@ $ink: #0b0c1e;
 
 .statLabel {
   font-size: 13.5px;
-  color: var(--color-slate-500);
+  // Nen o so lieu la mau nhat (xanh ngoc / xanh duong): slate-500 tut duoi 4.5:1.
+  color: var(--color-slate-600);
 }
 
 // ---- tai lieu xem nhieu
@@ -267,7 +268,8 @@ $ink: #0b0c1e;
   padding: 1px calc(var(--spacing) * 2);
   text-align: center;
   font-size: 12px;
-  color: var(--color-slate-500);
+  // Nen slate-100 lam slate-500 tut xuong 4.35:1 - doi dam hon mot bac.
+  color: var(--color-slate-600);
 }
 
 .share {

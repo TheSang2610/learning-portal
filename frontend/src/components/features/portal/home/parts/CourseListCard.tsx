@@ -69,6 +69,9 @@ export default function CourseListCard({
               sizes="80px"
               className={styles.thumbImage}
               hideOnError
+              // O vuong 80px: anh 16:9 thuong lech 1.78 lan van cat binh
+              // thuong; chi anh be ngang hon 2:1 (anh chup man hinh) moi hien tron.
+              avoidHeavyCrop={2}
             />
           ) : (
             <BookOpen size={22} aria-hidden />
@@ -76,22 +79,36 @@ export default function CourseListCard({
         </span>
 
         <span className={styles.body}>
-          {provider && (
+          {/* Hang dau: don vi dao tao ben trai, diem danh gia can phai. Diem
+              danh gia tung nam cuoi dong "cap do · so bai · gia" nhung dong do
+              qua dai cho the hep, sao bi rot xuong mot dong rieng va moi the
+              rot mot kieu. Dat o day thi sao cua moi the nam thang mot hang. */}
+          {(provider || hasRating) && (
             <span className={styles.partner}>
-              <span className={styles.partnerLogo}>
-                {logo?.src ? (
-                  <SafeImage
-                    src={logo.src}
-                    fallbackSrc={logo.fallback}
-                    alt=""
-                    width={20}
-                    height={20}
-                    className={styles.partnerLogoImage}
-                    hideOnError
-                  />
-                ) : null}
-              </span>
-              <span className={styles.partnerName}>{provider.name}</span>
+              {provider && (
+                <>
+                  <span className={styles.partnerLogo}>
+                    {logo?.src ? (
+                      <SafeImage
+                        src={logo.src}
+                        fallbackSrc={logo.fallback}
+                        alt=""
+                        width={20}
+                        height={20}
+                        className={styles.partnerLogoImage}
+                        hideOnError
+                      />
+                    ) : null}
+                  </span>
+                  <span className={styles.partnerName}>{provider.name}</span>
+                </>
+              )}
+              {hasRating && (
+                <span className={styles.rating}>
+                  <Star size={14} aria-hidden className={styles.star} />
+                  {k.rating?.toFixed(1)}
+                </span>
+              )}
             </span>
           )}
           <span className={styles.title}>{k.title}</span>
@@ -100,17 +117,14 @@ export default function CourseListCard({
               bat dau bang "·". */}
           <span className={styles.metaWrap}>
             <span className={styles.meta}>
-              {meta.map((m) => (
-                <span key={m} className={styles.metaItem}>
+              {meta.map((m, i) => (
+                <span
+                  key={m}
+                  className={`${styles.metaItem} ${i === meta.length - 1 ? (k.price > 0 ? styles.price : styles.free) : ""}`}
+                >
                   {m}
                 </span>
               ))}
-              {hasRating && (
-                <span className={`${styles.metaItem} ${styles.rating}`}>
-                  <Star size={14} aria-hidden className={styles.star} />
-                  {k.rating?.toFixed(1)}
-                </span>
-              )}
             </span>
           </span>
         </span>

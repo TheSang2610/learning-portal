@@ -15,6 +15,9 @@ import { HOME_PAGE } from "@/src/constants/portal/home-page";
 // van dem san duoc cho moi nguoi.
 export const revalidate = 60;
 
+// Cung dia chi "/" voi landing nen cung tieu de tab.
+export const metadata = HOME_PAGE.metadata;
+
 /**
  * Trang chu cua nguoi DA dang nhap (dashboard).
  *

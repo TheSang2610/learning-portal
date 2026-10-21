@@ -131,6 +131,10 @@ export const getCourseList = async (tham: {
 export interface SuggestedCourse extends Course {
   diemGoiY: number;
   viSaoGoiY: string;
+  /** true = ly do rieng cua nguoi nay (cung linh vuc, hoc vien giong ban);
+   *  false = cau chung ("Đang được nhiều người học"). May chu cu chua co truong
+   *  nay thi coi nhu false. */
+  goiYCuThe?: boolean;
 }
 
 export interface SuggestionResult {

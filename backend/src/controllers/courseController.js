@@ -670,7 +670,9 @@ const suggestCourses = async (req, res) => {
             isPublished: true,
             ...(learned.size ? { _id: { $nin: [...learned] } } : {}),
         })
-            .select('title slug thumbnail price category instructor provider level rating reviewsCount createdAt')
+            // lessons: chi la mang id, de the khoa hoc dem duoc "N bai hoc" (thieu
+            // truong nay thi the ghi "0 bai hoc" du khoa co bai).
+            .select('title slug thumbnail price category instructor provider level rating reviewsCount createdAt lessons')
             .populate('instructor', 'name')
             .populate('category', 'name')
             .populate('provider', 'name logo')

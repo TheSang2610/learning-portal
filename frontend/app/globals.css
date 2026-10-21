@@ -39,6 +39,12 @@
   --color-hong: #ff3e9d;
   --color-pha: #ffb000;
   --color-muc: #0b0c1e;
+
+  /* Mau DUY NHAT cho nut chinh (nut keu goi hanh dong) o khu hoc vien: cung
+     mau xanh voi logo va nut tim kiem tren header. Tim/ngoc/hong o tren chi de
+     diem xuyet (chu nhan, bieu tuong), khong dung lam nen nut chinh nua. */
+  --color-cta: var(--color-blue-600, #155dfc);
+  --color-cta-hover: var(--color-blue-700, #1447e6);
 }
 
 body {

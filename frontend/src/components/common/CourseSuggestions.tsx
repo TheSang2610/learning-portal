@@ -67,8 +67,12 @@ export default function CourseSuggestions({ soLuong: count = 6, courseId }: Prop
             <CourseCard khoa={k} sizes="(max-width: 768px) 50vw, 25vw" />
 
             {/* Ly do goi y. Day la phan dang gia nhat cua ca muc: mot goi y
-                khong noi duoc vi sao thi nguoi dung doc no nhu quang cao. */}
-            <p className={styles.text}>{k.viSaoGoiY}</p>
+                khong noi duoc vi sao thi nguoi dung doc no nhu quang cao.
+
+                Chi hien khi ly do CU THE (goiYCuThe). Cau chung ("Đang được
+                nhiều người học") khoa nao cung giong nhau - lap lai duoi sau,
+                bay the khong noi them dieu gi, chi lam rot trang. */}
+            {k.goiYCuThe && <p className={styles.text}>{k.viSaoGoiY}</p>}
           </div>
         ))}
       </div>

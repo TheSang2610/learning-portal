@@ -1,7 +1,7 @@
-// Dai quang cao. Tim chu dao cua du an (#4f2bff - nut chinh o HomeHero).
+// Dai quang cao. Nen dai (gradient) do admin chon, tim #4f2bff chi la mau du
+// phong cua nen. Nut trong dai theo mau nut chinh chung --color-cta (globals.css).
 
 $brand: #4f2bff;
-$brand-dark: #2c14b8;
 $ink: #0b0c1e;
 
 .wrap {
@@ -12,16 +12,16 @@ $ink: #0b0c1e;
 // Mau mac dinh cua tung kieu - style inline (bannerStyle) ghi de len.
 .guest {
   --promo-btn-bg: #fff;
-  --promo-btn-text: #{$brand};
+  --promo-btn-text: var(--color-cta);
   --promo-btn-hover-bg: #ffc93c;
   --promo-btn-hover-text: #{$ink};
   padding-block: calc(var(--spacing) * 10) calc(var(--spacing) * 2);
 }
 
 .member {
-  --promo-btn-bg: #{$ink};
+  --promo-btn-bg: var(--color-cta);
   --promo-btn-text: #fff;
-  --promo-btn-hover-bg: #{$brand-dark};
+  --promo-btn-hover-bg: var(--color-cta-hover);
   --promo-btn-hover-text: #fff;
   padding-block: calc(var(--spacing) * 8) 0;
 }

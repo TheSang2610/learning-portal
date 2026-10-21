@@ -121,7 +121,7 @@ $ink: #0b0c1e;
   align-items: center;
   gap: calc(var(--spacing) * 2);
   border-radius: var(--radius-xl);
-  background-color: $ink;
+  background-color: var(--color-cta);
   padding: calc(var(--spacing) * 3.5) calc(var(--spacing) * 6);
   font-size: 15px;
   font-weight: var(--font-weight-semibold);
@@ -130,12 +130,12 @@ $ink: #0b0c1e;
 
   @media (hover: hover) {
     &:hover {
-      background-color: $pink-ink;
+      background-color: var(--color-cta-hover);
     }
   }
 
   &:focus-visible {
-    outline: 3px solid $pink;
+    outline: 3px solid var(--color-cta);
     outline-offset: 3px;
   }
 }

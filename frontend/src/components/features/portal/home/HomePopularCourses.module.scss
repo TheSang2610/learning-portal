@@ -220,13 +220,14 @@
   color: var(--color-gray-500);
 }
 
+// Cot khong co nen rieng nua: truoc la khung xanh nhat #e8efff, trong do the
+// trang, anh nen xanh nhat, nut xanh - xanh chong xanh, cac lop lan vao nhau.
+// Gio the trang co vien (CourseListCard) dat thang tren nen xam cua khu, tieu
+// de cot du de gom nhom.
 .col3 {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--spacing) * 4);
-  border-radius: var(--radius-2xl);
-  background-color: #e8efff;
-  padding: calc(var(--spacing) * 4);
+  gap: calc(var(--spacing) * 3);
 }
 
 .box12 {

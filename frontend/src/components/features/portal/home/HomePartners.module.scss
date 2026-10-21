@@ -136,6 +136,23 @@
   background-image: linear-gradient(to left, #f6f7fb, rgb(246 247 251 / 0));
 }
 
+/* Nut tro ly (HeartBot, 60px, cach mep phai 20px - AssistantChat.module.scss)
+   co dinh o goc duoi phai, man hinh dau tien no nam dung tren dai nay va de len
+   chu cua logo dang troi qua. Tu tablet tro len: 88px sat mep PHAI la nen dac
+   (vua cho nut) roi mo dan trong 72px - logo troi toi do la da tat han. Chi
+   mep phai, vi nut chi o ben phai; mep trai giu nguyen de dai logo khong bi
+   hep di. Dien thoai giu nhu cu: dai hep, mat 88px qua nhieu. */
+@media (min-width: 48rem) {
+  .floating2 {
+    width: calc(var(--spacing) * 40);
+    background-image: linear-gradient(
+      to left,
+      #f6f7fb calc(var(--spacing) * 22),
+      rgb(246 247 251 / 0)
+    );
+  }
+}
+
 .row3 {
   display: flex;
   width: max-content;

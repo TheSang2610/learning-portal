@@ -73,12 +73,17 @@ const scoreDocument = (course, boi = {}) => {
     const studentCount = Number(course.studentCount) || 0;
     if (studentCount > 0) {
         score += Math.min(studentCount / POPULARITY_THRESHOLD, 1) * MAX_POPULARITY_SCORE;
-        if (!wallet) wallet = 'Đang được nhiều người học';
     }
 
+    // Hai cau tren (cung linh vuc / hoc vien giong ban) la ly do RIENG cua khoa
+    // nay voi nguoi nay; hai cau duoi la cau chung, khoa nao cung ra giong nhau.
+    // Giao dien chi hien ly do cu the - cau chung lap lai duoi moi the chi rot.
+    const specific = !!wallet;
+
+    if (studentCount > 0 && !wallet) wallet = 'Đang được nhiều người học';
     if (!wallet) wallet = 'Có thể bạn quan tâm';
 
-    return { diem: score, vi: wallet };
+    return { diem: score, vi: wallet, cuThe: specific };
 };
 
 /**
@@ -95,8 +100,8 @@ const rankSuggestions = (list, boi = {}, count = 6) => {
     return list
         .filter((k) => k && k._id && !learned.has(String(k._id)))
         .map((k) => {
-            const { diem: score, vi: wallet } = scoreDocument(k, boi);
-            return { ...k, diemGoiY: score, viSaoGoiY: wallet };
+            const { diem: score, vi: wallet, cuThe: specific } = scoreDocument(k, boi);
+            return { ...k, diemGoiY: score, viSaoGoiY: wallet, goiYCuThe: specific };
         })
         .sort((a, b) => {
             if (b.diemGoiY !== a.diemGoiY) return b.diemGoiY - a.diemGoiY;

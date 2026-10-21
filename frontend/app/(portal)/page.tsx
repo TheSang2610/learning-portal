@@ -23,6 +23,8 @@ import { HOME_PAGE } from "@/src/constants/portal/home-page";
 // serverless moi luot xem".
 export const revalidate = 60;
 
+export const metadata = HOME_PAGE.metadata;
+
 /**
  * Trang chu cho KHACH (landing). Nguoi da dang nhap khong toi day: proxy.ts dua
  * "/" sang app/(portal)/home/page.tsx (dashboard) khi thay cookie phien.

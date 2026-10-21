@@ -474,6 +474,13 @@ const explore: HomeExploreData = {
  * khong dung ham - xem fillTemplate trong lib/format.ts.
  */
 export const HOME_PAGE = {
+  // Truoc day trang chu khong co title: tab trinh duyet trong ten, ket qua tim
+  // kiem cung khong co dong tieu de. Ten thuong hieu lay theo logo (BrandLogo).
+  metadata: {
+    title: "Learning Platform – Học có lộ trình, lấy chứng nhận",
+    description:
+      "Khóa học trực tuyến xếp bài theo lộ trình, bài kiểm tra chấm ngay và chứng nhận có mã tra cứu công khai. Nhiều khóa học miễn phí.",
+  },
   api: {
     categories: "/api/categories",
     providers: "/api/providers",

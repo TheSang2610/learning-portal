@@ -118,68 +118,34 @@
 }
 
 .card2 {
-  --tw-gradient-from: #8b6bff;
-  --tw-gradient-stops: var(
-    --tw-gradient-via-stops,
-    var(--tw-gradient-position),
-    var(--tw-gradient-from) var(--tw-gradient-from-position),
-    var(--tw-gradient-to) var(--tw-gradient-to-position)
-  );
-  --tw-gradient-to: #4f2bff;
+  // Nut chinh cua trang: nen dac --color-cta, cung mau voi moi nut chinh khac
+  // (globals.css). Truoc la gradient tim, viet bang ca bo bien --tw-gradient-*.
   font-family: var(--chu-hien), "Inter", system-ui, sans-serif;
   display: inline-flex;
   align-items: center;
   gap: calc(var(--spacing) * 2.5);
   border-radius: 3.40282e38px;
-  --tw-gradient-position: to bottom right;
-  background-image: linear-gradient(var(--tw-gradient-stops));
+  background-color: var(--color-cta);
   padding-inline: calc(var(--spacing) * 7);
   padding-block: calc(var(--spacing) * 3.5);
   font-size: var(--text-base);
   line-height: var(--tw-leading, var(--text-base--line-height));
-  --tw-font-weight: var(--font-weight-bold);
   font-weight: var(--font-weight-bold);
   color: var(--color-white);
-  --tw-shadow: 0 16px 30px -16px var(--tw-shadow-color, #4f2bffd9);
-  box-shadow:
-    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
-    var(--tw-ring-shadow), var(--tw-shadow);
-  transition-property:
-    color,
-    background-color,
-    border-color,
-    outline-color,
-    text-decoration-color,
-    fill,
-    stroke,
-    --tw-gradient-from,
-    --tw-gradient-via,
-    --tw-gradient-to,
-    opacity,
-    box-shadow,
-    transform,
-    translate,
-    scale,
-    rotate,
-    filter,
-    -webkit-backdrop-filter,
-    backdrop-filter,
-    display,
-    content-visibility,
-    overlay,
-    pointer-events;
-  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
-  transition-duration: var(--tw-duration, var(--default-transition-duration));
-
-  @supports (background-image: linear-gradient(in lab, red, red)) {
-    --tw-gradient-position: to bottom right in oklab;
-  }
+  box-shadow: 0 16px 30px -16px color-mix(in srgb, var(--color-cta) 85%, transparent);
+  transition:
+    background-color 0.2s,
+    translate 0.2s;
 
   @media (hover: hover) {
     &:hover {
-      --tw-translate-y: calc(var(--spacing) * -0.5);
-      translate: var(--tw-translate-x) var(--tw-translate-y);
+      background-color: var(--color-cta-hover);
+      translate: 0 calc(var(--spacing) * -0.5);
     }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
   }
 }
 
@@ -237,10 +203,11 @@
   transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
   transition-duration: var(--tw-duration, var(--default-transition-duration));
 
+  // Nut phu dung canh nut chinh: hover cung mau --color-cta, khong doi sang tim.
   @media (hover: hover) {
     &:hover {
-      border-color: #4f2bff;
-      color: #4f2bff;
+      border-color: var(--color-cta);
+      color: var(--color-cta);
     }
   }
 }
@@ -569,7 +536,8 @@
 .label7 {
   display: block;
   font-size: 0.72rem;
-  color: var(--color-slate-500);
+  // slate-500 tren nen xam nhat chi dat 4.4:1, chu 11.5px can >= 4.5:1.
+  color: var(--color-slate-600);
 }
 
 .text2 {
