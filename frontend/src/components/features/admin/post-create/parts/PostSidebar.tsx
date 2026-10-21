@@ -1,10 +1,11 @@
-import { Eye, ImageOff, ListTree } from "lucide-react";
+import { Eye, ListTree } from "lucide-react";
 
-import SafeImage from "@/src/components/ui/SafeImage";
 import { ADMIN_POST_CREATE as C } from "@/src/constants/admin/post-create-page";
 
 import type { PostEditorState } from "../hooks/usePostEditor";
 import styles from "../AdminPostCreate.module.scss";
+import TagInput from "./TagInput";
+import ThumbnailPicker from "./ThumbnailPicker";
 
 /** The Xuat ban: trang thai + duong dan. */
 function PublishCard({ s }: { s: PostEditorState }) {
@@ -67,49 +68,15 @@ function ClassifyCard({ s }: { s: PostEditorState }) {
       </select>
 
       <label htmlFor="tags" className={styles.fieldLabel3}>
-        {K.tags} <span className={styles.label3}>{K.tagsHint}</span>
+        {K.tags}{" "}
+        <span className={styles.label3}>{K.tagsCount(s.tags.length, C.maxTags)}</span>
       </label>
-      <input
+      <TagInput
         id="tags"
-        value={s.tags}
-        onChange={(e) => s.setTags(e.target.value)}
-        placeholder={K.tagsPlaceholder}
-        className={styles.input2}
+        tags={s.tags}
+        onChange={s.setTags}
+        suggestions={s.tagSuggestions}
       />
-      <p className={styles.text6}>{K.tagsNote}</p>
-    </div>
-  );
-}
-
-/** The Anh dai dien: duong dan + xem truoc. */
-function ThumbnailCard({ s }: { s: PostEditorState }) {
-  const T = C.thumbnail;
-  return (
-    <div className={styles.card5}>
-      <h4 className={styles.minorHeading}>{T.heading}</h4>
-      <input
-        value={s.anh}
-        onChange={(e) => s.setImage(e.target.value)}
-        placeholder={T.placeholder}
-        aria-label={T.aria}
-        className={styles.input2}
-      />
-      <div className={styles.box6}>
-        {s.anh.trim() ? (
-          <SafeImage
-            src={s.anh.trim()}
-            alt={T.alt}
-            fill
-            sizes="320px"
-            className={styles.box7}
-          />
-        ) : (
-          <div className={styles.col}>
-            <ImageOff size={24} />
-            <span className={styles.label4}>{T.empty}</span>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
@@ -166,7 +133,7 @@ export default function PostSidebar({ s }: { s: PostEditorState }) {
     <div className={styles.stack}>
       <PublishCard s={s} />
       <ClassifyCard s={s} />
-      <ThumbnailCard s={s} />
+      <ThumbnailPicker value={s.anh} onChange={s.setImage} />
       <OutlineCard s={s} />
 
       <div className={styles.card7}>

@@ -354,6 +354,8 @@
 
 .cell4 {
   display: block;
+  // Khong co dong nay thi nut "An Quiz" bi be thanh 3 dong khi thieu cho.
+  white-space: nowrap;
   padding: calc(var(--spacing) * 5);
   text-align: right;
 
@@ -743,4 +745,31 @@
     pointer-events;
   transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
   transition-duration: var(--tw-duration, var(--default-transition-duration));
+}
+
+// Ten bai la nut mo cua so xem truoc.
+.previewTrigger {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover span:last-child {
+      color: var(--color-blue-600);
+      text-decoration: underline;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-blue-600);
+    outline-offset: 4px;
+    border-radius: var(--radius-md);
+  }
 }

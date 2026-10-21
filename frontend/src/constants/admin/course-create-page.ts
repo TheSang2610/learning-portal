@@ -33,6 +33,12 @@ export const ADMIN_COURSE_CREATE = {
     none: "-- Hệ thống LMS cấp chứng chỉ độc lập --",
     universityPrefix: "[Trường học] ",
     companyPrefix: "[Doanh nghiệp] ",
+    add: "Thêm đối tác mới",
+    namePlaceholder: "Tên trường / doanh nghiệp",
+    typeUniversity: "Trường học",
+    typeCompany: "Doanh nghiệp",
+    logo: "Logo (không bắt buộc)",
+    created: (name: string) => `Đã thêm đối tác "${name}" và chọn cho khóa học.`,
   },
   instructor: {
     label: "Giảng viên phụ trách khóa học",
@@ -40,7 +46,20 @@ export const ADMIN_COURSE_CREATE = {
     option: (name: string, email: string) => `${name} (${email})`,
     noneFound: "Lưu ý: Không tìm thấy tài khoản nào có vai trò Giảng viên (Instructor).",
   },
-  categories: { label: "Danh mục liên kết (Có thể chọn nhiều)" },
+  categories: {
+    label: "Danh mục liên kết (Có thể chọn nhiều)",
+    add: "Thêm danh mục mới",
+    namePlaceholder: "Tên danh mục mới, vd: Thiết kế UI/UX",
+    selected: (n: number) => `Đã chọn ${n}`,
+  },
+  quickAdd: {
+    open: "Thêm mới",
+    save: "Thêm",
+    saving: "Đang thêm...",
+    cancel: "Hủy",
+    needName: "Vui lòng nhập tên.",
+    failed: "Không thêm được",
+  },
 
   submit: { idle: "Tạo & Lưu Khóa Học", busy: "Đang xử lý..." },
 

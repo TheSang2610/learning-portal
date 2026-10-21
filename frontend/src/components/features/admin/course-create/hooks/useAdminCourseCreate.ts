@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 
 import { ADMIN_COURSE_CREATE as C } from "@/src/constants/admin/course-create-page";
 import { convertToSlug } from "@/src/lib/slug";
-import { getCategories, Category } from "@/src/services/categoryService";
+import { getErrorMessage } from "@/src/services/apiHelper";
+import { createCategory, getCategories, Category } from "@/src/services/categoryService";
 import { createCourse } from "@/src/services/course";
-import { getProviders, ProviderData } from "@/src/services/provider";
+import { createProviderAdmin, getProviders, ProviderData } from "@/src/services/provider";
 import { getUsers, User } from "@/src/services/userApi";
 import type {
   AdminCourseCreateFormData,
@@ -97,6 +98,45 @@ export function useAdminCourseCreate() {
     }
   };
 
+  /**
+   * Them danh muc moi ngay trong form roi chon luon - khoi phai bo form dang
+   * dien do sang trang Danh muc. Tra ve thong bao loi (rong = thanh cong) de o
+   * nhap tu hien, khong dung alert.
+   */
+  const createCategoryInline = async (name: string): Promise<string> => {
+    try {
+      const created = await createCategory({ name, slug: "" });
+      setCategories((list) => [...list, created]);
+      setFormData((data) => ({ ...data, category: [...data.category, created._id] }));
+      return "";
+    } catch (error) {
+      return getErrorMessage(error, C.quickAdd.failed);
+    }
+  };
+
+  /** Them doi tac / truong hoc moi (logo tuy chon) roi chon cho khoa hoc. */
+  const createProviderInline = async (
+    name: string,
+    type: "company" | "university",
+    logo: File | null,
+  ): Promise<string> => {
+    try {
+      const body = new FormData();
+      body.append("name", name);
+      body.append("type", type);
+      if (logo) body.append("logo", logo);
+      const created = await createProviderAdmin(body);
+      setProviders((list) => [...list, created]);
+      if (created._id) {
+        const id = created._id;
+        setFormData((data) => ({ ...data, providerId: id }));
+      }
+      return "";
+    } catch (error) {
+      return getErrorMessage(error, C.quickAdd.failed);
+    }
+  };
+
   const submitHandler = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.category.length === 0) return alert(C.messages.needCategory);
@@ -146,6 +186,8 @@ export function useAdminCourseCreate() {
     changeHandler,
     handleFileChange,
     handleCategoryToggle,
+    createCategoryInline,
+    createProviderInline,
     submitHandler,
   };
 }

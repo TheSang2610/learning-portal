@@ -99,6 +99,19 @@ export const postService = {
   getAdminPost: async (id: string): Promise<BlogPost> =>
     apiRequest(`/posts/admin/${id}`, { method: "GET" }),
 
+  /**
+   * Tai anh len Cloudinary, tra ve URL de gan vao thumbnail. Truyen FormData,
+   * KHONG tu dat Content-Type: apiHelper de trinh duyet tu sinh boundary.
+   */
+  uploadImage: async (
+    file: Blob,
+    name = "anh-bai-viet.jpg",
+  ): Promise<{ url: string }> => {
+    const fd = new FormData();
+    fd.append("image", file, name);
+    return apiRequest("/posts/upload-image", { method: "POST", body: fd });
+  },
+
   deletePost: async (id: string): Promise<{ message: string }> =>
     apiRequest(`/posts/${id}`, { method: "DELETE" }),
 };

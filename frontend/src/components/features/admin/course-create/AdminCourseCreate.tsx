@@ -45,6 +45,8 @@ export default function AdminCourseCreate() {
           categories={f.categories}
           onChange={f.changeHandler}
           onToggleCategory={f.handleCategoryToggle}
+          onCreateCategory={f.createCategoryInline}
+          onCreateProvider={f.createProviderInline}
         />
 
         <button

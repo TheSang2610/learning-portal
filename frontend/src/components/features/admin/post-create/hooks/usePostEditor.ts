@@ -23,7 +23,8 @@ export function usePostEditor() {
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
   const [topic, setTopic] = useState<string>(C.defaultTopic);
-  const [tags, setTags] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [usedTags, setUsedTags] = useState<string[]>([]);
   const [image, setImage] = useState("");
   const [published, setPublished] = useState(true);
   const [slug, setSlug] = useState("");
@@ -37,6 +38,13 @@ export function usePostEditor() {
       .getTopics()
       .then(setTopics)
       .catch(() => setTopics([]));
+
+    // Goi y tag = nhung tag hay dung nhat o cac bai gan day, de cac bai cung
+    // chu de viet tag giong nhau ("React" chu khong luc "ReactJS" luc "react").
+    postService
+      .getAdminPosts({ limit: 50 })
+      .then((r) => setUsedTags(rankTags(r.posts.flatMap((p) => p.tags ?? []))))
+      .catch(() => setUsedTags([]));
   }, []);
 
   // Lay bai cu khi sua. Dung /admin/:id chu khong phai /:slug vi ham cong khai
@@ -52,7 +60,7 @@ export function usePostEditor() {
         setDescription(p.excerpt);
         setContent(p.content ?? "");
         setTopic(p.topic);
-        setTags(p.tags.join(", "));
+        setTags(p.tags ?? []);
         setImage(p.thumbnail ?? "");
         setPublished(p.isPublished !== false);
         setSlug(p.slug);
@@ -100,11 +108,7 @@ export function usePostEditor() {
       excerpt: description.trim(),
       content: content.trim(),
       topic: topic,
-      tags: tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean)
-        .slice(0, C.maxTags),
+      tags: tags.slice(0, C.maxTags),
       thumbnail: image.trim(),
       isPublished: published,
     };
@@ -144,6 +148,7 @@ export function usePostEditor() {
     setTopic,
     tags,
     setTags,
+    tagSuggestions: mergeSuggestions(usedTags, C.classify.defaultSuggestions),
     anh: image,
     setImage,
     published,
@@ -155,6 +160,33 @@ export function usePostEditor() {
     outline,
     luu: save,
   };
+}
+
+/** Dem so lan xuat hien (khong phan biet hoa thuong), giu cach viet gap dau tien. */
+function rankTags(all: string[]) {
+  const counts = new Map<string, { tag: string; n: number }>();
+  for (const raw of all) {
+    const tag = raw.trim();
+    if (!tag) continue;
+    const key = tag.toLowerCase();
+    const hit = counts.get(key);
+    if (hit) hit.n += 1;
+    else counts.set(key, { tag, n: 1 });
+  }
+  return [...counts.values()].sort((a, b) => b.n - a.n).map((x) => x.tag);
+}
+
+/** Tag da dung truoc, roi bo mac dinh; bo trung, toi da 8 nut. */
+function mergeSuggestions(used: string[], defaults: readonly string[]) {
+  const seen = new Set<string>();
+  return [...used, ...defaults]
+    .filter((t) => {
+      const key = t.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 8);
 }
 
 export type PostEditorState = ReturnType<typeof usePostEditor>;

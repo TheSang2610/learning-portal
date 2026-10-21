@@ -5,6 +5,8 @@ const { TOPICS, TOPIC_NAMES } = require('../models/Post');
 const { checkText } = require('../utils/contentFilter');
 const { createSlug, splitTags } = require('../utils/textUtils');
 const { normalizeContent, stripTags } = require('../utils/postHtml');
+const getCloudinary = require('../config/cloudinary');
+const { uploadToCloudinary } = require('../utils/uploadCloud');
 
 // Bang dung gioi han cua truong content trong model.
 const MAX_CONTENT = 120000;
@@ -314,6 +316,34 @@ const deletePost = async (req, res) => {
     }
 };
 
+// @desc    Tai anh (anh dai dien bai / anh chen trong bai) len Cloudinary
+// @route   POST /api/posts/upload-image
+//
+// Trinh duyet da cat dung 16:9 truoc khi gui, nen o day chi can gioi han be
+// ngang de anh chup 4000px khong bi luu nguyen. Chi tra ve URL; bai viet van
+// luu thumbnail la chuoi URL nhu cu, nen dan link tay van chay y nguyen.
+const uploadPostImage = async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ message: 'Vui lòng chọn một tấm ảnh' });
+
+        const c = getCloudinary().config();
+        if (!c.cloud_name || !c.api_key || !c.api_secret) {
+            return res.status(503).json({
+                message: 'Máy chủ chưa cấu hình Cloudinary nên chưa nhận ảnh tải lên. Bạn vẫn dán được đường dẫn ảnh.',
+            });
+        }
+
+        const result = await uploadToCloudinary(req.file.buffer, 'image', {
+            folder: 'learning-portal/posts',
+            transformation: [{ width: 1600, crop: 'limit', quality: 'auto' }],
+        });
+        res.status(201).json({ url: result.secure_url });
+    } catch (error) {
+        console.error('uploadPostImage error:', error);
+        res.status(500).json({ message: error.message || 'Không tải được ảnh lên' });
+    }
+};
+
 module.exports = {
     getPosts,
     getTopics,
@@ -323,4 +353,5 @@ module.exports = {
     deletePost,
     getAdminPosts,
     getAdminPostById,
+    uploadPostImage,
 };

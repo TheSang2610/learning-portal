@@ -61,17 +61,51 @@ export const ADMIN_POST_CREATE = {
     topic: "Chủ đề",
     othersLabel: "Others",
     tags: "Tags",
-    tagsHint: "(cách nhau bằng dấu phẩy)",
-    tagsPlaceholder: "React 19, hooks",
-    tagsNote: "Tối đa 5 tag. Tag đầu tiên hiện trên thẻ ngoài danh sách.",
+    tagsCount: (n: number, max: number) => `(${n}/${max})`,
+    tagsPlaceholder: "Thêm tag rồi Enter...",
+    tagsAdd: "Thêm tag",
+    tagsRemove: (tag: string) => `Bỏ tag ${tag}`,
+    tagsMain: "Tag chính — hiện trên thẻ ngoài danh sách",
+    tagsFull: "Đã đủ 5 tag. Bỏ bớt một tag để thêm tag khác.",
+    tagsNote:
+      "Enter hoặc dấu phẩy để thêm. Tag đầu tiên (★) hiện trên thẻ ngoài danh sách.",
+    tagsSuggest: "Gợi ý chọn nhanh:",
+    /** Dung khi chua co bai nao co tag de goi y. */
+    defaultSuggestions: ["ReactJS", "NestJS", "Tailwind", "Python", "Database"],
+    /** Tag dai qua lam vo the ngoai danh sach. */
+    tagMaxLength: 30,
   },
 
   thumbnail: {
     heading: "Ảnh đại diện",
+    ratio: "Chuẩn 16:9",
+    tabUrl: "Dán URL",
+    tabUpload: "Tải file lên",
     placeholder: "https://images.unsplash.com/...",
     aria: "Đường dẫn ảnh đại diện",
+    fileAria: "Chọn ảnh từ máy",
+    fileNote: "JPG, PNG, WEBP hoặc GIF, tối đa 15MB. Chọn xong sẽ mở khung cắt 16:9.",
     alt: "Xem trước ảnh đại diện",
     empty: "Chưa có ảnh",
+    crop: "Cắt / Sửa",
+    remove: "Xóa",
+    uploading: "Đang tải ảnh lên...",
+    notImage: "File này không phải ảnh.",
+    tooBig: "Ảnh tối đa 15MB.",
+    /** Anh goc duoc cat o trinh duyet roi moi gui (~300KB), nen nhan anh goc lon. */
+    maxMb: 15,
+    uploadFailed: "Không tải được ảnh lên.",
+    corsBlocked:
+      'Máy chủ của link ảnh này không cho cắt ảnh. Hãy lưu ảnh về máy rồi dùng "Tải file lên".',
+    modal: {
+      title: "Chỉnh sửa & Cắt ảnh (Tỉ lệ 16:9)",
+      hint: "Kéo ảnh để chọn vùng, lăn chuột hoặc kéo thanh để phóng to.",
+      zoom: "Phóng to",
+      cancel: "Hủy",
+      apply: "Áp dụng ảnh đã cắt",
+    },
+    /** Kich thuoc anh sau khi cat: du net cho anh bia o trang doc tren man hinh retina. */
+    output: { width: 1280, height: 720, quality: 0.9 },
   },
 
   outline: {

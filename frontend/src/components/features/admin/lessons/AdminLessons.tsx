@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Plus } from "lucide-react";
@@ -9,12 +9,15 @@ import { ADMIN_LESSONS as C } from "@/src/constants/admin/lessons-page";
 import { useCourseLessons } from "@/src/hooks/useCourseLessons";
 
 import AdminLessonRow from "./parts/AdminLessonRow";
+import LessonPreview from "./parts/LessonPreview";
 import styles from "./AdminLessons.module.scss";
 
 function AdminLessonsContent() {
   const params = useSearchParams();
   const courseId = params.get("courseId") || "";
   const l = useCourseLessons(courseId, C.messages);
+  // Bai dang xem truoc (vi tri trong danh sach); null = dong cua so.
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
 
   if (l.loading) return <div className={styles.box}>{C.loading}</div>;
 
@@ -65,6 +68,7 @@ function AdminLessonsContent() {
                   onDeleteLesson={l.handleDeleteLesson}
                   onToggleQuiz={l.handleTogglePublishQuiz}
                   onDeleteQuiz={l.handleDeleteQuiz}
+                  onPreview={() => setPreviewIndex(index)}
                 />
               ))
             ) : (
@@ -77,6 +81,16 @@ function AdminLessonsContent() {
           </tbody>
         </table>
       </div>
+
+      {previewIndex !== null && l.lessons[previewIndex] && (
+        <LessonPreview
+          lessons={l.lessons}
+          index={previewIndex}
+          quizOfLesson={l.quizOfLesson}
+          onNavigate={setPreviewIndex}
+          onClose={() => setPreviewIndex(null)}
+        />
+      )}
     </div>
   );
 }

@@ -13,6 +13,7 @@ import { ADMIN_LESSONS as C } from "@/src/constants/admin/lessons-page";
 import type { Quiz } from "@/src/services/quizService";
 import type { LessonRow } from "@/src/types/lesson";
 
+import { formatDuration } from "./LessonPreview";
 import styles from "../AdminLessons.module.scss";
 
 interface AdminLessonRowProps {
@@ -23,6 +24,8 @@ interface AdminLessonRowProps {
   onDeleteLesson: (lessonId: string) => void;
   onToggleQuiz: (quizId: string) => void;
   onDeleteQuiz: (quizId: string) => void;
+  /** Mo cua so xem truoc bai (video + bai tap nhu hoc vien thay). */
+  onPreview: () => void;
 }
 
 /** Mot bai hoc: ten, thoi luong, trang thai quiz, thao tac quiz va bai hoc. */
@@ -34,21 +37,29 @@ export default function AdminLessonRow({
   onDeleteLesson,
   onToggleQuiz,
   onDeleteQuiz,
+  onPreview,
 }: AdminLessonRowProps) {
   return (
     <tr className={styles.row}>
       <td className={styles.cell}>
         <span className={styles.label2}>#{index + 1}</span>
-        <div className={styles.box3}>
-          <Video size={16} />
-        </div>
-        <span className={styles.label3}>{lesson.title}</span>
+        {/* Ca cum bieu tuong + ten bai la mot nut: bam vao xem truoc bai. */}
+        <button
+          type="button"
+          onClick={onPreview}
+          className={styles.previewTrigger}
+          title={C.preview.openHint}
+        >
+          <span className={styles.box3}>
+            <Video size={16} />
+          </span>
+          <span className={styles.label3}>{lesson.title}</span>
+        </button>
       </td>
 
       <td className={styles.cell2}>
-        {lesson.duration
-          ? `${Math.round(Number(lesson.duration) / 60)} ${C.row.minutes}`
-          : C.row.noDuration}
+        {/* duration la chuoi "12:30" trong model; cach cu chia cho 60 ra NaN. */}
+        {formatDuration(lesson.duration) || C.row.noDuration}
       </td>
 
       <td className={styles.cell3}>
@@ -88,7 +99,8 @@ export default function AdminLessonRow({
               className={`${styles.button5} ${quiz.isPublished ? styles.button : styles.button2}`}
             >
               {quiz.isPublished ? <XCircle size={12} /> : <CheckCircle2 size={12} />}
-              {quiz.isPublished ? C.row.hideQuiz : C.row.showQuiz}
+              {/* Chu trong <span>: chi co svg la con thi DashboardShell coi la nut icon. */}
+              <span>{quiz.isPublished ? C.row.hideQuiz : C.row.showQuiz}</span>
             </button>
 
             <button
