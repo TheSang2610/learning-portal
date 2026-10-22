@@ -136,3 +136,11 @@ test('than request rac thi tra mang rong chu khong nem loi', () => {
     assert.deepStrictEqual(parseBankCredits(undefined), []);
     assert.deepStrictEqual(parseBankCredits([{ id: 1 }]), []);
 });
+
+test('don re (gia toi thieu 2.000d) khong cho chuyen thieu qua 20%', () => {
+    // Truoc khi co tran 20%, dung sai san 2.000d lam chuyen 1d cung du.
+    assert.strictEqual(isPaidEnough(1, 2000), false);
+    assert.strictEqual(isPaidEnough(1599, 2000), false);
+    assert.strictEqual(isPaidEnough(1600, 2000), true);
+    assert.strictEqual(isPaidEnough(2000, 2000), true);
+});

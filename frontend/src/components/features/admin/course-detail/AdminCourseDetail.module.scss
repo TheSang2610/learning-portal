@@ -719,3 +719,10 @@
   line-height: 1.5;
   color: var(--color-slate-500);
 }
+
+// Goi y duoi o gia: 0 = mien phi, khoa co phi toi thieu 2.000d (lib/course-price.ts).
+.priceHint {
+  margin-top: calc(var(--spacing) * 1.5);
+  font-size: var(--text-xs);
+  color: var(--color-slate-500);
+}

@@ -4,6 +4,7 @@ const Course = require('../models/Course');
 const { createEnrollment } = require('../utils/enrollment');
 const User = require('../models/User');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
+const { priceError } = require('../utils/coursePrice');
 const { canViewContent, stripContent } = require('../utils/contentAccess');
 const { attachPlaybackUrl } = require('../utils/privateVideo');
 const Enrollment = require('../models/Enrollment');
@@ -57,6 +58,9 @@ const createCourse = async (req, res) => {
     try {
         const { title, description, price, category, instructorId, provider, providerId } = req.body;
         const chosenProvider = provider || providerId || null;
+
+        const badPrice = priceError(price);
+        if (badPrice) return res.status(400).json({ message: badPrice });
 
         const slug = slugify(title);
 
@@ -313,7 +317,11 @@ const updateCourse = async (req, res) => {
 
         // Cập nhật các thông tin cơ bản khác
         if (req.body.description !== undefined) updateData.description = req.body.description;
-        if (req.body.price !== undefined) updateData.price = Number(req.body.price);
+        if (req.body.price !== undefined) {
+            const badPrice = priceError(req.body.price);
+            if (badPrice) return res.status(400).json({ message: badPrice });
+            updateData.price = Number(req.body.price);
+        }
         // Thoi han hoc: chi quan tri dat (utils/accessPeriod.js).
         if (req.body.accessDays !== undefined && req.user.role === 'admin') {
             const days = Number(req.body.accessDays);

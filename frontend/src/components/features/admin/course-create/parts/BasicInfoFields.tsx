@@ -1,4 +1,5 @@
 import { ADMIN_COURSE_CREATE as C } from "@/src/constants/admin/course-create-page";
+import { checkPriceInput, COURSE_PRICE_HINT } from "@/src/lib/course-price";
 import type {
   AdminCourseCreateFormData,
   FieldChangeEvent,
@@ -67,11 +68,17 @@ export default function BasicInfoFields({
             type="number"
             name="price"
             value={formData.price}
-            onChange={onChange}
+            onChange={(e) => {
+              checkPriceInput(e);
+              onChange(e);
+            }}
+            onInvalid={checkPriceInput}
             className={styles.input2}
             min={0}
+            step={1}
             required
           />
+          <p className={styles.priceHint}>{COURSE_PRICE_HINT}</p>
         </div>
 
         <div>

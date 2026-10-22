@@ -38,13 +38,17 @@ const normalizeContent = (content) =>
  */
 const TOLERANCE_RATE = 0.02;
 const MIN_TOLERANCE = 2000;
+// Tran tren cua dung sai: khong bao gio duoc thieu qua 20% gia don. Khong co
+// tran nay thi don 2.000d (gia toi thieu, utils/coursePrice.js) co dung sai
+// 2.000d - tuc la chuyen 1d cung "du" va mo khoa.
+const MAX_SHORT_RATE = 0.2;
 
 const isPaidEnough = (amountReceived, amountDue) => {
     const received = Number(amountReceived);
     const can = Number(amountDue);
     if (!Number.isFinite(received) || !Number.isFinite(can) || can <= 0) return false;
 
-    const tolerance = Math.max(MIN_TOLERANCE, can * TOLERANCE_RATE);
+    const tolerance = Math.min(Math.max(MIN_TOLERANCE, can * TOLERANCE_RATE), can * MAX_SHORT_RATE);
     return received >= can - tolerance;
 };
 
@@ -128,5 +132,6 @@ module.exports = {
     parseBankCredit,
     parseBankCredits,
     TOLERANCE_RATE,
-    MIN_TOLERANCE
+    MIN_TOLERANCE,
+    MAX_SHORT_RATE
 };

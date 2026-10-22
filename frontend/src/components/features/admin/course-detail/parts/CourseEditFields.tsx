@@ -5,6 +5,7 @@
 import { Building2, Image as ImageIcon } from "lucide-react";
 
 import { ADMIN_COURSE_DETAIL as C } from "@/src/constants/admin/course-detail-page";
+import { checkPriceInput, COURSE_PRICE_HINT } from "@/src/lib/course-price";
 import type { ProviderData } from "@/src/services/provider";
 import type { AdminCourseEditFormData, FieldChangeEvent } from "@/src/types/course-form";
 
@@ -65,11 +66,17 @@ export default function CourseEditFields({
             type="number"
             name="price"
             value={formData.price}
-            onChange={onChange}
+            onChange={(e) => {
+              checkPriceInput(e);
+              onChange(e);
+            }}
+            onInvalid={checkPriceInput}
             className={styles.input2}
             min={0}
+            step={1}
             required
           />
+          <p className={styles.priceHint}>{COURSE_PRICE_HINT}</p>
         </div>
         <div>
           <label htmlFor="accessDays" className={styles.fieldLabel2}>
