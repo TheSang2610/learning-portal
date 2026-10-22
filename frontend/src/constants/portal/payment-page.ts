@@ -111,22 +111,15 @@ export const PAYMENT = {
       ].join("\n"),
   },
 
-  report: {
-    reportedAt: "Đã báo ban quản trị lúc ",
-    reportedText:
-      "Bên mình đang đối chiếu sao kê ngân hàng. Trang này tự kiểm tra lại — khoá học mở ra là thấy ngay, không phải tải lại.",
-    hint: "Chuyển khoản xong thì bấm nút này để báo cho ban quản trị đối chiếu. Đơn được xác nhận thủ công nên có thể mất vài phút.",
-    sending: "Đang gửi…",
-    iTransferred: "Tôi đã chuyển khoản",
-    mailFailed: {
-      a: "Tuy nhiên mail báo chưa gửi được, nên bạn nhắn thêm cho ban quản trị kèm mã ",
-      b: " cho chắc.",
-    },
+  /** Thanh toan tu xac nhan qua Casso - khong con nut "Tôi đã chuyển khoản". */
+  auto: {
+    title: "Chuyển khoản xong là xong",
+    text: "Hệ thống tự nhận tiền và mở khóa học, thường trong 1–2 phút. Trang này tự cập nhật — không cần bấm gì thêm, cũng không cần tải lại.",
+    waiting: "Đang chờ tiền về…",
   },
 
   messages: {
     loadFailed: "Không đọc được đơn hàng",
-    reportFailed: "Không gửi được thông báo",
     newCodeFailed: "Không tạo được mã mới",
     cancelFailed: "Không hủy được đơn",
   },

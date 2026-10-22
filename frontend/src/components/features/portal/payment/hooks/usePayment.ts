@@ -8,7 +8,6 @@ import { useCartStore } from "@/src/hooks/cart";
 import { coursesInOrder } from "@/src/lib/order";
 import { getErrorMessage } from "@/src/services/apiHelper";
 import {
-  reportTransfer,
   cancelOrder,
   getOrderByCode,
   createCartOrder,
@@ -28,11 +27,6 @@ export function usePayment() {
   const [remaining, setRemaining] = useState(0);
   const [cancelling, setCancelling] = useState(false);
   const [copiedAll, setCopiedAll] = useState(false);
-  const [reporting, setReporting] = useState(false);
-  const [reportResult, setReportResult] = useState<{
-    chu: string;
-    mailHong: boolean;
-  } | null>(null);
   const [recreating, setRecreating] = useState(false);
 
   // Giu trang thai gan nhat de vong hoi khong phai phu thuoc vao state,
@@ -98,29 +92,6 @@ export function usePayment() {
     return () => clearInterval(h);
   }, [currentOrder, reload]);
 
-  const clickTransferred = async () => {
-    if (!currentOrder) return;
-    setReporting(true);
-    try {
-      const r = await reportTransfer(currentOrder.code);
-      setReportResult({
-        chu: r.message,
-        // Chua cau hinh mail hoac gui hong -> phai noi that. De hoc vien ngoi
-        // cho mot cai mail khong bao gio den la cach chac chan nhat de mat
-        // khach: ho tuong da bao roi, con quan tri thi khong biet gi.
-        mailHong: !r.daGuiMail,
-      });
-      reload();
-    } catch (e) {
-      setReportResult({
-        chu: getErrorMessage(e, P.messages.reportFailed),
-        mailHong: true,
-      });
-    } finally {
-      setReporting(false);
-    }
-  };
-
   // Ma cu het han thi tao thang don moi va nhay sang, thay vi day nguoi dung
   // ve trang khoa hoc bat bam Mua lai tu dau.
   const regenerateCode = async () => {
@@ -173,10 +144,7 @@ export function usePayment() {
     conLai: remaining,
     cancelling,
     copiedAll,
-    reporting,
-    reportResult,
     recreating,
-    clickTransferred,
     regenerateCode,
     copyDetails,
     cancel,

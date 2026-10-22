@@ -6,7 +6,6 @@ import styles from "../Payment.module.scss";
 import BankTransfer from "./BankTransfer";
 import HoldClock from "./HoldClock";
 import OrderItems from "./OrderItems";
-import ReportTransfer from "./ReportTransfer";
 
 /** Don dang cho thanh toan. */
 export default function PaymentPending({
@@ -54,7 +53,17 @@ export default function PaymentPending({
         />
       )}
 
-      <ReportTransfer s={s} don={order} />
+      {/* Truoc 22/10/2026 cho nay la nut "Tôi đã chuyển khoản" gui mail cho quan
+          tri doi chieu tay. Gio Casso bao tien ve va may chu tu xac nhan, con
+          trang nay tu hoi lai trang thai moi P.pollMs - hoc vien khong can lam gi.
+          Don cu da bao chuyen khoan van giu dau vet o HoldClock (reported). */}
+      <div className={styles.card3} role="status">
+        <p className={styles.autoTitle}>
+          <span className={styles.autoDot} aria-hidden />
+          {P.auto.title}
+        </p>
+        <p className={styles.text9}>{P.auto.text}</p>
+      </div>
 
       {s.loi && <p className={styles.text12}>{s.loi}</p>}
 

@@ -629,28 +629,6 @@
   }
 }
 
-.card2 {
-  border-radius: var(--radius-2xl);
-  border-style: var(--tw-border-style);
-  border-width: 1px;
-  border-color: var(--color-emerald-200);
-  background-color: var(--color-emerald-50);
-  padding: calc(var(--spacing) * 4);
-  font-size: var(--text-sm);
-  line-height: var(--tw-leading, var(--text-sm--line-height));
-  color: var(--color-emerald-900);
-}
-
-.text7 {
-  --tw-font-weight: var(--font-weight-semibold);
-  font-weight: var(--font-weight-semibold);
-}
-
-.text8 {
-  margin-top: calc(var(--spacing) * 1);
-  color: var(--color-emerald-800);
-}
-
 .card3 {
   border-radius: var(--radius-2xl);
   border-style: var(--tw-border-style);
@@ -664,76 +642,6 @@
   font-size: var(--text-sm);
   line-height: var(--tw-leading, var(--text-sm--line-height));
   color: var(--color-slate-600);
-}
-
-.button4 {
-  margin-top: calc(var(--spacing) * 3);
-  width: 100%;
-  border-radius: var(--radius-2xl);
-  background-color: var(--color-emerald-600);
-  padding-inline: calc(var(--spacing) * 4);
-  padding-block: calc(var(--spacing) * 3);
-  font-size: var(--text-sm);
-  line-height: var(--tw-leading, var(--text-sm--line-height));
-  --tw-font-weight: var(--font-weight-bold);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-white);
-  transition-property:
-    color,
-    background-color,
-    border-color,
-    outline-color,
-    text-decoration-color,
-    fill,
-    stroke,
-    --tw-gradient-from,
-    --tw-gradient-via,
-    --tw-gradient-to,
-    opacity,
-    box-shadow,
-    transform,
-    translate,
-    scale,
-    rotate,
-    filter,
-    -webkit-backdrop-filter,
-    backdrop-filter,
-    display,
-    content-visibility,
-    overlay,
-    pointer-events;
-  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
-  transition-duration: var(--tw-duration, var(--default-transition-duration));
-
-  @media (hover: hover) {
-    &:hover {
-      background-color: var(--color-emerald-700);
-    }
-  }
-
-  &:disabled {
-    background-color: var(--color-slate-300);
-  }
-
-  @media (min-width: 40rem) {
-    width: auto;
-  }
-}
-
-.text10 {
-  border-style: var(--tw-border-style);
-  border-width: 1px;
-  border-color: var(--color-amber-200);
-  background-color: var(--color-amber-50);
-  color: var(--color-amber-900);
-}
-
-.text11 {
-  border-style: var(--tw-border-style);
-  border-width: 1px;
-  border-color: var(--color-emerald-200);
-  background-color: var(--color-emerald-50);
-  color: var(--color-emerald-900);
 }
 
 .text12 {
@@ -810,10 +718,38 @@
   font-size: var(--text-sm);
   line-height: var(--tw-leading, var(--text-sm--line-height));
 }
-.text13 {
-  margin-top: calc(var(--spacing) * 4);
-  border-radius: var(--radius-2xl);
-  padding: calc(var(--spacing) * 3);
+
+// Dong bao thanh toan tu dong (PaymentPending) - thay cho nut "Tôi đã chuyển khoản".
+.autoTitle {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  margin-bottom: calc(var(--spacing) * 1);
   font-size: var(--text-sm);
-  line-height: var(--tw-leading, var(--text-sm--line-height));
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-900);
+}
+
+// Cham xanh nhap nhay: trang dang tu hoi lai trang thai don.
+.autoDot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background-color: var(--color-green-600);
+  box-shadow: 0 0 0 0 rgb(22 163 74 / 0.5);
+  animation: autoPulse 1.6s ease-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes autoPulse {
+  70% {
+    box-shadow: 0 0 0 8px rgb(22 163 74 / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(22 163 74 / 0);
+  }
 }
