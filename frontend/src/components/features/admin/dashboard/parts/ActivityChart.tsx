@@ -15,8 +15,10 @@ import type { DashboardDay } from "@/src/services/adminService";
 
 import styles from "../AdminDashboard.module.scss";
 
-const COLORS = { enrollments: "#171717", users: "#a3a3a3" } as const;
-const SERIES = ["enrollments", "users"] as const;
+// Luot dang nhap mau xanh cho tach khoi hai chuoi xam: no la loai so khac
+// (hoat dong, khong phai ban ghi moi) nen ve rieng, khong chong len hai chuoi kia.
+const COLORS = { enrollments: "#171717", users: "#a3a3a3", logins: "#2563eb" } as const;
+const SERIES = ["enrollments", "users", "logins"] as const;
 
 const shortDate = (d: string) => {
   const [, m, day] = d.split("-");
@@ -93,6 +95,13 @@ export default function ActivityChart({ days }: { days: DashboardDay[] }) {
                 fontSize: 13,
                 boxShadow: "0 4px 12px rgb(0 0 0 / 0.08)",
               }}
+            />
+            <Area
+              dataKey="logins"
+              type="monotone"
+              fill="url(#fill-logins)"
+              stroke={COLORS.logins}
+              strokeWidth={1.5}
             />
             <Area
               dataKey="users"

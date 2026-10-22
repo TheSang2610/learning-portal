@@ -3,6 +3,7 @@ const { isValid, daCauHinh: isConfigured } = require('../config/bankWebhook');
 const { extractOrderCode, isPaidEnough, parseBankCredits } = require('../utils/matchBankTransfer');
 const Order = require('../models/Order');
 const { unlockOrder } = require('./adminOrderController');
+const { transferInfo } = require('../config/payment');
 
 /**
  * Nhan bao co tu ngan hang va tu mo khoa don hang ngay khi tien ve.
@@ -78,8 +79,24 @@ const processBankCredit = async (bc) => {
         return { xuLy: 'bo_qua', ghiChu: 'Giao dich tien ra, không xử lý' };
     }
 
+    // Mot tai khoan Casso co the theo doi nhieu tai khoan ngan hang (vd. ca tai
+    // khoan nhan tien cua infinity-store) va gui het ve moi webhook. Tien vao
+    // tai khoan KHAC tai khoan nhan hoc phi thi khong phai tien don hang.
+    const ownAccount = transferInfo({}).soTaiKhoan;
+    if (bc.soTaiKhoan && ownAccount && bc.soTaiKhoan !== ownAccount) {
+        return { xuLy: 'bo_qua', ghiChu: `Tiền vào tài khoản khác (${bc.soTaiKhoan}), không phải tài khoản nhận học phí` };
+    }
+
     const orderCode = extractOrderCode(bc.noiDung);
     if (!orderCode) {
+        // infinity-store dung CHUNG tai khoan nhan tien va chung tai khoan Casso,
+        // nen moi khoan tra don ben do cung bao ve day. Ma don ben do la "HA" +
+        // 10 ky tu hex (generateOrderCode cua infinity). Danh 'bo_qua' de nhat
+        // ky khong day nhung dong "chua khop" ma quan tri tuong la hoc vien
+        // chuyen sai.
+        if (/HA[0-9A-F]{10}/.test(String(bc.noiDung).toUpperCase())) {
+            return { maNap: null, xuLy: 'bo_qua', ghiChu: 'Tiền đơn hàng của infinity-store (cùng tài khoản nhận)' };
+        }
         return { maNap: null, xuLy: 'chua_khop', ghiChu: 'Nội dung không chứa mã đơn hợp lệ' };
     }
     return processOrderCredit(bc, orderCode);
@@ -96,7 +113,7 @@ const receiveBankCredit = async (req, res) => {
     // Chua dat khoa thi tu choi, khong xu ly gi. Tra 503 chu khong 401 de
     // nguoi dung dich vu biet la LOI CAU HINH BEN MINH, khong phai ho gui sai.
     if (!isConfigured()) {
-        console.error('nhanBaoCoNganHang: chua dat WEBHOOK_NGAN_HANG_SECRET');
+        console.error('nhanBaoCoNganHang: chua dat CASSO_WEBHOOK_SECRET');
         return res.status(503).json({ success: false, message: 'Webhook chưa được cấu hình' });
     }
 

@@ -34,9 +34,17 @@ export const ADMIN_DOCUMENT_SUBJECTS = {
     maxLength: 60,
     placeholder: "Tên lĩnh vực mới, VD: Luật",
     nameAria: "Tên lĩnh vực mới",
-    iconAria: "Biểu tượng",
-    iconOfAria: (name: string) => `Biểu tượng của ${name}`,
     add: "Thêm lĩnh vực",
+    subjects: "Ngành / môn thuộc lĩnh vực này",
+    subjectsHint:
+      "Gõ tên rồi Enter. Ngành đã có ở lĩnh vực khác sẽ được chuyển sang đây.",
+    subjectPlaceholder: "Thêm ngành, VD: Luật dân sự",
+    addSubject: "Thêm ngành",
+    removeSubject: (name: string) => `Bỏ ${name} khỏi lĩnh vực`,
+    noSubjects: "Chưa có ngành nào",
+    editTitle: "Sửa tên và danh sách ngành",
+    save: "Lưu",
+    cancel: "Hủy",
     count: (subjects: number, docs: number) => `${subjects} môn · ${docs} tài liệu`,
     deleteTitle: "Xóa lĩnh vực (môn trong đó giữ nguyên)",
   },
@@ -44,13 +52,19 @@ export const ADMIN_DOCUMENT_SUBJECTS = {
   universities: {
     heading: "Trường đại học",
     maxLength: 120,
-    logoMaxLength: 300,
     placeholder: "Tên trường mới, VD: Trường Đại học Cần Thơ",
     nameAria: "Tên trường mới",
-    logoPlaceholder: "Logo: /images/institution/ten-file.png",
     logoAria: (name: string) => `Logo của ${name}`,
+    pickLogo: "Chọn logo từ máy",
+    changeLogo: "Đổi logo",
+    removeLogo: "Bỏ logo",
+    uploadingLogo: "Đang tải logo...",
+    noLogo: "Chưa có logo",
+    logoHint:
+      "JPG, PNG, WEBP hoặc GIF, tối đa 5MB. Nên dùng ảnh nền trong suốt hoặc nền trắng.",
+    save: "Lưu",
+    cancel: "Hủy",
     add: "Thêm trường",
-    hasLogo: "có logo",
     count: (docs: number) => `${docs} tài liệu`,
     editTitle: "Đổi tên / logo",
     deleteTitle: "Xóa trường (tài liệu giữ nguyên)",
@@ -77,6 +91,11 @@ export const ADMIN_DOCUMENT_SUBJECTS = {
     categoryAdded: (name: string) => `Đã thêm lĩnh vực "${name}".`,
     categoryAddFailed: "Không thêm được lĩnh vực.",
     categoryUpdated: (name: string) => `Đã cập nhật lĩnh vực "${name}".`,
+    categorySaved: (name: string, added: number, removed: number) =>
+      `Đã lưu lĩnh vực "${name}"` +
+      (added ? ` · thêm ${added} ngành` : "") +
+      (removed ? ` · bỏ ${removed} ngành (ngành vẫn còn trong danh sách Môn học)` : "") +
+      ".",
     categoryUpdateFailed: "Không cập nhật được lĩnh vực.",
     confirmDeleteCategory: (name: string, n: number) =>
       `Xóa lĩnh vực "${name}"? ${n} môn trong đó sẽ thành "chưa có lĩnh vực" (môn và tài liệu không bị xóa).`,
@@ -87,6 +106,9 @@ export const ADMIN_DOCUMENT_SUBJECTS = {
     subjectUnplaced: (subject: string) => `Đã bỏ "${subject}" khỏi lĩnh vực.`,
     subjectPlaceFailed: "Không xếp được môn vào lĩnh vực.",
     universityAdded: (name: string) => `Đã thêm trường "${name}".`,
+    logoNotImage: "File logo phải là ảnh.",
+    logoTooBig: "Logo tối đa 5MB.",
+    logoUploadFailed: "Không tải được logo lên.",
     universityAddFailed: "Không thêm được trường.",
     universityUpdated: (name: string) => `Đã cập nhật "${name}".`,
     renamedWithDocs: (name: string, n: number) =>

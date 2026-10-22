@@ -471,11 +471,18 @@ export const documentService = {
     return apiRequest("/documents/truong", { method: "GET" });
   },
 
-  createUniversity: async (name: string): Promise<DocumentUniversity> => {
+  createUniversity: async (name: string, logo = ""): Promise<DocumentUniversity> => {
     return apiRequest("/documents/truong", {
       method: "POST",
-      body: JSON.stringify({ ten: name }),
+      body: JSON.stringify({ ten: name, logo }),
     });
+  },
+
+  /** Tai logo truong tu may len (admin), tra ve URL de gan vao truong. */
+  uploadUniversityLogo: async (file: File): Promise<{ url: string }> => {
+    const fd = new FormData();
+    fd.append("anh", file);
+    return apiRequest("/documents/truong/logo", { method: "POST", body: fd });
   },
 
   renameUniversity: async (

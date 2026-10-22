@@ -7,7 +7,10 @@ export const ADMIN_CATEGORIES = {
 
   columns: { name: "Tên", slug: "Slug (tự sinh)", icon: "Icon", actions: "Thao tác" },
   empty: "Chưa có danh mục nào.",
-  noIcon: "--",
+  /** Chua chon bieu tuong: trang chu tu doan theo ten. */
+  autoIcon: "Tự đoán theo tên",
+  /** Gia tri go tay tu truoc, khong co trong bang bieu tuong. */
+  unknownIcon: (v: string) => `"${v}" (không hợp lệ, đang đoán theo tên)`,
   edit: "Sửa",
   delete: "Xóa",
 
@@ -17,8 +20,9 @@ export const ADMIN_CATEGORIES = {
     name: "Tên danh mục *",
     namePlaceholder: "Ví dụ: Trí tuệ nhân tạo",
     slugHint: "Slug được backend tự sinh từ tên, không cần nhập.",
-    icon: "Icon",
-    iconPlaceholder: "code, cloud, megaphone...",
+    icon: "Biểu tượng",
+    iconHint: "Hiện ở mục Danh mục trên trang chủ. Không chọn thì tự đoán theo tên.",
+    iconAuto: "Tự động",
     cancel: "Hủy",
     save: "Lưu thay đổi",
     create: "Tạo danh mục",

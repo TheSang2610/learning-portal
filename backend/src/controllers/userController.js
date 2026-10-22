@@ -23,6 +23,7 @@ const { normalizeIdentifier, accountFilter } = require('../utils/loginIdentifier
 const { normalizePhone } = require('../utils/phoneNumber');
 const getCloudinary = require('../config/cloudinary');
 const { uploadToCloudinary } = require('../utils/uploadCloud');
+const { recordLogin } = require('../utils/loginActivity');
 
 // google-auth-library nap mat ~144ms nhung chi mot duong duy nhat can den no
 // (dang nhap bang Google). Nap luoi de moi cold start khac khong phai tra
@@ -213,6 +214,8 @@ const loginUser = async (req, res) => {
         // De no trong than thi JavaScript cua trang doc duoc, va the la mat
         // dung cai loi ich vua doi sang cookie de co.
         setTokenCookie(res, generateToken(user._id));
+        // So lieu dashboard; khong await - xem utils/loginActivity.js.
+        void recordLogin(user._id, 'password');
 
         res.json({
             _id: user._id,
@@ -365,6 +368,7 @@ const googleLogin = async (req, res) => {
     };
 
     setTokenCookie(res, generateToken(user._id));
+    void recordLogin(user._id, 'google');
 
     res.json(responseUser);
 
@@ -524,6 +528,8 @@ const registerUser = async (req, res) => {
         });
 
         setTokenCookie(res, generateToken(user._id));
+        // Dang ky xong la dang nhap luon - tinh la mot luot dang nhap.
+        void recordLogin(user._id, 'password');
 
         return res.status(201).json({
             _id: user._id,

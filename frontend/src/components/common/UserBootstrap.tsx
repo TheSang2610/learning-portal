@@ -17,7 +17,7 @@ import { storeUser, setLoading, SIGNAL_KEY } from "@/src/hooks/userStore";
 // Nen o day goi fetch tho: 401 la cau tra loi HOP LE ("ban la khach"), khong
 // phai loi.
 
-// The <script> noi tuyen trong app/(portal)/layout.tsx da ban luot goi nay di
+// The <script> noi tuyen trong app/layout.tsx (ProfilePrefetchScript) da ban luot goi nay di
 // tu luc trinh duyet con dang doc HTML, va de lai loi hua o day. Nhan lay no
 // thay vi goi lai tu dau.
 //

@@ -1,6 +1,7 @@
-import { FolderOpen, Loader2, Pencil, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Trash2 } from "lucide-react";
 
 import { ADMIN_CATEGORIES as C } from "@/src/constants/admin/categories-page";
+import { categoryIcon, categoryIconLabel } from "@/src/lib/category-icons";
 import type { Category } from "@/src/services/categoryService";
 
 import styles from "../AdminCategories.module.scss";
@@ -46,39 +47,47 @@ export default function CategoriesTable({
                 </td>
               </tr>
             ) : (
-              categories.map((c) => (
-                <tr key={c._id} className={styles.row2}>
-                  <td className={styles.headCell}>
-                    <div className={styles.row3}>
-                      <span className={styles.row4}>
-                        <FolderOpen size={15} />
-                      </span>
-                      <span className={styles.label}>{c.name}</span>
-                    </div>
-                  </td>
-                  <td className={styles.cell3}>{c.slug}</td>
-                  <td className={styles.cell4}>{c.icon || C.noIcon}</td>
-                  <td className={styles.headCell}>
-                    <div className={styles.row5}>
-                      <button
-                        onClick={() => onEdit(c)}
-                        title={C.edit}
-                        className={styles.button2}
-                      >
-                        <Pencil size={16} />
-                      </button>
-                      <button
-                        onClick={() => onDelete(c)}
-                        disabled={busyId === c._id}
-                        title={C.delete}
-                        className={styles.button3}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+              categories.map((c) => {
+                const Icon = categoryIcon(c.icon, c.name);
+                const label = categoryIconLabel(c.icon);
+                return (
+                  <tr key={c._id} className={styles.row2}>
+                    <td className={styles.headCell}>
+                      <div className={styles.row3}>
+                        {/* Dung bieu tuong trang chu se hien, khong phai mot thu muc chung. */}
+                        <span className={styles.row4}>
+                          <Icon size={15} />
+                        </span>
+                        <span className={styles.label}>{c.name}</span>
+                      </div>
+                    </td>
+                    <td className={styles.cell3}>{c.slug}</td>
+                    <td className={styles.cell4}>
+                      {label ??
+                        (c.icon?.trim() ? C.unknownIcon(c.icon.trim()) : C.autoIcon)}
+                    </td>
+                    <td className={styles.headCell}>
+                      <div className={styles.row5}>
+                        <button
+                          onClick={() => onEdit(c)}
+                          title={C.edit}
+                          className={styles.button2}
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          onClick={() => onDelete(c)}
+                          disabled={busyId === c._id}
+                          title={C.delete}
+                          className={styles.button3}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

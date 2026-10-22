@@ -1,5 +1,7 @@
 import "./globals.css";
 
+import ProfilePrefetchScript from "@/src/components/common/ProfilePrefetchScript";
+
 import styles from "./layout.module.scss";
 
 // Root layout DUY NHAT cua ca app: chi dung <html>/<body> va nap CSS chung.
@@ -19,6 +21,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" suppressHydrationWarning>
+      <head>
+        <ProfilePrefetchScript />
+      </head>
       <body className={styles.box}>{children}</body>
     </html>
   );

@@ -8,6 +8,7 @@ import {
   Heading2,
   Heading3,
   Image as ImageIcon,
+  ImageUp,
   Italic,
   Link2,
   List,
@@ -21,6 +22,8 @@ import {
 } from "lucide-react";
 import { parseContent } from "@/src/lib/article-outline";
 import { laHtml, cleanHtml } from "@/src/lib/post-html";
+import { getErrorMessage } from "@/src/services/apiHelper";
+import { postService } from "@/src/services/post";
 
 import styles from "./PostEditor.module.scss";
 // Trinh soan bai viet cho khu quan tri.
@@ -41,6 +44,48 @@ interface Props {
   setValue: (v: string) => void;
   toiDa: number;
   id?: string;
+}
+
+// Tran cua POST /api/posts/upload-image. Anh nang hon thi thu nho o trinh
+// duyet truoc (anh chup dien thoai 8-12MB), khong bat nguoi viet tu nen anh.
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+// Cot noi dung bai rong chua toi 800px; 1600px du net tren man hinh retina.
+const MAX_IMAGE_WIDTH = 1600;
+
+/** Thu anh ve be ngang MAX_IMAGE_WIDTH, xuat JPEG. Anh dong GIF se thanh anh tinh. */
+async function shrinkImage(file: File): Promise<Blob> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = reject;
+      el.src = url;
+    });
+    const scale = Math.min(1, MAX_IMAGE_WIDTH / img.naturalWidth);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(img.naturalWidth * scale);
+    canvas.height = Math.round(img.naturalHeight * scale);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Không xử lý được ảnh.");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return await new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob(
+        (b) => (b ? resolve(b) : reject(new Error("Không xử lý được ảnh."))),
+        "image/jpeg",
+        0.85,
+      ),
+    );
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+/** Lay file anh dau tien trong danh sach dan / keo tha (neu co). */
+function firstImage(files: FileList | null | undefined) {
+  return Array.from(files ?? []).find((f) => f.type.startsWith("image/"));
 }
 
 /** Doi ky tu dac biet thanh thuc the, dung khi dung HTML tu van ban tho. */
@@ -76,6 +121,9 @@ function buildPreview(content: string): string {
 export default function PostEditor({ giaTri: value, setValue, toiDa: max, id }: Props) {
   const typingBox = useRef<HTMLTextAreaElement>(null);
   const [previewing, setPreviewing] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   const previewCopy = useMemo(
     () => (previewing ? buildPreview(value) : ""),
@@ -124,6 +172,40 @@ export default function PostEditor({ giaTri: value, setValue, toiDa: max, id }: 
       el.focus();
       el.setSelectionRange(fullWidth, fullWidth + choice.length);
     });
+  };
+
+  /**
+   * Tai anh len roi chen <figure> vao cho con tro, nhu nut "Anh (link)" nhung
+   * khong phai tu di tim link anh.
+   *
+   * Trong luc tai, o soan khoa (readOnly) va khong cho chuyen sang xem truoc:
+   * `chen` dung gia tri bai luc bam nut, go them chu luc dang tai se bi de mat.
+   */
+  const insertImage = async (file: File) => {
+    setUploadError("");
+    if (!file.type.startsWith("image/")) {
+      setUploadError("File này không phải ảnh.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const big = file.size > MAX_UPLOAD_BYTES;
+      const blob = big ? await shrinkImage(file) : file;
+      const res = await postService.uploadImage(
+        blob,
+        big ? file.name.replace(/\.\w+$/, "") + ".jpg" : file.name,
+      );
+      const src = res.url.replace(/"/g, "&quot;");
+      chen(
+        `<figure>\n  <img src="${src}" alt="">\n  <figcaption>`,
+        "</figcaption>\n</figure>",
+        "Chú thích ảnh",
+      );
+    } catch (err) {
+      setUploadError(getErrorMessage(err, "Không tải được ảnh lên."));
+    } finally {
+      setUploading(false);
+    }
   };
 
   const order = () => {
@@ -247,8 +329,30 @@ export default function PostEditor({ giaTri: value, setValue, toiDa: max, id }: 
           title="Chèn ảnh kèm chú thích"
         >
           <ImageIcon size={15} />
-          Ảnh
+          Ảnh (link)
         </button>
+        <button
+          type="button"
+          onClick={() => fileInput.current?.click()}
+          disabled={uploading || previewing}
+          className={toolButton}
+          title="Chọn ảnh từ máy — cũng có thể dán (Ctrl+V) hoặc kéo thả ảnh vào ô soạn"
+        >
+          <ImageUp size={15} />
+          {uploading ? "Đang tải ảnh..." : "Tải ảnh"}
+        </button>
+        <input
+          ref={fileInput}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          hidden
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            // Xoa de chon lai dung file do lan nua van bat duoc onChange.
+            e.target.value = "";
+            if (file) void insertImage(file);
+          }}
+        />
         <button
           type="button"
           onClick={() => chen("<hr>", "")}
@@ -273,6 +377,7 @@ export default function PostEditor({ giaTri: value, setValue, toiDa: max, id }: 
         <button
           type="button"
           onClick={() => setPreviewing((v) => !v)}
+          disabled={uploading}
           className={[styles.button, previewing ? styles.button2 : styles.button3].join(
             " ",
           )}
@@ -281,6 +386,8 @@ export default function PostEditor({ giaTri: value, setValue, toiDa: max, id }: 
           {previewing ? "Về ô soạn" : "Xem trước"}
         </button>
       </div>
+
+      {uploadError && <p className={styles.uploadError}>{uploadError}</p>}
 
       {/* O SOAN / BAN XEM TRUOC */}
       {previewing ? (
@@ -302,6 +409,24 @@ export default function PostEditor({ giaTri: value, setValue, toiDa: max, id }: 
           ref={typingBox}
           value={value}
           onChange={(e) => setValue(e.target.value)}
+          readOnly={uploading}
+          // Dan anh chup man hinh / keo file anh vao: tai len va chen nhu nut
+          // "Tai anh". Dan chu van di duong binh thuong.
+          onPaste={(e) => {
+            const file = firstImage(e.clipboardData.files);
+            if (!file || uploading) return;
+            e.preventDefault();
+            void insertImage(file);
+          }}
+          onDragOver={(e) => {
+            if (e.dataTransfer.types.includes("Files")) e.preventDefault();
+          }}
+          onDrop={(e) => {
+            const file = firstImage(e.dataTransfer.files);
+            if (!file) return;
+            e.preventDefault();
+            if (!uploading) void insertImage(file);
+          }}
           maxLength={max}
           rows={22}
           spellCheck={false}
@@ -311,6 +436,7 @@ export default function PostEditor({ giaTri: value, setValue, toiDa: max, id }: 
             "<p>Đoạn nội dung của chương...</p>\n\n" +
             "<h3>Tên mục nhỏ</h3>\n" +
             "<ul>\n  <li>Ý thứ nhất</li>\n  <li>Ý thứ hai</li>\n</ul>\n\n" +
+            'Ảnh: bấm "Tải ảnh", hoặc dán (Ctrl+V) / kéo thả ảnh vào đây.\n\n' +
             "<figure>\n" +
             '  <img src="https://..." alt="">\n' +
             "  <figcaption>Chú thích ảnh</figcaption>\n" +

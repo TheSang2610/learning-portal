@@ -2,45 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  ArrowUpRight,
-  BarChart3,
-  Cloud,
-  Code2,
-  Cpu,
-  LayoutGrid,
-  Megaphone,
-  PenTool,
-  ShieldCheck,
-  Smartphone,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { getCategories, Category } from "@/src/services/categoryService";
 import SectionTitle from "@/src/components/common/SectionHeading";
+import { categoryIcon } from "@/src/lib/category-icons";
 import { fillTemplate } from "@/src/lib/format";
 import type { HomeCategoriesData } from "@/src/types/home";
 
 import styles from "./HomeCategories.module.scss";
-// Bieu tuong chon theo TU KHOA trong ten danh muc, khong theo truong icon cua
-// ban ghi: truong do la o nhap tu do trong trang quan tri, admin go gi cung
-// duoc, nen khong the dua vao no de chon dung mot component.
-//
-// Doi ten danh muc thi cung chi roi ve bieu tuong mac dinh, khong vo trang.
-const ICONS: [RegExp, LucideIcon][] = [
-  [/web|front|html|css/i, Code2],
-  [/devops|cloud|docker|kubernet/i, Cloud],
-  [/mobile|android|ios|flutter/i, Smartphone],
-  [/marketing|seo|quảng cáo/i, Megaphone],
-  [/dữ liệu|data|phân tích|analytic/i, BarChart3],
-  [/thiết kế|design|ui|ux/i, PenTool],
-  [/ai|máy học|machine|khoa học/i, Cpu],
-  [/bảo mật|security|an toàn/i, ShieldCheck],
-];
-
-function pickIcon(name: string): LucideIcon {
-  for (const [mau, Icon] of ICONS) if (mau.test(name)) return Icon;
-  return LayoutGrid;
-}
+// Bieu tuong: cai admin chon trong trang Danh muc, chua chon thi doan theo
+// ten - xem lib/category-icons.ts.
 
 function CategoriesSkeleton() {
   return (
@@ -124,7 +95,7 @@ export default function HomeCategories({
           {categories.map((category) => {
             const catSlug =
               category.slug || category.name.toLowerCase().replace(/ /g, "-");
-            const Icon = pickIcon(category.name);
+            const Icon = categoryIcon(category.icon, category.name);
             const courseCount = courseCountByCategory?.[category._id];
 
             return (

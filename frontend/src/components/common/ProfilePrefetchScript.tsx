@@ -15,6 +15,14 @@ import { PROFILE_PATH } from "@/src/services/apiBase";
  * Trong the nay khong co mot chut du lieu nguoi dung nao - no chi mo mot ket
  * noi. An toan de dat thang vao HTML tinh.
  *
+ * CHI dat trong app/layout.tsx (root layout). Truoc day the nay nam trong
+ * PortalShell: moi lan chuyen trang phia trinh duyet vao khu hoc vien (vd khu
+ * quan tri day khach ve "/") React phai ve lai no tren trinh duyet va bao loi
+ * "Encountered a script tag while rendering React component" - cua so loi do
+ * cua Next che ca man hinh nhu trang sap. Root layout chi ve mot lan luc tai
+ * trang, khong bao gio ve lai khi chuyen trang, nen khong con loi do; khu
+ * admin / giang vien cung duoc tai san ho so som nhu khu hoc vien.
+ *
  * `.catch` gan ngay tai cho: khong co no thi mot loi hua bi tu choi ma chua ai
  * bat se thanh "unhandled rejection" do do trong console truoc khi
  * UserBootstrap kip nhan.

@@ -1,6 +1,8 @@
+import { createElement } from "react";
 import { Loader2, X } from "lucide-react";
 
 import { ADMIN_CATEGORIES as C } from "@/src/constants/admin/categories-page";
+import { CATEGORY_ICONS, categoryIcon } from "@/src/lib/category-icons";
 
 import styles from "../AdminCategories.module.scss";
 
@@ -14,6 +16,48 @@ interface CategoryModalProps {
   onIcon: (v: string) => void;
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
+}
+
+function IconPicker({
+  value,
+  name,
+  onChange,
+}: {
+  value: string;
+  name: string;
+  onChange: (v: string) => void;
+}) {
+  const known = CATEGORY_ICONS.some((i) => i.key === value);
+  return (
+    <div className={styles.iconGrid} role="radiogroup" aria-label={C.modal.icon}>
+      <button
+        type="button"
+        role="radio"
+        aria-checked={!known}
+        onClick={() => onChange("")}
+        className={!known ? styles.iconOptionActive : styles.iconOption}
+        title={C.modal.iconAuto}
+      >
+        {/* Ve san bieu tuong se duoc doan tu ten dang go. */}
+        {createElement(categoryIcon("", name), { size: 18 })}
+        <span>{C.modal.iconAuto}</span>
+      </button>
+      {CATEGORY_ICONS.map(({ key, label, Icon }) => (
+        <button
+          key={key}
+          type="button"
+          role="radio"
+          aria-checked={value === key}
+          onClick={() => onChange(key)}
+          className={value === key ? styles.iconOptionActive : styles.iconOption}
+          title={label}
+        >
+          <Icon size={18} />
+          <span>{label}</span>
+        </button>
+      ))}
+    </div>
+  );
 }
 
 /** Hop tao / sua danh muc (ten + icon; slug backend tu sinh). */
@@ -56,12 +100,10 @@ export default function CategoryModal({
 
           <div>
             <label className={styles.fieldLabel}>{C.modal.icon}</label>
-            <input
-              value={icon}
-              onChange={(e) => onIcon(e.target.value)}
-              className={styles.input}
-              placeholder={C.modal.iconPlaceholder}
-            />
+            {/* Chon tu bang co dinh thay cho o chu tu do: go tay thi trang chu
+                khong biet doi chu do ra bieu tuong nao. */}
+            <IconPicker value={icon} name={name} onChange={onIcon} />
+            <p className={styles.text2}>{C.modal.iconHint}</p>
           </div>
 
           <div className={styles.row7}>

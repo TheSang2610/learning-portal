@@ -24,14 +24,16 @@ const Certificate = require('../models/Certificate');
 const { phanTrang: paginate, fuzzyRegex } = require('../utils/queryParams');
 const Review = require('../models/Review');
 const Quiz = require('../models/Quiz');
-const { buildDailySeries, compareWindows } = require('../utils/dailySeries');
+const { buildDailySeries, compareWindows, vnDateKey } = require('../utils/dailySeries');
+const LoginActivity = require('../models/LoginActivity');
 
 // @desc    Get dashboard statistics
 // @route   GET /api/admin/dashboard/statistics
 // @desc    So lieu theo ngay + ghi danh gan day cho dashboard admin
 // @route   GET /api/admin/dashboard/activity?days=90
 //
-// Bieu do can chuoi theo ngay (nguoi dung moi, ghi danh moi); the so lieu can
+// Bieu do can chuoi theo ngay (nguoi dung moi, ghi danh moi, luot dang nhap -
+// xem models/LoginActivity.js); the so lieu can
 // so sanh 30 ngay gan nhat voi 30 ngay truoc - nen luon lay it nhat 60 ngay.
 const getDashboardActivity = async (req, res) => {
     try {
@@ -48,10 +50,16 @@ const getDashboardActivity = async (req, res) => {
             },
         ];
 
-        const [users, enrollments, certificates, recent] = await Promise.all([
+        const [users, enrollments, certificates, logins, recent, recentLogins] = await Promise.all([
             User.aggregate(byDay),
             Enrollment.aggregate(byDay),
             Certificate.aggregate(byDay),
+            // Luot dang nhap: cong `count` cua moi nguoi trong ngay. Truong `day`
+            // da la ngay gio VN nen gom thang, khong can doi mui gio nhu tren.
+            LoginActivity.aggregate([
+                { $match: { day: { $gte: vnDateKey(since) } } },
+                { $group: { _id: '$day', count: { $sum: '$count' } } },
+            ]),
             Enrollment.find()
                 .sort({ createdAt: -1 })
                 .limit(8)
@@ -59,9 +67,15 @@ const getDashboardActivity = async (req, res) => {
                 .populate('course', 'title slug price')
                 .select('student course totalProgress status createdAt')
                 .lean(),
+            LoginActivity.find()
+                .sort({ lastAt: -1 })
+                .limit(8)
+                .populate('user', 'name email role')
+                .select('user method count lastAt day')
+                .lean(),
         ]);
 
-        const all = buildDailySeries({ users, enrollments, certificates }, span);
+        const all = buildDailySeries({ users, enrollments, certificates, logins }, span);
 
         res.json({
             days: all.slice(-days),
@@ -69,6 +83,7 @@ const getDashboardActivity = async (req, res) => {
                 users: compareWindows(all, 'users'),
                 enrollments: compareWindows(all, 'enrollments'),
                 certificates: compareWindows(all, 'certificates'),
+                logins: compareWindows(all, 'logins'),
             },
             recent: recent.map((e) => ({
                 _id: e._id,
@@ -77,6 +92,16 @@ const getDashboardActivity = async (req, res) => {
                 progress: e.totalProgress || 0,
                 status: e.status,
                 createdAt: e.createdAt,
+            })),
+            // Nguoi dang nhap gan nhat. `count` = so lan dang nhap trong
+            // ngay `day` cua nguoi do.
+            recentLogins: recentLogins.map((l) => ({
+                _id: l._id,
+                user: l.user ? { name: l.user.name, email: l.user.email, role: l.user.role } : null,
+                method: l.method,
+                count: l.count || 0,
+                day: l.day,
+                lastAt: l.lastAt,
             })),
         });
     } catch (error) {

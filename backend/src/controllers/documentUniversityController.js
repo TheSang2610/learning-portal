@@ -8,6 +8,8 @@ const DocumentCategory = require('../models/DocumentCategory');
 const DocumentUniversity = require('../models/DocumentUniversity');
 const { normalizeSubject } = require('../utils/rankDocuments');
 const { mainNameKey, logoHopLe: isValidLogo } = require('../utils/universityName');
+const getCloudinary = require('../config/cloudinary');
+const { uploadToCloudinary } = require('../utils/uploadCloud');
 
 // Cung dieu kien "dang hien" voi documentController.
 const VISIBLE = { daAn: { $ne: true } };
@@ -196,6 +198,30 @@ const addSchool = async (req, res) => {
     }
 };
 
+// @desc    Tai logo truong tu may len (admin) - tra ve URL de gan vao truong
+// @route   POST /api/documents/truong/logo   (multipart, truong 'anh')
+//
+// Truoc day chi go duoc duong dan /images/institution/<file> - tuc la phai chep
+// file vao thu muc public cua frontend roi deploy lai moi doi duoc logo. Gio
+// tai thang len Cloudinary; thu ve toi da 400px (logo hien o 32-96px) va giu
+// nguyen ti le, logo ngang hay vuong deu khong bi cat.
+const uploadSchoolLogo = async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ message: 'Vui lòng chọn một ảnh' });
+        const c = getCloudinary().config();
+        if (!c.cloud_name || !c.api_key || !c.api_secret) {
+            return res.status(503).json({ message: 'Máy chủ chưa cấu hình nơi lưu trữ ảnh' });
+        }
+        const outcome = await uploadToCloudinary(req.file.buffer, 'image', {
+            folder: 'learning-portal/institutions',
+            transformation: [{ width: 400, height: 400, crop: 'limit' }],
+        });
+        res.status(201).json({ url: outcome.secure_url });
+    } catch (error) {
+        res.status(500).json({ message: error.message || 'Không tải được ảnh lên' });
+    }
+};
+
 // @desc    Doi ten / logo truong (admin) - doi ten thi cap nhat luon cac tai lieu
 // @route   PUT /api/documents/truong/:id   { ten?, logo? }
 const editSchool = async (req, res) => {
@@ -288,4 +314,4 @@ const getStats = async (req, res) => {
     }
 };
 
-module.exports = { getSchools, getSchool, themTruong: addSchool, suaTruong: editSchool, xoaTruong: deleteSchool, getStats, validateSchool };
+module.exports = { getSchools, getSchool, themTruong: addSchool, suaTruong: editSchool, xoaTruong: deleteSchool, uploadSchoolLogo, getStats, validateSchool };

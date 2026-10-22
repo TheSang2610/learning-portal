@@ -45,6 +45,7 @@ const {
     themTruong: addSchool,
     suaTruong: editSchool,
     xoaTruong: deleteSchool,
+    uploadSchoolLogo,
     getStats,
 } = require('../controllers/documentUniversityController');
 
@@ -173,6 +174,8 @@ router.get('/truong', setCache(60), getSchools);
 // Mot truong (mon hoc cua truong + truong khac) - trang /share-document/institution/<khoa>.
 router.get('/truong/:khoa', setCache(60), getSchool);
 router.post('/truong', protect, admin, addSchool);
+// Logo tai tu may len - dung chung bo loc anh 5MB voi '/anh', nhung chi admin.
+router.post('/truong/logo', protect, admin, imageUpload, uploadSchoolLogo);
 router.put('/truong/:id', protect, admin, editSchool);
 router.delete('/truong/:id', protect, admin, deleteSchool);
 // So lieu tong quan cua kho - giong nhau voi moi nguoi nen cache duoc.

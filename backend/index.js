@@ -213,7 +213,7 @@ app.use('/api/reviews', require('./src/routes/reviewRoutes'));
 app.use('/api/enrollments', require('./src/routes/enrollmentRoutes'));
 app.use('/api/orders', require('./src/routes/orderRoutes'));
 app.use('/api/ngan-hang', require('./src/routes/bankRoutes'));
-// Duong webhook cu, tu thoi con coin. Nha cung cap (SePay/Casso) dang tro vao
+// Duong webhook cu, tu thoi con coin. Webhook Casso cu co the con tro vao
 // day - doi URL ben ho xong thi bo dong nay.
 app.post('/api/coin/webhook/ngan-hang', require('./src/controllers/bankWebhookController').receiveBankCredit);
 app.use('/api/quizzes', require('./src/routes/quizRoutes'));

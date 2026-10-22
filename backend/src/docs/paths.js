@@ -211,9 +211,9 @@ const BANG = [
     tag: "Trắc nghiệm",
     ghiChu: "Người đang có quyền học khóa. Lượt cũ đổi sang reset (không tính lượt) nhưng vẫn nằm trong lịch sử.",
   }],
-  ["post", "/api/ngan-hang/webhook", "", "Webhook báo có ngân hàng (SePay/Casso), tự mở khóa đơn khi tiền về", {
+  ["post", "/api/ngan-hang/webhook", "", "Webhook báo có ngân hàng (Casso), tự mở khóa đơn khi tiền về", {
     tag: "Đơn hàng",
-    ghiChu: "Không đăng nhập; xác thực bằng khóa bí mật trong header. Đường cũ /api/coin/webhook/ngan-hang vẫn nhận.",
+    ghiChu: "Không đăng nhập; xác thực bằng header secure-token (Secure Token đặt khi tạo webhook bên Casso). Đường cũ /api/coin/webhook/ngan-hang vẫn nhận.",
   }],
   ["get", "/api/ngan-hang/quan-tri/bao-co", "ad", "Nhật ký báo có ngân hàng", { tag: "Quản trị", q: ["xuLy", "page", "limit"] }],
 

@@ -250,13 +250,280 @@
   color: #1168c3;
 }
 
-// Truong da gan logo - nhan nho canh ten.
-.hasLogo {
-  margin-left: calc(var(--spacing) * 2);
-  border-radius: 999px;
-  background-color: #ecfcda;
-  padding: 0 0.45rem;
-  font-size: 0.72rem;
+// ---- linh vuc kem danh sach nganh (CategorySection, SubjectChips)
+
+.addCard {
+  margin-top: calc(var(--spacing) * 5);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-slate-200);
+  background-color: #fff;
+  padding: calc(var(--spacing) * 4);
+}
+
+.addRow {
+  display: flex;
+  gap: calc(var(--spacing) * 2);
+
+  .primaryButton {
+    min-height: 42px;
+  }
+}
+
+.fieldLabel {
+  margin-top: calc(var(--spacing) * 3);
+  margin-bottom: calc(var(--spacing) * 1.5);
+  font-size: 0.82rem;
   font-weight: 600;
-  color: #1d8201;
+  color: var(--color-slate-700);
+}
+
+.hint {
+  margin-top: calc(var(--spacing) * 1.5);
+  font-size: 0.78rem;
+  color: var(--color-slate-500);
+}
+
+.groupRow {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--spacing) * 3);
+  padding: calc(var(--spacing) * 3.5) calc(var(--spacing) * 4);
+
+  & + & {
+    border-top: 1px solid var(--color-slate-100);
+  }
+}
+
+.groupBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.groupHead {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--spacing) * 3);
+  min-height: 32px;
+  padding-top: 4px;
+}
+
+.subjectTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--spacing) * 1.5);
+  margin-top: calc(var(--spacing) * 1.5);
+  list-style: none;
+
+  li {
+    border-radius: 999px;
+    background-color: var(--color-slate-100);
+    padding: 2px calc(var(--spacing) * 2.5);
+    font-size: 0.78rem;
+    color: var(--color-slate-700);
+  }
+}
+
+.editActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: calc(var(--spacing) * 2);
+  margin-top: calc(var(--spacing) * 3);
+
+  .primaryButton,
+  .secondaryButton {
+    height: 36px;
+  }
+}
+
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5);
+  border: 1px solid var(--color-slate-200);
+  border-radius: 8px;
+  background-color: #fff;
+  padding-inline: calc(var(--spacing) * 4);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-slate-700);
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: var(--color-slate-50);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.chipBox {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 2);
+  border: 1px solid var(--color-slate-300);
+  border-radius: var(--radius-lg);
+  background-color: #fff;
+  padding: calc(var(--spacing) * 2);
+
+  &:focus-within {
+    border-color: var(--color-blue-500);
+    box-shadow: 0 0 0 3px rgb(59 130 246 / 0.12);
+  }
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--spacing) * 1.5);
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  border-radius: 999px;
+  background-color: #171717;
+  padding: 3px 4px 3px calc(var(--spacing) * 2.5);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #fff;
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.chipRemove {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.75;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: rgb(255 255 255 / 0.2);
+      opacity: 1;
+    }
+  }
+}
+
+.chipInputRow {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+}
+
+// Hai lop + the: thang luat chung `.main input:not([type=...])` (0,2,1) cua
+// DashboardShell - o nay nam trong khung .chipBox nen khong vien rieng.
+.chipBox .chipInputRow input.chipInput {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  padding: calc(var(--spacing) * 1) calc(var(--spacing) * 1.5);
+  font-size: 0.9rem;
+  box-shadow: none;
+  outline: none;
+
+  &:focus {
+    border: 0;
+    box-shadow: none;
+  }
+}
+
+.chipAdd {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-700);
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  @media (hover: hover) {
+    &:not(:disabled):hover {
+      background-color: #171717;
+      color: #fff;
+    }
+  }
+}
+
+// O doi ten khi sua: rong het dong nhu o nganh ben duoi (.o chi co flex: 1,
+// ma .groupBody khong phai flex nen no co lai).
+.groupBody > .o {
+  width: 100%;
+}
+
+// ---- logo truong (UniversitySection)
+
+.logoPicker {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+  margin-top: calc(var(--spacing) * 3);
+
+  .secondaryButton {
+    height: 36px;
+  }
+}
+
+// Logo ngang hay vuong deu hien tron, khong cat (contain) - giong trang Truong.
+.logoBox {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--color-slate-200);
+  background-color: #fff;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-origin: content-box;
+  padding: 4px;
+}
+
+.logoEmpty {
+  border-style: dashed;
+  background-color: var(--color-slate-50);
+  color: var(--color-slate-400);
+}
+
+.textButton {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 0.85rem;
+  color: #dc2626;
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }

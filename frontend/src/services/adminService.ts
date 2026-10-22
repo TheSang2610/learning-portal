@@ -32,6 +32,8 @@ export interface DashboardDay {
   users: number;
   enrollments: number;
   certificates: number;
+  /** Luot dang nhap that trong ngay (khong tinh quay lai bang phien con han). */
+  logins: number;
 }
 
 /** Tong 30 ngay gan nhat so voi 30 ngay truoc; change = null khi ky truoc bang 0. */
@@ -47,6 +49,7 @@ export interface DashboardActivity {
     users: WindowCompare;
     enrollments: WindowCompare;
     certificates: WindowCompare;
+    logins: WindowCompare;
   };
   recent: {
     _id: string;
@@ -55,6 +58,15 @@ export interface DashboardActivity {
     progress: number;
     status: "active" | "completed" | "dropped";
     createdAt: string;
+  }[];
+  recentLogins: {
+    _id: string;
+    user: { name: string; email: string; role: string } | null;
+    method: "password" | "google";
+    /** So lan dang nhap trong ngay `day` cua nguoi nay. */
+    count: number;
+    day: string;
+    lastAt: string;
   }[];
 }
 

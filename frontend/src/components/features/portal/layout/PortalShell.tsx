@@ -7,7 +7,6 @@ import Footer from "@/src/components/layout/Footer";
 import Header from "@/src/components/layout/Header";
 
 import { getFooterData } from "./data";
-import ProfilePrefetchScript from "./parts/ProfilePrefetchScript";
 import styles from "./PortalShell.module.scss";
 
 /** Noi dung ben trong <body> cua moi trang portal: header, main, footer, tro ly. */
@@ -16,7 +15,6 @@ export default async function PortalShell({ children }: { children: ReactNode })
 
   return (
     <>
-      <ProfilePrefetchScript />
       {/* Hoi may chu "toi la ai" mot lan. Danh tinh nam trong RAM, khong
           con ghi xuong localStorage - xem src/hooks/userStore.ts. */}
       <UserBootstrap />

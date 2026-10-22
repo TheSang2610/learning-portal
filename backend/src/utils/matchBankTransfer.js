@@ -49,59 +49,54 @@ const isPaidEnough = (amountReceived, amountDue) => {
 };
 
 /**
- * Chuan hoa mot bao co ve dang dung chung, du webhook den tu nha nao.
+ * Chuan hoa mot giao dich Casso ve dang dung chung cua nhat ky bao co.
  *
- * Hien co hai dinh dang pho bien o Viet Nam:
+ * Casso co hai ban webhook va ten truong hoi khac nhau:
+ *   cu  : { id, tid, amount, description, when, subAccId, bankName }
+ *   moi : { id, reference, amount, description, transactionDateTime, accountNumber }
+ * Doc ca hai, giong infinity-store (payment.controller.ts).
  *
- *   SePay  - mot object phang: { id, transferAmount, content, gateway, ... }
- *   Casso  - boc trong mang:   { error, data: [ { tid, amount, description } ] }
+ * Ma giao dich lay `reference` / `tid` (ma cua ngan hang) truoc `id` (so dem
+ * cua Casso): Casso gui lai cung giao dich thi ma ngan hang khong doi.
  *
- * Doc ca hai o day thay vi bat nguoi dung phai dung dung mot nha: doi nha
- * cung cap ve sau chi phai them vai ten truong vao danh sach ben duoi, khong
- * phai sua controller.
+ * Tra ve null khi khong doc ra ma giao dich - khong co ma thi khong chong trung
+ * duoc, va khong chong trung thi mot bao co phat lai hai lan se bi xu ly hai lan.
  *
- * Tra ve null khi khong doc ra noi ma giao dich - khong co ma thi khong chong
- * trung duoc, va khong chong trung thi mot bao co phat lai hai lan se bi xu
- * ly hai lan.
+ * Truoc 22/10/2026 ham nay con doc dinh dang phang cua SePay - da bo, chi dung Casso.
  */
 const parseBankCredit = (item) => {
     if (!item || typeof item !== 'object') return null;
 
-    const transactionId = item.id ?? item.tid ?? item.transactionId ?? item.reference;
+    const transactionId = item.reference ?? item.tid ?? item.id;
     if (transactionId === undefined || transactionId === null || transactionId === '') return null;
 
-    const amount = Number(
-        item.transferAmount ?? item.amount ?? item.creditAmount ?? item.amountIn ?? 0
-    );
-
-    // 'transferType' cua SePay: 'in' la tien vao, 'out' la tien ra. Casso thi
-    // bao so am cho tien ra. Chi coi la tien VAO khi thoa ca hai kieu - bo sot
-    // mot kieu thi mot lenh chuyen DI cung thanh mot lan tra tien don.
-    const loai = String(item.transferType || '').toLowerCase();
-    const incoming = loai === 'out' ? false : amount > 0;
+    // Casso bao so AM cho tien ra. Bo sot cho nay thi mot lenh chuyen DI cung
+    // thanh mot lan tra tien don.
+    const amount = Number(item.amount ?? 0);
 
     return {
         maGiaoDich: String(transactionId),
         soTien: Math.abs(amount),
-        incoming,
-        noiDung: String(item.content ?? item.description ?? ''),
-        nganHang: String(item.gateway ?? item.bank_name ?? item.bankName ?? ''),
-        soTaiKhoan: String(item.accountNumber ?? item.account_number ?? ''),
-        thoiGian: item.transactionDate ?? item.when ?? item.transaction_date ?? null
+        incoming: amount > 0,
+        noiDung: String(item.description ?? ''),
+        nganHang: String(item.bankName ?? item.bankAbbreviation ?? ''),
+        soTaiKhoan: String(item.accountNumber ?? item.subAccId ?? item.bank_sub_acc_id ?? ''),
+        thoiGian: item.transactionDateTime ?? item.when ?? null
     };
 };
 
 /**
- * Lay danh sach bao co tu than request, du no la object don hay mang.
+ * Lay danh sach giao dich tu than webhook Casso: { error, data }.
+ *
+ * `data` la MANG o ban cu, MOT object o ban moi. `error` khac 0 nghia la Casso
+ * bao loi phia ho - khong co giao dich nao dang tin.
  */
 const parseBankCredits = (body) => {
-    if (!body || typeof body !== 'object') return [];
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return [];
+    if (!body.data || typeof body.data !== 'object') return [];
+    if (body.error !== undefined && ![0, '0'].includes(body.error)) return [];
 
-    const tho = Array.isArray(body) ? body
-        : Array.isArray(body.data) ? body.data
-        : [body];
-
-    return tho.map(parseBankCredit).filter(Boolean);
+    return [].concat(body.data).map(parseBankCredit).filter(Boolean);
 };
 
 /**

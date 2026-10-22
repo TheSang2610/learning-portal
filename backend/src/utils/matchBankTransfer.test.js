@@ -79,57 +79,60 @@ test('so khong hop le thi khong du', () => {
 
 /* --------------------------------------------------------------- parseBankCredits */
 
-test('doc duoc dinh dang phang kieu SePay', () => {
-    const items = parseBankCredits({
-        id: 92704,
-        gateway: 'BIDV',
-        transactionDate: '2026-09-16 14:02:37',
-        accountNumber: '1810408755',
-        content: 'DH7K3M',
-        transferType: 'in',
-        transferAmount: 500000
-    });
-
-    assert.strictEqual(items.length, 1);
-    assert.strictEqual(items[0].maGiaoDich, '92704');
-    assert.strictEqual(items[0].soTien, 500000);
-    assert.strictEqual(items[0].incoming, true);
-    assert.strictEqual(items[0].noiDung, 'DH7K3M');
-});
-
-test('doc duoc dinh dang boc trong mang kieu Casso', () => {
+test('Casso ban cu: data la mang, ma giao dich lay tid', () => {
     const items = parseBankCredits({
         error: 0,
         data: [
-            { tid: 'FT123', description: 'DH7K3M', amount: 500000 },
-            { tid: 'FT124', description: 'DH9PQR', amount: 200000 }
+            { id: 1, tid: 'FT123', description: 'DH7K3M', amount: 500000, subAccId: '1810408755', when: '2026-10-22 08:00:00' },
+            { id: 2, tid: 'FT124', description: 'DH9PQR', amount: 200000 }
         ]
     });
 
     assert.strictEqual(items.length, 2);
     assert.strictEqual(items[0].maGiaoDich, 'FT123');
+    assert.strictEqual(items[0].soTien, 500000);
+    assert.strictEqual(items[0].soTaiKhoan, '1810408755');
+    assert.strictEqual(items[0].incoming, true);
     assert.strictEqual(items[1].maGiaoDich, 'FT124');
 });
 
-test('giao dich tien ra bi danh dau tienVao = false', () => {
-    // Bo sot cho nay thi mot lenh chuyen DI cung thanh mot lan tra tien don.
-    const byType = parseBankCredits({ id: 1, transferType: 'out', transferAmount: 500000 });
-    assert.strictEqual(byType[0].incoming, false);
+test('Casso ban moi: data la MOT object, ma giao dich lay reference', () => {
+    const items = parseBankCredits({
+        error: 0,
+        data: { id: 7, reference: 'BIDV-998', amount: 120000, description: 'CK DH7K3M', accountNumber: '1810408755' }
+    });
+    assert.strictEqual(items.length, 1);
+    assert.strictEqual(items[0].maGiaoDich, 'BIDV-998');
+    assert.strictEqual(extractOrderCode(items[0].noiDung), 'DH7K3M');
+});
 
-    const byPrefix = parseBankCredits({ id: 2, amount: -500000 });
-    assert.strictEqual(byPrefix[0].incoming, false);
-    assert.strictEqual(byPrefix[0].soTien, 500000);
+test('giao dich tien ra (so am) bi danh dau incoming = false', () => {
+    const items = parseBankCredits({ error: 0, data: [{ id: 2, amount: -500000 }] });
+    assert.strictEqual(items[0].incoming, false);
+    assert.strictEqual(items[0].soTien, 500000);
+});
+
+test('Casso bao error khac 0 thi khong xu ly giao dich nao', () => {
+    assert.deepStrictEqual(parseBankCredits({ error: 1, data: [{ id: 1, amount: 1000 }] }), []);
 });
 
 test('khong co ma giao dich thi bo qua ban ghi do', () => {
     // Khong co ma thi khong chong trung duoc, ma khong chong trung thi mot bao
     // co phat lai hai lan se bi xu ly hai lan.
-    assert.deepStrictEqual(parseBankCredits({ content: 'DH7K3M', amount: 500000 }), []);
+    assert.deepStrictEqual(parseBankCredits({ error: 0, data: [{ description: 'DH7K3M', amount: 500000 }] }), []);
     assert.strictEqual(parseBankCredit({ id: '', amount: 1 }), null);
+});
+
+test('khong con doc dinh dang phang kieu SePay', () => {
+    assert.deepStrictEqual(
+        parseBankCredits({ id: 92704, content: 'DH7K3M', transferType: 'in', transferAmount: 500000 }),
+        []
+    );
 });
 
 test('than request rac thi tra mang rong chu khong nem loi', () => {
     assert.deepStrictEqual(parseBankCredits(null), []);
     assert.deepStrictEqual(parseBankCredits('chuoi'), []);
     assert.deepStrictEqual(parseBankCredits(undefined), []);
+    assert.deepStrictEqual(parseBankCredits([{ id: 1 }]), []);
 });

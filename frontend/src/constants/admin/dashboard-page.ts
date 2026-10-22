@@ -32,7 +32,7 @@ export const ADMIN_DASHBOARD = {
   },
   chart: {
     title: "Hoạt động",
-    description: "Người dùng mới và lượt ghi danh theo ngày",
+    description: "Người dùng mới, lượt ghi danh và lượt đăng nhập theo ngày",
     ranges: [
       { days: 90, label: "3 tháng" },
       { days: 30, label: "30 ngày" },
@@ -41,7 +41,22 @@ export const ADMIN_DASHBOARD = {
     series: {
       enrollments: "Ghi danh",
       users: "Người dùng mới",
+      logins: "Lượt đăng nhập",
     },
+  },
+  logins: {
+    title: "Đăng nhập gần đây",
+    description:
+      "Chỉ tính lần đăng nhập thật — đăng xuất rồi đăng nhập lại là thêm một lượt.",
+    columns: ["Người dùng", "Vai trò", "Cách đăng nhập", "Số lần trong ngày", "Lần cuối"],
+    method: { password: "Mật khẩu", google: "Google" } as Record<string, string>,
+    role: { admin: "Quản trị", instructor: "Giảng viên", student: "Học viên" } as Record<
+      string,
+      string
+    >,
+    times: (n: number) => `${n} lần`,
+    empty: "Chưa có lượt đăng nhập nào được ghi nhận.",
+    deleted: "(đã xóa)",
   },
   table: {
     title: "Ghi danh gần đây",
