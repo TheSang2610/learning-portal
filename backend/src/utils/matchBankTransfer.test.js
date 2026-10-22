@@ -123,11 +123,32 @@ test('khong co ma giao dich thi bo qua ban ghi do', () => {
     assert.strictEqual(parseBankCredit({ id: '', amount: 1 }), null);
 });
 
-test('khong con doc dinh dang phang kieu SePay', () => {
-    assert.deepStrictEqual(
-        parseBankCredits({ id: 92704, content: 'DH7K3M', transferType: 'in', transferAmount: 500000 }),
-        []
-    );
+test('SePay: object phang, tien vao co ma don', () => {
+    const items = parseBankCredits({
+        id: 92704,
+        gateway: 'BIDV',
+        transactionDate: '2026-10-22 14:02:37',
+        accountNumber: '1810408755',
+        content: 'CT DEN:123 DH7K3M',
+        transferType: 'in',
+        transferAmount: 2000,
+        referenceCode: 'FT26295'
+    });
+    assert.strictEqual(items.length, 1);
+    assert.strictEqual(items[0].maGiaoDich, 'sepay-92704');
+    assert.strictEqual(items[0].soTien, 2000);
+    assert.strictEqual(items[0].incoming, true);
+    assert.strictEqual(items[0].soTaiKhoan, '1810408755');
+    assert.strictEqual(extractOrderCode(items[0].noiDung), 'DH7K3M');
+});
+
+test('SePay: tien ra (transferType out) khong phai tien vao', () => {
+    const items = parseBankCredits({ id: 1, transferType: 'out', transferAmount: 500000, content: 'DH7K3M' });
+    assert.strictEqual(items[0].incoming, false);
+});
+
+test('SePay: thieu id thi bo qua', () => {
+    assert.deepStrictEqual(parseBankCredits({ transferType: 'in', transferAmount: 1000 }), []);
 });
 
 test('than request rac thi tra mang rong chu khong nem loi', () => {

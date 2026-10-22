@@ -66,7 +66,7 @@ const isPaidEnough = (amountReceived, amountDue) => {
  * Tra ve null khi khong doc ra ma giao dich - khong co ma thi khong chong trung
  * duoc, va khong chong trung thi mot bao co phat lai hai lan se bi xu ly hai lan.
  *
- * Truoc 22/10/2026 ham nay con doc dinh dang phang cua SePay - da bo, chi dung Casso.
+ * SePay co ham rieng ben duoi (parseSepayCredit) - hai nha dat ten truong khac han.
  */
 const parseBankCredit = (item) => {
     if (!item || typeof item !== 'object') return null;
@@ -90,17 +90,49 @@ const parseBankCredit = (item) => {
 };
 
 /**
- * Lay danh sach giao dich tu than webhook Casso: { error, data }.
+ * Mot giao dich SePay - than webhook la MOT object phang:
+ *   { id, gateway, transactionDate, accountNumber, content, transferType: 'in'|'out',
+ *     transferAmount, referenceCode, ... }
  *
- * `data` la MANG o ban cu, MOT object o ban moi. `error` khac 0 nghia la Casso
- * bao loi phia ho - khong co giao dich nao dang tin.
+ * Ma giao dich gan tien to 'sepay-': so `id` cua SePay va ma cua Casso deu do
+ * moi nha tu dat, gan tien to thi chi muc unique tren maGiaoDich khong bao gio
+ * chan nham giao dich cua nha nay chi vi nha kia tung co ma trung.
+ */
+const parseSepayCredit = (item) => {
+    if (item.id === undefined || item.id === null || item.id === '') return null;
+    const amount = Number(item.transferAmount ?? 0);
+    return {
+        maGiaoDich: `sepay-${item.id}`,
+        soTien: Math.abs(amount),
+        // 'out' la tien RA - bo sot thi mot lenh chuyen di cung thanh tra tien don.
+        incoming: String(item.transferType || '').toLowerCase() === 'in' && amount > 0,
+        noiDung: String(item.content ?? item.description ?? ''),
+        nganHang: String(item.gateway ?? ''),
+        soTaiKhoan: String(item.accountNumber ?? ''),
+        thoiGian: item.transactionDate ?? null
+    };
+};
+
+/**
+ * Lay danh sach giao dich tu than webhook:
+ *   Casso : { error, data } - `data` la MANG (ban cu) hoac MOT object (ban moi);
+ *           `error` khac 0 nghia la Casso bao loi phia ho.
+ *   SePay : mot object phang co `transferAmount`.
  */
 const parseBankCredits = (body) => {
     if (!body || typeof body !== 'object' || Array.isArray(body)) return [];
-    if (!body.data || typeof body.data !== 'object') return [];
-    if (body.error !== undefined && ![0, '0'].includes(body.error)) return [];
 
-    return [].concat(body.data).map(parseBankCredit).filter(Boolean);
+    if (body.data && typeof body.data === 'object') {
+        if (body.error !== undefined && ![0, '0'].includes(body.error)) return [];
+        return [].concat(body.data).map(parseBankCredit).filter(Boolean);
+    }
+
+    if (body.transferAmount !== undefined) {
+        const one = parseSepayCredit(body);
+        return one ? [one] : [];
+    }
+
+    return [];
 };
 
 /**
@@ -130,6 +162,7 @@ module.exports = {
     extractOrderCode,
     isPaidEnough,
     parseBankCredit,
+    parseSepayCredit,
     parseBankCredits,
     TOLERANCE_RATE,
     MIN_TOLERANCE,

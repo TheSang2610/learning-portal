@@ -22,8 +22,8 @@ const crypto = require('crypto');
  *    loi - log cua Vercel nguoi khac doc duoc.
  */
 
-// Cung ten bien voi infinity-store. Ten cu WEBHOOK_NGAN_HANG_SECRET (thoi con
-// SePay) van doc lam du phong de may chu da dat bien cu khong bi tat webhook.
+// CASSO_WEBHOOK_SECRET cung ten voi infinity-store; WEBHOOK_NGAN_HANG_SECRET la
+// ten chung (dang dat tren Vercel). Ca Casso lan SePay deu dung khoa nay.
 const KEY = process.env.CASSO_WEBHOOK_SECRET || process.env.WEBHOOK_NGAN_HANG_SECRET || '';
 
 /** Da dat khoa chua? Chua dat thi controller tra 503 va khong xu ly gi. */
@@ -43,13 +43,21 @@ const safeEqual = (a, b) => {
 };
 
 /**
- * Rut khoa ra khoi header cua request.
+ * Rut khoa ra khoi header cua request. Nhan hai nha cung cap, CUNG mot khoa:
  *
- * Chi dung Casso (giong infinity-store): khoa nam trong header 'secure-token',
- * chinh la o "Secure Token" khi tao webhook ben Casso. Truoc 22/10/2026 con
- * nhan ca 'Authorization: Apikey <khoa>' cua SePay - da bo theo y chu du an.
+ *   Casso : header 'secure-token: <khoa>' (o "Secure Token" khi tao webhook)
+ *   SePay : header 'Authorization: Apikey <khoa>' (kieu chung thuc "API Key")
+ *
+ * 22/10/2026: sang bo SePay de chi dung Casso, chieu cung ngay chu du an
+ * chuyen sang SePay - nen nhan ca hai, doi qua lai khong phai sua code.
  */
-const getKeyFromHeader = (req) => String(req.headers['secure-token'] || '').trim();
+const getKeyFromHeader = (req) => {
+    const casso = String(req.headers['secure-token'] || '').trim();
+    if (casso) return casso;
+    const auth = String(req.headers.authorization || '').trim();
+    const sepay = auth.match(/^Apikey\s+(.+)$/i);
+    return sepay ? sepay[1].trim() : '';
+};
 
 /** Request nay co mang dung khoa khong? */
 const isValid = (req) => isConfigured() && safeEqual(getKeyFromHeader(req), KEY);

@@ -113,7 +113,7 @@ const receiveBankCredit = async (req, res) => {
     // Chua dat khoa thi tu choi, khong xu ly gi. Tra 503 chu khong 401 de
     // nguoi dung dich vu biet la LOI CAU HINH BEN MINH, khong phai ho gui sai.
     if (!isConfigured()) {
-        console.error('nhanBaoCoNganHang: chua dat CASSO_WEBHOOK_SECRET');
+        console.error('nhanBaoCoNganHang: chua dat WEBHOOK_NGAN_HANG_SECRET (hoac CASSO_WEBHOOK_SECRET)');
         return res.status(503).json({ success: false, message: 'Webhook chưa được cấu hình' });
     }
 
